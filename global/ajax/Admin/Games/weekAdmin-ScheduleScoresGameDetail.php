@@ -128,7 +128,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['607'] . '</label>
-													<input type="text" class="form-control" name="arbitro" id="arbitro" value="' . $arbitro . '"/>
+													<input type="text" class="form-control" name="arbitro' . $Game . '" id="arbitro' . $Game . '" value="' . $arbitro . '"/>
 												</div>
 											</div>
 										</div>
@@ -136,7 +136,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['645'] . '</label>
-													<input type="text" class="form-control" name="comentario" id="comentario" value="' . $comentario . '"/>
+													<input type="text" class="form-control" name="comentario' . $Game . '" id="comentario' . $Game . '" value="' . $comentario . '"/>
 												</div>
 											</div>
 										</div>
@@ -144,7 +144,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['648'] . ' ' . $lang['650'] . '</label>
-													<input type="text" class="form-control" name="extral" id="extral" value="' . $extral . '"/>
+													<input type="text" class="form-control" name="extral' . $Game . '" id="extral' . $Game . '" value="' . $extral . '"/>
 												</div>
 											</div>
 										</div>
@@ -152,13 +152,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['648'] . ' ' . $lang['651'] . '</label>
-													<input type="text" class="form-control" name="extrav" id="extrav" value="' . $extrav . '"/>
+													<input type="text" class="form-control" name="extrav' . $Game . '" id="extrav' . $Game . '" value="' . $extrav . '"/>
 												</div>
 											</div>
 										</div>
 										<div class="col-2 col-sm-2 col-md-2 col-lg-2 col-xl-2">
 											<div style="text-align:left; border: none; margin-top: 10px !important">
-												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStats(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', $(\'#arbitro\').val(), $(\'#comentario\').val(), $(\'#extral\').val(), $(\'#extrav\').val());">' . $lang['0000'] . '</button>
+												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStats(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', $(\'#arbitro' . $Game . '\').val(), $(\'#comentario' . $Game . '\').val(), $(\'#extra' . $Game . 'l\').val(), $(\'#extrav' . $Game . '\').val());">' . $lang['0000'] . '</button>
 											</div>
 										</div>
 									</div>

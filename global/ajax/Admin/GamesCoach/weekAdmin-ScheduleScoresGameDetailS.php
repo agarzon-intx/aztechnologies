@@ -122,7 +122,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['645'] . '</label>
-													<input type="text" class="form-control" name="comentarioS" id="comentarioS" value="' . $comentario . '"/>
+													<input type="text" class="form-control" name="comentarioS' . $Game . '" id="comentarioS' . $Game . '" value="' . $comentario . '"/>
 												</div>
 											</div>
 										</div>
@@ -133,7 +133,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								<td style="text-align:left; border: none; width: 100%">
 									<div class="col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6">
 											<div style="text-align:left; border: none; margin-top: 10px !important">
-												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStatsS(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', \'\', $(\'#comentarioS\').val(), 0, 0);">' . $lang['0000'] . '</button>
+												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStatsS(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', \'\', $(\'#comentarioS' . $Game . '\').val(), 0, 0);">' . $lang['0000'] . '</button>
 											</div>
 										</div>
 									</div>

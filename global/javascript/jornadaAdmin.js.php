@@ -31,7 +31,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	echo "
 		function loadVisitanteAgregar(Team){
-			console.log('loadVisitanteAgregar ' + Team);
+			//console.log('loadVisitanteAgregar ' + Team);
 			mainLoadingOn();
 			$.ajax({
 				type: 'POST',
@@ -50,22 +50,68 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			});
 		}
 		
-		/*
-		function loadVisitanteAgregarS(){
-			var first = document.getElementById('localAgregarS');
-			var options = first.innerHTML;
-			
-			var second = document.getElementById('visitanteAgregarS');
-			
-			second.innerHTML = options;
-			second.remove(first.selectedIndex);
-			var option = document.createElement('option');
-			option.value = 'NULL';
-			option.text = '" . $lang['654'] . "';
-			second.add(option, second[0]);
+		
+		function aplicarFiltroLocalAgregarA(){
+			var fil = document.getElementById('filtroCategoriaLocalAgregarA');
+			var src = document.getElementById('localAgregarA_source');
+			var dst = document.getElementById('localAgregarA');
+			if (!fil || !src || !dst) {
+				loadVisitanteAgregarA();
+				return;
+			}
+			var cat = fil.value;
+			dst.innerHTML = '';
+			for (var i = 0; i < src.options.length; i++) {
+				var o = src.options[i];
+				if (cat === '0' || String(o.getAttribute('data-categoria')) === cat) {
+					dst.appendChild(o.cloneNode(true));
+				}
+			}
+			loadVisitanteAgregarA();
+		}
+		
+		function aplicarFiltroVisitanteAgregarA(){
+			loadVisitanteAgregarA();
+		}
+		
+		function loadVisitanteAgregarA(){
+			var filV = document.getElementById('filtroCategoriaVisitanteAgregarA');
+			var src = document.getElementById('localAgregarA_source');
+			var first = document.getElementById('localAgregarA');
+			var second = document.getElementById('visitanteAgregarA');
+			if (!filV || !src || !first || !second) {
+				if (first && second) {
+					var options = first.innerHTML;
+					second.innerHTML = options;
+					second.remove(first.selectedIndex);
+					second.selectedIndex = 0;
+				}
+				return;
+			}
+			var catV = filV.value;
+			var localId = String(first.value);
+			second.innerHTML = '<option value=\"NULL\">" . $lang['654'] . "</option>';
+			for (var i = 0; i < src.options.length; i++) {
+				var o = src.options[i];
+				if (String(o.value) === localId) {
+					continue;
+				}
+				if (catV !== '0' && String(o.getAttribute('data-categoria')) !== catV) {
+					continue;
+				}
+				second.appendChild(o.cloneNode(true));
+			}
 			second.selectedIndex = 0;
 		}
-		*/
+		
+		function inicializarAgregarA(){
+			if (document.getElementById('filtroCategoriaLocalAgregarA')) {
+				aplicarFiltroLocalAgregarA();
+			} else {
+				loadVisitanteAgregarA();
+			}
+		}
+		
 		
 		function loadVisitanteAgregarS(){
 			var first = document.getElementById('localAgregarS');
@@ -89,6 +135,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				type: 'POST',
 				dataType: 'json',
 				url: 'ajax/Admin/Games/gameManagementAddGame.php',
+				data: {Date: fecha, Season: Season, Week: weekid, Home: Local, Away: Visitante},
+				success: function (res) {
+					mainLoadingOff();
+					if (res.status === '1') {
+						alert(res.dataGameAnswer);
+						loadWeekAdmin(weekid);
+					}
+				},
+				error: function(jqxhr, status, exception) {
+					console.log('Exception:' + exception);
+				}
+			});
+		}
+		
+		function agregarJuegoA(fecha, Season, weekid, Local, Visitante){
+			//console.log('createGame');
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/Games/gameManagementAddGameA.php',
 				data: {Date: fecha, Season: Season, Week: weekid, Home: Local, Away: Visitante},
 				success: function (res) {
 					mainLoadingOff();

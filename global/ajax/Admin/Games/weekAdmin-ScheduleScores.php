@@ -46,6 +46,7 @@
         				}
                     }
                     $game_status_opt .= ") ";
+					$game_status_opt .= "when jugado = 10 then concat('<option value=''10'' selected>" . $lang['675'] . "</option>') ";
 				}
             }
             $game_status_opt .= "end";
@@ -122,20 +123,7 @@
 										Extra_Local,
 										Extra_Visitante, 
 										jugado as jugadoStat,
-										case 
-											when jugado = 0 then 
-												concat('<option value=''0'' selected>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
-											when jugado = 1 then 
-												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1'' selected>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
-											when jugado = 2 then 
-												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2'' selected>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
-											when jugado = 3 then 
-												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3'' selected>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
-											when jugado = 4 then 
-												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4'' selected>" . $lang['662-2'] . "</option>')
-						
-										end as jugado,
-						
+										$game_status_opt as jugado,
 										j.Local_ID, 
 										case when j.Visitante_Id is null then '' else concat(l.equipo_desc,'') end  as 'Local', 
             							case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
@@ -353,6 +341,69 @@
 									</td>
 								</tr>';
 				
+					
+				$htmlWeek .= '	<tr>
+									<td scope="row" colspan="7">
+										<div class="d-flex px-2 py-1">
+											<div style="width: 100%;text-align: left;padding-right: 3px;padding-top: 6px;">
+												<div style="float: left;padding-top: 6px;padding-left: 10px;">
+													<label class="custom-control-label" for="actual">' . $lang['753'] . '</label>
+													<input class="form-check-input" type="checkbox" name="actual" id="actual">
+												</div>
+												<div style="float: left;padding-top: 6px;padding-left: 10px;">
+													<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
+													<div style="float: right;padding-left: 10px;">
+														<select name="localAgregar" id="localAgregar" onChange="loadVisitanteAgregar()"></select>
+													</div>
+												</div>
+												<div style="float: left;padding-top: 6px;padding-left: 10px;">
+													<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
+													<div style="float: right;padding-left: 10px;">
+														<select name="visitanteAgregar" id="visitanteAgregar">
+															<option value="NULL">' . $lang['654'] . '</option>
+														</select>
+													</div>
+												</div>
+												<div style="float: left;padding-left: 10px;">
+													<button type="button" class="btn btn-primary" onClick="agregarJuego(\'' . $row["Fecha"] . '\', ' . $Season . ', ' . $Week . ', $(\'#localAgregar\').val(), $(\'#visitanteAgregar\').val());" >' . $lang['664'] . '</button>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr><script>loadVisitanteAgregar();</script>';
+								
+				$sqlcat = "and a.Fuerza = $Category";
+				if($vs == 1){
+					$sqlcat = "";
+				}
+			    $sqloneperweek = "";				
+			    $sqloneperweekcond = "";				
+				if($Config->unjuegosemanal == 1){
+    			    $sqloneperweek = "left outer join (
+    									select j.Local_ID as Equipo_ID
+    									from  $schema.Juegos as j 
+    										join $schema.Jornada as jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin
+    									where jo.Jornada_ID = $Week
+    									UNION
+    									select j.Visitante_ID as Equipo_ID
+    									from  $schema.Juegos as j 
+    										join $schema.Jornada as jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin
+    									where jo.Jornada_ID = $Week) b on a.Equipo_ID = b.Equipo_ID";				
+    				$sqloneperweekcond = "and b.Equipo_ID is null";
+				}
+				$sql33 = "SELECT distinct a.Equipo_ID, 
+								Equipo_DESC 
+						 FROM $schema.Equipos a
+						$sqloneperweek
+						 where Torneo_ID = $Season 
+							and Equipo_Desc <> 'NA' 
+							and Activo = 1 $sqlcat
+							$sqloneperweekcond
+						 order by 2 asc;";
+				$result3 = $Config->query($sql33);
+				if ($result3->num_rows > 0) {
+					
+				}
 					
 				$sqlcat = "and a.Fuerza = $Category";
 				if($vs == 1){

@@ -78,20 +78,10 @@
 											<th scope="col" class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">' . $lang['609']  . ' ' . $row1["Fecha_Inicio"] . ' ' . $lang['610'] . ' ' . $row1["Fecha_Fin"] . '</th>';
 					$htmlWeek .= '		</thead>';
 					$htmlWeek .= '		<tbody>';
-					$htmlWeek .= '<tr>
-									<td scope="row">
-										<div class="d-flex px-2 py-1">
-											<div style="width: 100%;text-align: left;padding-right: 3px;padding-top: 6px;">
-												<div style="float: left;padding-top: 6px;padding-left: 10px;">
-													<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
-													<div style="float: right;padding-left: 10px;">
-														<select name="localAgregar" id="localAgregar" onChange="loadVisitanteAgregar($(\'#localAgregar  option:selected\').val())">';
-					
-					$sqlcat = "and Fuerza = $Category";
-					if($vs == 1){
-						$sqlcat = "";
-					}
-					
+					$sqlcata = "and a.Fuerza = $Category";
+				if($vs == 1){
+					$sqlcata = "";
+				}
 			    $sqloneperweek = "";				
 			    $sqloneperweekcond = "";				
 				if($Config->unjuegosemanal == 1){
@@ -107,43 +97,114 @@
     									where jo.Jornada_ID = $Week) b on a.Equipo_ID = b.Equipo_ID";				
     				$sqloneperweekcond = "and b.Equipo_ID is null";
 				}
-				$sql33 = "SELECT a.Equipo_ID, 
+				$sql33 = "	SELECT a.Equipo_ID, 
 								Equipo_DESC 
-						 FROM $schema.Equipos a
-						$sqloneperweek
-						 where Torneo_ID = $Season 
-							and Equipo_Desc <> 'NA' 
-							and Activo = 1 $sqlcat
-							$sqloneperweekcon
-						 order by 2 asc;";
-				$result3 = $Config->query($sql33);
-					if ($result3->num_rows > 0) {
-						// output data of each row
-						while($row3 = $result3->fetch_assoc()) {
-								$htmlWeek .= "<option value='" . $row3["Equipo_ID"] . "'>" . $row3["Equipo_DESC"] . "</option>";
-						}
+							FROM $schema.Equipos a
+							$sqloneperweek
+							where Torneo_ID = $Season 
+								and Equipo_Desc <> 'NA' 
+								and Activo = 1 $sqlcata
+								$sqloneperweekcond
+							order by 2 asc;";
+						 
+				$sql34 = "	SELECT c.Categoria_ID, c.Categoria_DESC, e.Equipo_ID, 
+								e.Equipo_DESC 
+							FROM $schema.Equipos e
+								join $schema.Categorias c on e.Fuerza = c.Categoria_ID and c.Torneo_ID = $Season
+							where e.Torneo_ID = $Season 
+							and e.Equipo_Desc <> 'NA' 
+							and e.Activo = 1
+							order by c.Categoria_DESC, e.Equipo_DESC asc;";
+				$sql35 = "SELECT Categoria_ID, Categoria_DESC FROM $schema.Categorias WHERE Torneo_ID = $Season ORDER BY Categoria_Orden, Categoria_DESC";
+				$optsCatFilterHtml = '<option value="0"' . ($vs == 1 ? ' selected' : '') . '>' . $lang['762'] . '</option>';
+				$resultCatA = $Config->query($sql35);
+				if ($resultCatA && $resultCatA->num_rows > 0) {
+					while ($rowCatA = $resultCatA->fetch_assoc()) {
+						$selCatA = ($vs != 1 && (int)$rowCatA['Categoria_ID'] === (int)$Category) ? ' selected' : '';
+						$optsCatFilterHtml .= "<option value='" . $rowCatA["Categoria_ID"] . "'" . $selCatA . ">" . $rowCatA["Categoria_DESC"] . "</option>";
 					}
-					
-						$htmlWeek .= '					</select>
-													</div>
-												</div>
+				}
+				
+					$htmlWeek .= '<tr>
+									<td scope="row" colspan="7">
+										<div class="d-flex px-2 py-1">
+											<div style="width: 100%;text-align: left;padding-right: 3px;padding-top: 6px;">
 												<div style="float: left;padding-top: 6px;padding-left: 10px;">
-													<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
-													<div style="float: right;padding-left: 10px;">
-														<select name="visitanteAgregar" id="visitanteAgregar">
-															<option value="NULL">' . $lang['654'] . '</option>
-														</select>
+													<div class="form-check input-group input-group-outline">
+														<label class="custom-control-label">' . $lang['675'] . '</label>
+														<input type="checkbox" id="amistoso" name="amistoso" value="0" class="form-check-input" style="border-radius: 0.35rem" onClick="$(\'#amistosos\').toggle();$(\'#normal\').toggle();"> 
+													</div>
+												</div>	
+												<div id="normal">
+													<div style="float: left;padding-top: 6px;padding-left: 10px;">
+														<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
+														<div style="float: right;padding-left: 10px;">
+															<select name="localAgregar" id="localAgregar" onChange="loadVisitanteAgregar($(\'#localAgregar  option:selected\').val())">';
+				$result3 = $Config->query($sql33);
+				if ($result3->num_rows > 0) {// output data of each row
+					while($row3 = $result3->fetch_assoc()) {
+							$htmlWeek .= "<option value='" . $row3["Equipo_ID"] . "'>" . $row3["Equipo_DESC"] . "</option>";
+					}
+				}
+						$htmlWeek .= '						</select>
+														</div>
+													</div>
+													<div style="float: left;padding-top: 6px;padding-left: 10px;">
+														<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
+														<div style="float: right;padding-left: 10px;">
+															<select name="visitanteAgregar" id="visitanteAgregar">
+																<option value="NULL">' . $lang['654'] . '</option>
+															</select>
+														</div>
+													</div>
+													<div style="float: left;padding-left: 10px;">
+														<button type="button" class="btn btn-primary" onClick="agregarJuego(\'' . $row["Fecha"] . '\', ' . $Season . ', ' . $Week . ', $(\'#localAgregar\').val(), $(\'#visitanteAgregar\').val());" >' . $lang['664'] . '</button>
 													</div>
 												</div>
-												<div style="float: left;padding-left: 10px;">
-													<button type="button" class="btn btn-primary" onClick="agregarJuego(\'' . $row1["Fecha"] . '\', ' . $Season . ', ' . $Week . ', $(\'#localAgregar\').val(), $(\'#visitanteAgregar\').val());" >' . $lang['664'] . '</button>
+												<div id="amistosos" style="display: none;">
+													<select id="localAgregarA_source" style="display:none">';
+				$result3 = $Config->query($sql34);
+				$optsAgregarA = '';
+				if ($result3->num_rows > 0) {
+					while ($row3 = $result3->fetch_assoc()) {
+						$optsAgregarA .= "<option value='" . $row3["Equipo_ID"] . "' data-categoria='" . $row3["Categoria_ID"] . "'>" . $row3["Categoria_DESC"] . "-" . $row3["Equipo_DESC"] . "</option>";
+					}
+				}
+				$htmlWeek .= $optsAgregarA . '</select>
+													<div style="float: left;padding-top: 6px;padding-left: 10px;clear: both;">
+														<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
+														<div style="float: left;padding-left: 10px;">
+															<div style="font-size: 11px;margin-bottom: 2px;">' . $lang['953'] . '</div>
+															<select id="filtroCategoriaLocalAgregarA" onChange="aplicarFiltroLocalAgregarA();">' . $optsCatFilterHtml . '</select>
+															<div style="margin-top: 6px;">
+																<select name="localAgregarA" id="localAgregarA" onChange="loadVisitanteAgregarA()"></select>
+															</div>
+														</div>
+													</div>
+													<div style="float: left;padding-top: 6px;padding-left: 10px;">
+														<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
+														<div style="float: left;padding-left: 10px;">
+															<div style="font-size: 11px;margin-bottom: 2px;">' . $lang['953'] . '</div>
+															<select id="filtroCategoriaVisitanteAgregarA" onChange="aplicarFiltroVisitanteAgregarA();">' . $optsCatFilterHtml . '</select>
+															<div style="margin-top: 6px;">
+																<select name="visitanteAgregarA" id="visitanteAgregarA">
+																	<option value="NULL">' . $lang['654'] . '</option>
+																</select>
+															</div>
+														</div>
+													</div>
+													<div style="float: left;padding-left: 10px;">
+														<button type="button" class="btn btn-primary" onClick="agregarJuegoA(\'' . $row["Fecha"] . '\', ' . $Season . ', ' . $Week . ', $(\'#localAgregarA\').val(), $(\'#visitanteAgregarA\').val());" >' . $lang['664'] . '</button>
+													</div>
 												</div>
 											</div>
 										</div>
 									</td>
-								</tr>';
+								</tr>
+								<script>loadVisitanteAgregar($(\'#localAgregar  option:selected\').val());</script>
+								<script>inicializarAgregarA();</script>';
 					$htmlWeek .= '</tbody>';
-					$htmlWeek .= '</table><script>loadVisitanteAgregar($(\'#localAgregar  option:selected\').val());</script>';
+					$htmlWeek .= '</table>';
 					$htmlWeek .= '</div>';
 					$htmlWeek .= '</div>';
 				

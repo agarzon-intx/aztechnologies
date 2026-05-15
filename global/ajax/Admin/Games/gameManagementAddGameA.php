@@ -42,7 +42,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataColorAnswer' => 'Error');
 		
-	$sql = "CALL $schema.GameCreate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $Home, $Away, $Week, $Season, '$Date', 0,@out);";
+	$sql = "CALL $schema.GameCreate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $Home, $Away, $Week, $Season, '$Date', 10, @out);";
 
 	$Connection = $Config->connectAdmin();
 	$result = $Connection->query($sql);
