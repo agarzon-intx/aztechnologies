@@ -1,7 +1,11 @@
         function loadScript() {
+            var k = (typeof window !== 'undefined' && window.__GOOGLE_MAPS_API_KEY) ? String(window.__GOOGLE_MAPS_API_KEY).trim() : '';
+            if (!k) {
+                return;
+            }
             var script = document.createElement('script');
             script.type = 'text/javascript';
-            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDYiDvsZGN5SeQjZIuwO1KwyW6BTkyuNBc&' +
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(k) + '&' +
                     'callback=initialize';
             document.body.appendChild(script);
         }

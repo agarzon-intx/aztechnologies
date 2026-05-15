@@ -208,7 +208,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				
 				
 				<script type="text/javascript">
-					
+				(function(){
+					var tries = 0;
+					function initFieldMapEdit(){
+					if (typeof google === "undefined" || !google.maps) {
+						tries++;
+						if (typeof window !== "undefined" && window.__GOOGLE_MAPS_API_KEY && tries < 200) {
+							setTimeout(initFieldMapEdit, 100);
+						}
+						return;
+					}
 					var map;
 					var geocoder;
 					var marker;
@@ -272,6 +281,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							}
 						});
 					}
+					}
+					initFieldMapEdit();
+				})();
 				</script>';
 					
 	$retunData = array('status' => '1', 'message' => 'Success.', 'dataFieldEdit' => $htmlFields);

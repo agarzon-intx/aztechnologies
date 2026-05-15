@@ -20,6 +20,15 @@ require_once("Configuration.php");
 $Config = new Configuration();
 $fgmembersite = new FGMembersite($Config);
 
+$googleMapsBrowserKey = '';
+$__gmkFile = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.local' . DIRECTORY_SEPARATOR . 'google_maps_api_key';
+if (is_readable($__gmkFile)) {
+	$googleMapsBrowserKey = trim((string) file_get_contents($__gmkFile));
+}
+if ($googleMapsBrowserKey === '' && getenv('GOOGLE_MAPS_API_KEY')) {
+	$googleMapsBrowserKey = trim((string) getenv('GOOGLE_MAPS_API_KEY'));
+}
+
 //Provide your site name here
 $fgmembersite->SetWebsiteName($Config->getWebSite());
 
