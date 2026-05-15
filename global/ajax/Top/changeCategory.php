@@ -200,6 +200,7 @@ $schema = $Config->getSchema();
         								l.Extra_Local ExtraEquipo
         						from $schema.Equipos e
         							left outer join $schema.Juegos l on e.Equipo_ID = l.Local_ID and l.Torneo_ID = $Season
+														  and l.Jugado <> 10
                                     join $schema.Categorias lc on e.Fuerza = lc.Categoria_ID
                                     left outer join $schema.Jornada lj on l.Jornada_ID = lj.Jornada_ID 
                                                                                 and lj.Jornada_Type = 1 
@@ -259,6 +260,7 @@ $schema = $Config->getSchema();
         							as JP, v.Extra_Visitante ExtraEquipo
         						from $schema.Equipos e
                                 	left outer join $schema.Juegos v on e.Equipo_ID = v.Visitante_ID and v.Torneo_ID = $Season
+														  and v.Jugado <> 10
                                     join $schema.Categorias vc on e.Fuerza = vc.Categoria_ID
                                     left outer join $schema.Jornada vj on v.Jornada_ID = vj.Jornada_ID 
                                                                                         and vj.Jornada_Type = 1 

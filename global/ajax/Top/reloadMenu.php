@@ -688,6 +688,7 @@ $schema = $Config->getSchema();
 						l.Extra_Local ExtraEquipo
 				from $schema.Equipos e
 					left outer join $schema.Juegos l on e.Equipo_ID = l.Local_ID and l.Torneo_ID = $Season
+														  and l.Jugado <> 10
 				where e.Fuerza = $Category and e.Torneo_ID = $Season and e.Equipo_ID > 0 and Activo = 1
 				UNION
 				select distinct concat(e.Torneo_ID,'-', e.Equipo_ID) Logo, 
@@ -732,6 +733,7 @@ $schema = $Config->getSchema();
 					as JP, v.Extra_Visitante ExtraEquipo
 				from $schema.Equipos e
 					left outer join $schema.Juegos v on e.Equipo_ID = v.Visitante_ID and v.Torneo_ID = $Season
+														  and v.Jugado <> 10
 				where e.Fuerza = $Category and e.Torneo_ID = $Season  and e.Equipo_ID > 0 and Activo = 1) j
 		where ifnull(Jornada_ID, -2) <= (select ifnull(max(Jornada_ID),0)-2 from $schema.Jornada where Torneo_ID = $Season)
 			Group by j.Equipo_ID, Equipo_DESC, Fuerza) jj

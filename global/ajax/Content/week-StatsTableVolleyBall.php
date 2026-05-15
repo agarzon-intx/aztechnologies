@@ -157,6 +157,7 @@
                                         				  and e.Torneo_ID = $Season 
                                         				  and l.Torneo_ID = $Season 
                                         				  and Equipo_ID > 0
+														  and l.Jugado <> 10
                                             join $schema.Categorias lc on e.Fuerza = lc.Categoria_ID
                                             join $schema.Jornada lj on l.Jornada_ID = lj.Jornada_ID 
                                                                                         and lj.Jornada_Type = 1 
@@ -215,6 +216,7 @@
 																						and e.Torneo_ID = $Season 
 																						and v.Torneo_ID = $Season
 																						and Equipo_ID > 0
+																						and v.Jugado <> 10
                                             join $schema.Categorias vc on e.Fuerza = vc.Categoria_ID
                                             join $schema.Jornada vj on v.Jornada_ID = vj.Jornada_ID 
                                                                                         and vj.Jornada_Type = 1 
