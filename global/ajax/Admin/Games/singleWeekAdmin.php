@@ -175,7 +175,7 @@
 				$optsAgregarA = '';
 				if ($result3->num_rows > 0) {
 					while ($row3 = $result3->fetch_assoc()) {
-						$optsAgregarA .= "<option value='" . $row3["Equipo_ID"] . "' data-categoria='" . $row3["Categoria_ID"] . "'>" . $row3["Categoria_DESC"] . "-" . $row3["Equipo_DESC"] . "</option>";
+						$optsAgregarA .= "<option value='" . $row3["Equipo_ID"] . "' data-categoria='" . $row3["Categoria_ID"] . "'>" . $row3["Equipo_DESC"] . "</option>";
 					}
 				}
 				$htmlWeek .= $optsAgregarA . '</select>
