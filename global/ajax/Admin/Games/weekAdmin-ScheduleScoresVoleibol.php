@@ -441,11 +441,19 @@
 							order by c.Categoria_DESC, e.Equipo_DESC asc;";
 				$sql35 = "SELECT Categoria_ID, Categoria_DESC FROM $schema.Categorias WHERE Torneo_ID = $Season ORDER BY Categoria_Orden, Categoria_DESC";
 				$filtroCatDefaultAllA = ($vs == 1 || $Type == 1);
-				$optsCatFilterHtml = '<option value="0"' . ($filtroCatDefaultAllA ? ' selected' : '') . '>' . $lang['762'] . '</option>';
+				$optsCatFilterHtml = '';
 				$resultCatA = $Config->query($sql35);
+				$catIdx = 0;
 				if ($resultCatA && $resultCatA->num_rows > 0) {
 					while ($rowCatA = $resultCatA->fetch_assoc()) {
-						$selCatA = (!$filtroCatDefaultAllA && (int)$rowCatA['Categoria_ID'] === (int)$Category) ? ' selected' : '';
+						if (!$filtroCatDefaultAllA && (int)$rowCatA['Categoria_ID'] === (int)$Category) {
+							$selCatA = ' selected';
+						} elseif ($filtroCatDefaultAllA && $catIdx === 0) {
+							$selCatA = ' selected';
+						} else {
+							$selCatA = '';
+						}
+						$catIdx++;
 						$optsCatFilterHtml .= "<option value='" . $rowCatA["Categoria_ID"] . "'" . $selCatA . ">" . $rowCatA["Categoria_DESC"] . "</option>";
 					}
 				}
@@ -496,7 +504,7 @@
 					}
 				}
 				$htmlWeek .= $optsAgregarA . '</select>
-													<div style="float: left;padding-top: 6px;padding-left: 10px;clear: both;">
+													<div style="float: left;padding-top: 6px;padding-left: 10px;">
 														<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
 														<div style="float: left;padding-left: 10px;">
 															<div style="font-size: 11px;margin-bottom: 2px;">' . $lang['953'] . '</div>
@@ -513,7 +521,6 @@
 															<select id="filtroCategoriaVisitanteAgregarA" onChange="aplicarFiltroVisitanteAgregarA();">' . $optsCatFilterHtml . '</select>
 															<div style="margin-top: 6px;">
 																<select name="visitanteAgregarA" id="visitanteAgregarA">
-																	<option value="NULL">' . $lang['654'] . '</option>
 																</select>
 															</div>
 														</div>

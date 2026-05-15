@@ -63,7 +63,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			dst.innerHTML = '';
 			for (var i = 0; i < src.options.length; i++) {
 				var o = src.options[i];
-				if (cat === '0' || String(o.getAttribute('data-categoria')) === cat) {
+				if (String(o.getAttribute('data-categoria')) === String(cat)) {
 					dst.appendChild(o.cloneNode(true));
 				}
 			}
@@ -90,18 +90,20 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 			var catV = filV.value;
 			var localId = String(first.value);
-			second.innerHTML = '<option value=\"NULL\">" . $lang['654'] . "</option>';
+			second.innerHTML = '';
 			for (var i = 0; i < src.options.length; i++) {
 				var o = src.options[i];
 				if (String(o.value) === localId) {
 					continue;
 				}
-				if (catV !== '0' && String(o.getAttribute('data-categoria')) !== catV) {
+				if (String(o.getAttribute('data-categoria')) !== String(catV)) {
 					continue;
 				}
 				second.appendChild(o.cloneNode(true));
 			}
-			second.selectedIndex = 0;
+			if (second.options.length > 0) {
+				second.selectedIndex = 0;
+			}
 		}
 		
 		function inicializarAgregarA(){
