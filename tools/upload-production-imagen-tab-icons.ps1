@@ -37,9 +37,18 @@ foreach ($s in $sites) {
 	foreach ($f in $files) {
 		$local = Join-Path $localDir $f
 		$remote = "${u}@${h}:$productionBase/$s/imagenes/$f"
-		& $pscp -batch -pw $pw $local $remote
-		if ($LASTEXITCODE -ne 0) { $fail += "${s}/${f}" }
-		else { Write-Host "OK $s $f" }
+		$ok = $false
+		for ($attempt = 1; $attempt -le 3; $attempt++) {
+			if ($attempt -gt 1) { Start-Sleep -Seconds 6 }
+			& $pscp -batch -pw $pw $local $remote
+			if ($LASTEXITCODE -eq 0) {
+				$ok = $true
+				Write-Host "OK $s $f"
+				break
+			}
+		}
+		if (-not $ok) { $fail += "${s}/${f}" }
+		Start-Sleep -Seconds 2
 	}
 }
 if ($fail.Count -gt 0) {
