@@ -183,6 +183,28 @@ $alto  = 85.6; // alto PVC
 				
 				
 				*/
+				
+				try{
+					$pdf->SetAlpha(1);
+					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'PNG');
+				}catch(Exception $e){
+					try{
+    					$pdf->SetAlpha(1);
+    					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'JPG');
+    				}catch(Exception $e){
+    					try{
+        					$pdf->SetAlpha(1);
+        					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'JPEG');
+        				}catch(Exception $e){
+        					try{
+            					$pdf->SetAlpha(1);
+            					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'GIF');
+            				}catch(Exception $e){
+            					echo $e->getMessage();
+            				}
+        				}
+    				}
+				}
 				try{
 					$pdf->SetAlpha(1);
 					
