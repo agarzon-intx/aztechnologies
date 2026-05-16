@@ -286,8 +286,8 @@
 	$lang['450'] = 'Footer';
 	$lang['451'] = 'Alert Template';
 	$lang['452'] = 'General';
-	$lang['452-1'] = 'Images';
-	$lang['453'] = 'Language';
+	$lang['452-1'] = 'images';
+	$lang['452-2'] = 'Logo and colors are under the General tab; additional image tools can be added here.';
 	$lang['454'] = 'Coup/League';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penalties (Tie)';

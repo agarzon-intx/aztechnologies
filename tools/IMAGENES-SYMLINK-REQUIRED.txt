@@ -1,0 +1,40 @@
+================================================================================
+PERMANENT DEPLOYMENT RULE: imagenes MUST BE A SYMBOLIC LINK (Linux / cPanel)
+================================================================================
+
+Why:
+  Git stores each site's "imagenes" path as a normal directory in the index.
+  Plain git archive + tar, and most FTP clients, therefore create a REAL folder
+  on the server. That duplicates disk and drifts from Production assets.
+
+Automated deploy (recommended):
+  tools/deploy-development-sftp.ps1 now:
+    1) Excludes every site's imagenes/ tree from the git archive (nothing uploaded).
+    2) After tar extract, runs on the server for each site:
+         rm -rf <DEV>/<site>/imagenes && ln -s <PROD>/<site>/imagenes <DEV>/<site>/imagenes
+  Required in .local/sftp-development.env:
+    SFTP_REMOTE_PATH      = Development root (parent of elite/, huskies/, ...)
+    SFTP_PRODUCTION_BASE  = Production root (same layout: parent of elite/, ...)
+
+Manual FTP / other clients:
+  Do NOT upload each site's imagenes/ folder. After upload, on the server run
+  the same rm + ln -s per site so imagenes points at Production.
+
+One-off example (adjust paths):
+
+  PROD=/home1/aztechn1/public_html/Production/voleibalmetepec
+  DEV=/home1/aztechn1/public_html/Development/voleibalmetepec
+  cd "$DEV"
+  rm -rf imagenes
+  ln -s "$PROD/imagenes" imagenes
+  ls -la imagenes
+
+Repeat for every site (elite, huskies, lidep, nuestrodeporte, vollidep,
+voleibalmetepec), each pointing to THAT site's Production imagenes folder.
+
+Windows / Laragon:
+  Use a junction or directory symlink to the canonical folder you treat as
+  Production for local work, or keep a local copy only for dev — the rule
+  above applies to the Linux FTP/cPanel deployment layout.
+
+See also: tools/deploy-development-sftp.ps1

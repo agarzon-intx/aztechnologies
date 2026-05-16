@@ -286,8 +286,8 @@
 	$lang['450'] = 'Footer';
 	$lang['451'] = 'Aviso Borrador';
 	$lang['452'] = 'General';
-	$lang['452-1'] = 'Imagenes';
-	$lang['453'] = 'Lenguaje';
+	$lang['452-1'] = 'imagenes';
+	$lang['452-2'] = 'El logo y los colores están en la pestaña General; aquí se pueden añadir más herramientas de imágenes.';
 	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penales (Empate)';

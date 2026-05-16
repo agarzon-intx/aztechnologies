@@ -64,9 +64,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 									<img src="./imagenes/stats.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['452'] . '
 								</a>
 							</li>
-							<li class="nav-item" id="generalli">
-								<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#general" role="tab" aria-controls="generalli" aria-selected="false">
-									<img src="./imagenes/stats.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['452-1'] . '
+							<li class="nav-item" id="configimagesli">
+								<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#configimages" role="tab" aria-controls="configimagesli" aria-selected="false">
+									<img src="https://img.magnific.com/vector-gratis/lista-verificacion-lapices-marcas-verificacion_779267-3440.jpg?semt=ais_hybrid&amp;w=740&amp;q=80" alt="" width="20" height="20" style="width: 20px; height: 20px; object-fit: contain; vertical-align: middle;" loading="lazy" referrerpolicy="no-referrer"/>  ' . $lang['452-1'] . '
 								</a>
 							</li>
 						</ul>
@@ -95,6 +95,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$htmlConfig .= '<div id="general" class="tabla" style="display: none;height: auto;">';
 	require 'configManagementGeneral.php';
 	$htmlConfig .= '</div>';            
+	/*-----------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------------------*/
+
+	/*-----------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------------------*/
+	$htmlConfig .= '<div id="configimages" class="tabla" style="display: none;height: auto;">';
+	require 'configManagementImages.php';
+	$htmlConfig .= '</div>';
 	/*-----------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------------------*/
 
