@@ -1,7 +1,0 @@
-# Copy to: ../../.local/google_maps_api_key (project root .local folder)
-# Put the browser (Maps JavaScript) API key on a single line. Do not commit that file.
-# Alternative: set environment variable GOOGLE_MAPS_API_KEY on the server.
-#
-# Advanced markers require a Map ID (Google Cloud Console > Map Management).
-# Optional: ../../.local/google_maps_map_id (single line) or env GOOGLE_MAPS_MAP_ID.
-# If unset, the app uses DEMO_MAP_ID (fine for local testing; use your own ID in production).
