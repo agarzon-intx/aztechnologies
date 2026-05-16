@@ -17,13 +17,17 @@ if (!defined('APP_SITE_ROOT')) {
 }
 	require("membersite_config.php");
 	$schema = $Config->getSchema();
-	
-	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+
+	$__langCk = $Config->getAlias() . 'language';
+	if (!isset($_COOKIE[$__langCk]) || $_COOKIE[$__langCk] === '') {
+		$Config->LoadLanguage();
+		$__lang = $Config->lan;
+	} else {
+		$__lang = $_COOKIE[$__langCk];
+	}
+	include 'lang.' . $__lang . '.php';
 
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
-    
-	$Season = $_COOKIE[$Config->getAlias() . 'season'];
-	$Category = $_COOKIE[$Config->getAlias() . 'category'];
 
     $htmlAlert = '';
 

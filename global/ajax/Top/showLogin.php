@@ -22,8 +22,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	require("membersite_config.php");
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('showLogin.php');
-	
-	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+
+	$__langCk = $Config->getAlias() . 'language';
+	if (!isset($_COOKIE[$__langCk]) || $_COOKIE[$__langCk] === '') {
+		$Config->LoadLanguage();
+		$__lang = $Config->lan;
+	} else {
+		$__lang = $_COOKIE[$__langCk];
+	}
+	include 'lang.' . $__lang . '.php';
 
 	$key = $Config->getAlias() . 'CSRFtoken';
 	$CSRFtoken = (isset($_SESSION[$key]) && is_string($_SESSION[$key])) ? $_SESSION[$key] : '';
