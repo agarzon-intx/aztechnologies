@@ -226,12 +226,23 @@ class Configuration
      */
     public function connect()
     {
+        if (!is_array($this->config)) {
+            return null;
+        }
         if (!isset($this->connection)) {
-            // Try and connect to the database
-            $connection = new mysqli($this->config['servername'], $this->config['username'], $this->config['password'], $this->config['schema']);
-            // If connection was not successful
-            if ($connection->connect_error || mysqli_connect_error()) {
-                // Handle error - notify administrator, log to a file, show an error screen, etc.
+            $server = $this->config['servername'] ?? '';
+            $user = $this->config['username'] ?? '';
+            $pass = $this->config['password'] ?? '';
+            $db = $this->config['schema'] ?? '';
+            if ($server === '' || $user === '' || $db === '') {
+                return null;
+            }
+            try {
+                $connection = new mysqli($server, $user, $pass, $db);
+            } catch (\Throwable $e) {
+                return null;
+            }
+            if ($connection->connect_error) {
                 return null;
             }
             $this->connection = $connection;
@@ -246,12 +257,23 @@ class Configuration
      */
     public function connectAdmin()
     {
+        if (!is_array($this->config)) {
+            return null;
+        }
         if (!isset($this->connectiona)) {
-            // Try and connect to the database
-            $connectiona = new mysqli($this->config['servername'], $this->config['usernamea'], $this->config['passworda'], $this->config['schemaa']);
-            // If connection was not successful
-            if ($connectiona->connect_error || mysqli_connect_error()) {
-                // Handle error - notify administrator, log to a file, show an error screen, etc.
+            $server = $this->config['servername'] ?? '';
+            $user = $this->config['usernamea'] ?? '';
+            $pass = $this->config['passworda'] ?? '';
+            $db = $this->config['schemaa'] ?? '';
+            if ($server === '' || $user === '' || $db === '') {
+                return null;
+            }
+            try {
+                $connectiona = new mysqli($server, $user, $pass, $db);
+            } catch (\Throwable $e) {
+                return null;
+            }
+            if ($connectiona->connect_error) {
                 return null;
             }
             $this->connectiona = $connectiona;
@@ -266,13 +288,25 @@ class Configuration
      */
     public function connectFG()
     {
-		$connection = mysqli_connect($this->config['servername'], $this->config['usernamea'], $this->config['passworda'], $this->config['schemaa']);
-		// If connection was not successful
-		if ($connection->connect_error || mysqli_connect_error()) {
-			// Handle error - notify administrator, log to a file, show an error screen, etc.
-			return false;
-		}
-		return $connection;
+        if (!is_array($this->config)) {
+            return false;
+        }
+        $server = $this->config['servername'] ?? '';
+        $user = $this->config['usernamea'] ?? '';
+        $pass = $this->config['passworda'] ?? '';
+        $db = $this->config['schemaa'] ?? '';
+        if ($server === '' || $user === '' || $db === '') {
+            return false;
+        }
+        try {
+            $connection = mysqli_connect($server, $user, $pass, $db);
+        } catch (\Throwable $e) {
+            return false;
+        }
+        if ($connection === false || $connection->connect_error) {
+            return false;
+        }
+        return $connection;
     }
 
     /**
@@ -295,8 +329,10 @@ class Configuration
                     FROM " . $this->config["schema"] . ".Lenguaje 
                     WHERE Lenguaje_ID = '" . $_COOKIE[$this->getAlias() . 'language'] . "'";
             $result = $connection->query($sql);
-            while ($row2 = $result->fetch_assoc()) {
-                $connection->query("SET lc_time_names = '" . $row2["LenguajeDB"] . "';");
+            if ($result) {
+                while ($row2 = $result->fetch_assoc()) {
+                    $connection->query("SET lc_time_names = '" . $row2["LenguajeDB"] . "';");
+                }
             }
         }
 
@@ -327,8 +363,10 @@ class Configuration
                     FROM " . $this->config["schema"] . ".Lenguaje 
                     WHERE Lenguaje_ID = '" . $_COOKIE[$this->getAlias() . 'language'] . "'";
             $result = $connection->query($sql);
-            while ($row2 = $result->fetch_assoc()) {
-                $connection->query("SET lc_time_names = '" . $row2["LenguajeDB"] . "';");
+            if ($result) {
+                while ($row2 = $result->fetch_assoc()) {
+                    $connection->query("SET lc_time_names = '" . $row2["LenguajeDB"] . "';");
+                }
             }
         }
 
@@ -344,35 +382,39 @@ class Configuration
      */
     public function Close()
     {
-        $this->connection->Close();
+        if (isset($this->connection) && $this->connection instanceof mysqli) {
+            $this->connection->close();
+        }
     }
 
         public function getPath(){
-                return $this->config["path"];
+                return is_array($this->config) ? ($this->config["path"] ?? '') : '';
         }
 
  	public function getSport(){
-		return $this->config["sport"];
+		return is_array($this->config) ? ($this->config["sport"] ?? '') : '';
 	}
 
 	public function getSchema(){
-		return $this->config["schema"];
+		return is_array($this->config) ? ($this->config["schema"] ?? '') : '';
 	}
 	
 	public function getAlias(){
-		return $this->config["alias"];
+		return is_array($this->config) ? ($this->config["alias"] ?? '') : '';
 	}
 	
     public function getAdminEmail(){
-		return $this->config["adminemail"];
+		return is_array($this->config) ? ($this->config["adminemail"] ?? '') : '';
 	}
 	
     public function getWebSite(){
-		return $this->config["website"];
+		return is_array($this->config) ? ($this->config["website"] ?? '') : '';
 	}
 	
 	public function getEmailConnectionInfo(){
-	    //print_r($this->config);
+	    if (!is_array($this->config)) {
+	        return;
+	    }
 		$this->MAILSMTPDebug = $this->config["MAILSMTPDebug"];
 		$this->MAILSMTPAuth = $this->config["MAILSMTPAuth"];
 		$this->MAILSMTPSecure = $this->config["MAILSMTPSecure"];
@@ -412,6 +454,9 @@ class Configuration
     public function error()
     {
         $connection = $this->connect();
+        if (!$connection) {
+            return '';
+        }
         return $connection->error;
     }
 
@@ -424,6 +469,9 @@ class Configuration
     public function quote($value)
     {
         $connection = $this->connect();
+        if (!$connection) {
+            return "''";
+        }
         return "'" . $connection->real_escape_string($value) . "'";
     }
 
@@ -464,7 +512,14 @@ class Configuration
             }
             throw new RuntimeException('Unable to locate ini/config.ini (DOCUMENT_ROOT / SCRIPT_FILENAME / APP_INI_FILE).');
         }
-        $this->config = parse_ini_file($iniFile);
+        $parsed = parse_ini_file($iniFile);
+        if ($parsed === false) {
+            if ($tmp !== false) {
+                chdir($tmp);
+            }
+            throw new RuntimeException('Failed to parse ini file (check comment lines use ; not #): ' . $iniFile);
+        }
+        $this->config = $parsed;
         if ($tmp !== false) {
             chdir($tmp);
         }

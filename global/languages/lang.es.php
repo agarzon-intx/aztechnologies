@@ -286,6 +286,7 @@
 	$lang['450'] = 'Footer';
 	$lang['451'] = 'Aviso Borrador';
 	$lang['452'] = 'General';
+	$lang['452-1'] = 'Imagenes';
 	$lang['453'] = 'Lenguaje';
 	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';

@@ -26,9 +26,8 @@ $sql2 = "	SELECT a.*, concat(a.Torneo_ID,'-', a.Equipo_ID) newLogo, c.Campo_DESC
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				left outer join $schema.Categorias d on a.fuerza = d.Categoria_ID and d.Torneo_ID = $Season
 			WHERE a.Torneo_ID = $Season and Fuerza = $Category
-				and IFNULL(a.Activo, 0) = 1
+				and IFNULL(a.Activo, 0) <> 1
 			order by Equipo_DESC asc;";
-//echo $sql2;
 $result2 = $Config->query($sql2);
 if ($result2->num_rows > 0) {
 	while($row2 = $result2->fetch_assoc()) {
@@ -53,7 +52,7 @@ $htmlTeams .= '</tbody>';
 $htmlTeams .= '</table>';
 $htmlTeams .= '</div>';
 $htmlTeams .= '</div>';
-			
+
 
 $htmlTeams .= '</div>';
 ?>

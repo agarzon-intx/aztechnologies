@@ -83,7 +83,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}else{
 				$htmlCat .= '						<a class="btn bg-gradient-dark" data-bs-toggle="dropdown" id="navbarDropdownMenuLinkCat" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;" aria-expanded="false">' . $row2["Categoria_Desc"] . '</a>';
 			}
-			$Category = utf8_encode($row2["Categoria_ID"]);
+			$Category = (string) $row2["Categoria_ID"];
 		}
 	} else {
 	   $htmlCat .= "";

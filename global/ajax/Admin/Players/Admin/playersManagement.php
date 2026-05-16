@@ -45,7 +45,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								<div class="tablas" style="width:  100% !important;">
 									<div class="container-fluid py-0 px-0">
 										<div class="row">
-											<div class="justify-content-left d-flex px-0 py-0 col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6">
+											<div class="justify-content-left d-flex px-0 py-0 col-12 col-sm-12 col-md-6 col-lg-6 col-xl-6 col-xxl-6">
 												<div class="container-fluid py-0">
 													<div class="px-0 py-0">
 														<div class="nav-wrapper position-relative end-0">
@@ -71,7 +71,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 													<script>initNavs("config1");</script>
 												</div>
 											</div>
-											<div class="align-self-right col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6" style="text-align: right;">
+											<div class="align-self-right col-12 col-sm-12 col-md-6 col-lg-6 col-xl-6 col-xxl-6" style="text-align: right;">
 												<h4>' . $lang['903'] . '</h4>
 											</div>
 										</div>

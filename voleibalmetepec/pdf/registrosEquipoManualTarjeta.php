@@ -205,18 +205,18 @@ $alto  = 85.6; // alto PVC
         				}
     				}
 				}
-				try{
-					$pdf->SetAlpha(1);
+				//try{
+				//	$pdf->SetAlpha(1);
 					
                //     $pdf->Rotate(90, 40,40); // Gira 90 grados alrededor del punto (30,30)
 //$pdf->Image('logo.png', 25, 25, 20); // Imagen girada
-					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'PNG');    //Logo equipo
+				//	$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'PNG');    //Logo equipo
 					//$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3-18.7,$y+18.5+28.45,16.68, 16.68, 'PNG');    //Logo equipo
 				// $pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3-18.7,$y+54.5+28.45,15.68, 15.68, 'PNG');    //Logo equipo
 				//	$pdf->Rotate(5,$x+2,$y+4);
-				}catch(Exception $e){
-					echo $e;
-				}
+				//}catch(Exception $e){
+				//	echo $e;
+				//}
 			
 			//Categorias
 				//$pdf->SetXY($x+2-18.7,$y+28+6+15.66+2.75);  Anterior

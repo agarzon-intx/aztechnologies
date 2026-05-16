@@ -46,12 +46,12 @@ if (!defined('APP_SITE_ROOT')) {
 		if ($result->num_rows > 0) {
 			while($row2 = $result->fetch_assoc()) {
 				$alertlist .= '<li class="mb-2">
-									<a class="dropdown-item border-radius-md" onclick="loadAlert(' . utf8_encode($row2["Aviso_ID"]) . ');">
+									<a class="dropdown-item border-radius-md" onclick="loadAlert(' . (int) $row2["Aviso_ID"] . ');">
 										<div class="d-flex align-items-center py-1">
 											<span class="material-icons">email</span>
 											<div class="ms-2">
 												<h6 class="text-sm font-weight-normal my-auto">
-													' . utf8_encode($row2["Aviso_Titulo"]) . '
+													' . htmlspecialchars((string) $row2["Aviso_Titulo"], ENT_QUOTES, 'UTF-8') . '
 												</h6>
 											</div>
 										</div>

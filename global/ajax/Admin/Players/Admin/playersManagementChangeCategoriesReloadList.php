@@ -34,6 +34,7 @@ $schema = $Config->getSchema();
 	$CategoryRows = 0;
 	$htmlLogos = '';
 	$htmlLogosList = '';
+	$totCat = 0;
 	
 	$sql0 = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
@@ -41,7 +42,7 @@ $schema = $Config->getSchema();
 			Where a.Torneo_ID = $Season and Activo = 1
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql0);
-	if ($result->num_rows > 0) {
+	if ($result && $result->num_rows > 0) {
 		$totCat = $result->num_rows;
 	}
 	
@@ -51,19 +52,19 @@ $schema = $Config->getSchema();
 			Where a.Torneo_ID = $Season and a.Fuerza = $Category and Activo = 1
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql1);
-	if ($result->num_rows > 0) {
+	if ($result && $result->num_rows > 0) {
 		// output data of each row
 		$selected = false;	
 		while($row2 = $result->fetch_assoc()) {
 			if($totCat > 1){
-				$htmlCat .= '<a class="btn bg-gradient-dark dropdown-toggle" data-bs-toggle="dropdown" id="navbarDropdownMenuLinkCat" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;" aria-expanded="false">' . $row2["Categoria_Desc"] . '</a>';
+				$htmlCategories .= '<a class="btn bg-gradient-dark dropdown-toggle" data-bs-toggle="dropdown" id="navbarDropdownMenuLinkCat" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;" aria-expanded="false">' . $row2["Categoria_Desc"] . '</a>';
 			}else{
-				$htmlCat .= '<a class="btn bg-gradient-dark" data-bs-toggle="dropdown" id="navbarDropdownMenuLinkCat" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;" aria-expanded="false">' . $row2["Categoria_Desc"] . '</a>';
+				$htmlCategories .= '<a class="btn bg-gradient-dark" data-bs-toggle="dropdown" id="navbarDropdownMenuLinkCat" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;" aria-expanded="false">' . $row2["Categoria_Desc"] . '</a>';
 			}
-			$Category = utf8_encode($row2["Categoria_ID"]);
+			$Category = (string) $row2["Categoria_ID"];
 		}
 	} else {
-	   $htmlCat .= "";
+	   $htmlCategories .= "";
 	}
 	
 	$sql2 = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
@@ -72,21 +73,21 @@ $schema = $Config->getSchema();
 			Where a.Torneo_ID = $Season and a.Fuerza <> $Category and Activo = 1
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql2);
-	if ($result->num_rows > 0) {
+	if ($result && $result->num_rows > 0) {
 		// output data of each row
 		$selected = false;
-		$htmlCat .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCat">';
+		$htmlCategories .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkCat">';
 		while($row2 = $result->fetch_assoc()) {
-			$htmlCat .= '<li><a class="dropdown-item" onclick="playersManagementAdminCategoryShowReloadList(' . $row2["Categoria_ID"] . ')">' . $row2["Categoria_Desc"] . '</a></li>';
+			$htmlCategories .= '<li><a class="dropdown-item" onclick="playersManagementAdminCategoryShowReloadList(' . $row2["Categoria_ID"] . ')">' . $row2["Categoria_Desc"] . '</a></li>';
 		}
-		$htmlCat .= '</ul>';
+		$htmlCategories .= '</ul>';
 	} else {
-		$htmlCat .= "";
+		$htmlCategories .= "";
 	}
 	
-	$htmlCat .= '									<input type="hidden" id="playersManagementAdminSelectedCategory" value="' . $Category . '">';
+	$htmlCategories .= '									<input type="hidden" id="playersManagementAdminSelectedCategory" value="' . $Category . '">';
 	
-	$retunData = array('status' => '1', 'message' => 'Success.', 'dataCategories' => $htmlCat, 'category' => $Category, 'sql0' => $sql0, 'sql1' => $sql1, 'sql2' => $sql2);
+	$retunData = array('status' => '1', 'message' => 'Success.', 'dataCategories' => $htmlCategories, 'category' => $Category, 'sql0' => $sql0, 'sql1' => $sql1, 'sql2' => $sql2);
 	$Config->Close();
 	echo json_encode($retunData);
 ?>

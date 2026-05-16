@@ -64,6 +64,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 									<img src="./imagenes/stats.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['452'] . '
 								</a>
 							</li>
+							<li class="nav-item" id="generalli">
+								<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#general" role="tab" aria-controls="generalli" aria-selected="false">
+									<img src="./imagenes/stats.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['452-1'] . '
+								</a>
+							</li>
 						</ul>
 					</div>';
 	$htmlConfig .= "<script>initNavs('config1');</script>";

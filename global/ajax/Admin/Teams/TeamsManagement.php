@@ -37,59 +37,56 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $htmlTeams = '';
 	$Config->LoadFlags();
     $Config->LoadRegionalSettings();
-	$fecha = new DateTime();
 
 	$htmlTeams .= '<div id="teamssManagement" class="tabla active" style="display: block;padding-top: 10px;">
 		<div id="alllist" class="datagridAdmin" style="display: block;width: 100%;height: auto;">
 			<div class="tab-content">
 				<div class="tablas" style="width:  100% !important;">
-					<div class="nav-wrapper position-relative end-0">
-						<!--<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important;" id="config1">
-							<li class="nav-item" id="infoli">
-								<a class="nav-link mb-0 px-0 py-1 active" data-bs-toggle="tab" style="cursor: pointer;" callval="#info" role="tab" aria-controls="infoli" aria-selected="true">
-									<img src="./imagenes/LogoLigaGeneric.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['474'] . '
-								</a>
-							</li>
-							<li class="nav-item" id="messageli">
-								<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#message" role="tab" aria-controls="messageli" aria-selected="false">
-									<img src="./imagenes/stats.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['451'] . '
-								</a>
-							</li>
-							<li class="nav-item" id="generalli">
-								<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#general" role="tab" aria-controls="generalli" aria-selected="false">
-									<img src="./imagenes/stats.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['452'] . '
-								</a>
-							</li>
-						</ul>-->
-					</div>
-					<!--<script>initNavs();</script>-->
-					<div class="tabla-content">';
-							
-	/*-----------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------*/
-	$htmlTeams .= '<div id="teamsManagementList" class="tabla active" style="display: block; height: auto;">';
+					<div id="teamsManagementList" class="tabla active" style="display: block;padding-top: 10px;">
+						<div class="container-fluid py-0 px-0">
+							<div class="row">
+								<div class="justify-content-left d-flex px-0 py-0 col-12 col-sm-12 col-md-6 col-lg-6 col-xl-6 col-xxl-6">
+									<div class="container-fluid py-0">
+										<div class="px-0 py-0">
+											<div class="nav-wrapper position-relative end-0">
+												<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important;" id="teamsManagementNavTabs">
+													<li class="nav-item" id="teamsTabActiveli">
+														<a class="nav-link mb-0 px-0 py-1 active" data-bs-toggle="tab" style="cursor: pointer;" callval="#teamsTabActive" role="tab" aria-controls="teamsTabActiveli" aria-selected="true">
+															' . $lang['js907'] . '
+														</a>
+													</li>
+													<li class="nav-item" id="teamsTabInactiveli">
+														<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#teamsTabInactive" role="tab" aria-controls="teamsTabInactiveli" aria-selected="false">
+															' . $lang['js908'] . '
+														</a>
+													</li>
+												</ul>
+											</div>
+											<script>initNavs("teamsManagementNavTabs");</script>
+										</div>
+									</div>
+								</div>
+								<div class="align-self-right col-12 col-sm-12 col-md-6 col-lg-6 col-xl-6 col-xxl-6" style="text-align: right;">
+									<h4>' . $lang['514'] . '</h4>
+								</div>
+							</div>
+						</div>
+						<div class="tabla-content">';
+	$htmlTeams .= '<div id="teamsTabActive" class="tabla active" style="display: block; height: auto;">';
 	require 'TeamsManagementActiveList.php';
 	$htmlTeams .= '</div>';
-	/*-----------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------*/
-
-	/*-----------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------*/
+	$htmlTeams .= '<div id="teamsTabInactive" class="tabla" style="display: none; height: auto;">';
+	require 'TeamsManagementInactiveList.php';
+	$htmlTeams .= '</div>';
+	$htmlTeams .= '</div>
+					</div>';
 	$htmlTeams .= '<div id="teamsManagementCreate" class="tabla" style="display: none; height: auto;">';
 	$htmlTeams .= '</div>';
-	/*-----------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------*/
-    
-	/*-----------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------*/
 	$htmlTeams .= '<div id="teamsManagementEdit" class="tabla" style="display: none; height: auto;">';
 	$htmlTeams .= '</div>';
-	/*-----------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------*/
-	$htmlTeams .= "</div> 
-            	</div>	
-  			</div>  
-		</div>
+	$htmlTeams .= "</div>
+            	</div>
+  			</div>
 	</div>";
     $retunData = array('status' => '1', 'message' => 'Success.', 'dataTeam' => $htmlTeams);
     $Config->Close();

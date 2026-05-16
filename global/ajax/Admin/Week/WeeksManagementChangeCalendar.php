@@ -88,7 +88,7 @@ $schema = $Config->getSchema();
 			}else{
 				$htmlCal .= '						<a class="btn bg-gradient-dark" data-bs-toggle="dropdown" id="navbarDropdownMenuLinkCat" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;" aria-expanded="false">' . $row2["Calendario_DESC"] . '</a>';
 			}
-			$Calendar = utf8_encode($row2["Calendario_ID"]);
+			$Calendar = (string) $row2["Calendario_ID"];
 		}
 	} else {
 	   $htmlCal .= "";

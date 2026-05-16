@@ -9,7 +9,7 @@
     }
 
     function SanitizeUsername($username) {
-        return preg_replace('/[^a-z0-9]/s', "", filterSanitizeStringCompat(strtolower($username)));
+        return preg_replace('/[^a-z0-9]/s', "", filterSanitizeStringCompat(strtolower((string) $username)));
     }
 
     function SanitizeHex($key) {
@@ -69,7 +69,7 @@
     }
 
     function SanitizeEmail($email) {
-        return filter_var(strtolower($email), FILTER_SANITIZE_EMAIL);
+        return filter_var(strtolower((string) $email), FILTER_SANITIZE_EMAIL);
     }
 
 	function sanitizeHexColor($color = '#FFFFFF', $hash = true) {
