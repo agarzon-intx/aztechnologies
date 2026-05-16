@@ -124,7 +124,22 @@
 					$pdf->SetAlpha(1);
 					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3,$y+64,19, 19, 'PNG');
 				}catch(Exception $e){
-					echo $e;
+					try{
+    					$pdf->SetAlpha(1);
+    					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3,$y+64,19, 19, 'JPG');
+    				}catch(Exception $e){
+    					try{
+        					$pdf->SetAlpha(1);
+        					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3,$y+64,19, 19, 'JPEG');
+        				}catch(Exception $e){
+        					try{
+            					$pdf->SetAlpha(1);
+            					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3,$y+64,19, 19, 'GIF');
+            				}catch(Exception $e){
+            					echo $e->getMessage();
+            				}
+        				}
+    				}
 				}
 				try{
 					$pdf->SetAlpha(1);
