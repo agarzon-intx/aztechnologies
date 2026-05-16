@@ -1,0 +1,100 @@
+
+RewriteOptions inherit
+
+# BEGIN WordPress
+# The directives (lines) between "BEGIN WordPress" and "END WordPress" are
+# dynamically generated, and should only be modified via WordPress filters.
+# Any changes to the directives between these markers will be overwritten.
+# WordPress block below — cPanel AddHandler removed: on Laragon unknown handlers make .php download instead of execute.
+# Restore on production if your host requires it: AddHandler application/x-httpd-ea-php70 .php
+<IfModule mod_expires.c>
+	ExpiresActive On
+	ExpiresByType image/jpg "access plus 24 hours"
+	ExpiresByType image/jpeg "access plus 24 hours"
+	ExpiresByType image/gif "access plus 24 hours"
+	ExpiresByType image/png "access plus 24 hours"
+	ExpiresByType text/css "access plus 24 hours"
+	ExpiresByType application/pdf "access plus 1 week"
+	ExpiresByType text/javascript "access plus 24 hours"
+	ExpiresByType text/html "access plus 5 minutes"
+	ExpiresByType image/x-icon "access plus 1 year"
+	ExpiresDefault "access plus 24 hours"
+</IfModule>
+<ifModule mod_headers.c>
+Header set X-Endurance-Cache-Level "2"
+</ifModule>
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+
+# END WordPress
+
+# BEGIN cPanel-generated php ini directives, do not edit
+# Manual editing of this file may result in unexpected behavior.
+# To make changes to this file, use the cPanel MultiPHP INI Editor (Home >> Software >> MultiPHP INI Editor)
+# For more information, read our documentation (https://go.cpanel.net/EA4ModifyINI)
+<IfModule php7_module>
+   php_flag display_errors Off
+   php_value max_execution_time 30
+   php_value max_input_time 60
+   php_value max_input_vars 1000
+   php_value memory_limit 256M
+   php_value post_max_size 516M
+   php_value session.gc_maxlifetime 1440
+   php_value session.save_path "/var/cpanel/php/sessions/ea-php73"
+   php_value upload_max_filesize 512M
+   php_flag zlib.output_compression Off
+   php_value include_path ".:/home1/aztechn1/public_html/Production/nuestrodeporte/include:/home1/aztechn1/public_html/Production/nuestrodeporte/config:/home1/aztechn1/public_html/Production/nuestrodeporte/languages:/home1/aztechn1/public_html/Production/nuestrodeporte/ini"
+   php_value session.cookie_httponly "1"
+   php_value session.cookie_lifetime 3600
+   php_value session.cookie_secure "1"
+   php_value session.hash_bits_per_character 6
+   php_value session.hash_function "7"
+   php_flag session.use_cookies On
+   php_flag session.use_only_cookies On
+   php_flag session.use_strict_mode On
+</IfModule>
+<IfModule lsapi_module>
+   php_flag display_errors Off
+   php_value max_execution_time 30
+   php_value max_input_time 60
+   php_value max_input_vars 1000
+   php_value memory_limit 256M
+   php_value post_max_size 516M
+   php_value session.gc_maxlifetime 1440
+   php_value session.save_path "/var/cpanel/php/sessions/ea-php73"
+   php_value upload_max_filesize 512M
+   php_flag zlib.output_compression Off
+   php_value include_path ".:/home1/aztechn1/public_html/Production/nuestrodeporte/include:/home1/aztechn1/public_html/Production/nuestrodeporte/config:/home1/aztechn1/public_html/Production/nuestrodeporte/languages:/home1/aztechn1/public_html/Production/nuestrodeporte/ini"
+   php_value session.cookie_httponly "1"
+   php_value session.cookie_lifetime 3600
+   php_value session.cookie_secure "1"
+   php_value session.hash_bits_per_character 6
+   php_value session.hash_function "7"
+   php_flag session.use_cookies On
+   php_flag session.use_only_cookies On
+   php_flag session.use_strict_mode On
+</IfModule>
+# END cPanel-generated php ini directives, do not edit
+
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301,NE]
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-SSL} !on
+RewriteCond %{HTTP_HOST} ^elite\.lidep\.net$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.elite\.lidep\.net$
+RewriteRule ^/?$ "https\:\/\/elite\.lidep\.net\/" [R=301,L]
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# cPanel/LiteSpeed only — never use on Laragon (unknown handler → browser downloads .php files).
+# <IfModule mime_module>
+#   AddHandler application/x-httpd-ea-php82___lsphp .php .php8 .phtml
+# </IfModule>
+# php -- END cPanel-generated handler, do not edit

@@ -1,0 +1,26 @@
+@charset "utf-8";
+#Logo {
+	width: 800px;
+	display: list-item;
+	float: left;
+}
+#Equipo {
+	width: 350px;
+	display: block;
+	float: left;
+	font-weight: bolder;
+	color: #5C0002;
+	font-size: 20px;
+	font-style: normal;
+	padding-left: 0px;
+	font-variant: normal;
+	line-height: 20px;
+}
+#Header {
+	display: inherit;
+	float: left;
+}
+#lista {
+	font-size: 24px;
+	float: none;
+}

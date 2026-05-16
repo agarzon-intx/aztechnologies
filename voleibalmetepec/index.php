@@ -70,7 +70,7 @@
 <html lang="en">
 	<head>
 	    <meta name="google" content="notranslate">
-		<script>window.__GOOGLE_MAPS_API_KEY=<?php echo json_encode($googleMapsBrowserKey ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;</script>
+		<script>window.__GOOGLE_MAPS_API_KEY=<?php echo json_encode($googleMapsBrowserKey ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;window.__GOOGLE_MAPS_MAP_ID=<?php echo json_encode($googleMapsMapId ?? 'DEMO_MAP_ID', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;</script>
 	
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -290,7 +290,7 @@
 		<script src="./javascript/mainVoleibol.js.php" type="text/javascript"></script>
                 <script src="./javascript/mainBasket.js.php" type="text/javascript"></script>
 		<?php if (($googleMapsBrowserKey ?? '') !== ''): ?>
-		<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($googleMapsBrowserKey, ENT_QUOTES, 'UTF-8'); ?>&loading=async" type="text/javascript"></script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($googleMapsBrowserKey, ENT_QUOTES, 'UTF-8'); ?>&libraries=marker&loading=async" type="text/javascript"></script>
 		<?php endif; ?>
 		<script>
 			window.onload = function() {
