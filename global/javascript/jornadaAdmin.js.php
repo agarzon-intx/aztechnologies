@@ -280,7 +280,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     						golesv = 0;
     					}
 					}
-					actualizarJuego(golesl, golesv, fecha, jugado, penaltiesl, penaltiesv, horario, campo, juego, week);
+					if (typeof campo !== \"undefined\") {
+						actualizarJuego(golesl, golesv, fecha, jugado, penaltiesl, penaltiesv, horario, campo, juego, week);
+					}
 			});
 		}
 		
