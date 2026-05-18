@@ -195,7 +195,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		var gameupdates = 0;
 		function actualizarJuego(GoalsHome, GoalsAway, Date, Played, PenaltiesHome, PenaltiesAway, Time, Field, GameID, weekid){
-			console.log('actualizarJuego GoalsHome = ' + GoalsHome + ', GoalsAway = ' + GoalsAway);
+			// Debug example: actualizarJuego GoalsHome = 0, GoalsAway = 0
+			//console.log('actualizarJuego GoalsHome = ' + GoalsHome + ', GoalsAway = ' + GoalsAway);
 			gameupdates++;
 			mainLoadingOn();
 			$.ajax({
