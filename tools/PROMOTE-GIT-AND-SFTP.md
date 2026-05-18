@@ -73,9 +73,9 @@ git push origin initial-upload
 
 Script: **`tools/deploy-development-sftp.ps1`**
 
-- Builds **`git archive`** of `HEAD` (or optional ref), **excludes** every site’s **`imagenes/`** only (images are **not** uploaded). Each site’s **`ini/`** is **included** from Git and overwrites Development `ini` on extract.
+- Builds **`git archive`** of `HEAD` (or optional ref), **excludes** every site’s **`imagenes/`**, **`ini/`**, and the **symlink-only roots** (`Form`, `ajax`, `assets`, `config`, `css`, `include`, `javascript`, `languages`, `objects`) so nothing in those paths is sent and **existing** server `imagenes`, `ini`, and shared-folder links are **not** overwritten.
 - Uploads the tarball with **PuTTY `pscp`**.
-- On the server: **`tar -xzf`** under **`SFTP_REMOTE_PATH`** (preserves symlinks that exist **inside** the archive).
+- On the server: **`tar -xzf`** under **`SFTP_REMOTE_PATH`** (archive does **not** contain the excluded paths or symlink entries listed above).
 - Then **SSH via `plink`**: for each site, **`imagenes`** under Development is **`rm -rf`** and **`ln -s`** to **Production** so **`imagenes` always points at Production** for that site.
 
 ### Prerequisites
@@ -114,7 +114,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\deploy-development-sft
 
 `<SFTP_REMOTE_PATH>/<site>/imagenes` → symlink → `<SFTP_PRODUCTION_BASE>/<site>/imagenes`
 
-**`ini/`** is **not** symlinked; it comes from the archive (same as the rest of the tracked tree).
+**`ini/`** is **not** uploaded by this script (excluded from the archive) so Development keeps its existing `ini/` (e.g. `config.ini`) untouched.
 
 If a Production **`imagenes`** path for a site is missing, the script prints **WARN** and skips that symlink.
 
@@ -132,7 +132,7 @@ $pscp = 'C:\Program Files\PuTTY\pscp.exe'
 & $pscp -batch -pw $pw "C:\cursor\aztechnologies\voleibalmetepec\pdf\SomeFile.php" "${u}@${h}:$base/voleibalmetepec/pdf/SomeFile.php"
 ```
 
-Do **not** upload **`imagenes/`** as a real folder on full syncs; the promote script omits it from the archive and restores the Production **`imagenes`** symlink after extract. **`ini/`** is deployed from Git with the rest of the tree.
+Do **not** upload **`imagenes/`** as a real folder on full syncs; the promote script omits it from the archive and restores the Production **`imagenes`** symlink after extract. **`ini/`** and the site **symlink roots** (`Form`, `ajax`, …) are **omitted** from the archive so Development keeps its existing copies and links.
 
 ---
 
@@ -140,7 +140,7 @@ Do **not** upload **`imagenes/`** as a real folder on full syncs; the promote sc
 
 | File | Purpose |
 |------|---------|
-| `tools/deploy-development-sftp.ps1` | Full promote: archive (no `imagenes`; **`ini/` included**) → SFTP → tar → Production **`imagenes`** symlink only |
+| `tools/deploy-development-sftp.ps1` | Full promote: archive (no `imagenes`, no `ini`, no site symlink roots) → SFTP → tar → Production **`imagenes`** symlink only |
 | `tools/IMAGENES-SYMLINK-REQUIRED.txt` | Permanent rule + manual FTP notes |
 | `tools/recreate-site-junctions.ps1` | Windows Laragon: recreate **junctions** from each site → `global/` (does **not** set Linux `imagenes`) |
 | `.local/sftp-development.env` | Credentials + paths; optional **`GITHUB_TOKEN`** for `git push` (never commit) |
@@ -151,4 +151,4 @@ Do **not** upload **`imagenes/`** as a real folder on full syncs; the promote sc
 
 Copy-paste:
 
-> On Windows, repo `C:\cursor\aztechnologies`. **Git:** `GITHUB_TOKEN` in `.local/sftp-development.env` (or use Credential Manager / PAT at prompt); `git add` only intended files, `git commit`, `git push origin initial-upload`. **Deploy:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\deploy-development-sftp.ps1` — requires PuTTY and `.local\sftp-development.env` with `SFTP_HOST`, `SFTP_USER`, `SFTP_PASSWORD`, `SFTP_REMOTE_PATH`, **`SFTP_PRODUCTION_BASE`**. Script **excludes** `*/imagenes` from archive, **includes** `*/ini`, and **symlinks** each Development `imagenes` to Production. Details: **`tools/PROMOTE-GIT-AND-SFTP.md`**.
+> On Windows, repo `C:\cursor\aztechnologies`. **Git:** `GITHUB_TOKEN` in `.local/sftp-development.env` (or use Credential Manager / PAT at prompt); `git add` only intended files, `git commit`, `git push origin <branch>`. **Deploy:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\deploy-development-sftp.ps1` — requires PuTTY and `.local\sftp-development.env` with `SFTP_HOST`, `SFTP_USER`, `SFTP_PASSWORD`, `SFTP_REMOTE_PATH`, **`SFTP_PRODUCTION_BASE`**. Script **excludes** each site’s `imagenes/`, `ini/`, and symlink roots (`Form`, `ajax`, …) from the archive, then **symlinks** each Development `imagenes` to Production. Details: **`tools/PROMOTE-GIT-AND-SFTP.md`**.

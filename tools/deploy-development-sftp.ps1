@@ -1,6 +1,8 @@
-# Deploy tracked tree to Development over SFTP while preserving Git symlinks.
-# Uses: git archive (excludes each site's imagenes/ only) -> pscp -> remote tar -xzf
-#       then recreates imagenes -> Production symlinks on the server (ini/ is deployed from Git).
+# Deploy tracked tree to Development over SFTP.
+# Uses: git archive (excludes each site's imagenes/, ini/, and symlink-only site roots) -> pscp -> remote tar -xzf
+#       then recreates imagenes -> Production symlinks on the server.
+# Symlink paths (Form, ajax, assets, …) are omitted from the archive so we do not upload symlink entries;
+# existing server links/directories for those paths are left unchanged.
 # Requires: PuTTY pscp/plink, .local/sftp-development.env
 #
 # .local/sftp-development.env must include:
@@ -35,10 +37,15 @@ $sites = @('elite', 'huskies', 'lidep', 'nuestrodeporte', 'vollidep', 'voleibalm
 $ref = if ($args[0]) { $args[0] } else { 'HEAD' }
 $tarName = 'aztechnologies-Development-deploy.tgz'
 $localTar = Join-Path ([System.IO.Path]::GetTempPath()) $tarName
-Write-Host "git archive $ref -> $localTar (excluding each site's imagenes/ only; ini/ included)"
+$symlinkSiteRoots = @('Form', 'ajax', 'assets', 'config', 'css', 'include', 'javascript', 'languages', 'objects')
+Write-Host "git archive $ref -> $localTar (excluding each site's imagenes/, ini/, and symlink roots: $($symlinkSiteRoots -join ', '))"
 $archiveArgs = @('--format=tar.gz', '-o', $localTar, $ref, '--', '.')
 foreach ($s in $sites) {
 	$archiveArgs += ":(exclude)$s/imagenes"
+	$archiveArgs += ":(exclude)$s/ini"
+	foreach ($sub in $symlinkSiteRoots) {
+		$archiveArgs += ":(exclude)$s/$sub"
+	}
 }
 & git archive @archiveArgs
 if ($LASTEXITCODE -ne 0) { throw 'git archive failed' }
@@ -49,7 +56,7 @@ Write-Host "Uploading to ${u}@${h}:$remoteTar ..."
 if ($LASTEXITCODE -ne 0) { throw 'pscp failed' }
 
 $remoteCmd = "cd $remoteBase && tar -xzf $tarName && rm -f $tarName"
-Write-Host 'Extracting on server (symlinks preserved; imagenes/ omitted from archive; ini/ from Git)...'
+Write-Host 'Extracting on server (imagenes/, ini/, and site symlink roots omitted from archive; existing paths untouched)...'
 & $plink -batch -pw $pw "${u}@${h}" $remoteCmd
 if ($LASTEXITCODE -ne 0) { throw 'remote tar failed' }
 
