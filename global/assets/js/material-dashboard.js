@@ -511,6 +511,189 @@ function debounce(func, wait, immediate) {
   };
 };
 
+/**
+ * Tab <a class="nav-link"> that is not the ghost inside .moving-tab (inserted before the real link).
+ */
+function getRealNavLinkInLi(li) {
+  if (!li || !li.querySelectorAll) {
+    return null;
+  }
+  var list = li.querySelectorAll('a.nav-link');
+  for (var i = 0; i < list.length; i++) {
+    if (!list[i].closest('.moving-tab')) {
+      return list[i];
+    }
+  }
+  return null;
+}
+
+function getActiveTabLi(navUl) {
+  if (!navUl || !navUl.querySelector) {
+    return null;
+  }
+  var li = navUl.querySelector(':scope > li.active');
+  if (li) {
+    return li;
+  }
+  var list = navUl.querySelectorAll('a.nav-link.active');
+  for (var i = 0; i < list.length; i++) {
+    if (!list[i].closest('.moving-tab')) {
+      var p = list[i].closest('li');
+      if (p && navUl.contains(p)) {
+        return p;
+      }
+    }
+  }
+  var aSel = navUl.querySelector(':scope > li > a.nav-link[aria-selected="true"]');
+  if (aSel && !aSel.closest('.moving-tab')) {
+    var liSel = aSel.closest('li');
+    if (liSel && navUl.contains(liSel)) {
+      return liSel;
+    }
+  }
+  var first = navUl.querySelector(':scope > li');
+  return first || null;
+}
+
+/**
+ * Align real tab <a> classes/ARIA with the active <li> (Bootstrap Tab may clear them when callval is used instead of data-bs-target).
+ */
+function syncNavPillLinksState(navUl) {
+  if (!navUl) {
+    return;
+  }
+  var lis = navUl.querySelectorAll(':scope > li');
+  var activeLi = getActiveTabLi(navUl);
+  if (!activeLi && lis.length) {
+    activeLi = lis[0];
+  }
+  if (!activeLi) {
+    return;
+  }
+
+  for (var i = 0; i < lis.length; i++) {
+    var li = lis[i];
+    var link = getRealNavLinkInLi(li);
+    if (!link) {
+      continue;
+    }
+    var on = li === activeLi;
+    if (on) {
+      li.classList.add('active');
+      link.classList.add('active');
+      link.setAttribute('aria-selected', 'true');
+      link.tabIndex = 0;
+    } else {
+      li.classList.remove('active');
+      link.classList.remove('active');
+      link.setAttribute('aria-selected', 'false');
+      link.tabIndex = -1;
+      link.style.removeProperty('position');
+      link.style.removeProperty('z-index');
+    }
+  }
+}
+
+function getActiveRealNavLink(navUl) {
+  var li = getActiveTabLi(navUl);
+  return li ? getRealNavLinkInLi(li) : null;
+}
+
+/** Ghost link inside .moving-tab must not be a Bootstrap tab trigger (Bootstrap resets aria/tabindex on all toggles). */
+function stripBootstrapTabAttrsFromGhost(ghostAnchor) {
+  if (!ghostAnchor || ghostAnchor.nodeType !== 1) {
+    return;
+  }
+  ghostAnchor.removeAttribute('data-bs-toggle');
+  ghostAnchor.removeAttribute('data-bs-target');
+  ghostAnchor.removeAttribute('href');
+  ghostAnchor.removeAttribute('role');
+  ghostAnchor.removeAttribute('aria-controls');
+  ghostAnchor.removeAttribute('callval');
+  ghostAnchor.removeAttribute('aria-selected');
+  ghostAnchor.setAttribute('aria-hidden', 'true');
+  ghostAnchor.tabIndex = -1;
+}
+
+/** Reposition the slider under whichever tab is active (li.active from changeStatusTab, etc.). */
+function syncMovingTabToActiveNav(navUl) {
+  if (!navUl) {
+    return;
+  }
+  syncNavPillLinksState(navUl);
+  var md = navUl.querySelector('.moving-tab');
+  var li = getActiveTabLi(navUl);
+  if (md && li) {
+    positionMovingTabOverNavItem(navUl, md, li);
+  }
+}
+
+/**
+ * Place the sliding .moving-tab inside the target <li> and stretch it with inset 0
+ * (same as top/left/right/bottom: 0). Works with flex-wrap; no transform positioning.
+ */
+function positionMovingTabOverNavItem(navUl, movingDiv, li) {
+  if (!navUl || !movingDiv || !li || !navUl.contains(li)) {
+    return;
+  }
+  var link = getRealNavLinkInLi(li);
+  if (!link || !li.contains(link)) {
+    return;
+  }
+  var holder = link.parentNode;
+  if (!holder || !navUl.contains(holder)) {
+    return;
+  }
+
+  if (window.getComputedStyle(holder).position === 'static') {
+    holder.style.position = 'relative';
+  }
+  if (holder !== li && window.getComputedStyle(li).position === 'static') {
+    li.style.position = 'relative';
+  }
+
+  holder.insertBefore(movingDiv, link);
+
+  movingDiv.style.position = 'absolute';
+  movingDiv.style.transform = 'none';
+  movingDiv.style.top = '0';
+  movingDiv.style.right = '0';
+  movingDiv.style.bottom = '0';
+  movingDiv.style.left = '0';
+  movingDiv.style.width = 'auto';
+  movingDiv.style.height = 'auto';
+  movingDiv.style.maxHeight = 'none';
+  movingDiv.style.overflow = 'hidden';
+  movingDiv.style.display = 'flex';
+  movingDiv.style.alignItems = 'stretch';
+  movingDiv.style.justifyContent = 'stretch';
+  movingDiv.style.setProperty('z-index', '0', 'important');
+  movingDiv.style.pointerEvents = 'none';
+  link.style.setProperty('position', 'relative', 'important');
+  link.style.setProperty('z-index', '2', 'important');
+
+  var inner = movingDiv.querySelector('.nav-link');
+  if (inner) {
+    inner.style.pointerEvents = 'none';
+    var cs = window.getComputedStyle(link);
+    inner.style.boxSizing = 'border-box';
+    inner.style.width = '100%';
+    inner.style.height = '100%';
+    inner.style.maxHeight = '100%';
+    inner.style.margin = '0';
+    inner.style.overflow = 'hidden';
+    inner.style.fontSize = cs.fontSize;
+    inner.style.fontWeight = cs.fontWeight;
+    inner.style.lineHeight = cs.lineHeight;
+    inner.style.padding = cs.padding;
+    inner.style.border = cs.border;
+    inner.style.letterSpacing = cs.letterSpacing;
+    inner.style.boxShadow = 'none';
+    stripBootstrapTabAttrsFromGhost(inner);
+    inner.classList.add('active');
+  }
+}
+
 // Tabs navigation
 
 var total = document.querySelectorAll('.nav-pills');
@@ -519,69 +702,61 @@ function initNavs(id) {
   total = document.querySelectorAll('#' + id + '.nav-pills');
   total.forEach(function(item, i) {
     var moving_div = document.createElement('div');
-    var li_active = item.querySelector(".nav-link.active");
-    var tab = li_active.cloneNode();
+    var li_active = getActiveRealNavLink(item);
+    if (!li_active) {
+      return;
+    }
+    var tab = li_active.cloneNode(true);
     tab.innerHTML = "-";
+    stripBootstrapTabAttrsFromGhost(tab);
+    tab.classList.add('active');
+    tab.style.boxSizing = 'border-box';
+    tab.style.width = '100%';
 
-    moving_div.classList.add('moving-tab', 'position-absolute', 'nav-link');
+    moving_div.classList.add('moving-tab', 'position-absolute');
     moving_div.appendChild(tab);
-    item.appendChild(moving_div);
-
-    var list_length = item.getElementsByTagName("li").length;
 
     moving_div.style.padding = '0px';
+    moving_div.style.margin = '0px';
     moving_div.style.transition = '.5s ease';
+    moving_div.style.boxSizing = 'border-box';
 
-    let li = item.querySelector(".nav-link.active").parentElement;
+    if (window.getComputedStyle(item).position === 'static') {
+      item.style.position = 'relative';
+    }
 
+    Array.prototype.forEach.call(item.querySelectorAll(':scope > li'), function (tli) {
+      if (window.getComputedStyle(tli).position === 'static') {
+        tli.style.position = 'relative';
+      }
+    });
+
+    let li = li_active.closest('li');
     if (li) {
-      let nodes = Array.from(li.closest('ul').children); // get array
-      let index = nodes.indexOf(li) + 1;
-
-      let sum = 0;
-      if (item.classList.contains('flex-column')) {
-        for (var j = 1; j <= nodes.indexOf(li); j++) {
-          sum += item.querySelector('li:nth-child(' + j + ')').offsetHeight;
-        }
-        moving_div.style.transform = 'translate3d(0px,' + sum + 'px, 0px)';
-        moving_div.style.width = item.querySelector('li:nth-child(' + index + ')').offsetWidth + 'px';
-        moving_div.style.height = item.querySelector('li:nth-child(' + j + ')').offsetHeight;
-      } else {
-        for (var j = 1; j <= nodes.indexOf(li); j++) {
-          sum += item.querySelector('li:nth-child(' + j + ')').offsetWidth;
-        }
-        moving_div.style.transform = 'translate3d(' + sum + 'px, 0px, 0px)';
-        moving_div.style.width = item.querySelector('li:nth-child(' + index + ')').offsetWidth + 'px';
-
-      }
+      positionMovingTabOverNavItem(item, moving_div, li);
     }
 
-    item.onmouseover = function(event) {
-      let target = getEventTarget(event);
-      let li = target.closest('li'); // get reference
-      if (li) {
-        let nodes = Array.from(li.closest('ul').children); // get array
-        let index = nodes.indexOf(li) + 1;
-        item.querySelector('li:nth-child(' + index + ') .nav-link').onclick = function() {
-          moving_div = item.querySelector('.moving-tab');
-          let sum = 0;
-          if (item.classList.contains('flex-column')) {
-            for (var j = 1; j <= nodes.indexOf(li); j++) {
-              sum += item.querySelector('li:nth-child(' + j + ')').offsetHeight;
-            }
-            moving_div.style.transform = 'translate3d(0px,' + sum + 'px, 0px)';
-            moving_div.style.height = item.querySelector('li:nth-child(' + j + ')').offsetHeight;
-          } else {
-            for (var j = 1; j <= nodes.indexOf(li); j++) {
-              sum += item.querySelector('li:nth-child(' + j + ')').offsetWidth;
-            }
-            moving_div.style.transform = 'translate3d(' + sum + 'px, 0px, 0px)';
-            moving_div.style.width = item.querySelector('li:nth-child(' + index + ')').offsetWidth + 'px';
-          }
-	  changeStatusTab(this.getAttribute('callval'));
-        }
+    syncMovingTabToActiveNav(item);
+    window.setTimeout(function () {
+      syncMovingTabToActiveNav(item);
+    }, 0);
+    window.setTimeout(function () {
+      syncMovingTabToActiveNav(item);
+    }, 100);
+
+    item.addEventListener('click', function (ev) {
+      var a = ev.target.closest && ev.target.closest('a.nav-link');
+      if (!a || a.closest('.moving-tab') || !item.contains(a)) {
+        return;
       }
-    }
+      var cv = a.getAttribute('callval');
+      if (cv && typeof changeStatusTab === 'function') {
+        changeStatusTab(cv);
+      }
+      window.setTimeout(function () {
+        syncMovingTabToActiveNav(item);
+      }, 0);
+    });
   });
 }
 
@@ -593,41 +768,43 @@ setTimeout(function() {
 
 window.addEventListener('resize', function(event) {
   total.forEach(function(item, i) {
-    item.querySelector('.moving-tab').remove();
+    var prevMoving = item.querySelector('.moving-tab');
+    if (prevMoving) {
+      prevMoving.remove();
+    }
     var moving_div = document.createElement('div');
-    var tab = item.querySelector(".nav-link.active").cloneNode();
+    var tabSrc = getActiveRealNavLink(item);
+    if (!tabSrc) {
+      return;
+    }
+    var tab = tabSrc.cloneNode(true);
     tab.innerHTML = "-";
+    stripBootstrapTabAttrsFromGhost(tab);
+    tab.classList.add('active');
+    tab.style.boxSizing = 'border-box';
+    tab.style.width = '100%';
 
-    moving_div.classList.add('moving-tab', 'position-absolute', 'nav-link');
+    moving_div.classList.add('moving-tab', 'position-absolute');
     moving_div.appendChild(tab);
 
-    item.appendChild(moving_div);
-
     moving_div.style.padding = '0px';
+    moving_div.style.margin = '0px';
     moving_div.style.transition = '.5s ease';
+    moving_div.style.boxSizing = 'border-box';
 
-    let li = item.querySelector(".nav-link.active").parentElement;
+    if (window.getComputedStyle(item).position === 'static') {
+      item.style.position = 'relative';
+    }
 
-    if (li) {
-      let nodes = Array.from(li.closest('ul').children); // get array
-      let index = nodes.indexOf(li) + 1;
-
-      let sum = 0;
-      if (item.classList.contains('flex-column')) {
-        for (var j = 1; j <= nodes.indexOf(li); j++) {
-          sum += item.querySelector('li:nth-child(' + j + ')').offsetHeight;
-        }
-        moving_div.style.transform = 'translate3d(0px,' + sum + 'px, 0px)';
-        moving_div.style.width = item.querySelector('li:nth-child(' + index + ')').offsetWidth + 'px';
-        moving_div.style.height = item.querySelector('li:nth-child(' + j + ')').offsetHeight;
-      } else {
-        for (var j = 1; j <= nodes.indexOf(li); j++) {
-          sum += item.querySelector('li:nth-child(' + j + ')').offsetWidth;
-        }
-        moving_div.style.transform = 'translate3d(' + sum + 'px, 0px, 0px)';
-        moving_div.style.width = item.querySelector('li:nth-child(' + index + ')').offsetWidth + 'px';
-
+    Array.prototype.forEach.call(item.querySelectorAll(':scope > li'), function (tli) {
+      if (window.getComputedStyle(tli).position === 'static') {
+        tli.style.position = 'relative';
       }
+    });
+
+    let li = tabSrc.closest('li');
+    if (li) {
+      positionMovingTabOverNavItem(item, moving_div, li);
     }
   });
 
@@ -636,16 +813,12 @@ window.addEventListener('resize', function(event) {
       if (!item.classList.contains('flex-column')) {
         item.classList.remove('flex-row');
         item.classList.add('flex-column', 'on-resize');
-        let li = item.querySelector(".nav-link.active").parentElement;
-        let nodes = Array.from(li.closest('ul').children); // get array
-        let index = nodes.indexOf(li) + 1;
-        let sum = 0;
-        for (var j = 1; j <= nodes.indexOf(li); j++) {
-          sum += item.querySelector('li:nth-child(' + j + ')').offsetHeight;
+        let a = getActiveRealNavLink(item);
+        let li = a ? a.closest('li') : null;
+        var moving_div = item.querySelector('.moving-tab');
+        if (li && moving_div) {
+          positionMovingTabOverNavItem(item, moving_div, li);
         }
-        var moving_div = document.querySelector('.moving-tab');
-        moving_div.style.width = item.querySelector('li:nth-child(1)').offsetWidth + 'px';
-        moving_div.style.transform = 'translate3d(0px,' + sum + 'px, 0px)';
 
       }
     });
@@ -654,16 +827,12 @@ window.addEventListener('resize', function(event) {
       if (item.classList.contains('on-resize')) {
         item.classList.remove('flex-column', 'on-resize');
         item.classList.add('flex-row');
-        let li = item.querySelector(".nav-link.active").parentElement;
-        let nodes = Array.from(li.closest('ul').children); // get array
-        let index = nodes.indexOf(li) + 1;
-        let sum = 0;
-        for (var j = 1; j <= nodes.indexOf(li); j++) {
-          sum += item.querySelector('li:nth-child(' + j + ')').offsetWidth;
+        let a2 = getActiveRealNavLink(item);
+        let li = a2 ? a2.closest('li') : null;
+        var moving_div = item.querySelector('.moving-tab');
+        if (li && moving_div) {
+          positionMovingTabOverNavItem(item, moving_div, li);
         }
-        var moving_div = document.querySelector('.moving-tab');
-        moving_div.style.transform = 'translate3d(' + sum + 'px, 0px, 0px)';
-        moving_div.style.width = item.querySelector('li:nth-child(' + index + ')').offsetWidth + 'px';
       }
     })
   }

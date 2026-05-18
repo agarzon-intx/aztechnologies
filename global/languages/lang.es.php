@@ -287,7 +287,17 @@
 	$lang['451'] = 'Aviso Borrador';
 	$lang['452'] = 'General';
 	$lang['452-1'] = 'imagenes';
-	$lang['452-2'] = 'El logo y los colores están en la pestaña General; aquí se pueden añadir más herramientas de imágenes.';
+	$lang['452-2'] = 'Sube las plantillas usadas en reportes y PDF. El marcador depende del deporte (0 = fútbol, 3 = voleibol). Los archivos se guardan con el mismo nombre en imagenes/ o pdf/.';
+	$lang['452-8'] = 'No se recibió ningún archivo válido.';
+	$lang['452-9'] = 'Selecciona al menos un archivo para subir.';
+	$lang['452-10'] = 'Fondo Reporte';
+	$lang['452-11'] = 'Fondo Flyer (vs)';
+	$lang['452-12'] = 'Fondo Flyer';
+	$lang['452-13'] = 'Fondo Credencial';
+	$lang['452-14'] = 'Calendario (Flyer)';
+	$lang['452-15'] = 'Reloj (Flyer)';
+	$lang['452-16'] = 'Puntero (Flyer)';
+	$lang['452-17'] = 'Fondo Marcadores';
 	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penales (Empate)';

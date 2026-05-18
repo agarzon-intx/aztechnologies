@@ -287,7 +287,17 @@
 	$lang['451'] = 'Alert Template';
 	$lang['452'] = 'General';
 	$lang['452-1'] = 'images';
-	$lang['452-2'] = 'Logo and colors are under the General tab; additional image tools can be added here.';
+	$lang['452-2'] = 'Upload templates used in reports and PDFs. The scoreboard image depends on sport (0 = soccer, 3 = volleyball). Files keep the same names under imagenes/ or pdf/.';
+	$lang['452-8'] = 'No valid file was received.';
+	$lang['452-9'] = 'Select at least one file to upload.';
+	$lang['452-10'] = 'Background Report';
+	$lang['452-11'] = 'Flyer Background (vs)';
+	$lang['452-12'] = 'Flyer Background';
+	$lang['452-13'] = 'Background ID';
+	$lang['452-14'] = 'Calendar (Flyer)';
+	$lang['452-15'] = 'Clock (Flyer)';
+	$lang['452-16'] = 'Pointer (Flyer)';
+	$lang['452-17'] = 'Background Scores';
 	$lang['454'] = 'Coup/League';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penalties (Tie)';

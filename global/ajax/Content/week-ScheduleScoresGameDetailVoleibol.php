@@ -96,7 +96,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$Config->LoadFlags();
     $htmlWeekGameDetail = '<table width="100%">
-            <tr style="background: url(./imagenes/marcadorvole1.png?tmp=' . $fecha->getTimestamp() . ') no-repeat; background-size:100% 100%;">
+            <tr style="background: url(./imagenes/marcador.png?tmp=' . $fecha->getTimestamp() . ') no-repeat; background-size:100% 100%;">
         	    <td colspan="3" height="200">
         	        <div style="width:100%; margin: auto;">';
                 	

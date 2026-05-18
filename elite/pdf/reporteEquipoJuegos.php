@@ -25,7 +25,7 @@
 	$pdf->AddPage();
 	$pdf->SetAutoPageBreak(false,1);
 	$pdf->SetMargins(5, 5, 5, 5);	
-	$pdf->Image($server . '/imagenes/FondoReporte.jpeg',0,0,279,216);
+	$pdf->Image($server . '/imagenes/FondoReporte.png',0,0,279,216);
 
     // restore full opacity
     //$pdf->SetAlpha(.5);
@@ -144,7 +144,7 @@
             
             if($count >= 51){
                 $pdf->AddPage();
-            	$pdf->Image($server . '/imagenes/FondoReporte.jpeg',0,0,279,216);
+            	$pdf->Image($server . '/imagenes/FondoReporte.png',0,0,279,216);
             	
             	$x = 0;
             	$y = 40;

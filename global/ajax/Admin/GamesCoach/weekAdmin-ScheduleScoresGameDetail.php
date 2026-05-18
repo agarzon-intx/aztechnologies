@@ -100,7 +100,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 
 	$htmlWeekGameDetail = '<table width="99%" id="fichaTecnicaEdit" >
-							<tr style="background: url(./imagenes/marcadorvole1.png?tmp=' . $fecha->getTimestamp() . ') no-repeat; background-size:100%;">
+							<tr style="background: url(./imagenes/marcador.png?tmp=' . $fecha->getTimestamp() . ') no-repeat; background-size:100%;">
 								<td colspan="3" height="200">
 									<table width="100%" height="150%">
 										<tr>
