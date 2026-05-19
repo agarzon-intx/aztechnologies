@@ -30,28 +30,49 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
-	$Game = SanitizeInteger($_POST['Game']);
-    $Week = SanitizeInteger($_POST['Week']);
-    $Season = SanitizeInteger($_POST['Season']);
-    $Referee = SanitizeText($_POST['Referee']);
-	$Comments = SanitizeText($_POST['Comments']);
-	$Extral = SanitizeInteger($_POST['Extral']);
-	$Extrav = SanitizeInteger($_POST['Extrav']);
+	$Game = (int) SanitizeInteger($_POST['Game'] ?? '0');
+	$Week = (int) SanitizeInteger($_POST['Week'] ?? '0');
+	$Season = (int) SanitizeInteger($_POST['Season'] ?? '0');
+	$Referee = SanitizeText($_POST['Referee'] ?? '');
+	$Comments = SanitizeText($_POST['Comments'] ?? '');
+	$Extral = (int) SanitizeInteger($_POST['Extral'] ?? '0');
+	$Extrav = (int) SanitizeInteger($_POST['Extrav'] ?? '0');
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataColorAnswer' => 'Error');
-		
-	$sql0 = "CALL $schema.GameUpdateDetails('" . $_SESSION[$Config->getAlias() . 'username'] . "', '$Referee', '$Comments', $Extral, $Extrav, $Game, @out);";
-
-	//echo $sql;
 
 	$Connection = $Config->connectAdmin();
+	if (!$Connection) {
+		echo json_encode($retunData);
+		exit;
+	}
+	if ($Game < 1) {
+		$retunData['message'] = 'Invalid game.';
+		$Connection->Close();
+		echo json_encode($retunData);
+		exit;
+	}
+	$userEsc = $Connection->real_escape_string((string) ($_SESSION[$Config->getAlias() . 'username'] ?? ''));
+	$RefereeEsc = $Connection->real_escape_string($Referee);
+	$CommentsEsc = $Connection->real_escape_string($Comments);
+	$sql0 = "CALL $schema.GameUpdateDetails('$userEsc', '$RefereeEsc', '$CommentsEsc', $Extral, $Extrav, $Game, @out);";
+
 	$result = $Connection->query($sql0);
+	if (!$result) {
+		$retunData['message'] = 'Database error.';
+		$Connection->Close();
+		echo json_encode($retunData);
+		exit;
+	}
+	while ($Connection->more_results() && $Connection->next_result()) {
+		if ($resFlush = $Connection->store_result()) {
+			$resFlush->free();
+		}
+	}
 
 	$sql = "Select @out as 'count'";
 	$result = $Connection->query($sql);
-	if ($result->num_rows > 0) {
-		// output data of each row
-		while($row2 = $result->fetch_assoc()) {
+	if ($result && $result->num_rows > 0) {
+		while ($row2 = $result->fetch_assoc()) {
 			$retunData = array('status' => '1', 'message' => 'Success.', 'sql' => $sql0);
 		}
 	}

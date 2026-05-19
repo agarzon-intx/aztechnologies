@@ -199,7 +199,7 @@
 						order by Fecha asc, hora asc, VisitanteS, Torneo, Jornada, Juego;";
 				//$htmlWeek .= $sql2;
 				$result2 = $Config->query($sql2);
-                $htmlWeek .= '<div class="d-none  d-xs-none d-md-none d-lg-none d-xl-block d-xxl-block"><div class="card">
+                $htmlWeek .= '<div class="d-none  d-xs-none d-md-none d-lg-none d-xl-block"><div class="card">
 								<div class="table-responsive">
 									<table class=" table align-items-center mb-0" style="border-color: #136aeb;" id="scores">
 										<thead class="">
@@ -280,43 +280,79 @@
 						        $colorSL = 'inherit';
 						    }
 						}
+						$statusText = '';
+						$sql20st = "SELECT * FROM $schema.Juego_Estatus where Juego_Estatus_ID = " . (int)$row2["jugado1"] . ";";
+						$result20st = $Config->query($sql20st);
+						if ($result20st && $result20st->num_rows > 0) {
+							while ($row20st = $result20st->fetch_assoc()) {
+								$statusText = $lang[$row20st["Juego_Estatus_DESC_ID"]];
+							}
+						}
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){
 								$htmlWeek .= '<td scope="row"><div class="d-flex px-2 py-1">
 								<div style="width: 200px;text-align: center;padding-top: 6px;">' . $row2["Comentarios"] . '</div></div></td>';
 						}else{
-							$htmlWeek .= '<td scope="row"><div class="d-flex px-2 py-1"><div style="text-wrap: balance; width: 240px;text-align: right;padding-right: 3px;padding-top: 6px;">' . $row2["Local"] . '</div>
-								<div>' . $row2["Logol"] . '</div>
-								<div style="width: 20px;text-align: center">';
-							if (strpos($row2["Comentarios"],$lang['654']) !== false){
-									$htmlWeek .= "";
-							}else{
-								$htmlWeek .= '<div style="justify-content: right;align-items: center;display: flex;margin-top: 0px;"><span style="color: ' . $colorSL . ';font-size: xx-large;font-weight: 500;max-height: 36px;display: flex;align-items: center;">' . $row2["GL"] . '</span></div>';
-							}
-							$htmlWeek .= '</div>
-								<div style="width: 20px;text-align: right;">';
-							if (strpos($row2["Comentarios"],$lang['654']) !== false){
-								$htmlWeek .= "";
-							}else{
-								$htmlWeek .= '<div style="justify-content: right;color: ' . $colorSL . ';height: 36px;display: flex;align-items: center;">' . $row2["PL"] . '</div>';
-							}
-							$htmlWeek .= '</div>
-								<div style="width: 10px;text-align: center;">' . $row2["marcador"] . '</div>
-								<div style="width: 20px;text-align: left;">';
-							if (strpos($row2["Comentarios"],$lang['654']) !== false){
-								$htmlWeek .= "";
-							}else{
-								$htmlWeek .= '<div style="justify-content: left;color: ' . $colorSV . ';height: 36px;display: flex;align-items: center;">' . $row2["PV"] . '</div>';
-							}
-							$htmlWeek .= '</div>
-								<div style="width: 20px;text-align: center;">';
-							if (strpos($row2["Comentarios"],$lang['654']) !== false){
-								$htmlWeek .= "";
-							}else{
-								$htmlWeek .= '<div style="justify-content: left;align-items: center;display: flex;margin-top: 0px;"><span style="color: ' . $colorSV . ';font-size: xx-large;font-weight: 500;max-height: 36px;display: flex;align-items: center;">' . $row2["GV"] . '</span></div>';
-							}
-							$htmlWeek .= '</div>
-								<div>' . $row2["Logov"] . '</div>
-								<div style="text-wrap: balance; width: 240px;text-left: right;padding-left: 3px;">' . $row2["Visitante"] .'</div></div></td>';
+							$htmlWeek .= '<td scope="row">
+							    <div class="container">
+							        <div class="row">
+							            <div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
+            							    <div class="container" style="height: 100%;">
+            							        <div class="row" style="height: 100%;">
+							                        <div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-9 col-xxl-10" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;text-wrap: pretty;align-items: center;display: flex;justify-content: right;">
+							                            <div style="text-align: right;overflow-wrap: break-word;padding-right: 2px;">' . $row2["Local"] . '</div>
+							                        </div>
+							                        <div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-3 col-xxl-2" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;justify-content: center;align-items: center;display: flex;">' . $row2["Logol"] . '</div>
+							                    </div>
+							                </div>
+							            </div>';
+						if($row2["jugado1"] > 1 ){
+							$htmlWeek .= '
+							<div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
+							    <div class="container" style="height: 100%;">
+							        <div class="row" style="height: 100%;justify-content: center;align-items: center;display: flex;">' . $statusText . '</div>
+            					</div>
+							</div>';
+						}
+						if($row2["jugado1"] == 1 ){
+							$htmlWeek .= '
+							<div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
+							    <div class="container" style="height: 100%;">
+							        <div class="row" style="height: 100%;justify-content: center;align-items: center;display: flex;">
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-3 col-xxl-3" style="justify-content: right;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSL . ';font-size: xx-large;font-weight: 500;">' . $row2["GL"] . '</span></div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-2 col-xxl-2" style="justify-content: right;color: ' . $colorSL . ';padding: 0;align-items: center;display: flex;">' . $row2["PL"] . '</div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-1 col-xxl-1" style="justify-content: center;padding: 0;align-items: center;display: flex;">' . $row2["marcador"] . '</div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-2 col-xxl-2" style="justify-content: left;color: ' . $colorSV . ';padding: 0;align-items: center;display: flex;">' . $row2["PV"] . '</div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-3 col-xxl-3" style="justify-content: left;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSV . ';font-size: xx-large;font-weight: 500;">' . $row2["GV"] . '</span></div>
+            						</div>
+            					</div>
+							</div>';
+						}
+						if($row2["jugado1"] == 0){
+							$htmlWeek .= '
+							<div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
+							    <div class="container" style="height: 100%;">
+							        <div class="row" style="height: 100%;justify-content: center;align-items: center;display: flex;">
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-3 col-xxl-3" style="justify-content: right;padding: 0;align-items: center;display: flex;"></div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-2 col-xxl-2" style="justify-content: right;color: ' . $colorSL . ';padding: 0;align-items: center;display: flex;"></div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-1 col-xxl-1" style="justify-content: center;padding: 0;align-items: center;display: flex;"></div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-2 col-xxl-2" style="justify-content: left;color: ' . $colorSV . ';padding: 0;align-items: center;display: flex;"></div>
+            							<div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-3 col-xxl-3" style="justify-content: left;padding: 0;align-items: center;display: flex;"></div>
+									</div>
+            					</div>
+							</div>';
+						}
+						$htmlWeek .= '<div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
+							            <div class="container" style="height: 100%;">
+            							    <div class="row" style="height: 100%;">
+							                    <div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-3 col-xxl-2" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;justify-content: center;align-items: center;display: flex;">
+							                        <div style="text-left: left;">' . $row2["Logov"] . ' </div>
+							                    </div>
+							                    <div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-9 col-xxl-10" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;text-wrap: pretty;align-items: center;display: flex;justify-content: left;">
+							                        <div style="text-align: left;overflow-wrap: break-word;padding-left: 2px;">' . $row2["Visitante"] .'</div>
+							                    </div>
+							                </div>
+							            </div>
+							        </div></div></div></td>';
 						}
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){
 							$htmlWeek .= '<td  scope="row" class="align-middle text-center"></td>';
@@ -468,18 +504,17 @@
 														<input type="checkbox" id="amistoso" name="amistoso" value="0" class="form-check-input" style="border-radius: 0.35rem" onClick="$(\'#amistosos\').toggle();$(\'#normal\').toggle();"> 
 													</div>
 												</div>	
-												<div id="normal">
-													<div style="float: left;padding-top: 6px;padding-left: 10px;">
+												<div id="normal">';
+				$result3 = $Config->query($sql33);
+				if ($result3->num_rows > 0) {// output data of each row
+					$htmlWeek .= '					<div style="float: left;padding-top: 6px;padding-left: 10px;">
 														<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
 														<div style="float: right;padding-left: 10px;">
 															<select name="localAgregar" id="localAgregar" onChange="loadVisitanteAgregar($(\'#localAgregar  option:selected\').val())">';
-				$result3 = $Config->query($sql33);
-				if ($result3->num_rows > 0) {// output data of each row
 					while($row3 = $result3->fetch_assoc()) {
 							$htmlWeek .= "<option value='" . $row3["Equipo_ID"] . "'>" . $row3["Equipo_DESC"] . "</option>";
 					}
-				}
-						$htmlWeek .= '						</select>
+					$htmlWeek .= '							</select>
 														</div>
 													</div>
 													<div style="float: left;padding-top: 6px;padding-left: 10px;">
@@ -492,15 +527,16 @@
 													</div>
 													<div style="float: left;padding-left: 10px;">
 														<button type="button" class="btn btn-primary" onClick="agregarJuego(\'' . $row["Fecha"] . '\', ' . $Season . ', ' . $Week . ', $(\'#localAgregar\').val(), $(\'#visitanteAgregar\').val());" >' . $lang['664'] . '</button>
-													</div>
-												</div>
+													</div>';
+				}		
+				$htmlWeek .= '					</div>
 												<div id="amistosos" style="display: none;">
 													<select id="localAgregarA_source" style="display:none">';
 				$result3 = $Config->query($sql34);
 				$optsAgregarA = '';
 				if ($result3->num_rows > 0) {
 					while ($row3 = $result3->fetch_assoc()) {
-						$optsAgregarA .= "<option value='" . $row3["Equipo_ID"] . "' data-categoria='" . $row3["Categoria_ID"] . "'>" . $row3["Equipo_DESC"] . "</option>";
+						$optsAgregarA .= "<option value='" . $row3["Equipo_ID"] . "' data-categoria='" . $row3["Categoria_ID"] . "'>" . $row3["Categoria_DESC"] . "-" . $row3["Equipo_DESC"] . "</option>";
 					}
 				}
 				$htmlWeek .= $optsAgregarA . '</select>
@@ -545,9 +581,9 @@
                 $htmlWeek .= '</div>';
 				
 				$result2 = $Config->query($sql2);
-                $htmlWeek .= '<div class="d-block d-xs-block d-md-block d-lg-block d-xl-none d-xxl-none"><div class="card">
+                $htmlWeek .= '<div class="d-md-block d-lg-block d-xl-none"><div class="card">
 								<div class="table-responsive">
-									<table class=" table align-items-center mb-0" style="border-color: #136aeb;width: 100%;" id="scoresS">
+									<table class=" table align-items-center mb-0" style="border-color: #136aeb;" id="scoresS">
 										<thead class="">
 											<th scope="col" class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="padding-right: .25rem; padding-left: .25rem;">' . $lang['609']  . ' ' . $row["Fecha_Inicio"] . ' ' . $lang['610'] . ' ' . $row["Fecha_Fin"] . '</th>';
 				$htmlWeek .= '</thead>';
@@ -567,38 +603,25 @@
 								<input name="jornada' . $row2["juego"] . '" type="hidden" id="jornada' . $row2["juego"] . '" value="' . $row2["Jornada"] . '">
 								<input name="juego' . $row2["juego"] . '" type="hidden" id="juego' . $row2["juego"] . '" value="' . $row2["juego"] . '">
 								<input name="local' . $row2["juego"] . '" type="hidden" id="local' . $row2["juego"] . '" value="' . $row2["Local_ID"] . '">
-								<input name="visitante' . $row2["juego"] . '" type="hidden" id="visitante' . $row2["juego"] . '" value="' . $row2["Visitante_ID"] . '">
-								<div class="container" style="padding-left: 0px; padding-right: 0px; margin-left: 0px; margin-right: 0px; width: 100%; max-width: 100%;">
-							        <div class="row">';
+								<input name="visitante' . $row2["juego"] . '" type="hidden" id="visitante' . $row2["juego"] . '" value="' . $row2["Visitante_ID"] . '">';
+						$statusText = '';
+						$sql20stM = "SELECT * FROM $schema.Juego_Estatus where Juego_Estatus_ID = " . (int)$row2["jugado1"] . ";";
+						$result20stM = $Config->query($sql20stM);
+						if ($result20stM && $result20stM->num_rows > 0) {
+							while ($row20stM = $result20stM->fetch_assoc()) {
+								$statusText = $lang[$row20stM["Juego_Estatus_DESC_ID"]];
+							}
+						}
 						if($Type == 1){
-						    $htmlWeek .= '  <div class="col-12 col-sm-12 col-md-12 col-lg-12" style="padding-top: 0px;padding-left: 10;padding-right: 0;padding-bottom: 0;font-size: 11px;height: 2px;">
-					                            [' . $row2["Jornada_DescCorta"] . ' - ' .  $row2["Categoria_DESC"] . '] 
-					                        </div>';
+						    $htmlWeek .= '<div class="px-0 py-0" style="font-size:11px;line-height:1.2;padding-left:2px;">[' . $row2["Jornada_DescCorta"] . ' - ' .  $row2["Categoria_DESC"] . ']</div>';
 						}
-						$htmlWeek .= '  <div class="col-12 col-sm-12 col-md-12 col-lg-12" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-							                <div class="container" style="padding-left: 0px; padding-right: 0px; margin-left: 0px; margin-right: 0px; width: 100%; max-width: 100%;">
-            							        <div class="row">
-            							            <div class="col-1 col-sm-1 col-md-1 col-lg-1" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-                        							    <div class="container" style="height: 100%;">
-                        							        <div class="row" style="height: 100%;">
-            							                        <div class="col-12 col-sm-12 col-md-12 col-lg-12" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;text-wrap: pretty;align-items: center;display: flex;justify-content: center;">
-            							                            <img src="imagenes/eliminar.png" height="18" width="18" onClick="borrarJuego(' . $row2["juego"] . ', ' . $Week . ')">
-            							                        </div>
-            							                    </div>
-            							                </div>
-            							            </div>
-            							            <div class="col-4 col-sm-4 col-md-4 col-lg-4" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-                        							    <div class="container" style="height: 100%;">
-                        							        <div class="row" style="height: 100%;">
-            							                        <div class="col-9 col-sm-9 col-md-9 col-lg-9" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;text-wrap: pretty;align-items: center;display: flex;justify-content: right;">
-            							                            <div style="text-align: right;overflow-wrap: break-word;padding-right: 2px;">' . $row2["Local"] . '</div>
-            							                        </div>
-            							                        <div class="col-3 col-sm-3 col-md-3 col-lg-3" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;justify-content: center;align-items: center;display: flex;">' . $row2["Logol"] . '</div>
-            							                    </div>
-            							                </div>
-            							            </div>';
+						$htmlWeek .= '<div class="justify-content-center d-flex px-0 py-1"><div class="align-self-center" style="width: 3%; text-align: right;padding-right: 3px; font-size:3vw;"><img src="imagenes/eliminar.png" height="18" width="18" onClick="borrarJuego(' . $row2["juego"] . ', ' . $Week . ')"></div><div class="align-self-center" style="width: 87%;"><div class="justify-content-center d-flex px-0 py-1"><div class="align-self-center" style="width: 50%; text-align: right;padding-right: 3px; font-size:3vw; text-wrap:auto;">' . $row2["Local"] . '</div>
+							<div class="align-self-center">' . $row2["Logol"] . '</div>';
+						if($row2["jugado1"] == 2){
+							$htmlWeek .= '<div style="width: 84px;text-align: center;" class="align-self-center"><span style="font-size: small;">' . $lang['663'] . '</span></div>';
+						}
 						if($row2["jugado1"] == 1){
-					    	if($row2["GL"] > $row2["GV"]){
+						    if($row2["GL"] > $row2["GV"]){
 						        $colorSL = 'red';
 						        $colorSV = 'inherit';
 						    }
@@ -610,127 +633,59 @@
 						        $colorSV = 'inherit';
 						        $colorSL = 'inherit';
 						    }
-							
 							$htmlWeek .= '
-							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-							    <div class="container" style="height: 100%;">
-							        <div class="row" style="height: 100%;justify-content: center;align-items: center;display: flex;">
-            							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="justify-content: right;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSL . ';font-size: xx-large;font-weight: 500;">' . $row2["GL"] . '</span></div>
-            							<div class="col-2 col-sm-2 col-md-2 col-lg-2" style="justify-content: right;color: ' . $colorSL . ';padding: 0;align-items: center;display: flex;">' . $row2["PL"] . '</div>
-            							<div class="col-1 col-sm-1 col-md-1 col-lg-1" style="justify-content: center;padding: 0;align-items: center;display: flex;">' . $row2["marcador"] . '</div>
-            							<div class="col-2 col-sm-2 col-md-2 col-lg-2" style="justify-content: left;color: ' . $colorSV . ';padding: 0;align-items: center;display: flex;">' . $row2["PV"] . '</div>
-            							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="justify-content: left;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSV . ';font-size: xx-large;font-weight: 500;">' . $row2["GV"] . '</span></div>
-            						</div>
-            					</div>
-							</div>';
-            				
-				        }
-					    if($row2["jugado1"] == 0){
-					    	if($row2["GL"] > $row2["GV"]){
-						        $colorSL = 'red';
-						        $colorSV = 'inherit';
-						    }
-						    if($row2["GL"] < $row2["GV"]){
-						        $colorSV = 'red';
-						        $colorSL = 'inherit';
-						    }
-						    if($row2["GL"] == $row2["GV"]){
-						        $colorSV = 'inherit';
-						        $colorSL = 'inherit';
-						    }
-							
-							$htmlWeek .= '
-							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-							    <div class="container" style="height: 100%;">
-							        <div class="row" style="height: 100%;justify-content: center;align-items: center;display: flex;">
-            							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="justify-content: right;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSL . ';font-size: xx-large;font-weight: 500;">' . $row2["GL"] . '</span></div>
-            							<div class="col-2 col-sm-2 col-md-2 col-lg-2" style="justify-content: right;color: ' . $colorSL . ';padding: 0;align-items: center;display: flex;">' . $row2["PL"] . '</div>
-            							<div class="col-1 col-sm-1 col-md-1 col-lg-1" style="justify-content: center;padding: 0;align-items: center;display: flex;">' . $row2["marcador"] . '</div>
-            							<div class="col-2 col-sm-2 col-md-2 col-lg-2" style="justify-content: left;color: ' . $colorSV . ';padding: 0;align-items: center;display: flex;">' . $row2["PV"] . '</div>
-            							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="justify-content: left;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSV . ';font-size: xx-large;font-weight: 500;">' . $row2["GV"] . '</span></div>
-            						</div>
-            					</div>
-							</div>';
-            				
-				        }						    
-				        if($row2["jugado1"] > 1){
-					    	if($row2["GL"] > $row2["GV"]){
-						        $colorSL = 'red';
-						        $colorSV = 'inherit';
-						    }
-						    if($row2["GL"] < $row2["GV"]){
-						        $colorSV = 'red';
-						        $colorSL = 'inherit';
-						    }
-						    if($row2["GL"] == $row2["GV"]){
-						        $colorSV = 'inherit';
-						        $colorSL = 'inherit';
-						    }
-							
-							$htmlWeek .= '
-							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-							    <div class="container" style="height: 100%;">
-							        <div class="row" style="height: 100%;justify-content: center;align-items: center;display: flex;">
-            							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="justify-content: right;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSL . ';font-size: xx-large;font-weight: 500;">' . $row2["GL"] . '</span></div>
-            							<div class="col-2 col-sm-2 col-md-2 col-lg-2" style="justify-content: right;color: ' . $colorSL . ';padding: 0;align-items: center;display: flex;">' . $row2["PL"] . '</div>
-            							<div class="col-1 col-sm-1 col-md-1 col-lg-1" style="justify-content: center;padding: 0;align-items: center;display: flex;">' . $row2["marcador"] . '</div>
-            							<div class="col-2 col-sm-2 col-md-2 col-lg-2" style="justify-content: left;color: ' . $colorSV . ';padding: 0;align-items: center;display: flex;">' . $row2["PV"] . '</div>
-            							<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="justify-content: left;padding: 0;align-items: center;display: flex;"><span style="margin-top: 0px;color: ' . $colorSV . ';font-size: xx-large;font-weight: 500;">' . $row2["GV"] . '</span></div>
-            						</div>
-            					</div>
-							</div>';
-            				
-				        }
-						$htmlWeek .= '<div class="col-4 col-sm-4 col-md-4 col-lg-4" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-							            <div class="container" style="height: 100%;">
-            							    <div class="row" style="height: 100%;">
-							                    <div class="col-3 col-sm-3 col-md-3 col-lg-3" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;justify-content: center;align-items: center;display: flex;">
-							                        <div style="text-left: left;">' . $row2["Logov"] . ' </div>
-							                    </div>
-							                    <div class="col-9 col-sm-9 col-md-9 col-lg-9" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;text-wrap: pretty;align-items: center;display: flex;justify-content: left;">
-							                        <div style="text-align: left;overflow-wrap: break-word;padding-left: 2px;">' . $row2["Visitante"] .'</div>
-							                    </div>
-							                </div>
-							            </div>
-							        </div>';
-
-						$htmlWeek .= '</div></div></div>';
-						$htmlWeek .= '<div class="col-12 col-sm-12 col-md-12 col-lg-12" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-						                <div class="container" style="padding-left: 0px; padding-right: 0px; margin-left: 0px; margin-right: 0px; width: 100%; max-width: 100%;">
-        							        <div class="row">
-        							            <div class="col-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0; align-items: center;display: flex;justify-content: center;">
-        							                <div class="container" style="padding-left: 0px; padding-right: 0px; margin-left: 0px; margin-right: 0px; width: 100%; max-width: 100%;">
-        							                        <div class="row">
-        							                            <div class="col-12 col-sm-12 col-md-12 col-lg-12" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0; align-items: center;display: flex;justify-content: center;">
-                    							                    <p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['604'] . '/' . $lang['605'] . '</span></p>
-                    							                </div>
-                        						                <div class="col-12 col-sm-12 col-md-12 col-lg-12" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0; align-items: center;display: flex;justify-content: center;">
-                    							                    <div class="container" style="padding-left: 0px; padding-right: 0px; margin-left: 0px; margin-right: 0px; width: 100%; max-width: 100%;">
-                    							        <div class="row">';
-						if (strpos($row2["Comentarios"],$lang['654']) !== false){
-							$htmlWeek .= "";
-						}else{
-							$htmlWeek .= '  <div class="col-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 0px;padding-left: 0;padding-right: 1;padding-bottom: 0; align-items: center;display: flex;justify-content: right;">
-						                        <input type="date" style="width: 90px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["Fecha"] . '" name="fecha' . $row2["juego"] . '" id="fecha' . $row2["juego"] . '">
-										    </div>
-										    <div class="col-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 0px;padding-left: 1;padding-right: 0;padding-bottom: 0; align-items: center;display: flex;justify-content: left;">
-						                        <input type="time" style="width: 95px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["horario"] . '" name="horario' . $row2["juego"] . '" id="horario' . $row2["juego"] . '">
-											</div>
-										</div></div></div></div></div></div>';
+							<div style="width: 17px;text-align: center;" class="align-self-center"><p style="color: ' . $colorSL . ';font-size: xx-large;font-weight: 500; margin-bottom: 0px !important;">' . $row2["GL"] . '</p></div>
+							<div style="width: 20px;text-align: right;color: ' . $colorSL . ';" class="align-self-center">' . $row2["PL"] . '</div>
+							<div style="width: 10px;text-align: center;" class="align-self-center">' . $row2["marcador"] . '</div>
+							<div style="width: 20px;text-align: left;color: ' . $colorSV . ';" class="align-self-center">' . $row2["PV"] . '</div>
+							<div style="width: 17px;text-align: center;" class="align-self-center"><p style="color: ' . $colorSV . ';font-size: xx-large;font-weight: 500; margin-bottom: 0px !important;">' . $row2["GV"] . '</p></div>';
 						}
+						if($row2["jugado1"] == 0){
+
+						    $colorSV = 'inherit';
+                            $colorSL = 'inherit';
+
+							$htmlWeek .= '
+							<div style="width: 17px;text-align: center;" class="align-self-center"></div>
+							<div style="width: 20px;text-align: right;color: ' . $colorSL . ';" class="align-self-center"></div>
+							<div style="width: 10px;text-align: center;" class="align-self-center"></div>
+							<div style="width: 20px;text-align: left;color: ' . $colorSV . ';" class="align-self-center"></div>
+							<div style="width: 17px;text-align: center;" class="align-self-center"></div>';
+						}
+						if($row2["jugado1"] > 1 && (int)$row2["jugado1"] !== 2){
+							$htmlWeek .= '<div style="width: 80px;text-align: center;" class="align-self-center"><span style="font-size: small;">' . $statusText . '</span></div>';
+						}
+						$htmlWeek .= '<div class="align-self-center">' . $row2["Logov"] . '</div>
+							<div style="width: 50%; text-align: left; padding-left: 3px;  font-size:3vw; text-wrap:auto;" class="align-self-center">' . $row2["Visitante"] .'</div></div></div>';
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){
 							$htmlWeek .= '';
 						}else{
-							$htmlWeek .= '<div class="col-3 col-sm-3 col-md-3 col-lg-3" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['606']. '</span></a></p>
-											<p style="margin-bottom: 0rem !important;" class="lh-1">
-												<div class="input-group input-group-static mb-0" style=" padding-left: 0.25rem; padding-right: 0.25rem;">
-													<select class="form-control" style="width : 90px;padding-top: 0px;padding-bottom: 0px;" name="campo' . $row2["juego"] . '" id="campo' . $row2["juego"] . '">';
+							if($row2["jugado1"] == 1){
+								$htmlWeek .= '<div class="align-self-center" style="width: 3%; text-align: left;padding-left: 3px; font-size:3vw;">
+								<img class="expandirButtonS" id="expandirS' . $row2["juego"] . 'SA" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditSVoleibol(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', 0, 0, \'' . $sqlcat . '\'); "></div>';
+							}
+						}
+						$htmlWeek .= '</div></div><div class="d-flex px-0 py-1">';
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= "";
+						}else{
+							$htmlWeek .= '<div style="width: 30%;text-align: center;padding-top: 6px;">
+							<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['604'] . ' / ' . $lang['605'] . '</span></p>
+							<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><input type="date" style="width: 85px;max-width:100%;text-align: center;padding-right: 0px !important;padding-left: 0px !important;margin: 0 auto;" class="form-control form-control-sm" value="' . $row2["Fecha"] . '" name="fecha' . $row2["juego"] . '" id="fecha' . $row2["juego"] . '"> <input type="time" style="width: 92px;max-width:100%;text-align: center;padding-right: 0px !important;padding-left: 0px !important;margin: 0 auto;" class="form-control form-control-sm" value="' . $row2["horario"] . '" name="horario' . $row2["juego"] . '" id="horario' . $row2["juego"] . '"></div></div>';
+						}
+						$htmlWeek .= '</div>';
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '<div style="width: 30%;text-align: center;padding-top: 6px;">
+							<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $row2["Comentarios"]. '</span></p></div>';
+						}else{
+							$htmlWeek .= '<div style="width: 30%;text-align: center;padding-top: 6px;">
+							<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['606']. '</span></p>
+							<div class="input-group input-group-static mb-0" style="padding-left: 0.25rem; padding-right: 0.25rem;">
+									<select class="form-control" style="width : 90px;max-width:100%;" name="campo' . $row2["juego"] . '" id="campo' . $row2["juego"] . '">';
 							$sql3 = "SELECT Campo_ID, Campo_DESC FROM $schema.Campos
 										order by Campo_DESC asc;";
 							$result3 = $Config->query($sql3);
 							if ($result3->num_rows > 0) {
-								// output data of each row
 								while($row3 = $result3->fetch_assoc()) {
 									if($row3["Campo_DESC"] == $row2["Campo"]){
 										$htmlWeek .= "<option value='" . $row3["Campo_ID"] . "' selected>" . $row3["Campo_DESC"] . "</option>";
@@ -741,38 +696,37 @@
 							}
 							$htmlWeek .= '
 								 </select>
-							   </div>
-							   </p>
-							   </div>';
+							   </div></div>';
+							$htmlWeek .= '<div style="width: 10%;text-align: center;padding-top: 6px;">
+							<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['649'] . '</span></p>
+							<p style="margin-bottom: 0rem !important;" class="lh-1"><div class="d-flex px-0 py-0 lh-1 justify-content-center"><div class="input-group input-group-static mb-0" style="padding-left: 0.25rem; padding-right: 0.25rem;">
+									<select class="form-control" style="width : 90px;max-width:100%;" name="jugado' . $row2["juego"] . '" id="jugado' . $row2["juego"] . '">' . $row2["jugado"] . '</select>
+								</div></div></p></div>';
 						}
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){
 							$htmlWeek .= '';
 						}else{
-							$htmlWeek .= '<div class="col-2 col-sm-2 col-md-2 col-lg-2" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['649'] . '</span></p>
-											<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;">
-												<div class="input-group input-group-static mb-0" style=" padding-left: 0.25rem; padding-right: 0.25rem;">
-													<select class="form-control" style="width : 90px;padding-top: 0px;padding-bottom: 0px;" name="jugado' . $row2["juego"] . '" id="jugado' . $row2["juego"] . '">' . $row2["jugado"] . '</select>
-												</div>
-											</div>
-										</div>';
+							if($row2["jugado1"] == 1){
+								if(strcmp($row2["Comentarios"],"")==0){
+									$htmlWeek .= '<div style="width: 30%;text-align: center;padding-top: 6px;"><p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['608'] . '</span></p>';
+								$htmlWeek .= '</div>';
+								}else{
+									$htmlWeek .= '<div style="width: 20%;text-align: center;padding-top: 6px;">
+									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['608'] . '</span></p>
+									<span class="text-secondary text-xs font-weight-normal"><img src="imagenes/comments.png" class="avatar avatar-sm me-3" style="border-radius: 0rem !important;"title="' . $row2["Comentarios"]. '"/></span>';
+								$htmlWeek .= '</div>';
+								}
+							}else{
+								$htmlWeek .= '<div style="width: 30%;text-align: center;padding-top: 6px;">';
+								$htmlWeek .= '</div>';
+							}
 						}
-
 						$htmlWeek .= '</div>';
-						$htmlWeek .= '<div class="col-1 col-sm-1 col-md-1 col-lg-1" style="padding-top: 0px;padding-left: 0;padding-right: 0;padding-bottom: 0;">
-        							    <div class="container" style="height: 100%;">
-        							        <div class="row" style="height: 100%;">
-        				                        <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12" style="padding-top: 6px;padding-left: 0;padding-right: 0;padding-bottom: 0;text-wrap: pretty;align-items: center;display: flex;justify-content: center;">
-        				                            <img class="expandirButtonS" id="expandirS' . $row2["juego"] . 'SA" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditSVoleibol(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', 0, 0, \'' . $sqlcat . '\'); ">
-        				                        </div>
-        				                    </div>
-        				                </div>
-        				            </div>';
-        				$htmlWeek .= '</div></td>';
+						$htmlWeek .= '</td>';
 						$htmlWeek .= '</tr>';
 						if (strpos($row2["Comentarios"],$lang['654']) == false){
 							$htmlWeek .= '<tr id="editS' . $row2["juego"] . '" class="juegoS" style="display: none">
-									<td  scope="row" colspan="14" style="width: 1183px; padding-left: 0px; padding-right: 0px;">
+									<td  scope="row" colspan="14" style="width: 100%; padding-left: 0px; padding-right: 0px;">
 										<div class="contentEditFichaS" width="100%" id="contentS' . $row2["juego"] . '" height="400"></div>
 									</td>
 								  </td></td></td></tr>';
@@ -786,6 +740,7 @@
 										<button type="button" class="btn btn-primary" onclick="saveChangesS(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
 										<a href="pdf/flyerSC.php?Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">Flyer Categoria</a>
 										<a href="pdf/reportePendientes.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">Reporte Pendientes</a>
+										<br>
 										<a href="pdf/reporteArbitros.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">Reporte Partidos</a>
 										<a href="pdf/cedulas.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">' . $lang['647'] . '</a>
 									</td>

@@ -154,3 +154,12 @@
     border: 1px solid #e8e8e8;
     overflow: hidden;
 }
+
+/* Material Dashboard sets .navbar-vertical .navbar-brand > img { max-height: 2rem } (~32px), which
+   wins over height="45" / height:45px and shrinks the league logo. Clear the cap so each site's
+   inline max-height (e.g. 45px, 70px, 90px in index.php) controls the logo size. */
+#sidenav-main.navbar-vertical .navbar-brand > img {
+	max-height: none;
+	height: auto;
+	width: auto;
+}

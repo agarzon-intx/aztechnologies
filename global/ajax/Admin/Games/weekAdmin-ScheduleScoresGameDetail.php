@@ -158,7 +158,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 										</div>
 										<div class="col-2 col-sm-2 col-md-2 col-lg-2 col-xl-2">
 											<div style="text-align:left; border: none; margin-top: 10px !important">
-												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStats(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', $(\'#arbitro' . $Game . '\').val(), $(\'#comentario' . $Game . '\').val(), $(\'#extra' . $Game . 'l\').val(), $(\'#extrav' . $Game . '\').val());">' . $lang['0000'] . '</button>
+												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStats(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', $(\'#arbitro' . $Game . '\').val(), $(\'#comentario' . $Game . '\').val(), $(\'#extral' . $Game . '\').val(), $(\'#extrav' . $Game . '\').val());">' . $lang['0000'] . '</button>
 											</div>
 										</div>
 									</div>

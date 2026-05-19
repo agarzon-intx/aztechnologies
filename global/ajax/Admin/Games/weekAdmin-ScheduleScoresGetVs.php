@@ -29,12 +29,25 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 	
-	$Season = $_COOKIE[$Config->getAlias() . 'season'];
-    $Category = $_COOKIE[$Config->getAlias() . 'category'];
-	$team = SanitizeInteger($_POST["Team"]);
+	$Season = (int) SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? '0');
+	$Category = (int) SanitizeInteger($_COOKIE[$Config->getAlias() . 'category'] ?? '0');
+	$team = (int) SanitizeInteger($_POST['Team'] ?? '0');
 	$htmlWeekVs = '';
 	
 	$htmlWeekVs .= '<option value="NULL">' . $lang['654'] . '</option>';
+
+	if ($Season < 1 || $Category < 1) {
+		$retunData = array('status' => '0', 'message' => 'Missing season or category.', 'dataVs' => $htmlWeekVs);
+		$Config->Close();
+		echo json_encode($retunData);
+		exit;
+	}
+	if ($team < 1) {
+		$retunData = array('status' => '1', 'message' => 'Success.', 'dataVs' => $htmlWeekVs);
+		$Config->Close();
+		echo json_encode($retunData);
+		exit;
+	}
 
 	$sql33 = "	SELECT a.Equipo_ID, 
 						Equipo_DESC 
@@ -42,7 +55,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				 where Torneo_ID = $Season
 					and Activo = 1 
 					and a.Fuerza = $Category 
-					and Equipo_Id <> $team and Equipo_ID not in (	select Equipo2 Equipo_ID
+					and Equipo_ID <> $team and Equipo_ID not in (	select Equipo2 AS Equipo_ID
 										from (
 											select Equipo1, Equipo2, count(*) ct
 											from (
@@ -60,13 +73,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				 order by 2 asc;";
 	//echo $sql33;
 	$result33 = $Config->query($sql33);
-	if ($result33->num_rows > 0) {
+	if ($result33 && $result33->num_rows > 0) {
 		// output data of each row
 		while($row33 = $result33->fetch_assoc()) {
 				$htmlWeekVs .= "<option value='" . $row33["Equipo_ID"] . "'>" . $row33["Equipo_DESC"] . "</option>";
 		}
 	}
-	$retunData = array('status' => '1', 'message' => 'Success.', 'dataVs' => $htmlWeekVs, 'sql33' => $sql33);
+	$retunData = array('status' => '1', 'message' => 'Success.', 'dataVs' => $htmlWeekVs);
     $Config->Close();
     echo json_encode($retunData);
 ?>

@@ -30,35 +30,77 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
-	$Season = $_COOKIE[$Config->getAlias() . 'season'];
-	$Category = $_COOKIE[$Config->getAlias() . 'category'];
-    $Week = SanitizeInteger($_POST['Week']);
+	$Season = (int) SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? '0');
+	$Category = (int) SanitizeInteger($_COOKIE[$Config->getAlias() . 'category'] ?? '0');
+	$Week = (int) SanitizeInteger($_POST['Week'] ?? '0');
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataColorAnswer' => 'Error');
-		
-	$sql = "CALL $schema.Cal_Sem($Season, $Week);";
 
 	$Connection = $Config->connectAdmin();
-	$result = $Connection->query($sql);
+	if (!$Connection) {
+		echo json_encode($retunData);
+		exit;
+	}
+	if ($Season < 1 || $Week < 1) {
+		$retunData['message'] = 'Invalid season or week.';
+		$Connection->Close();
+		echo json_encode($retunData);
+		exit;
+	}
+
+	/** Drain all result sets from a mysqli CALL (required before running another query). */
+	$drainMysqli = static function (mysqli $mysqli): void {
+		while ($mysqli->more_results() && $mysqli->next_result()) {
+			if ($res = $mysqli->store_result()) {
+				$res->free();
+			}
+		}
+	};
+
+	/** Run CALL; tolerate mysqlnd "No data / zero rows" when the routine returns no result set. */
+	$execCall = static function (mysqli $mysqli, string $sql, array &$retunData) use ($drainMysqli): bool {
+		try {
+			if (!$mysqli->query($sql)) {
+				$retunData['message'] = 'Database error: ' . $mysqli->error;
+				return false;
+			}
+		} catch (mysqli_sql_exception $e) {
+			$msg = $e->getMessage();
+			if (stripos($msg, 'No data') === false && stripos($msg, 'zero rows') === false) {
+				$retunData['message'] = 'Database error: ' . $msg;
+				return false;
+			}
+		}
+		$drainMysqli($mysqli);
+		return true;
+	};
+
+	$sql = "CALL $schema.Cal_Sem($Season, $Week);";
+	if (!$execCall($Connection, $sql, $retunData)) {
+		$Connection->Close();
+		echo json_encode($retunData);
+		exit;
+	}
 
 	$sql = "Select @out as 'count'";
 	$result = $Connection->query($sql);
-	if ($result->num_rows > 0) {
-		// output data of each row
-		while($row2 = $result->fetch_assoc()) {
+	if ($result && $result->num_rows > 0) {
+		while ($row2 = $result->fetch_assoc()) {
 			$retunData = array('status' => '1', 'message' => 'Success.');
 		}
 	}
-    	
-	$sql = "CALL $schema.Generate_Equipo_Stats($Season, $Week,$Category);";
 
-	$result = $Connection->query($sql);
+	$sql = "CALL $schema.Generate_Equipo_Stats($Season, $Week, $Category);";
+	if (!$execCall($Connection, $sql, $retunData)) {
+		$Connection->Close();
+		echo json_encode($retunData);
+		exit;
+	}
 
 	$sql = "Select @out as 'count'";
 	$result = $Connection->query($sql);
-	if ($result->num_rows > 0) {
-		// output data of each row
-		while($row2 = $result->fetch_assoc()) {
+	if ($result && $result->num_rows > 0) {
+		while ($row2 = $result->fetch_assoc()) {
 			$retunData = array('status' => '1', 'message' => 'Success.');
 		}
 	}
