@@ -1,0 +1,3 @@
+# Reduce confusing 403s on bare directory URLs under global/.
+# If first-hit 403 persists on real .php URLs, see tools/cpanel-global-first-request-403.md (ModSecurity / Imunify360).
+Options -Indexes

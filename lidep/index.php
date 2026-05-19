@@ -61,7 +61,23 @@
 	}
 
 	$date = new DateTime();
-	include('./languages/lang.' . $Language . '.php');
+	$lang = [];
+	$langBasename = 'lang.' . $Language . '.php';
+	$langSite = __DIR__ . DIRECTORY_SEPARATOR . 'languages' . DIRECTORY_SEPARATOR . $langBasename;
+	$langGlobal = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'languages' . DIRECTORY_SEPARATOR . $langBasename;
+	$langFile = is_readable($langSite) ? $langSite : (is_readable($langGlobal) ? $langGlobal : null);
+	if ($langFile === null && $Language !== 'es') {
+		$langBasename = 'lang.es.php';
+		$langSite = __DIR__ . DIRECTORY_SEPARATOR . 'languages' . DIRECTORY_SEPARATOR . $langBasename;
+		$langGlobal = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'languages' . DIRECTORY_SEPARATOR . $langBasename;
+		$langFile = is_readable($langSite) ? $langSite : (is_readable($langGlobal) ? $langGlobal : null);
+	}
+	if ($langFile === null) {
+		http_response_code(500);
+		header('Content-Type: text/plain; charset=utf-8');
+		die('Missing language file under site or global/languages: lang.' . $Language . '.php');
+	}
+	include $langFile;
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
