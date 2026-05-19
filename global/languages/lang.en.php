@@ -16,7 +16,9 @@
   	$lang['0013'] = 'New';
 	$lang['js0000'] = 'Please fix the following errors:';
 	$lang['js0001'] = 'The user id or password fields cant be blank';
+	$lang['js0002'] = 'An error occurred, try again. If the problem persists, please contact your administrator.';
 
+	
   	//Index Header
   	$lang['0'] = 'SEASON';
   	$lang['1'] = 'CATEGORY';

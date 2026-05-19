@@ -40,6 +40,7 @@
 	$msgSave = htmlspecialchars($lang['0000'], ENT_QUOTES, 'UTF-8');
 	$msgOk = htmlspecialchars($lang['441'], ENT_QUOTES, 'UTF-8');
 	$msgErr = htmlspecialchars($lang['452-9'], ENT_QUOTES, 'UTF-8');
+	$msgAjaxGenericJs = json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 
 	$htmlConfig .= '
 						</div>
@@ -51,6 +52,9 @@
 					</div>
 					<script>
 					(function () {
+						var MSG_AJAX_GENERIC = ';
+	$htmlConfig .= $msgAjaxGenericJs;
+	$htmlConfig .= ';
 						var saveUrl = "./ajax/Admin/Config/configManagementImagesSave.php";
 						function readURLConfigImage(input) {
 							if (!input || !input.files || !input.files[0]) { return; }
@@ -101,9 +105,10 @@
 											else { alert(j.dataConfigAnswer || j.message || "Error"); }
 										}
 									},
-									error: function () {
-										if (typeof Swal !== "undefined") { Swal.fire({ icon: "error", title: "Error" }); }
-										else { alert("Error"); }
+									error: function (jqxhr, status, exception) {
+										if (typeof mainLoadingOff === "function") { mainLoadingOff(); }
+										if (typeof Swal !== "undefined") { Swal.fire({ icon: "error", title: MSG_AJAX_GENERIC }); }
+										else { alert(MSG_AJAX_GENERIC); }
 									}
 								});
 							}

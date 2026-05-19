@@ -16,6 +16,8 @@
   	$lang['0013'] = 'Nuevo';
 	$lang['js0000'] = 'Se encontraron los siguientes errores en el Formulario:';
 	$lang['js0001'] = 'El Usuario y/o password no pueden estar vacios';
+	$lang['js0002'] = 'Ocurrió un error, inténtalo de nuevo. Si el problema persiste comunícate con el administrador.';
+
 	
 	//Index Header
   	$lang['0'] = 'TORNEO';

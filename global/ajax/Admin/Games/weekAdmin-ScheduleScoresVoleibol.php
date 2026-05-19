@@ -660,10 +660,8 @@
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){
 							$htmlWeek .= '';
 						}else{
-							if($row2["jugado1"] == 1){
 								$htmlWeek .= '<div class="align-self-center" style="width: 3%; text-align: left;padding-left: 3px; font-size:3vw;">
 								<img class="expandirButtonS" id="expandirS' . $row2["juego"] . 'SA" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditSVoleibol(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', 0, 0, \'' . $sqlcat . '\'); "></div>';
-							}
 						}
 						$htmlWeek .= '</div></div><div class="d-flex px-0 py-1">';
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){

@@ -29,8 +29,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
 	Header("content-type: application/x-javascript");
+	$__msg_ajax_generic = json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 
-	echo "  function searchCURP(cat, team) {
+	echo "
+	var MSG_AJAX_GENERIC = " . $__msg_ajax_generic . ";
+  function searchCURP(cat, team) {
  
                 var curp = $('#curp').val();
                 var team = $('select[name=equipo] option').filter(':selected').val().split(',')[0];
@@ -70,6 +73,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                                                 };
                                         	},
                                         	error: function(jqxhr, status, exception) {
+                                        		mainLoadingOff();
+                                        		alert(MSG_AJAX_GENERIC);
                                         		console.log('Exception:' + exception);
                                         	}
                                         });
@@ -87,6 +92,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                     	    }
                     	},
                     	error: function(jqxhr, status, exception) {
+                    		mainLoadingOff();
+                    		alert(MSG_AJAX_GENERIC);
                     		console.log('Exception:' + exception);
                     	}
                     });
@@ -136,6 +143,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                                                 };
                                         	},
                                         	error: function(jqxhr, status, exception) {
+                                        		mainLoadingOff();
+                                        		alert(MSG_AJAX_GENERIC);
                                         		console.log('Exception:' + exception);
                                         	}
                                         });
@@ -153,6 +162,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                     	    }
                     	},
                     	error: function(jqxhr, status, exception) {
+                    		mainLoadingOff();
+                    		alert(MSG_AJAX_GENERIC);
                     		console.log('Exception:' + exception);
                     	}
                     });

@@ -137,6 +137,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 										}
 									},
 									error: function(jqxhr, status, exception) {
+										if (typeof mainLoadingOff === \'function\') { mainLoadingOff(); }
+										alert(' . json_encode($lang['js0002'], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG) . ');
 										console.log(\'Exception:\' + exception);
 									}
 								});

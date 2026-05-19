@@ -29,6 +29,8 @@ function abrirFichaBasket(id, week, game, gamedesc, lgoals, vgoals){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -64,6 +66,8 @@ function abrirFichaSBasket(id, week, game, gamedesc, lgoals, vgoals){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -99,6 +103,8 @@ function abrirFichaEditBasket(id, week, game, gamedesc, lgoals, vgoals, Arbitro,
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -134,6 +140,8 @@ function abrirFichaEditSBasket(id, week, game, gamedesc, lgoals, vgoals, Arbitro
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});

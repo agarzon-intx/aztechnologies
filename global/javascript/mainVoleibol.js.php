@@ -29,6 +29,8 @@ function abrirFichaVoleibol(id, week, game, gamedesc, lgoals, vgoals){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -64,6 +66,8 @@ function abrirFichaSVoleibol(id, week, game, gamedesc, lgoals, vgoals){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -99,6 +103,8 @@ function abrirFichaEditVoleibol(id, week, game, gamedesc, lgoals, vgoals, Arbitr
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -134,6 +140,8 @@ function abrirFichaEditS(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Come
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -169,6 +177,8 @@ function abrirFichaEditSVoleibol(id, week, game, gamedesc, lgoals, vgoals, Arbit
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});

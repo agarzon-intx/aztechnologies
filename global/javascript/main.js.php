@@ -55,6 +55,8 @@ function checkSessionExpire(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -86,6 +88,8 @@ function loadTournament(Season){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -104,6 +108,8 @@ function loadTournamentReloadList(Season){
 			$("#seasonsel").html(res.dataSeason);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -127,6 +133,8 @@ function loadCategory(Season, Category){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -145,6 +153,8 @@ function loadCategoryReloadList(Season, Category){
 			$("#categorysel").html(res.dataCategories);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -165,6 +175,8 @@ function loadLanguage(language, url){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -184,6 +196,8 @@ function loadMenu(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -209,6 +223,8 @@ function reloadNotifications(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -236,6 +252,8 @@ function loadWeeks(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -258,6 +276,8 @@ function loadWeek(Week){
     			}
     		},
     		error: function(jqxhr, status, exception) {
+    			mainLoadingOff();
+    			alert(MSG_AJAX_GENERIC);
     			console.log('Exception:' + exception);
     		}
     	});
@@ -280,6 +300,8 @@ function loadWeek(Week){
     			}
     		},
     		error: function(jqxhr, status, exception) {
+    			mainLoadingOff();
+    			alert(MSG_AJAX_GENERIC);
     			console.log('Exception:' + exception);
     		}
     	});
@@ -303,6 +325,8 @@ function loadWeekReloadList(Week){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -329,6 +353,8 @@ function showLogin(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -358,6 +384,8 @@ function showRegCode(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -381,6 +409,8 @@ function submitRegCode(code, message){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -406,6 +436,8 @@ function login(user, password, CSRFtoken){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Status: ' + status);
 			console.log('Exception: ' + exception);
 			console.log('jqxhr: ' + jqxhr);
@@ -429,6 +461,8 @@ function logout(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -448,6 +482,8 @@ function showBrowserRegister(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -471,6 +507,8 @@ function browserRegister(email){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -498,6 +536,8 @@ function loadTeam(team,season){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -621,6 +661,8 @@ function previewPlayerShow(playerID){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -642,6 +684,8 @@ function previewPlayerShowVoleibol(playerID){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -668,6 +712,8 @@ function loadAlert(alert){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -707,6 +753,8 @@ function abrirFicha(id, week, game, gamedesc, lgoals, vgoals){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -742,6 +790,8 @@ function abrirFichaS(id, week, game, gamedesc, lgoals, vgoals){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -765,6 +815,8 @@ function userManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -828,6 +880,8 @@ function playersManagementAdminValidateAll(cat, team){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});	
@@ -857,6 +911,8 @@ function userManagementCreateUser(name, lastname, lastname2, phone, email, user,
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -879,6 +935,8 @@ function userManagementDeleteUser(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -906,6 +964,7 @@ function userManagementReloadTeamLeftOptions($equipol, mode, editUserId, onDone)
 		},
 		error: function (jqxhr, status, exception) {
 			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1007,6 +1066,8 @@ function userManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1032,6 +1093,8 @@ function userManagementShowEdit(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1062,6 +1125,8 @@ function userManagementEditUser(userid, name, lastname, lastname2, phone, email,
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1082,6 +1147,8 @@ function userManagementShowResetPassword(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1104,6 +1171,8 @@ function userManagementShowResetPasswordEnterConfirmCode(email){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1126,6 +1195,8 @@ function userManagementResetPasswordEnterConfirmCodeSend(code, email){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1149,6 +1220,8 @@ function userManagementResetPasswordChangePassword(code, password, salt){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1177,6 +1250,8 @@ function playersManagementAdminCategoryShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1196,6 +1271,8 @@ function playersManagementAdminCategoryShowReloadList(Category){
 			playersManagementAdminCategoryTeamShow(Category);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1217,6 +1294,8 @@ function playersManagementAdminCategoryTeamShow(Category){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1236,6 +1315,8 @@ function playersManagementAdminCategoryTeamShowReloadList(Category, Team){
 			playersManagementAdminShow(Category, Team);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1258,6 +1339,8 @@ function playersManagementAdminShow(Category, Team){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1298,6 +1381,8 @@ function playersManagementAdminShowCreate(Category, Team){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1321,6 +1406,8 @@ function playersManagementAdminCreatePlayer(name, lastname, lastname2, nickname,
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});playersManagementAdminEditPlayer
@@ -1343,6 +1430,8 @@ function playersManagementAdminShowEdit(player){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1366,6 +1455,8 @@ function playersManagementAdminEditPlayer(playerid, name, lastname, lastname2, n
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1385,6 +1476,8 @@ function playersManagementAdminShowPrintList(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1412,6 +1505,8 @@ function refereeManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1435,6 +1530,8 @@ function refereeManagementAdminCreateReferee(name, lastname, lastname2, nickname
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1456,6 +1553,8 @@ function refereeManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1486,6 +1585,8 @@ function RefereeManagementCreateSave(Titulo, Fecha, editor, file){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1509,6 +1610,8 @@ function refereeManagementAdminEditReferee(refereeid, name, lastname, lastname2,
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1531,6 +1634,8 @@ function refereeManagementShowEdit(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1561,6 +1666,8 @@ function refereeManagementEditSave(id, Titulo, Fecha, editor, file){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1590,6 +1697,8 @@ function playersManagementTeamCategoryShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1609,6 +1718,8 @@ function playersManagementTeamCategoryShowReloadList(Category){
 			playersManagementTeamCategoryTeamShow(Category);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1630,6 +1741,8 @@ function playersManagementTeamCategoryTeamShow(Category){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1649,6 +1762,8 @@ function playersManagementTeamCategoryTeamShowReloadList(Category, Team){
 			playersManagementTeamShow(Category, Team);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1671,6 +1786,8 @@ function playersManagementTeamShow(Category, Team){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -1693,6 +1810,8 @@ function playersManagementTeamShowCreate(Team){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1716,6 +1835,8 @@ function playersManagementTeamCreatePlayer(name, lastname, lastname2, nickname, 
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1738,6 +1859,8 @@ function playersManagementTeamShowEdit(player){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1761,6 +1884,8 @@ function playersManagementTeamEditPlayer(playerid, name, lastname, lastname2, ni
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1791,6 +1916,8 @@ function readURL(input, foto) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1831,6 +1958,8 @@ function readURLE(input, fotoE) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1871,6 +2000,8 @@ function readIDURL11(input, identificacion) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1911,6 +2042,8 @@ function readIDURL11E(input, identificacion) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1951,6 +2084,8 @@ function readIDURL12(input, identificacion) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -1991,6 +2126,8 @@ function readIDURL12E(input, identificacion) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2031,6 +2168,8 @@ function readFirmaURL(input, firma) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2071,6 +2210,8 @@ function readFirmaURLE(input, firma) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2107,6 +2248,8 @@ function configManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2138,6 +2281,8 @@ function readURLLogo(input, logoImage) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2170,6 +2315,8 @@ function configManagementInfoSave(leagueName, latitude, longitude, logo, logox, 
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2192,6 +2339,8 @@ function configManagementAlertSave(Alert){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2218,6 +2367,8 @@ function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, Ju
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2245,6 +2396,8 @@ function colorManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2268,6 +2421,8 @@ function colorsManagementCreateSave(colorName, colorHEX){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2290,6 +2445,8 @@ function colorsManagementShowEdit(color){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2311,6 +2468,8 @@ function colorsManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2334,6 +2493,8 @@ function colorsManagementUpdateSave(colorID, colorName, colorHEX){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2361,6 +2522,8 @@ function tournamentManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2382,6 +2545,8 @@ function tournamentsManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2412,6 +2577,8 @@ function tournamentsManagementCreateSave(tournamentName, tournamentActual, tourn
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2434,6 +2601,8 @@ function tournamentsManagementShowEdit(tournament){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2464,6 +2633,8 @@ function tournamentsManagementEditSave(tournamentid, tournamentName, tournamentA
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2491,6 +2662,8 @@ function categoryManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2512,6 +2685,8 @@ function categoryManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2542,6 +2717,8 @@ function categoryManagementCreateSave(descripcion, orden, Inicial, Final, Color,
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2564,6 +2741,8 @@ function categoryManagementShowEdit(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2594,6 +2773,8 @@ function categoryManagementEditSave(id, descripcion, orden, Inicial, Final, Colo
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2621,6 +2802,8 @@ function calendarManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2642,6 +2825,8 @@ function calendarManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2672,6 +2857,8 @@ function calendarManagementCreateSave(descripcion){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2694,6 +2881,8 @@ function calendarManagementShowEdit(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2724,6 +2913,8 @@ function calendarManagementEditSave(id, descripcion){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2751,6 +2942,8 @@ function fieldManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2772,6 +2965,8 @@ function fieldManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2802,6 +2997,8 @@ function fieldManagementCreateSave(descripcion, lat, long, zoom, google){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2824,6 +3021,8 @@ function fieldManagementShowEdit(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2854,6 +3053,8 @@ function fieldManagementEditSave(id, descripcion, lat, long, zoom, google){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2881,6 +3082,8 @@ function teamsManagementAdminCategoryShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2902,6 +3105,8 @@ function teamsManagementAdminCategoryTeamShow(Category){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -2920,6 +3125,8 @@ function teamsManagementAdminCategoryTeamShowReloadList(Category){
 			$("#teamContentCategoryList").html(res.dataCategories);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2942,6 +3149,8 @@ function teamManagementShowAdd(Category){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2972,6 +3181,8 @@ function teamManagementCreateSave(categoria, descripcion, descripcionlarga, esta
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -2994,6 +3205,8 @@ function teamManagementShowEdit(id, category){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3024,6 +3237,8 @@ function teamManagementEditSave(id, categoria, descripcion, descripcionlarga, es
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3054,6 +3269,8 @@ function readTeamLogoURL(input, Logo) {
 			} 
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3091,6 +3308,8 @@ function weekManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3112,6 +3331,8 @@ function weeksManagementAdminCalendarWeeksShow(Calendar){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3130,6 +3351,8 @@ function weeksManagementAdminCalendarWeekShowReloadList(Calendar){
 			$("#weekContentCalendarList").html(res.dataCalendar);
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3152,6 +3375,8 @@ function weekManagementShowAdd(Calendar){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3182,6 +3407,8 @@ function weekManagementCreateSave(Desc, DescCorta, Orden, Fecha, Inicio, Fin, Ca
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3204,6 +3431,8 @@ function weekManagementShowEdit(id, Calendar){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3234,6 +3463,8 @@ function weekManagementEditSave(id, Desc, DescCorta, Orden, Fecha, Inicio, Fin, 
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3261,6 +3492,8 @@ function alertManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3282,6 +3515,8 @@ function alertManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3312,6 +3547,8 @@ function alertManagementCreateSave(Titulo, Inicio, Fin, Status, editor, mostrar)
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3334,6 +3571,8 @@ function alertManagementShowEdit(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3364,6 +3603,8 @@ function alertManagementEditSave(id, Titulo, Inicio, Fin, Status, editor, mostra
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3391,6 +3632,8 @@ function memoManagementShow(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3412,6 +3655,8 @@ function memoManagementShowAdd(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3442,6 +3687,8 @@ function memoManagementCreateSave(Titulo, Fecha, editor, file){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3464,6 +3711,8 @@ function memoManagementShowEdit(id){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3494,6 +3743,8 @@ function memoManagementEditSave(id, Titulo, Fecha, editor, file){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});								 
@@ -3522,6 +3773,8 @@ function loadWeeksAdmin(type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3550,6 +3803,8 @@ function loadWeekAdmin(Week, team, type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3572,6 +3827,8 @@ function loadWeekAdmminReloadList(Week, team, type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3594,6 +3851,8 @@ function loadWeekAdmminReloadListTeam(Week, team, type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3617,6 +3876,8 @@ function loadWeekAdminGameComments(Comment, GameID){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3651,6 +3912,8 @@ function abrirFichaEdit(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comen
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -3686,6 +3949,8 @@ function abrirFichaEditS(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Come
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -3709,6 +3974,8 @@ function loadWeekAdminGameDetailRoja(redComment, playerID, redDays, redFee, redP
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3731,6 +3998,8 @@ function loadWeekAdminGameDetailDocs(Season, Week, Game){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3843,6 +4112,8 @@ function loadWeeksAdminC(type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3871,6 +4142,8 @@ function loadWeekAdminC(Week, team, type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3893,6 +4166,8 @@ function loadWeekAdmminReloadListC(Week, team, type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3915,6 +4190,8 @@ function loadWeekAdmminReloadListTeamC(Week, team, type){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3938,6 +4215,8 @@ function loadWeekAdminGameCommentsC(Comment, GameID){
 			}
 		},
 		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
 	});
@@ -3972,6 +4251,8 @@ function abrirFichaEditC(id, week, game, gamedesc,Comentarios, SQL){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
@@ -4007,6 +4288,8 @@ function abrirFichaEditSC(id, week, game, gamedesc, Comentarios, SQL){
 				}
 			},
 			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
 				console.log('Exception:' + exception);
 			}
 		});
