@@ -5,7 +5,7 @@
 
 	//error_reporting(0);
 	//ini_set('display_errors', DEBUG ? '1' : '0');
-	require("membersite_config.php");
+	require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'load_membersite.php';
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('index.php');
 	$Season = 0;
