@@ -159,7 +159,7 @@
 				$pdf->SetFont('Helvetica' , 'B' , 10);
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(23, 128, 204);
-				$pdf->Cell(42 , 6.65, utf8_decode($torneo_desc), 0, 0 , 'C' , true);
+				$pdf->Cell(42 , 6.65, az_utf8_decode($torneo_desc), 0, 0 , 'C' , true);
 				$pdf->SetXY($x+2,$y+28);
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetFont('Helvetica' , 'B' , 10);
@@ -172,10 +172,10 @@
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(184 ,211, 220);
 				$pdf->SetXY($x+25,$y+34);
-				$pdf->Cell(42 , 4, utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
+				$pdf->Cell(42 , 4, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
 				$pdf->SetXY($x+25,$y+40);
 				$pdf->SetFont('Helvetica' , 'B' , 9);
-				$pdf->MultiCell(42	 , 4, utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
+				$pdf->MultiCell(42	 , 4, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
 				$pdf->SetFont('Helvetica' , 'B' , 9);
 
 				$pdf->SetXY($x+25,$y+50);
@@ -190,7 +190,7 @@
 				$pdf->SetFont('Helvetica' , 'B' , 10);
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(184 ,211, 220);
-				$pdf->MultiCell(42 , 4, '' . utf8_decode($row["Equipo_FULLDESC"]) . '', 0 , 'C' , true);
+				$pdf->MultiCell(42 , 4, '' . az_utf8_decode($row["Equipo_FULLDESC"]) . '', 0 , 'C' , true);
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetFont('Courier' , 'B' , 30);
 				$pdf->SetXY($x+25,$y+70);

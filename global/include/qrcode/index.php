@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+	require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'encoding_compat.php';
 	$msg = isset($_GET['msg']) ? $_GET['msg'] : '';
 	if (!$msg) $msg = "Le site du spipu\r\nhttp://spipu.net/";
 
@@ -55,13 +56,13 @@ table.qr td.on
 				<input type="submit" value="Afficher">
 			</form>
 			<hr>
-			G�n�ration d'un tableau HTML :<br> 
+			Gï¿½nï¿½ration d'un tableau HTML :<br> 
 <?php
-	$qrcode = new QRcode(utf8_encode($msg), $err);
+	$qrcode = new QRcode(az_utf8_encode($msg), $err);
 	$qrcode->displayHTML();
 ?>
 			<br>
-			G�n�ration d'une image PNG : <br>
+			Gï¿½nï¿½ration d'une image PNG : <br>
 			<img src="./image.php?msg=<?php echo urlencode($msg); ?>&amp;err=<?php echo urlencode($err); ?>" alt="generation qr-code" style="border: solid 1px black;">
 		</center>
 	</body>

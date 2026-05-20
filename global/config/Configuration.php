@@ -77,11 +77,47 @@ class Configuration
 	public $MAILaddReplyTo = 'administrador@ligapremierdeveteranos.com';
 
     /**
+     * Whether {schema}.Configuration has a column (older DBs may not be migrated yet).
+     */
+    public function configurationHasColumn(string $columnName): bool
+    {
+        $conn = $this->connect();
+        if (!$conn) {
+            return false;
+        }
+        return $this->schemaHasConfigurationColumn($conn, $columnName);
+    }
+
+    /**
+     * Internal: column check using an existing mysqli connection.
+     */
+    private function schemaHasConfigurationColumn(mysqli $conn, string $columnName): bool
+    {
+        $schema = $this->getSchema();
+        if ($schema === '' || $columnName === '') {
+            return false;
+        }
+        $schemaEsc = $conn->real_escape_string($schema);
+        $colEsc = $conn->real_escape_string($columnName);
+        $sql = "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{$schemaEsc}' AND TABLE_NAME = 'Configuration' AND COLUMN_NAME = '{$colEsc}' LIMIT 1";
+        $r = @$conn->query($sql);
+        return $r instanceof mysqli_result && $r->num_rows > 0;
+    }
+
+    /**
      * Load Config Flags
      *
      */
     public function LoadFlags()
     {
+        $conn = $this->connect();
+        if (!$conn) {
+            return null;
+        }
+        $selTarjetaCambios = $this->schemaHasConfigurationColumn($conn, 'TarjetaCambios')
+            ? 'TarjetaCambios'
+            : '0 AS TarjetaCambios';
+
         $query = "SELECT  case when MarcadorArbitro = 1 then '' else 'hidden' end MarcadorArbitro,
                           case when MarcadorFecha = 1 then '' else 'hidden' end MarcadorFecha,
 			  (case when MarcadorArbitro = 1 then 0 else 1 end) + 
@@ -97,7 +133,7 @@ class Configuration
 			  ByeWeekPoints, ByeWeekPointsGoals, Latitude, Longitude,
 			  UnJuegoSemana, TresSets, PerfilJugadores, JugadoresApellidos1,JuegosxNombre,
 			  CoachJuegos, CoachJuegosDiaInicial, CoachJuegosDiaFinal, CoachJuegosHoraFinal,
-			  TarjetaCambios, VollByeWeekSets, VollByeWeekPoints, VollByeWeekSetPoints, Apodo, BuscaCurp, MultiJugador
+			  " . $selTarjetaCambios . ", VollByeWeekSets, VollByeWeekPoints, VollByeWeekSetPoints, Apodo, BuscaCurp, MultiJugador
 		  FROM " . $this->config["schema"] . ".Configuration";
         $result = $this->query($query);
         if (!$result){

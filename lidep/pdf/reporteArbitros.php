@@ -78,7 +78,7 @@
         	$pdf->SetTextColor(252, 1, 2);
         	$pdf->SetXY(40,32);
         	$pdf->SetFont('Helvetica' , 'B' , 20);
-        	$pdf->Cell(225 , 8, utf8_decode($row1["Jornada_DescCorta"]) . ' (Fecha)', 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, az_utf8_decode($row1["Jornada_DescCorta"]) . ' (Fecha)', 35, 0 , 'C' , false);
         	$pdf->SetTextColor(0, 0, 0);
 
 		} 
@@ -122,13 +122,13 @@
         	$pdf->SetXY($x+5,$y+3);
         	//$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(8 , (3*$height), utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(8 , (3*$height), az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+13,$y+3);
         	$pdf->SetFont('Times' , '' , 5);
-        	$pdf->Cell(20 , (3*$height), utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(20 , (3*$height), az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+33,$y+3);
         	$pdf->SetFont('Times' , '' , 6);
-        	$pdf->Cell(35 , (3*$height), utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+68,$y+3);
         	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+74,$y+3);
@@ -140,13 +140,13 @@
         	$pdf->SetXY($x+92,$y+3);
         	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+98,$y+3);
-        	$pdf->Cell(35 , (3*$height), utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+133,$y+3);
-        	$pdf->Cell(35 , (3*$height), utf8_decode($row1["dia_sem"]) . ', ' . utf8_decode($row1["Mes"]) . utf8_decode($row1["Fecha_String"]) . '/' .utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+168,$y+3);
-        	$pdf->MultiCell(70, (3), utf8_decode($row1["Comentarios"]), 1,'L', false);
+        	$pdf->MultiCell(70, (3), az_utf8_decode($row1["Comentarios"]), 1,'L', false);
         	$pdf->SetXY($x+238,$y+3);
-        	$pdf->Cell(37 , (3*$height), utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(37 , (3*$height), az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
         	$y = $y + (3*$height);
             $count = $count + $height;
             
@@ -194,7 +194,7 @@
             	$pdf->SetTextColor(252, 1, 2);
             	$pdf->SetXY(40,32);
             	$pdf->SetFont('Helvetica' , 'B' , 20);
-            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . utf8_decode($Jornada_Desc_Corta) . ' (Fecha)', 35, 0 , 'C' , false);
+            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($Jornada_Desc_Corta) . ' (Fecha)', 35, 0 , 'C' , false);
             	$pdf->SetTextColor(0, 0, 0);
             	
                 $x = 0;
@@ -266,7 +266,7 @@
 	$pdf->SetTextColor(252, 1, 2);
 	$pdf->SetXY(40,32);
 	$pdf->SetFont('Helvetica' , 'B' , 20);
-	$pdf->Cell(225 , 8, utf8_decode($Jornada_Desc_Corta) . ' (Categoria)', 35, 0 , 'C' , false);
+	$pdf->Cell(225 , 8, az_utf8_decode($Jornada_Desc_Corta) . ' (Categoria)', 35, 0 , 'C' , false);
 	$pdf->SetTextColor(0, 0, 0);
     $x = 0;
     $y = 43;
@@ -303,13 +303,13 @@
         	$pdf->SetXY($x+5,$y+3);
         	//$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(8 , (3*$height), utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(8 , (3*$height), az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+13,$y+3);
         	$pdf->SetFont('Times' , '' , 5);
-        	$pdf->Cell(20 , (3*$height), utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(20 , (3*$height), az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+33,$y+3);
         	$pdf->SetFont('Times' , '' , 6);
-        	$pdf->Cell(35 , (3*$height), utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+68,$y+3);
         	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+74,$y+3);
@@ -321,13 +321,13 @@
         	$pdf->SetXY($x+92,$y+3);
         	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+98,$y+3);
-        	$pdf->Cell(35 , (3*$height), utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+133,$y+3);
-        	$pdf->Cell(35 , (3*$height), utf8_decode($row1["dia_sem"]) . ', ' . utf8_decode($row1["Mes"]) . utf8_decode($row1["Fecha_String"]) . '/' .utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+168,$y+3);
-        	$pdf->MultiCell(70, (3), utf8_decode($row1["Comentarios"]), 1,'L', false);
+        	$pdf->MultiCell(70, (3), az_utf8_decode($row1["Comentarios"]), 1,'L', false);
         	$pdf->SetXY($x+238,$y+3);
-        	$pdf->Cell(37 , (3*$height), utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(37 , (3*$height), az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
         	$y = $y + (3*$height);
             $count = $count + $height;
             
@@ -375,7 +375,7 @@
             	$pdf->SetTextColor(252, 1, 2);
             	$pdf->SetXY(40,32);
             	$pdf->SetFont('Helvetica' , 'B' , 20);
-            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . utf8_decode($Jornada_Desc_Corta) . ' (Categoria)', 35, 0 , 'C' , false);
+            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($Jornada_Desc_Corta) . ' (Categoria)', 35, 0 , 'C' , false);
             	$pdf->SetTextColor(0, 0, 0);
             	
                 $x = 0;

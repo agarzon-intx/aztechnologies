@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+	require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'encoding_compat.php';
 	$msg = isset($_GET['msg']) ? $_GET['msg'] : '';
 	if (!$msg) $msg = "Le site du spipu\r\nhttp://spipu.net/";
 
@@ -8,7 +9,7 @@
 	
 	require_once('qrcode.class.php');
 	
-	$qrcode = new QRcode(utf8_encode($msg), $err);
+	$qrcode = new QRcode(az_utf8_encode($msg), $err);
 	$qrcode->disableBorder();
 	$qrcode->displayPNG(200);
 ?>

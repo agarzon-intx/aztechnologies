@@ -62,7 +62,7 @@
 			$pdf->SetXY(0,0);
 			$pdf->Image($server . '/pdf/FondoFlyer.png',0,0,210, 210, 'PNG');
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->SetTextColor(0, 152, 175);
+			$pdf->SetTextColor(210, 44, 46);
 			$pdf->Image($server . '/pdf/calendar.png',35,153,10, 10, 'PNG');
 			$pdf->SetXY(45,155);
 			$pdf->SetFont('Coluna' , 'B' , 35);
@@ -85,40 +85,40 @@
 			$pdf->SetXY(90.5,170.5);
 			$pdf->SetFont('Coluna' , 'B' , 35);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
-            try{
-                            $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'PNG');
-            }catch(Exception $e){
-                    try{
-                            $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'JPG');
-                    }catch(Exception $e){
-                            try{
-                                    $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'JPEG');
-                            }catch(Exception $e){
-                                    try{
-                                            $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'GIF');
-                                    }catch(Exception $e){
-                                            echo $e->getTraceAsString();
-                                    }
-                            }
-                    }
-            }
-            try{
-                            $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'PNG');
-            }catch(Exception $e){
-                    try{
-                            $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'JPG');
-                    }catch(Exception $e){
-                            try{
-                                    $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'JPEG');
-                            }catch(Exception $e){
-                                    try{
-                                            $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'GIF');
-                                    }catch(Exception $e){
-                                            //echo $e->getTraceAsString();
-                                    }
-                            }
-                    }
-            }
+			try{
+				$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'PNG');
+			}catch(Exception $e){
+				try{
+					$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'JPG');
+				}catch(Exception $e){
+					try{
+						$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'JPEG');
+					}catch(Exception $e){
+						try{
+							$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'GIF');
+						}catch(Exception $e){
+							//echo $e->getTraceAsString();
+						}
+					}
+				}
+			}
+			try{
+				$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'PNG');
+			}catch(Exception $e){
+				try{
+					$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'JPG');
+				}catch(Exception $e){
+					try{
+						$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'JPEG');
+					}catch(Exception $e){
+						try{
+							$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'GIF');
+						}catch(Exception $e){
+							//echo $e->getTraceAsString();
+						}
+					}
+				}
+			}
             $pdf->SetXY(0,38);
 			$pdf->SetFont('Coluna' , 'B' , 75);
 			if(is_numeric($row1["Jornada_Desc"])){
@@ -130,7 +130,7 @@
 			$pdf->SetXY(0,70);
 			$pdf->SetFont('Coluna' , 'B' , 60);
 			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
-			$pdf->SetTextColor(0, 152, 175);
+			$pdf->SetTextColor(210, 44, 46);
 			$pdf->SetXY(.5,38.5);
 			$pdf->SetFont('Coluna' , 'B' , 75);
 			if(is_numeric($row1["Jornada_Desc"])){
@@ -150,5 +150,17 @@
 	}
 	$Config->close();
 
-	$pdf->Output();
+	//$pdf->Output();
+	$pdf_content = $pdf->Output('S'); // Return the PDF as a string
+
+	$imagick = new Imagick();
+	$imagick->setResolution(150, 150);
+	$imagick->readImageBlob($pdf_content);
+	$imagick->setImageFormat('png');
+
+	// Output the image directly to the browser
+	header("Content-Type: image/png");
+	echo $imagick->getImagesBlob();
+	// Optional: write out to files instead of echoing
+	// $imagick->writeImages('path/to/save/page.jpg', false);
 ?>

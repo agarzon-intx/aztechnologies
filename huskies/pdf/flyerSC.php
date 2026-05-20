@@ -39,7 +39,7 @@
 	if ($result0->num_rows > 0) {
 		// output data of each row
 		while($row0 = $result0->fetch_assoc()) {
-			$catid = utf8_decode($row0["Categoria_ID"]);
+			$catid = az_utf8_decode($row0["Categoria_ID"]);
 			$x = 0;
 			$y = -18;
 			$col = 0;
@@ -54,24 +54,24 @@
 			$pdf->SetXY(135,10);
 			$pdf->SetFont('Coluna' , 'B' , 20);
 			if(is_numeric($row0["Jornada_Desc"])){
-			    $pdf->Cell(170 , 8, 'Jornada ' . utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+			    $pdf->Cell(170 , 8, 'Jornada ' . az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
 			}else{
-			    $pdf->Cell(170 , 8, utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+			    $pdf->Cell(170 , 8, az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
 			}
 			$pdf->SetXY(135,18);
 			$pdf->SetFont('Coluna' , 'B' , 20);
-			$pdf->Cell(170 , 8, 'Categoria: ' . utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
+			$pdf->Cell(170 , 8, 'Categoria: ' . az_utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
 			$pdf->SetTextColor(210, 44, 46);
 			$pdf->SetXY(135.5,10.5);
 			$pdf->SetFont('Coluna' , 'B' , 20);
 			if(is_numeric($row0["Jornada_Desc"])){
-			    $pdf->Cell(170 , 8, 'Jornada ' . utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+			    $pdf->Cell(170 , 8, 'Jornada ' . az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
 			}else{
-			    $pdf->Cell(170 , 8, utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+			    $pdf->Cell(170 , 8, az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
 			}
 			$pdf->SetXY(135.5,18.5);
 			$pdf->SetFont('Coluna' , 'B' , 20);
-			$pdf->Cell(170 , 8, 'Categoria: ' . utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
+			$pdf->Cell(170 , 8, 'Categoria: ' . az_utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
 
 			
 			$sql1 = "select *
@@ -139,7 +139,7 @@
         			$pdf->SetXY($x+40,$y+53);
         			$pdf->SetFont('Coluna' , 'B' , 15);
         			$pdf->SetTextColor(255, 255, 255);
-        			$pdf->Cell(130 , 10, utf8_decode($row1["local"]) . '', 35, 0 , 'L' , false);
+        			$pdf->Cell(130 , 10, az_utf8_decode($row1["local"]) . '', 35, 0 , 'L' , false);
         			
 			        $pdf->SetAlpha(1);
 			        $pdf->SetFillColor(255, 255, 255);
@@ -152,15 +152,15 @@
         			}
         			$pdf->SetXY($x+40,$y+53);
         			$pdf->SetFont('Coluna' , 'B' , 15);
-        			$pdf->Cell(130 , 10, utf8_decode($row1["visitante"]) . '', 35, 0 , 'R' , false);
+        			$pdf->Cell(130 , 10, az_utf8_decode($row1["visitante"]) . '', 35, 0 , 'R' , false);
         			$pdf->SetXY($x+40,$y+53);
         			$pdf->SetFont('Coluna' , 'B' , 13);
         			if($row1["Visitante_ID"] != -1){
-        			    $pdf->Cell(130 , 10, utf8_decode($row1["Horario"]) . '', 35, 0 , 'C' , false);
+        			    $pdf->Cell(130 , 10, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'C' , false);
         			}
         			$pdf->SetXY($x+40,$y+59);
         			if($row1["Visitante_ID"] != -1){
-        			    $pdf->Cell(130 , 10, utf8_decode($row1["Campo_DESC"]) . ' @ ' . utf8_decode($row1["Fecha"]), 35, 0 , 'C' , false);
+        			    $pdf->Cell(130 , 10, az_utf8_decode($row1["Campo_DESC"]) . ' @ ' . az_utf8_decode($row1["Fecha"]), 35, 0 , 'C' , false);
         			}
         			$y = $y+17;
         			$rowc = $rowc + 1;
@@ -179,24 +179,24 @@
             			$pdf->SetXY(10,30);
             			$pdf->SetFont('Coluna' , 'B' , 20);
             			if(is_numeric($row0["Jornada_Desc"])){
-            			    $pdf->Cell(170 , 8, 'Jornada ' . utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+            			    $pdf->Cell(170 , 8, 'Jornada ' . az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
             			}else{
-            			    $pdf->Cell(170 , 8, utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+            			    $pdf->Cell(170 , 8, az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
             			}
             			$pdf->SetXY(10,38);
             			$pdf->SetFont('Coluna' , 'B' , 20);
-            			$pdf->Cell(170 , 8, 'Categoria: ' . utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
+            			$pdf->Cell(170 , 8, 'Categoria: ' . az_utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
             			$pdf->SetTextColor(210, 44, 46);
             			$pdf->SetXY(10.5,30.5);
             			$pdf->SetFont('Coluna' , 'B' , 20);
             			if(is_numeric($row0["Jornada_Desc"])){
-            			    $pdf->Cell(170 , 8, 'Jornada ' . utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+            			    $pdf->Cell(170 , 8, 'Jornada ' . az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
             			}else{
-            			    $pdf->Cell(170 , 8, utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
+            			    $pdf->Cell(170 , 8, az_utf8_decode($row0["Jornada_Desc"]) . '', 35, 0 , 'L' , FALSE);
             			}
             			$pdf->SetXY(10.5,38.5);
             			$pdf->SetFont('Coluna' , 'B' , 20);
-            			$pdf->Cell(170 , 8, 'Categoria: ' . utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
+            			$pdf->Cell(170 , 8, 'Categoria: ' . az_utf8_decode($row0["Categoria_Desc"]) . '', 35, 0 , 'L' , FALSE);
         			}
         		} 
         	}else {

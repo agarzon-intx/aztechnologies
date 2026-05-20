@@ -40,8 +40,8 @@
 	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
-			$localid = utf8_decode($row1["Local_ID"]);
-			$visitanteid = utf8_decode($row1["Visitante_ID"]);
+			$localid = az_utf8_decode($row1["Local_ID"]);
+			$visitanteid = az_utf8_decode($row1["Visitante_ID"]);
 			$x = 0;
 			$y = 0;
 			$col = 0;
@@ -58,20 +58,20 @@
 			$pdf->Cell(60 , 8, $Config->liga, 35, 0 , 'L' , false);
 			$pdf->SetXY(120,10);
 			$pdf->SetFont('Helvetica' , '' , 12);
-			$pdf->Cell(90 , 8, utf8_decode($row1["Fecha_String"]) . ' a las ' . utf8_decode($row1["Hora_String"]) . $lang['985'] . ' ' . utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'R' , false);
+			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha_String"]) . ' a las ' . az_utf8_decode($row1["Hora_String"]) . $lang['985'] . ' ' . az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'R' , false);
 			$pdf->SetXY(120,5);
 			$pdf->SetFont('Helvetica' , '' , 10);
-			$pdf->Cell(90 , 3, $lang['986'] . ' ' . utf8_decode($row1["Jornada_DescCorta"]) . '', 35, 0 , 'R' , false);
+			$pdf->Cell(90 , 3, $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . '', 35, 0 , 'R' , false);
 			$pdf->SetXY(40,19);
 			$pdf->Cell(90 , 8, $lang['987'], 35, 0 , 'L' , false);
 			$pdf->SetXY(65,19);
 			$pdf->Cell(90 , 8, '_________________________________________________________________________', 35, 0 , 'L' , false);
 			$pdf->SetXY(40,27);
 			$pdf->SetFont('Helvetica' , 'B' , 10);
-			$pdf->Cell(85 , 8, $lang['0'] . ': "' . utf8_decode($row1["Torneo_Desc"]) . '"', 35, 0 , 'L' , false);
+			$pdf->Cell(85 , 8, $lang['0'] . ': "' . az_utf8_decode($row1["Torneo_Desc"]) . '"', 35, 0 , 'L' , false);
 			$pdf->SetXY(125,27);
 			$pdf->SetFont('Helvetica' , 'B' , 10);
-			$pdf->Cell(85 , 8, $lang['1'] . ': "' . utf8_decode($row1["Categoria_DESC"]) . '"', 35, 0 , 'R' , false);
+			$pdf->Cell(85 , 8, $lang['1'] . ': "' . az_utf8_decode($row1["Categoria_DESC"]) . '"', 35, 0 , 'R' , false);
 			
 			$sql = "select * from (
                     				SELECT Jugador_ID,
@@ -135,7 +135,7 @@
 			$y = $y -5;
 			$pdf->SetFont('Times' , 'B' , 14);
 			$pdf->SetXY($x+6,$y+46);
-			$pdf->Cell(100 , 5, mb_strtoupper(utf8_decode('' . utf8_decode($row1["Local"]) . '')), 1, 1 , 'C' , false);
+			$pdf->Cell(100 , 5, mb_strtoupper(az_utf8_decode('' . az_utf8_decode($row1["Local"]) . '')), 1, 1 , 'C' , false);
 			$pdf->SetFont('Times' , '' , 10);
 			$y = $y + 4;
 			$pdf->SetXY($x+6,$y+47);
@@ -164,9 +164,9 @@
 					$pdf->SetFillColor(255, 255, 255);
 					$pdf->SetFont('Times' , '' , 10);
 					$pdf->SetXY($x+6,$y+47);
-					$pdf->Cell(6 , 4, '' . utf8_decode($row["Numero"]) . '', 1, 1 , 'C' , false);
+					$pdf->Cell(6 , 4, '' . az_utf8_decode($row["Numero"]) . '', 1, 1 , 'C' , false);
 					$pdf->SetXY($x+12,$y+47);
-					$pdf->Cell(62, 4, '' . utf8_decode($row["Nombre"]) . ' ' . utf8_decode($row["Apellido_P"]) . ' ' . utf8_decode($row["Apellido_M"]) . '', 1, 0, 'L' , false);
+					$pdf->Cell(62, 4, '' . az_utf8_decode($row["Nombre"]) . ' ' . az_utf8_decode($row["Apellido_P"]) . ' ' . az_utf8_decode($row["Apellido_M"]) . '', 1, 0, 'L' , false);
 					$pdf->SetXY($x+74,$y+47);
 					$pdf->Cell(8, 4, '', 1, 0, 'C' , false);
 					$pdf->SetXY($x+82,$y+47);
@@ -242,7 +242,7 @@
 		
 			$pdf->SetFont('Times' , 'B' , 14);
 			$pdf->SetXY($x+10,$y+46);
-			$pdf->Cell(100 , 5, mb_strtoupper (utf8_decode('' . utf8_decode($row1["Visitante"]) . '')), 1, 1 , 'C' , false);
+			$pdf->Cell(100 , 5, mb_strtoupper (az_utf8_decode('' . az_utf8_decode($row1["Visitante"]) . '')), 1, 1 , 'C' , false);
 			$pdf->SetFont('Times' , '' , 10);
 			$y = $y + 4;
 			$pdf->SetXY($x+10,$y+47);
@@ -271,9 +271,9 @@
 					$pdf->SetFillColor(255, 255, 255);
 					$pdf->SetFont('Times' , '' , 10);
 					$pdf->SetXY($x+10,$y+47);
-					$pdf->Cell(6 , 4, '' . utf8_decode($row["Numero"]) . '', 1, 1 , 'C' , 1);
+					$pdf->Cell(6 , 4, '' . az_utf8_decode($row["Numero"]) . '', 1, 1 , 'C' , 1);
 					$pdf->SetXY($x+16,$y+47);
-					$pdf->Cell(62, 4, utf8_decode($row["Nombre"]) . ' ' . utf8_decode($row["Apellido_P"]) . ' ' . utf8_decode($row["Apellido_M"]), 1, 0, 'L' , false);
+					$pdf->Cell(62, 4, az_utf8_decode($row["Nombre"]) . ' ' . az_utf8_decode($row["Apellido_P"]) . ' ' . az_utf8_decode($row["Apellido_M"]), 1, 0, 'L' , false);
 					$pdf->SetXY($x+78,$y+47);
 					$pdf->Cell(8, 4, '', 1, 0, 'C' , false);
 					$pdf->SetXY($x+86,$y+47);

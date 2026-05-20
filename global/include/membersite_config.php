@@ -15,8 +15,10 @@
 	ini_set('display_errors', '0');
 	ini_set('display_startup_errors', '0');
 })();
-require_once("fg_membersite.php");
-require_once("Configuration.php");
+// Always load from this tree (do not rely on cwd or include_path for shared libs).
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'encoding_compat.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'fg_membersite.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'Configuration.php';
 $Config = new Configuration();
 $fgmembersite = new FGMembersite($Config);
 

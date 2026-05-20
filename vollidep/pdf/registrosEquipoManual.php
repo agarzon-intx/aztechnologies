@@ -130,19 +130,19 @@
 				$pdf->SetAlpha(1);
 				$pdf->SetXY($x+40,$y+16);
 				$pdf->SetFont('Helvetica' , '' , 11);
-				$pdf->Cell(45 , 5, '' . utf8_decode($row["Equipo_FULLDESC"]) . '', 0, 0 , 'L' , false);
+				$pdf->Cell(45 , 5, '' . az_utf8_decode($row["Equipo_FULLDESC"]) . '', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+21);
-				$pdf->Cell(45 , 5, '' . utf8_decode($row["Categoria_Desc"]) . '', 0, 0 , 'L' , false);
+				$pdf->Cell(45 , 5, '' . az_utf8_decode($row["Categoria_Desc"]) . '', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+26);
-				$pdf->MultiCell(45	 , 5, utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , false);
+				$pdf->MultiCell(45	 , 5, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , false);
 				//$pdf->SetXY($x+40,$y+36);
-				//$pdf->Cell(65 , 5, utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , false);
+				//$pdf->Cell(65 , 5, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+36);
-				$pdf->Cell(65 , 5, 'Fech Nac ' . utf8_decode($row["Fecha_Nacimiento"]) . '', 0, 0 , 'L' , false);
+				$pdf->Cell(65 , 5, 'Fech Nac ' . az_utf8_decode($row["Fecha_Nacimiento"]) . '', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+41);
-				$pdf->Cell(65 , 5, '' . utf8_decode(substr($row["Curp"],0,11)) . 'XXXXXXX', 0, 0 , 'L' , false);
+				$pdf->Cell(65 , 5, '' . az_utf8_decode(substr($row["Curp"],0,11)) . 'XXXXXXX', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+46);
-				$pdf->Cell(65 , 5, utf8_decode($row["FechaAlta"]), 0, 0 , 'L' , false);
+				$pdf->Cell(65 , 5, az_utf8_decode($row["FechaAlta"]), 0, 0 , 'L' , false);
 				//$pdf->Image($server . '/include/qrcode/image.php?msg=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+92,$y+2,13, 13, 'PNG');
 
 				

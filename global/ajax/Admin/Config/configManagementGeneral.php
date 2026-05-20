@@ -1,4 +1,5 @@
 <?php
+	$__selTarjetaCambiosCfg = $Config->configurationHasColumn('TarjetaCambios') ? 'TarjetaCambios' : '0 AS TarjetaCambios';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -33,7 +34,7 @@
 			    CoachJuegosDiaFinal,
 			    TIME_FORMAT(MarcadorHoraDefault, '%H:%i') horario,
 			    TIME_FORMAT(CoachJuegosHoraFinal, '%H:%i') CoachJuegosHoraFinal,
-			    TarjetaCambios,
+			    " . $__selTarjetaCambiosCfg . ",
 			    VollByeWeekSets,
 			    VollByeWeekPoints,
 			    VollByeWeekSetPoints

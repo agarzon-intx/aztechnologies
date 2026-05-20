@@ -44,8 +44,8 @@
 	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
-			$localid = utf8_decode($row1["Local_ID"]);
-			$visitanteid = utf8_decode($row1["Visitante_ID"]);
+			$localid = az_utf8_decode($row1["Local_ID"]);
+			$visitanteid = az_utf8_decode($row1["Visitante_ID"]);
 			$DescTorneo = $row1["Torneo_Desc"];
 			
 			$x = 0;
@@ -65,7 +65,7 @@
 			$pdf->SetXY(115,5);
 			$pdf->SetFont('Helvetica' , 'B' , 12);
 			$pdf->SetTextColor(0, 0, 255);
-			$pdf->Cell(62 , 5, utf8_decode($row1["Fecha_String"]) . '  ' . utf8_decode($row1["Horario"]) , 1, 1 , 'L' , false);
+			$pdf->Cell(62 , 5, az_utf8_decode($row1["Fecha_String"]) . '  ' . az_utf8_decode($row1["Horario"]) , 1, 1 , 'L' , false);
 
 			/*Torneo y Categoria */
 			$pdf->SetFont('Helvetica' , '' , 10);
@@ -73,7 +73,7 @@
 			$pdf->SetXY(5,10);
 			
 		//	$pdf->Cell(60, 5, $row1["Torneo_Desc"], 1, 1 , 'L' , false);	// se comento esta línea EMA 20.10.2023
-			$pdf->Cell(60, 5,utf8_decode($DescTorneo), 1, 1 , 'L' , false);
+			$pdf->Cell(60, 5,az_utf8_decode($DescTorneo), 1, 1 , 'L' , false);
 			$pdf->SetXY(65,10);
 			$pdf->Cell(50, 5, $row1["Categoria_DESC"], 1, 1 , 'L' , false);
 
@@ -114,9 +114,9 @@
             $pdf->SetTextColor(0, 0, 255);
 	    	$pdf->Cell(60, 11, '' , 0, 1 , 'C' , false);
 	    	$pdf->SetXY(115,13);
-	    	$pdf->MultiCell(30, 4.7, utf8_decode($row1["Local"]), 0 , 'C' , false);
+	    	$pdf->MultiCell(30, 4.7, az_utf8_decode($row1["Local"]), 0 , 'C' , false);
 	    	$pdf->SetXY(145,13);
-	    	$pdf->MultiCell(30, 4.7, utf8_decode($row1["Visitante"]), 0 , 'C' , false);
+	    	$pdf->MultiCell(30, 4.7, az_utf8_decode($row1["Visitante"]), 0 , 'C' , false);
 		
 		    /*Cancha y Juego */
            	$pdf->SetFont('Helvetica' , 'B' , 9);
@@ -124,7 +124,7 @@
 			$pdf->SetXY(5,15);
 			$pdf->Cell(60, 6, $lang['10517'] . ' ' . $row1["Campo_DESC"], 1, 1 , 'L' , false);			
 			$pdf->SetXY(65,15);
-			$pdf->Cell(50, 6,  $lang['986'] . ' ' . utf8_decode($row1["Jornada_DescCorta"]) . '', 1, 0 , 'C' , false);
+			$pdf->Cell(50, 6,  $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . '', 1, 0 , 'C' , false);
 			$y = .5;
 			/*Empieza Cabecera antes de los Set's*/
 			$pdf->SetFont('Times' , 'B' , 8);
@@ -140,7 +140,7 @@
 		    /*Colocacion del equipo dentro de la cancha 1er set*/
 		    $pdf->SetFont('Times' , 'B' , 9);
 		    $pdf->SetXY(27,$y+21);
-		    //$pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    //$pdf->Cell(36.8 , 6, 'A) ' . az_utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
 		    $pdf->Cell(36.8 , 6, 'A) ', 1, 1 , 'L' , false);
 		    
 		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
@@ -161,7 +161,7 @@
 			
 			$pdf->SetXY(82.8,$y+21);
             $pdf->SetFont('Times' , 'B' , 9);
-    	//	$pdf->Cell(33.8, 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+    	//	$pdf->Cell(33.8, 6, 'B) ' . az_utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
     	    $pdf->Cell(33.8, 6, 'B) ' , 1, 0 , 'L' , false);
 		 
 		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
@@ -199,7 +199,7 @@
 	        /*Datos de acomodo para el 2do. Set*/
 	        $pdf->SetXY(156.6,$y+21);
             $pdf->SetFont('Times' , 'B' , 8);
-			//$pdf->Cell(39.8 , 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+			//$pdf->Cell(39.8 , 6, 'B) ' . az_utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
 			//Se agrega esta línea porque se pide que no aparezca los equipos EMA 20022023
 			$pdf->Cell(39.8 , 6, 'B) ' , 1, 0 , 'L' , false);
 			
@@ -224,7 +224,7 @@
 	        /*Colocacion del equipo dentro de la cancha 2do set*/
 		    $pdf->SetFont('Times' , 'B' , 9);
 		    $pdf->SetXY(212.4,$y+21);
-		    //$pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    //$pdf->Cell(36.8 , 6, 'A) ' . az_utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
 		    //Se agrega esta línea porque se pide que no aparezca los equipos EMA 20022023
 		    $pdf->Cell(36.8 , 6, 'A) ' , 1, 1 , 'L' , false);
 		    
@@ -263,7 +263,7 @@
 			$pdf->Cell(11 , 5,''  , 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+28);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10500']) . utf8_decode($lang['10500-1']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10500']) . az_utf8_decode($lang['10500-1']), 0 , 'C' , false);
 			
 			$pdf->SetFont('Times' , 'B' , 7);
 		    $pdf->SetXY($x+16,$y+28);
@@ -288,7 +288,7 @@
 			$pdf->Cell(11 , 5,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+33);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-1']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-1']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 		    $pdf->SetFont('Times' , 'B' , 6);
 			$pdf->SetXY($x+20,$y+33);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -311,7 +311,7 @@
 			$pdf->RotatedText($x+7,$y+50,$lang['10508-4'],90);
 			$pdf->SetXY($x+8,$y+38);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(8, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(8, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 		    $pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+38);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -332,7 +332,7 @@
 			$pdf->Cell(8 , 10,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+7,$y+45.5);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(10, 2.5, utf8_decode($lang['10508-3']), 0 , 'C' , false);
+			$pdf->MultiCell(10, 2.5, az_utf8_decode($lang['10508-3']), 0 , 'C' , false);
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+43);
 			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
@@ -2091,7 +2091,7 @@
 		    /*Colocacion del equipo dentro de la cancha 1er set*/
 		    $pdf->SetFont('Times' , 'B' , 9);
 		    $pdf->SetXY(27,$y+72);
-		    //$pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    //$pdf->Cell(36.8 , 6, 'A) ' . az_utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
 		    
 		    $pdf->Cell(36.8 , 6, 'A) ' , 1, 1 , 'L' , false);
 		    
@@ -2114,7 +2114,7 @@
 			
 			$pdf->SetXY(82.8,$y+72);
             $pdf->SetFont('Times' , 'B' , 9);
-    		//$pdf->Cell(33.8, 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+    		//$pdf->Cell(33.8, 6, 'B) ' . az_utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
     		
     		$pdf->Cell(33.8, 6, 'B) ' , 1, 0 , 'L' , false);
 		 
@@ -2182,7 +2182,7 @@
 			$pdf->Cell(11 , 5,''  , 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+28);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10500']) . utf8_decode($lang['10500-1']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10500']) . az_utf8_decode($lang['10500-1']), 0 , 'C' , false);
 			
 			
 			$pdf->SetXY($x+16,$y+28);
@@ -2207,7 +2207,7 @@
 			$pdf->Cell(11 , 5,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+33);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-1']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-1']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 		    
 		    $pdf->SetXY($x+20,$y+33);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -2230,7 +2230,7 @@
 			$pdf->RotatedText($x+7,$y+50,$lang['10508-4'],90);
 			$pdf->SetXY($x+8,$y+38);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(8, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(8, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+38);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -2251,7 +2251,7 @@
 			$pdf->Cell(8 , 10,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+7,$y+45.5);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(10, 2.5, utf8_decode($lang['10508-3']), 0 , 'C' , false);
+			$pdf->MultiCell(10, 2.5, az_utf8_decode($lang['10508-3']), 0 , 'C' , false);
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+43);
 			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
@@ -3612,11 +3612,11 @@
 			$pdf->SetTextColor(0, 0, 0);
 			
 			$pdf->SetXY($x+151,$y+125.5);
-			//$pdf->MultiCell(30.35, 3, utf8_decode($row1["Local"]), 0 , 'L' , false);
+			//$pdf->MultiCell(30.35, 3, az_utf8_decode($row1["Local"]), 0 , 'L' , false);
 			$pdf->MultiCell(30.35, 3, '', 0 , 'L' , false);
 			
 			$pdf->SetXY($x+181.35,$y+125.5);
-			//$pdf->MultiCell(30.35, 3, utf8_decode($row1["Visitante"]), 0 , 'R' , false);
+			//$pdf->MultiCell(30.35, 3, az_utf8_decode($row1["Visitante"]), 0 , 'R' , false);
 			$pdf->MultiCell(30.35, 3, '', 0 , 'R' , false);
 			
 			/*RESULTADOS 1a*/
@@ -3862,7 +3862,7 @@
 
 			$pdf->SetFont('Times' , 'B' , 6);
 			$pdf->SetXY($x+191.5,$y+134);
-			$pdf->Cell(20.2 , 3, utf8_decode($lang['10597']), 0, 0 , 'C' , false);
+			$pdf->Cell(20.2 , 3, az_utf8_decode($lang['10597']), 0, 0 , 'C' , false);
 
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+191.5,$y+135);
@@ -3916,7 +3916,7 @@
 			
 			$pdf->SetFont('Times' , 'B' , 14);
 			$pdf->SetXY($x+59,$y+160);
-			$pdf->Cell(50, 5, utf8_decode($row1["arbitro"]) , 1, 0, 'L' , false);
+			$pdf->Cell(50, 5, az_utf8_decode($row1["arbitro"]) , 1, 0, 'L' , false);
 			
 			$pdf->SetFont('Times' , 'B' , 12);
 			$pdf->SetXY($x+109,$y+160);
@@ -4080,9 +4080,9 @@
 			$pdf->SetTextColor(0, 0, 0);
 			$pdf->Cell(62.3, 11, '' , 1, 1 , 'C' , false);
 			$pdf->SetXY($x+210.7,$y+76);
-			$pdf->MultiCell(31, 3, utf8_decode($row1["Local"]), 0 , 'L' , false);
+			$pdf->MultiCell(31, 3, az_utf8_decode($row1["Local"]), 0 , 'L' , false);
 			$pdf->SetXY($x+242.3,$y+76);
-			$pdf->MultiCell(31, 3, utf8_decode($row1["Visitante"]), 0 , 'R' , false);
+			$pdf->MultiCell(31, 3, az_utf8_decode($row1["Visitante"]), 0 , 'R' , false);
 
 			$countRow = 0;
 			$y = $y - 2;
@@ -4099,7 +4099,7 @@
 				
 				//Apodo L
 				$pdf->SetFillColor(255, 255, 255);
-				$pdf->Cell(22.2, 4, utf8_decode(''), 1, 0, 'L' , false);
+				$pdf->Cell(22.2, 4, az_utf8_decode(''), 1, 0, 'L' , false);
 				$pdf->SetXY($x+242.2,$y+85);
 				$pdf->Cell(4, 4, $lang['10136'], 1, 0, 'L' , false);
 			
@@ -4210,12 +4210,12 @@
 					$pdf->SetFont('Times' , 'B' , 7);
 					$pdf->SetXY($x+215,$y+85);
 					//$pdf->SetFillColor($colorR ,$colorG, $colorB);
-					$pdf->Cell(5 , 4, '' . utf8_decode($rowL["Numero"]) . '', 0, 1 , 'C' , 0);
+					$pdf->Cell(5 , 4, '' . az_utf8_decode($rowL["Numero"]) . '', 0, 1 , 'C' , 0);
 					
 					/*Datos del Apodo del Jugador Local*/
 					$pdf->SetXY($x+220,$y+85);
 					$pdf->SetFillColor(255, 255, 255);
-					$pdf->Cell(22, 4, utf8_decode('' . $rowL["Jugador"] . ''), 0, 0, 'L' , 0);
+					$pdf->Cell(22, 4, az_utf8_decode('' . $rowL["Jugador"] . ''), 0, 0, 'L' , 0);
 					$y= $y+4;
 					$tmpy = $tmpy + 4;
 				}
@@ -4315,12 +4315,12 @@
 					$pdf->SetFont('Times' , 'B' , 7);
 					$pdf->SetXY($x+215,$y+85);
 					//$pdf->SetFillColor($colorR ,$colorG, $colorB);
-					$pdf->Cell(5 , 4, '' . utf8_decode($rowV["Numero"]) . '', 0, 1 , 'C' , 0);
+					$pdf->Cell(5 , 4, '' . az_utf8_decode($rowV["Numero"]) . '', 0, 1 , 'C' , 0);
 
 					/*Datos del Apodo del Jugador Local*/
 					$pdf->SetXY($x+220,$y+85);
 					$pdf->SetFillColor(255, 255, 255);
-				    $pdf->Cell(22, 4, utf8_decode('' . $rowV["Jugador"] . ''), 0, 0, 'L' , 0);
+				    $pdf->Cell(22, 4, az_utf8_decode('' . $rowV["Jugador"] . ''), 0, 0, 'L' , 0);
 					
 					$y= $y+4;
 				}

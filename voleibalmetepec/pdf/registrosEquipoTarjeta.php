@@ -182,11 +182,11 @@
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(184 ,211, 220);
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45);
-				$pdf->Cell(33 , 3.2, utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
+				$pdf->Cell(33 , 3.2, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
 				
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45+3.2+1.5);
 				$pdf->SetFont('Helvetica' , 'B' , 7.2);
-				$pdf->MultiCell(33	 , 3.2, utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
+				$pdf->MultiCell(33	 , 3.2, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
 				
 				
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45+(9.6)+(3.0));

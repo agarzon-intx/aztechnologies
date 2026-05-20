@@ -136,14 +136,14 @@
 		   	
 		   	//	$pdf->SetXY($x+20.5-18.7,$y+30+28.45+3.2+1.5);
 			//	$pdf->SetFont('Helvetica' , 'B' , 7.2);
-		//	 utf8_decode($row1["Visitante"])
+		//	 az_utf8_decode($row1["Visitante"])
 	          
 	          
 		    	$pdf->Cell(11, 5, 'Nombre  ' , 0,1, 'L' , false);
 		    	
 				$pdf->SetFont('Arial','',13);
 		    	$pdf->SetXY($x+28,$y+19); //30 luego 24
-				$pdf->Cell (45 , 5, utf8_decode($row["Nombre"]),0 ,0, 'L', false);
+				$pdf->Cell (45 , 5, az_utf8_decode($row["Nombre"]),0 ,0, 'L', false);
 				
 				$pdf->SetXY($x+28,$y+23);  //35 luego 29
 				$pdf->Cell (55 , .1, '' ,1 , 1, 'L', false);
@@ -155,7 +155,7 @@
 				
 				$pdf->SetFont('Arial','',13);
 				$pdf->SetXY($x+32,$y+37);
-				$pdf->Cell (40 , 5, utf8_decode($row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
+				$pdf->Cell (40 , 5, az_utf8_decode($row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
 				$pdf->SetXY($x+38,$y+42);
 				$pdf->Cell (55 , .1, '' ,1 , 1, 'L', false);
 									
@@ -177,7 +177,7 @@
 					
 				$pdf->SetFont('Arial','',13);
 				$pdf->SetXY($x+41,$y+51);
-				$pdf->Cell (45 , 5, utf8_decode($row["Equipo_FULLDESC"]) ,0 , 1, 'L', false);
+				$pdf->Cell (45 , 5, az_utf8_decode($row["Equipo_FULLDESC"]) ,0 , 1, 'L', false);
 				$pdf->SetXY($x+40,$y+56);
 				$pdf->Cell (53 , .1, '' ,1 , 1, 'L', false);
 				
@@ -188,14 +188,14 @@
 				
 			    $pdf->SetFont('Arial','',14);
 				$pdf->SetXY($x+42,$y+59);
-				$pdf->Cell (45 , 5, utf8_decode($row["Categoria_Desc"] ) ,0 , 1, 'L', false);
+				$pdf->Cell (45 , 5, az_utf8_decode($row["Categoria_Desc"] ) ,0 , 1, 'L', false);
 				
 				$pdf->SetXY($x+40,$y+64);
 				$pdf->Cell (53 , .1, '' ,1 , 1, 'L', false);
 				
 				$pdf->SetXY($x+15,$y+66);
 				$pdf->SetFont('Arial','',10);
-				$pdf->Cell(20, 5,utf8_decode('Asociación  ') , 0,1, 'L' , false);
+				$pdf->Cell(20, 5,az_utf8_decode('Asociación  ') , 0,1, 'L' , false);
 				
 			    $pdf->SetFont('Arial','',12);
 				$pdf->SetXY($x+38,$y+66);
@@ -206,14 +206,14 @@
 			
 				$pdf->SetXY($x+60,$y+66);
 				$pdf->SetFont('Arial','',10);
-				$pdf->Cell(10, 5,utf8_decode('Liga  ') , 0,1, 'L' , false);
+				$pdf->Cell(10, 5,az_utf8_decode('Liga  ') , 0,1, 'L' , false);
 				
 			   	$pdf->SetXY($x+72,$y+71);
 				$pdf->Cell (30 , .1, '' ,1 , 1, 'L', false);
 				
 			    $pdf->SetXY($x+15,$y+73);
 				$pdf->SetFont('Arial','',10);
-				$pdf->Cell(20, 5,utf8_decode('Función  ') , 0,1, 'L' , false);
+				$pdf->Cell(20, 5,az_utf8_decode('Función  ') , 0,1, 'L' , false);
 				
 				 $pdf->SetFont('Arial','',15);
 				$pdf->SetXY($x+38,$y+78);
@@ -221,7 +221,7 @@
 			   
 			    $pdf->SetXY($x+100,$y+79);
 				$pdf->SetFont('Arial','',10);
-				$pdf->Cell(20, 5,utf8_decode('Firma  ') , 0,0, 'C' , false);
+				$pdf->Cell(20, 5,az_utf8_decode('Firma  ') , 0,0, 'C' , false);
 				
 				 $pdf->SetFont('Arial','',15);
 				$pdf->SetXY($x+95,$y+78);
@@ -232,7 +232,7 @@
 			    $pdf->SetTextColor(255, 255, 255);
 			    $pdf->SetFillColor(244, 67, 54);
 				$pdf->SetFont('Arial','B',10);
-				$pdf->Cell(60, 5,utf8_decode('Costo Máximo al afiliado: $150.00') , 1,1, 'L' , true);
+				$pdf->Cell(60, 5,az_utf8_decode('Costo Máximo al afiliado: $150.00') , 1,1, 'L' , true);
 			
 			   
 			    
@@ -293,7 +293,7 @@
 				$pdf->SetFont('Helvetica' , 'B' , 7.8);
 				$pdf->SetAlpha(1);
 			//	$pdf->SetFillColor(23, 128, 204);
-			//	$pdf->Cell(33 , 5.22, utf8_decode($torneo_desc), 0, 0 , 'C' , true);
+			//	$pdf->Cell(33 , 5.22, az_utf8_decode($torneo_desc), 0, 0 , 'C' , true);
 			//	$pdf->SetXY($x+2-18.7,$y+28+6+15.66+2.75);
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetFont('Helvetica' , 'B' , 7.8);
@@ -306,11 +306,11 @@
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(184 ,211, 220);
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45);
-				$pdf->Cell(33 , 3.2, utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
+				$pdf->Cell(33 , 3.2, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
 				
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45+3.2+1.5);
 				$pdf->SetFont('Helvetica' , 'B' , 7.2);
-				$pdf->MultiCell(33	 , 3.2, utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
+				$pdf->MultiCell(33	 , 3.2, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
 		*/		
 			/*	
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45+(9.6)+(3.0));
@@ -326,7 +326,7 @@
 				$pdf->SetFont('Helvetica' , 'B' , 7.8);
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(184 ,211, 220);
-				$pdf->MultiCell(33 , 3.2, '' . utf8_decode($row["Equipo_FULLDESC"]) . '', 0 , 'C' , true);
+				$pdf->MultiCell(33 , 3.2, '' . az_utf8_decode($row["Equipo_FULLDESC"]) . '', 0 , 'C' , true);
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetFont('Courier' , 'B' , 24);
 				$pdf->SetXY($x+20.5-18.7,$y+54.5+28.45+5);

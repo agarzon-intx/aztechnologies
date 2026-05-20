@@ -163,10 +163,10 @@
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(184 ,211, 220);
 				$pdf->SetXY($x+25,$y+34);
-				$pdf->Cell(42 , 4, utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
+				$pdf->Cell(42 , 4, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
 				$pdf->SetXY($x+25,$y+40);
 				$pdf->SetFont('Helvetica' , 'B' , 9);
-				$pdf->MultiCell(42	 , 4, utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
+				$pdf->MultiCell(42	 , 4, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
 				$pdf->SetFont('Helvetica' , 'B' , 9);
 				$pdf->SetXY($x+25,$y+50);
 				$pdf->SetFont('Helvetica' , 'B' , 10);

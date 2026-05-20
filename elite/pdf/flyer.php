@@ -49,8 +49,8 @@
 	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
-			$localid = utf8_decode($row1["Local_ID"]);
-			$visitanteid = utf8_decode($row1["Visitante_ID"]);
+			$localid = az_utf8_decode($row1["Local_ID"]);
+			$visitanteid = az_utf8_decode($row1["Visitante_ID"]);
 			$x = 0;
 			$y = 0;
 			$col = 0;
@@ -65,25 +65,25 @@
 			$pdf->Image($server . '/pdf/calendar.png',35,153,10, 10, 'PNG');
 			$pdf->SetXY(45,155);
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->Cell(90 , 8, utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
+			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
 			$pdf->Image($server . '/pdf/clock.png',120,153,10, 10, 'PNG');
 			$pdf->SetXY(130,155);
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->Cell(90 , 8, utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
+			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
 			$pdf->Image($server . '/pdf/pointer.png',80,169,10, 10, 'PNG');
 			$pdf->SetXY(90,170);
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->Cell(90 , 8, utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
+			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
 			$pdf->SetTextColor(255,255,255);
 			$pdf->SetXY(45.5,155.5);
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->Cell(90 , 8, utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
+			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
 			$pdf->SetXY(130.5,155.5);
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->Cell(90 , 8, utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
+			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
 			$pdf->SetXY(90.5,170.5);
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->Cell(90 , 8, utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
+			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
             try{
                             $pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'PNG');
             }catch(Exception $e){
@@ -121,26 +121,26 @@
             $pdf->SetXY(0,38);
 			$pdf->SetFont('Coluna' , 'B' , 75);
 			if(is_numeric($row1["Jornada_Desc"])){
-			    $pdf->Cell(210 , 25, 'Jornada ' . utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
+			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}else{
-			    $pdf->Cell(210 , 25, utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
+			    $pdf->Cell(210 , 25, az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
 			$pdf->SetXY(0,70);
 			$pdf->SetFont('Coluna' , 'B' , 60);
-			$pdf->Cell(210 , 18, 'Categoria: ' . utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
+			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
 			$pdf->SetTextColor(0, 152, 175);
 			$pdf->SetXY(.5,38.5);
 			$pdf->SetFont('Coluna' , 'B' , 75);
 			if(is_numeric($row1["Jornada_Desc"])){
-			    $pdf->Cell(210 , 25, 'Jornada ' . utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
+			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}else{
-			    $pdf->Cell(210 , 25, utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
+			    $pdf->Cell(210 , 25, az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
 			$pdf->SetXY(.5,70.5);
 			$pdf->SetFont('Coluna' , 'B' , 60);
-			$pdf->Cell(210 , 18, 'Categoria: ' . utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
+			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
 			
 			
 		} 

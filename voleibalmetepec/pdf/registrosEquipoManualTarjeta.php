@@ -244,7 +244,7 @@ $alto  = 85.6; // alto PVC
 				$pdf->SetFont('Helvetica' , 'B' , 14);
 				$pdf->SetAlpha(1);
 				$pdf->SetFillColor(255 ,255, 255);
-				$pdf->Cell(39 , 6.2, '' . utf8_decode($row["Equipo_FULLDESC"]) . '', 0, 0, 'C' , true);
+				$pdf->Cell(39 , 6.2, '' . az_utf8_decode($row["Equipo_FULLDESC"]) . '', 0, 0, 'C' , true);
 				//	$pdf->Cell(22 , 6.2, '' . $row["Fecha_Nacimiento"] . '', 0, 0 , 'C' , true);
 
 		     //Nombre de liga		
@@ -268,7 +268,7 @@ $alto  = 85.6; // alto PVC
 		//		$pdf->SetFont('Helvetica' , 'B' , 8.5);
 		//		$pdf->SetAlpha(1);
 		//		$pdf->SetFillColor(23, 128, 204);
-		//		$pdf->Cell(33 , 5.22, utf8_decode($torneo_desc), 0, 0 , 'C' , true);
+		//		$pdf->Cell(33 , 5.22, az_utf8_decode($torneo_desc), 0, 0 , 'C' , true);
 			
 			
 				$pdf->SetTextColor(0, 0, 0);
@@ -277,7 +277,7 @@ $alto  = 85.6; // alto PVC
 			//	$pdf->SetFillColor(184 ,211, 220);
 			$pdf->SetFillColor(255 ,255, 255);
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45);
-	//			$pdf->Cell(33 , 3.2, utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
+	//			$pdf->Cell(33 , 3.2, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
 			
 				//$pdf->SetXY($x+2-18.7,$y+15+28.45+3.2+1.5); logo equipo
 				//nombre jugador
@@ -285,8 +285,8 @@ $alto  = 85.6; // alto PVC
 				//$pdf->SetXY(17,$y+48+25+2.7); //anterior
 				$pdf->SetXY($x+23.7,$y+14.5);
 				$pdf->SetFont('Helvetica' , 'B' , 12);
-				//$pdf->Cell(33	 , 3.2, utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'C' , true);
-				$pdf->MultiCell(60	 , 5, utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
+				//$pdf->Cell(33	 , 3.2, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'C' , true);
+				$pdf->MultiCell(60	 , 5, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
 				
 				//fecha nacimiento
 				//$pdf->SetXY($x+22-18.7,$y+60.5+28); //Anterior
@@ -301,7 +301,7 @@ $alto  = 85.6; // alto PVC
 				$pdf->SetXY($x+25.2,$y+32);
 			//	$pdf->SetXY($x+20.5-18.7,$y+30+28.45+(9.6)+(3.0));
 				$pdf->SetFont('Helvetica' , 'B' , 13);
-				$pdf->Cell(22 , 3.2, utf8_decode('' . $row["Jugador"] . ''), 0, 0 , 'C' , true);
+				$pdf->Cell(22 , 3.2, az_utf8_decode('' . $row["Jugador"] . ''), 0, 0 , 'C' , true);
 				
 				
 				$pdf->SetXY($x+20.5-18.7,$y+30+28.45+12.8+4.5); //Anterior

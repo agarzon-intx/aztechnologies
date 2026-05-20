@@ -78,16 +78,16 @@
 	        $pdf->SetTextColor(0, 110, 191);
 	        $pdf->SetDrawColor(0, 0, 0);
         	$pdf->SetXY(40,8);
-        	$pdf->Cell(225 , 8, utf8_decode($Config->liga), 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, az_utf8_decode($Config->liga), 35, 0 , 'C' , false);
         	$pdf->SetXY(40,16);
         	$pdf->SetFont('Helvetica' , 'IB' , 18);
         	$pdf->Cell(225 , 8, '"INNOVANDO EL FUTBOL"', 35, 0 , 'C' , false);
         	$pdf->SetXY(40,24);
         	$pdf->SetFont('Helvetica' , 'B' , 22);
-        	$pdf->Cell(225 , 8, utf8_decode($row1["Torneo_Desc"]), 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, az_utf8_decode($row1["Torneo_Desc"]), 35, 0 , 'C' , false);
         	$pdf->SetXY(40,32);
         	$pdf->SetFont('Helvetica' , 'B' , 20);
-        	$pdf->Cell(225 , 8, $lang['986'] . ' ' . utf8_decode($row1["Jornada_DescCorta"]) . ' (Fecha)', 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . ' (Fecha)', 35, 0 , 'C' , false);
         	$pdf->SetTextColor(0, 0, 0);
 
 		} 
@@ -120,11 +120,11 @@
         	$pdf->SetXY($x+5,$y+3);
         	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(8 , 3, utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(8 , 3, az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+13,$y+3);
-        	$pdf->Cell(20 , 3, utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(20 , 3, az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+33,$y+3);
-        	$pdf->Cell(45 , 3, utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+78,$y+3);
         	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+84,$y+3);
@@ -136,13 +136,13 @@
         	$pdf->SetXY($x+102,$y+3);
         	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+108,$y+3);
-        	$pdf->Cell(45 , 3, utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+153,$y+3);
-        	$pdf->Cell(40 , 3, utf8_decode($row1["dia_sem"]) . ', ' . utf8_decode($row1["Mes"]) . utf8_decode($row1["Fecha_String"]) . '/' .utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(40 , 3, az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+193,$y+3);
-        	$pdf->Cell(45 , 3, utf8_decode($row1["Comentarios"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Comentarios"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+238,$y+3);
-        	$pdf->Cell(37 , 3, utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(37 , 3, az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
         	$y = $y + 3;
 		} 
 	}else {
@@ -204,16 +204,16 @@
 	        $pdf->SetTextColor(0, 110, 191);
 	        $pdf->SetDrawColor(0, 0, 0);
         	$pdf->SetXY(40,8);
-        	$pdf->Cell(225 , 8, utf8_decode($Config->liga), 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, az_utf8_decode($Config->liga), 35, 0 , 'C' , false);
         	$pdf->SetXY(40,16);
         	$pdf->SetFont('Helvetica' , 'IB' , 18);
         	$pdf->Cell(225 , 8, '"INNOVANDO EL FUTBOL"', 35, 0 , 'C' , false);
         	$pdf->SetXY(40,24);
         	$pdf->SetFont('Helvetica' , 'B' , 22);
-        	$pdf->Cell(225 , 8, utf8_decode($row1["Torneo_Desc"]), 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, az_utf8_decode($row1["Torneo_Desc"]), 35, 0 , 'C' , false);
         	$pdf->SetXY(40,32);
         	$pdf->SetFont('Helvetica' , 'B' , 20);
-        	$pdf->Cell(225 , 8, $lang['986'] . ' ' . utf8_decode($row1["Jornada_DescCorta"]) . ' (Categoria)', 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . ' (Categoria)', 35, 0 , 'C' , false);
         	$pdf->SetTextColor(0, 0, 0);
 
 		} 
@@ -246,11 +246,11 @@
         	$pdf->SetXY($x+5,$y+3);
         	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(8 , 3, utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(8 , 3, az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+13,$y+3);
-        	$pdf->Cell(20 , 3, utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(20 , 3, az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+33,$y+3);
-        	$pdf->Cell(45 , 3, utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+78,$y+3);
         	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+84,$y+3);
@@ -262,13 +262,13 @@
         	$pdf->SetXY($x+102,$y+3);
         	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+108,$y+3);
-        	$pdf->Cell(45 , 3, utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+153,$y+3);
-        	$pdf->Cell(40 , 3, utf8_decode($row1["dia_sem"]) . ', ' . utf8_decode($row1["Mes"]) . utf8_decode($row1["Fecha_String"]) . '/' .utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(40 , 3, az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+193,$y+3);
-        	$pdf->Cell(45 , 3, utf8_decode($row1["Comentarios"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Comentarios"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+238,$y+3);
-        	$pdf->Cell(37 , 3, utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(37 , 3, az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
         	$y = $y + 3;
 		} 
 	}else {

@@ -1,4 +1,8 @@
 <?php
+if (!function_exists('az_utf8_decode')) {
+	$__azRepoRoot = dirname(dirname(__DIR__));
+	require_once $__azRepoRoot . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'encoding_compat.php';
+}
 require('fpdf.php');
 
 class AlphaPDF extends FPDF
