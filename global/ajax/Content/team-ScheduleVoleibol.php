@@ -404,10 +404,6 @@
     									<div style="width: 30%;text-align: center;padding-top: 0px;">
     									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['365'] . '</span></p>
     									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap"><a target="_blank" href="' . $row2["Google"] . '">' . $row2["Campo"]. '</a></span></div></div></div>
-    									<div style="width: 10%;text-align: center;padding-top: 0px;">
-    									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['367'] . '</span></p>
-    									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["Reales"] . '</span></div></div></div>
-    									
     									</div></div></td>';
 						}else{
     						$htmlTeam .= '</div>
@@ -420,11 +416,7 @@
     									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["Fecha"]. '</span></div></div></div>
     									<div style="width: 30%;text-align: center;padding-top: 0px;">
     									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"></span></p>
-    									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"></div></div></div>
-    									<div style="width: 10%;text-align: center;padding-top: 0px;">
-    									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"></span></p>
-    									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"></div></div></div>
-    									
+    									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"></div></div></div>    									
     									</div></div></td>';
 						}
 						$htmlTeam .= '</tr>';

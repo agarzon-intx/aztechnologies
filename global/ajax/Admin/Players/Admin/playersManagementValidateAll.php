@@ -41,27 +41,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$Config->LoadFlags();
     $Config->LoadRegionalSettings();
 
-	$htmlPlayer .= '';   
-	
-	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataPlayerMessage' => 'Error');
-	
+	$htmlPlayer .= '';
 
-	$sql="	update $schema.Jugadores
-        set Validado = 1
-        where Equipo_ID = $team and Validado = 0;";
-	//echo $sql;
+	$sql = "UPDATE $schema.Jugadores
+        SET Validado = 1
+        WHERE Equipo_ID = $team AND Validado = 0";
 
-	$result = $Config->queryAdmin($sql);
-	
-	if ($result->num_rows > 0) {
-		$found = 1;
-		while($row = $result->fetch_assoc()) {
-				$retunData = array('status' => '1', 'message' => 'Success.', 'dataPlayerMessage' => $lang['916'], 'sql0' => mb_convert_encoding($sql0, 'UTF-8', 'UTF-8'));
-		}		
+	$Connection = $Config->connectAdmin();
+	if (!$Connection) {
+		$retunData = array('status' => '0', 'message' => 'Database connection failed.', 'dataPlayerMessage' => 'Error');
+	} else {
+		$result = $Connection->query($sql);
+		if ($result === false) {
+			$retunData = array('status' => '0', 'message' => 'Update failed.', 'dataPlayerMessage' => 'Error');
+		} elseif ($Connection->affected_rows > 0) {
+			$retunData = array('status' => '1', 'message' => 'Success.', 'dataPlayerMessage' => $lang['916']);
+		} else {
+			$retunData = array('status' => '1', 'message' => 'All Updated.', 'dataPlayerMessage' => $lang['916']);
+		}
+		$Connection->close();
 	}
 	$Config->Close();
-    
-    $retunData = array('status' => '1', 'message' => 'All Updated.', 'dataPlayerMessage' => 'ok');
 
-    echo json_encode($retunData);
+	echo json_encode($retunData);
 ?>
