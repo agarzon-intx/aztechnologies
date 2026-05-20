@@ -47,9 +47,11 @@
             where jo.Jornada_ID = $jornada
             order by ca.Categoria_ID, j.Fecha, j.Horario, c.Campo_DESC, j.Juego_ID asc";
 	$result1 = $Config->query($sql);
+	$pageLabels = array();
 	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
+			$pageLabels[] = 'juego-' . $row1['Juego_ID'];
 			$localid = az_utf8_decode($row1["Local_ID"]);
 			$visitanteid = az_utf8_decode($row1["Visitante_ID"]);
 			$x = 0;
@@ -146,21 +148,109 @@
 			
 		} 
 	}else {
+		$pageLabels[] = 'sin-juegos';
+		$pdf->AddPage();
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
 	$Config->close();
 
-	//$pdf->Output();
-	$pdf_content = $pdf->Output('S'); // Return the PDF as a string
+	$pdf_content = $pdf->Output('S');
 
-	$imagick = new Imagick();
-	$imagick->setResolution(150, 150);
-	$imagick->readImageBlob($pdf_content);
-	$imagick->setImageFormat('png');
+	if (!extension_loaded('imagick')) {
+		header('HTTP/1.1 500 Internal Server Error');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo 'Imagick extension is required to export flyer PNGs.';
+		exit;
+	}
+	if (!class_exists('ZipArchive')) {
+		header('HTTP/1.1 500 Internal Server Error');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo 'ZipArchive is required to download flyer PNGs.';
+		exit;
+	}
 
-	// Output the image directly to the browser
-	header("Content-Type: image/png");
-	echo $imagick->getImagesBlob();
-	// Optional: write out to files instead of echoing
-	// $imagick->writeImages('path/to/save/page.jpg', false);
-?>
+	$tmpDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'flyerC-I-' . uniqid('', true);
+	if (!mkdir($tmpDir, 0700, true)) {
+		header('HTTP/1.1 500 Internal Server Error');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo 'Could not create temporary directory.';
+		exit;
+	}
+
+	$pngPaths = array();
+	try {
+		$imagick = new Imagick();
+		$imagick->setResolution(150, 150);
+		$imagick->readImageBlob($pdf_content);
+
+		$pageIndex = 0;
+		foreach ($imagick as $page) {
+			$page->setImageBackgroundColor(new ImagickPixel('white'));
+			$page->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
+			$flat = $page->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+			$flat->setImageFormat('png');
+
+			$label = isset($pageLabels[$pageIndex])
+				? (string) $pageLabels[$pageIndex]
+				: sprintf('page-%03d', $pageIndex + 1);
+			$safeName = preg_replace('/[^\w\-]+/', '_', $label);
+			$pngFile = $tmpDir . DIRECTORY_SEPARATOR . $safeName . '.png';
+			$flat->writeImage($pngFile);
+			$flat->destroy();
+			$pngPaths[] = $pngFile;
+			$pageIndex++;
+		}
+		$imagick->clear();
+		$imagick->destroy();
+	} catch (Throwable $e) {
+		foreach ($pngPaths as $path) {
+			if (is_file($path)) {
+				@unlink($path);
+			}
+		}
+		@rmdir($tmpDir);
+		header('HTTP/1.1 500 Internal Server Error');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo 'Error generating flyer images: ' . $e->getMessage();
+		exit;
+	}
+
+	if (count($pngPaths) === 0) {
+		@rmdir($tmpDir);
+		header('HTTP/1.1 500 Internal Server Error');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo 'No flyer pages were generated.';
+		exit;
+	}
+
+	$zipPath = $tmpDir . DIRECTORY_SEPARATOR . 'flyers.zip';
+	$zip = new ZipArchive();
+	if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+		foreach ($pngPaths as $path) {
+			@unlink($path);
+		}
+		@rmdir($tmpDir);
+		header('HTTP/1.1 500 Internal Server Error');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo 'Could not create ZIP archive.';
+		exit;
+	}
+	foreach ($pngPaths as $path) {
+		$zip->addFile($path, basename($path));
+	}
+	$zip->close();
+
+	$zipDownloadName = 'flyers-jornada-' . preg_replace('/\D+/', '', $jornada) . '.zip';
+	header('Content-Type: application/zip');
+	header('Content-Disposition: attachment; filename="' . $zipDownloadName . '"');
+	header('Content-Length: ' . filesize($zipPath));
+	header('Cache-Control: no-store, no-cache, must-revalidate');
+	header('Pragma: no-cache');
+	readfile($zipPath);
+
+	foreach ($pngPaths as $path) {
+		@unlink($path);
+	}
+	@unlink($zipPath);
+	@rmdir($tmpDir);
+	exit;

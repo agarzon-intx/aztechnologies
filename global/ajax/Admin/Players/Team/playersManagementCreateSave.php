@@ -259,28 +259,28 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     		}else{
     			$idfull="";
     		}
-	    }
-		$clave = $team . substr($name,0,1) . "" . 
-			substr($lastname,0,1) . "" . substr($birthdate,2,2) . "" . 
-			substr($birthdate,5,2) . "" . substr($birthdate,8,2) . "-" . 
-			$playernumber;
-    	
-		$retunData = array('status' => '0', 'message' => 'No insert.', 'dataPlayerMessage' => 'Error', 'sql1' -> $sql1, 'sql2' -> $sql2);
-		
-		$sql = "CALL $schema.PlayerCreate('" . $_SESSION[$Config->getAlias() . 'username'] . "', '$clave', '$name', '$lastname', '$lastname2', '$nickname', '$birthdate', '$status', '$id', '$playernumber', $team, '$valid', '$comments', '$phone', '$email','$foto','$idfull','$firma',$sex, $type, NOW(), NOW(), @out);";
-		
-		$Connection = $Config->connectAdmin();
-		$result = $Connection->query($sql);
 
-		$sql = "Select @out as 'count'";
-		$result = $Connection->query($sql);
-		if ($result->num_rows > 0) {
-			// output data of each row
-			while($row2 = $result->fetch_assoc()) {
-				$retunData = array('status' => '1', 'message' => 'Success.', 'dataPlayerMessage' => $lang['916'], 'sql1' => $sql1, 'sql2' => $sql2);
+			$clave = $team . substr($name,0,1) . "" .
+				substr($lastname,0,1) . "" . substr($birthdate,2,2) . "" .
+				substr($birthdate,5,2) . "" . substr($birthdate,8,2) . "-" .
+				$playernumber;
+
+			$retunData = array('status' => '0', 'message' => 'No insert.', 'dataPlayerMessage' => 'Error', 'sql1' => $sql1, 'sql2' => $sql2);
+
+			$sql = "CALL $schema.PlayerCreate('" . $_SESSION[$Config->getAlias() . 'username'] . "', '$clave', '$name', '$lastname', '$lastname2', '$nickname', '$birthdate', '$status', '$id', '$playernumber', $team, '$valid', '$comments', '$phone', '$email','$foto','$idfull','$firma',$sex, $type, NOW(), NOW(), @out);";
+
+			$Connection = $Config->connectAdmin();
+			$result = $Connection->query($sql);
+
+			$sql = "Select @out as 'count'";
+			$result = $Connection->query($sql);
+			if ($result->num_rows > 0) {
+				while($row2 = $result->fetch_assoc()) {
+					$retunData = array('status' => '1', 'message' => 'Success.', 'dataPlayerMessage' => $lang['916'], 'sql1' => $sql1, 'sql2' => $sql2);
+				}
 			}
-		}
-		$Connection->Close();
+			$Connection->Close();
+	    }
 	}
 	
 
