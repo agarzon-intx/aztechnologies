@@ -205,7 +205,7 @@
 			<div class="sidenav-header">
 				<i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
 				<a class="navbar-brand m-0">
-				<img title="Home" src="imagenes/<?php echo $Config->logo;?>.png" width="90"  alt="" onclick="loadWeeks(); toggleSidenav();" style="cursor: pointer;margin-left: 60px;max-height: 45px;">
+				<img title="Home" src="imagenes/<?php echo $Config->logo;?>.png" width="<?php echo (int) $Config->logowidth; ?>" alt="" onclick="loadWeeks(); toggleSidenav();" style="cursor: pointer;margin-left: 60px;max-height: <?php echo (int) $Config->logoheight; ?>px;">
 				
 				</a>
 			</div>
@@ -266,7 +266,7 @@
 						<img src="imagenes/ws.png" width="30" style="margin-left: 20px;">
 						<!--<img src="imagenes/FMVB.png" width="30" style="margin-left: 20px;">-->
 						<!--<img src="imagenes/AMVB.png" width="30" style="margin-left: 20px;">-->
-						<img src="imagenes/<?php echo $Config->logo;?>.png" width="90" style="margin-left: 20px;">
+						<img src="imagenes/<?php echo $Config->logo;?>.png" width="<?php echo (int) $Config->logowidth; ?>" style="margin-left: 20px;max-height: <?php echo (int) $Config->logoheight; ?>px;">
 					  </div>
 					</div>
 				  </div>
@@ -302,6 +302,7 @@
 		<script src="../assets/js/plugins/nouislider.min.js"></script>
 		<!--<script src="./assets/js/material-dashboard.js"></script>-->
 		<script type="text/javascript">var MSG_AJAX_GENERIC = <?php echo json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;</script>
+		<?php require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_facebook_lang_js.inc.php'; ?>
 		<script src="./javascript/main.js.php" type="text/javascript"></script>
 		<script src="./javascript/mainVoleibol.js.php" type="text/javascript"></script>
                 <script src="./javascript/mainBasket.js.php" type="text/javascript"></script>

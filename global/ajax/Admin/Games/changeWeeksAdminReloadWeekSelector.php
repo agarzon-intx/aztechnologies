@@ -30,7 +30,8 @@ $schema = $Config->getSchema();
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
 	$Category = $_COOKIE[$Config->getAlias() . 'category'];
 	$Week = SanitizeInteger($_POST['Week']);
-    $Type = SanitizeInteger($_POST['Type']);
+    $Type = SanitizeInteger($_POST['Type'] ?? 0);
+    $sql1 = '';
     
     $Config->LoadFlags();
     $hideJuegosXNombre = "";

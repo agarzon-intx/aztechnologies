@@ -15,7 +15,7 @@ set_time_limit(300);
         $categoria = $_COOKIE[$Config->getAlias() . 'category'];
         $jornada = htmlspecialchars($_GET['Jornada_ID']);
 
-        $server = $fgmembersite->getSitename();
+        $siteRoot = az_pdf_site_root($Config);
 
         $Config->LoadLogo();
         $Config->LoadFlags();
@@ -80,14 +80,11 @@ set_time_limit(300);
 				$pdf->SetFont('Arial','',14);
 				$pdf->SetFillColor($colorR ,$colorG, $colorB);
 				$pdf->Rect($x+0, $y+5, 69, 100 , 'DF');
-				try{
-					$pdf->SetAlpha(1);
-					$pdf->Image('http://' . $server . ':' . $port . '/' . $folder .'/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2,$y+34,20, 26, 'PNG');
-				}catch(Exception $e){
-				}
-				$pdf->Image('http://' . $server . ':' . $port . '/' . $folder .'/imagenes/' . $row["Logo"] . '.png',$x+3,$y+64,19, 19, 'PNG');
 				$pdf->SetAlpha(1);
-				$pdf->Image('http://' . $server . ':' . $port . '/' . $folder .'/imagenes/LogoLiga.png',$x+4,$y+5,10, 15, 'PNG');
+				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+2, $y+34, 20, 26);
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $row['Logo'] . '.png', $x+3, $y+64, 19, 19);
+				$pdf->SetAlpha(1);
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/LogoLiga.png', $x+4, $y+5, 10, 15);
 				$pdf->SetXY($x+19,$y+6);
 				$pdf->SetTextColor(255, 255, 255);
 				$pdf->SetFont('Helvetica' , '' , 7);
@@ -107,7 +104,7 @@ set_time_limit(300);
 				$pdf->SetFillColor(255 ,80, 84);
 				$pdf->Cell(31 , 5, 'Temporada 2016-2017', 0, 0 , 'C' , true);
 				$pdf->SetAlpha(1);
-				$pdf->Image('http://' . $server . ':' . $port . '/' . $folder .'/imagenes/patrocinador.png',$x+52,$y+5,15, 15, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/patrocinador.png', $x+52, $y+5, 15, 15);
 
 				$pdf->SetXY($x+2,$y+22);
 				$pdf->SetTextColor(255, 255, 255);
@@ -147,7 +144,7 @@ set_time_limit(300);
 				$pdf->SetFillColor(184 ,211, 220);
 				$pdf->MultiCell(42 , 4, '' . $row["Equipo_FULLDESC"] . '', 0 , 'C' , true);
 				$pdf->SetAlpha(.4);
-				$pdf->Image('http://' . $server . ':' . $port . '/' . $folder .'/imagenes/patrocinador.png',$x+29,$y+72,32, 32, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/patrocinador.png', $x+29, $y+72, 32, 32);
 				$pdf->SetAlpha(1);
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetFont('Courier' , 'B' , 30);
@@ -155,7 +152,7 @@ set_time_limit(300);
 				$pdf->Cell(42 , 14, '' . $row["Numero"] . '', 0, 0 , 'C' , false);
 
 				//$pdf->Image('http://chart.googleapis.com/chart?cht=qr&chs=200x200&chld=L|1&chf=bg,s,65432100&chl=http://www.hectorbarraza.com/Reportes/jugador.php?Jugador_ID=' . $row["Jugador_ID"] . '',$x+2,$y+85,20, 20, 'PNG');
-				$pdf->Image('https://qrcode.tec-it.com/API/QRCode?data=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2,$y+85,20, 20, 'PNG');
+				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+2, $y+85, 20, 20);
 
 				$pdf->SetDrawColor(0 ,0, 0);
 				$pdf->Line($x+37,$y+90, $x+57,$y+90);

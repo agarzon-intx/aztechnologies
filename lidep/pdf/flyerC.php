@@ -12,8 +12,9 @@
 	$folder = substr(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])),1,strlen(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])))-5);
 
 	$jornada = htmlspecialchars($_GET['Jornada_ID']);
-	
-	$server = $fgmembersite->getSitename();
+	$categoria = (int) $_COOKIE[$Config->getAlias() . 'category'];
+
+	$siteRoot = az_pdf_site_root($Config);
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
@@ -44,7 +45,7 @@
                 join $schema.Jornada jo on jo.Jornada_ID = j.Jornada_ID
                 join $schema.Campos c on c.Campo_ID = j.Campo_ID
                 join $schema.Categorias ca on ca.Categoria_ID = l.Fuerza and ca.Torneo_ID = j.Torneo_ID
-            where jo.Jornada_ID = $jornada
+            where jo.Jornada_ID = $jornada and l.Fuerza = $categoria
             order by ca.Categoria_ID, j.Fecha, j.Horario, c.Campo_DESC, j.Juego_ID asc";
 	$result1 = $Config->query($sql);
 	if ($result1->num_rows > 0) {
@@ -60,18 +61,18 @@
 			$pdf->AddPage();
 			$pdf->SetAutoPageBreak(false,1);
 			$pdf->SetXY(0,0);
-			$pdf->Image($server . '/pdf/FondoFlyer.png',0,0,210, 210, 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/pdf/FondoFlyer.png', 0,0,210, 210);
 			$pdf->SetFont('Coluna' , 'B' , 35);
 			$pdf->SetTextColor(210, 44, 46);
-			$pdf->Image($server . '/pdf/calendar.png',35,153,10, 10, 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/pdf/calendar.png', 35,153,10, 10);
 			$pdf->SetXY(45,155);
 			$pdf->SetFont('Coluna' , 'B' , 35);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
-			$pdf->Image($server . '/pdf/clock.png',120,153,10, 10, 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/pdf/clock.png', 120,153,10, 10);
 			$pdf->SetXY(130,155);
 			$pdf->SetFont('Coluna' , 'B' , 35);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
-			$pdf->Image($server . '/pdf/pointer.png',80,169,10, 10, 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/pdf/pointer.png', 80,169,10, 10);
 			$pdf->SetXY(90,170);
 			$pdf->SetFont('Coluna' , 'B' , 35);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
@@ -85,40 +86,8 @@
 			$pdf->SetXY(90.5,170.5);
 			$pdf->SetFont('Coluna' , 'B' , 35);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
-			try{
-				$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'PNG');
-			}catch(Exception $e){
-				try{
-					$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'JPG');
-				}catch(Exception $e){
-					try{
-							$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'JPEG');
-					}catch(Exception $e){
-						try{
-							$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png',30,95,45, 45, 'GIF');
-						}catch(Exception $e){
-							//echo $e->getTraceAsString();
-						}
-					}
-				}
-			}
-			try{
-				$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'PNG');
-			}catch(Exception $e){
-				try{
-					$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'JPG');
-				}catch(Exception $e){
-					try{
-						$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'JPEG');
-					}catch(Exception $e){
-						try{
-							$pdf->Image($server . '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png',135,95,45, 45, 'GIF');
-						}catch(Exception $e){
-							//echo $e->getTraceAsString();
-						}
-					}
-				}
-			}
+			az_pdf_image($pdf, az_pdf_team_logo_path($siteRoot, $row1['Torneo_ID'], $row1['Local_ID']), 30, 95, 45, 45);
+			az_pdf_image($pdf, az_pdf_team_logo_path($siteRoot, $row1['Torneo_ID'], $row1['Visitante_ID']), 135, 95, 45, 45);
             $pdf->SetXY(0,38);
 			$pdf->SetFont('Coluna' , 'B' , 75);
 			if(is_numeric($row1["Jornada_Desc"])){

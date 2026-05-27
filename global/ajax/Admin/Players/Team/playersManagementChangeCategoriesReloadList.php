@@ -37,7 +37,7 @@ $schema = $Config->getSchema();
 	
 	$sql0 = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
-				join $schema.Categorias b on a.Fuerza = b.Categoria_ID
+				join $schema.Categorias b on a.Fuerza = b.Categoria_ID and b.Torneo_Id = $Season
 			Where a.Torneo_ID = $Season and a.Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql0);
@@ -47,7 +47,7 @@ $schema = $Config->getSchema();
 	
 	$sql1 = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
-				join $schema.Categorias b on a.Fuerza = b.Categoria_ID
+				join $schema.Categorias b on a.Fuerza = b.Categoria_ID and b.Torneo_Id = $Season
 			Where a.Torneo_ID = $Season and a.Fuerza = $Category and a.Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql1);
@@ -68,7 +68,7 @@ $schema = $Config->getSchema();
 	
 	$sql2 = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
-				join $schema.Categorias b on a.Fuerza = b.Categoria_ID
+				join $schema.Categorias b on a.Fuerza = b.Categoria_ID and b.Torneo_Id = $Season
 			Where a.Torneo_ID = $Season and a.Fuerza <> $Category and a.Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql2);

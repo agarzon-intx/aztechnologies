@@ -19,7 +19,7 @@
 	$edad2 = htmlspecialchars($_GET["Edad2"]);	
 	$imprimir = htmlspecialchars($_GET["Imprimir"]);
 
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 	
 	$x = 1;
 	$y = 0;
@@ -113,13 +113,13 @@
 			    $pdf->Cell(115, 79, '', 1, 0, 'C' , false);
 			  
 			 //  $pdf->SetXY(15,2);
-			 //   $pdf->Image($server . '/imagenes/Siafilia.png' ,60, 11.2, 55, 0 ,'PNG');
+			 //   az_pdf_image_file($pdf, $siteRoot, 'imagenes/Siafilia.png' ,60, 11.2, 55, 0 ,'PNG'));
 			    
 			//	$pdf->SetXY(15,2);
-			 //   $pdf->Image($server . '/imagenes/fmvb.PNG' ,165, 12, 14, 0 ,'PNG');
+			 //   az_pdf_image_file($pdf, $siteRoot, 'imagenes/fmvb.PNG' ,165, 12, 14, 0 ,'PNG'));
 			    
 			  //  $pdf->SetXY(15,2);
-			   // $pdf->Image($server . '/imagenes/Fivb.PNG' ,120, 11.2, 32, 0 ,'PNG');
+			   // az_pdf_image_file($pdf, $siteRoot, 'imagenes/Fivb.PNG' ,120, 11.2, 32, 0 ,'PNG'));
 			    
 			
 				$pdf->SetXY($x+10,$y+19);
@@ -238,27 +238,27 @@
 			    
 				try{
 			//		$pdf->SetAlpha(1);
-			//		$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+2+((25.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+1+((25.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)), 'PNG');
+			//		az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+2+((25.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+1+((25.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)));
 				}catch(Exception $e){
 					echo $e;
 				}
     
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+89,$y+6+17,25.68, 32.36, 'PNG');
-				//	$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'PNG');
+					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+89,$y+6+17,25.68, 32.36);
+				//	az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
 				}catch(Exception $e){
 					try{
     					$pdf->SetAlpha(1);
-    					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'JPG');
+    					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
     				}catch(Exception $e){
     					try{
         					$pdf->SetAlpha(1);
-        					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'JPEG');
+        					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
         				}catch(Exception $e){
         					try{
             					$pdf->SetAlpha(1);
-            					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'GIF');
+            					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
             				}catch(Exception $e){
             					echo $e->getMessage();
             				}
@@ -268,9 +268,9 @@
 				
 				try{
 					$pdf->SetAlpha(2);
-					//$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+75-18.7,$y+54.5+28.45,15.68, 15.68, 'PNG');
+					//az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+75-18.7,$y+54.5+28.45,15.68, 15.68);
 					/*Logo del equipo*/
-						$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+98-15.7,$y+47+28.45,12, 12, 'PNG');
+						az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+98-15.7,$y+47+28.45,12, 12);
 				}catch(Exception $e){
 					echo $e;
 				}
@@ -339,18 +339,18 @@
 
 				try{
 					$pdf->SetAlpha(1);
-					//$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x+20.5-18.7,$y+78.08+28.45,33, 9.42, 'PNG');
-					$pdf->Image($server . '/imagenes/Fivb.PNG',$x+80-18.7,$y+.2+5,30, 18, 'PNG');
-					$pdf->Image($server . '/imagenes/fmvb.PNG',$x+117-18.5,$y+.2+6,15, 14, 'PNG');
-					$pdf->Image($server . '/imagenes/Siafilia.png',$x+26-18.7,$y+.2+6,47, 14, 'PNG');
+					//az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png', $x+20.5-18.7,$y+78.08+28.45,33, 9.42);
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/Fivb.PNG', $x+80-18.7,$y+.2+5,30, 18);
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/fmvb.PNG', $x+117-18.5,$y+.2+6,15, 14);
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/Siafilia.png', $x+26-18.7,$y+.2+6,47, 14);
 			
 				}catch(Exception $e){
 					echo $e;
 				}	
 				try{
 					$pdf->SetAlpha(.3);
-					//$pdf->Image($server . '/imagenes/Aztechnologies-A.png',$x+20.5-18.7,$y+27.5+28.45,33, 41.5, 'PNG');
-				//	$pdf->Image($server . '/imagenes/Fondofibv.png',$x+26-18.7,$y+6+16.45,81, 46.5, 'PNG');
+					//az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-A.png', $x+20.5-18.7,$y+27.5+28.45,33, 41.5);
+				//	az_pdf_image_file($pdf, $siteRoot, '/imagenes/Fondofibv.png', $x+26-18.7,$y+6+16.45,81, 46.5);
 				}catch(Exception $e){
 					echo $e;
 				}

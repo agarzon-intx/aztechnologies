@@ -20,7 +20,7 @@
 	$edad2 = htmlspecialchars($_GET["Edad2"]);	
 	$imprimir = htmlspecialchars($_GET["Imprimir"]);
 
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 	
 	
 	$x = 1;
@@ -127,10 +127,10 @@ $alto  = 85.6; // alto PVC
 			//	$pdf->Rect($x, $y, $ancho, $alto);
 				try{
 			//		$pdf->SetAlpha(1);
-			//	    $pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+2+((15.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+5+((15.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)), 'PNG');
+			//	    az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+2+((15.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+5+((15.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)));
 			//original	
 				     //try{ $pdf->SetAlpha(1);
-				    // $pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+2+((15.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+5+((15.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)), 'PNG'); 
+				    // az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+2+((15.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+5+((15.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110))); 
 				}catch(Exception $e){
 					echo $e;
 				}
@@ -138,19 +138,19 @@ $alto  = 85.6; // alto PVC
     //$pdf->SetXY(62,12);
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+20-18.7,$y+.4+.3,19.5, 22.38, 'PNG');
+					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+20-18.7,$y+.4+.3,19.5, 22.38);
 				}catch(Exception $e){
 					try{
     					$pdf->SetAlpha(1);
-    					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+20-18.7,$y+.5+1,20.4, 22.38, 'JPG');
+    					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+20-18.7,$y+.5+1,20.4, 22.38);
     				}catch(Exception $e){
     					try{
         					$pdf->SetAlpha(1);
-        					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+20-18.7,$y+.5+1,20.4, 22.38, 'JPEG');
+        					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+20-18.7,$y+.5+1,20.4, 22.38);
         				}catch(Exception $e){
         					try{
             					$pdf->SetAlpha(1);
-            					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+20-18.7,$y+.5+1,20.4, 22.38, 'GIF');
+            					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+20-18.7,$y+.5+1,20.4, 22.38);
             				}catch(Exception $e){
             					echo $e->getMessage();
             				}
@@ -161,19 +161,19 @@ $alto  = 85.6; // alto PVC
 				
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+29-18.7,$y+20+28.45,22., 25.38, 'PNG');
+					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+29-18.7,$y+20+28.45,22., 25.38);
 				}catch(Exception $e){
 					try{
     					$pdf->SetAlpha(1);
-    					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+29-18.7,$y+20+28.45,22.4, 25.38, 'JPG');
+    					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+29-18.7,$y+20+28.45,22.4, 25.38);
     				}catch(Exception $e){
     					try{
         					$pdf->SetAlpha(1);
-        					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+29-18.7,$y+20+28.45,22.4, 25.38, 'JPEG');
+        					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+29-18.7,$y+20+28.45,22.4, 25.38);
         				}catch(Exception $e){
         					try{
             					$pdf->SetAlpha(1);
-            					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+29-18.7,$y+20+28.45,22.4, 25.38, 'GIF');
+            					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+29-18.7,$y+20+28.45,22.4, 25.38);
             				}catch(Exception $e){
             					echo $e->getMessage();
             				}
@@ -186,19 +186,19 @@ $alto  = 85.6; // alto PVC
 				
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'PNG');
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+22-18.7,$y+9.2+16,15.68, 15.68);
 				}catch(Exception $e){
 					try{
     					$pdf->SetAlpha(1);
-    					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'JPG');
+    					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+22-18.7,$y+9.2+16,15.68, 15.68);
     				}catch(Exception $e){
     					try{
         					$pdf->SetAlpha(1);
-        					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'JPEG');
+        					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+22-18.7,$y+9.2+16,15.68, 15.68);
         				}catch(Exception $e){
         					try{
             					$pdf->SetAlpha(1);
-            					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'GIF');
+            					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+22-18.7,$y+9.2+16,15.68, 15.68);
             				}catch(Exception $e){
             					echo $e->getMessage();
             				}
@@ -210,9 +210,9 @@ $alto  = 85.6; // alto PVC
 					
                //     $pdf->Rotate(90, 40,40); // Gira 90 grados alrededor del punto (30,30)
 //$pdf->Image('logo.png', 25, 25, 20); // Imagen girada
-				//	$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+22-18.7,$y+9.2+16,15.68, 15.68, 'PNG');    //Logo equipo
-					//$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3-18.7,$y+18.5+28.45,16.68, 16.68, 'PNG');    //Logo equipo
-				// $pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3-18.7,$y+54.5+28.45,15.68, 15.68, 'PNG');    //Logo equipo
+				//	az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+22-18.7,$y+9.2+16,15.68, 15.68);    //Logo equipo
+					//az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+3-18.7,$y+18.5+28.45,16.68, 16.68);    //Logo equipo
+				// az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+3-18.7,$y+54.5+28.45,15.68, 15.68);    //Logo equipo
 				//	$pdf->Rotate(5,$x+2,$y+4);
 				//}catch(Exception $e){
 				//	echo $e;
@@ -318,29 +318,29 @@ $alto  = 85.6; // alto PVC
 
 				//$pdf->Image('http://chart.googleapis.com/chart?cht=qr&chs=200x200&chld=L|1&chf=bg,s,65432100&chl=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2-18.7,$y+72+28.45,15.68, 15.68, 'PNG');
 				//$pdf->Image('https://qrcode.tec-it.com/API/QRCode?data=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2.3-18.7,$y+72+28.45,15.68, 15.68, 'PNG');
-                $pdf->Image($server . '/include/qrcode/image.php?msg=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+89-18.7,$y+10.5+27.45,13.68, 13.68, 'PNG');
+                az_pdf_qrcode($pdf, $fgmembersite, $row["Jugador_ID"],$x+89-18.7,$y+10.5+27.45,13.68, 13.68);
 
 				$pdf->SetDrawColor(0 ,0, 0);
 
 				try{
 					$pdf->SetAlpha(1);
-				//	$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x+15.5-18.7,$y+80.08+28.40,26, 9.42, 'PNG');
-			//		$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x+50-18.7,$y+11.5+27.45,25.68, 15.68,'PNG');
+				//	az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png', $x+15.5-18.7,$y+80.08+28.40,26, 9.42);
+			//		az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png', $x+50-18.7,$y+11.5+27.45,25.68, 15.68);
 				}catch(Exception $e){
 					echo $e;
 				}
 				
 				$pdf->SetXY($x+4-15.7,$y+14+28);
-			    $pdf->Image($server . '/imagenes/fmvb.PNG' ,$x+58-18.7,$y+11.5+27.45,13.68, 13.68,'PNG');
-			    //$pdf->Image($server . '/imagenes/fmvb.PNG' ,$x+65-18.7,$y+10.5+27.45,13.68, 13.68,'PNG');
+			    az_pdf_image_file($pdf, $siteRoot, 'imagenes/fmvb.PNG' ,$x+58-18.7,$y+11.5+27.45,13.68, 13.68,'PNG'));
+			    //az_pdf_image_file($pdf, $siteRoot, 'imagenes/fmvb.PNG' ,$x+65-18.7,$y+10.5+27.45,13.68, 13.68,'PNG'));
 			  
-			//    $pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+45-18.7,$y+10.5+27.45,13.68, 13.68,'PNG');
+			//    az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+45-18.7,$y+10.5+27.45,13.68, 13.68);
 			  //Fondo
 			   	try{
 			  	    $pdf->SetAlpha(.4);
 			   $pdf->SetXY(2,62);
-			    $pdf->Image($server . '/imagenes/FondoAvi1.png' ,$x+39-18.7,$y+1.5+5.45,66, 43,'PNG');
-			 //     $pdf->Image($server . '/imagenes/FondoAvi1.png' ,$x+39-18.7,$y+1.5+5.45,66, 39,'PNG');
+			    az_pdf_image_file($pdf, $siteRoot, 'imagenes/FondoAvi1.png' ,$x+39-18.7,$y+1.5+5.45,66, 43,'PNG'));
+			 //     az_pdf_image_file($pdf, $siteRoot, 'imagenes/FondoAvi1.png' ,$x+39-18.7,$y+1.5+5.45,66, 39,'PNG'));
 			   	}catch(Exception $e){
 					echo $e;
 				}
@@ -349,12 +349,12 @@ $alto  = 85.6; // alto PVC
 				try{
 					$pdf->SetAlpha(.3);
 					
-				//	$pdf->Image($server . '/imagenes/Aztechnologies-A.png',$x+20.5-18.7,$y+27.5+28.45,33, 41.5, 'PNG');
-			//		$pdf->Image($server . '/imagenes/Aztechnologies-A.png',$x+57-18.7,$y+1.5+5.45,27, 27, 'PNG');
-				//	$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+15-18.7,$y+36.5+28.45,33, 37, 'PNG');
-					$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+57-18.7,$y+.5+5.55,28, 25, 'PNG');
+				//	az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-A.png', $x+20.5-18.7,$y+27.5+28.45,33, 41.5);
+			//		az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-A.png', $x+57-18.7,$y+1.5+5.45,27, 27);
+				//	az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+15-18.7,$y+36.5+28.45,33, 37);
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+57-18.7,$y+.5+5.55,28, 25);
 					//,$x+2+((15.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+5+((15.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)), 'PNG');
-			//	$pdf->Image($server . '/imagenes/Aztechnologies-A.png',$x+20.5-18.7,$y+27.5+28.45,33, 41.5, 'PNG');
+			//	az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-A.png', $x+20.5-18.7,$y+27.5+28.45,33, 41.5);
 				}catch(Exception $e){
 					echo $e;
 				}

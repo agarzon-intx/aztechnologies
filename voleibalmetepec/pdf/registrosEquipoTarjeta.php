@@ -21,7 +21,7 @@
 	$edad2 = htmlspecialchars($_GET["Edad2"]);	
 	$imprimir = htmlspecialchars($_GET["Imprimir"]);
 
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 	
 	$x = 1;
 	$y = 0;
@@ -118,26 +118,26 @@
 				
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+2+((15.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+5+((15.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)), 'PNG');
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+2+((15.68 - (15.68 * ($Config->logowidth / 110)))/2)-18.7,$y+5+((15.68 - (15.68 * ($Config->logoheight / 110)))/2)+28.45,(15.68 * ($Config->logowidth / 110)), (15.68 * ($Config->logoheight / 110)));
 				}catch(Exception $e){
 					echo $e;
 				}
     
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'PNG');
+					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
 				}catch(Exception $e){
 					try{
     					$pdf->SetAlpha(1);
-    					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'JPG');
+    					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
     				}catch(Exception $e){
     					try{
         					$pdf->SetAlpha(1);
-        					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'JPEG');
+        					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
         				}catch(Exception $e){
         					try{
             					$pdf->SetAlpha(1);
-            					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2-18.7,$y+30+28.45,15.68, 20.38, 'GIF');
+            					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2-18.7,$y+30+28.45,15.68, 20.38);
             				}catch(Exception $e){
             					echo $e->getMessage();
             				}
@@ -147,7 +147,7 @@
 				
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3-18.7,$y+54.5+28.45,15.68, 15.68, 'PNG');
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+3-18.7,$y+54.5+28.45,15.68, 15.68);
 				}catch(Exception $e){
 					echo $e;
 				}
@@ -210,19 +210,19 @@
 
 				//$pdf->Image('http://chart.googleapis.com/chart?cht=qr&chs=200x200&chld=L|1&chf=bg,s,65432100&chl=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2-18.7,$y+72+28.45,15.68, 15.68, 'PNG');
 				//$pdf->Image('https://qrcode.tec-it.com/API/QRCode?data=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2-18.7,$y+72+28.45,15.68, 15.68, 'PNG');
-                $pdf->Image($server . '/include/qrcode/image.php?msg=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2-18.7,$y+72+28.45,15.68, 15.68, 'PNG');
+                az_pdf_qrcode($pdf, $fgmembersite, $row["Jugador_ID"],$x+2-18.7,$y+72+28.45,15.68, 15.68);
 
 				$pdf->SetDrawColor(0 ,0, 0);
 
 				try{
 					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x+20.5-18.7,$y+78.08+28.45,33, 9.42, 'PNG');
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png', $x+20.5-18.7,$y+78.08+28.45,33, 9.42);
 				}catch(Exception $e){
 					echo $e;
 				}	
 				try{
 					$pdf->SetAlpha(.3);
-					$pdf->Image($server . '/imagenes/Aztechnologies-A.png',$x+20.5-18.7,$y+27.5+28.45,33, 41.5, 'PNG');
+					az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-A.png', $x+20.5-18.7,$y+27.5+28.45,33, 41.5);
 				}catch(Exception $e){
 					echo $e;
 				}

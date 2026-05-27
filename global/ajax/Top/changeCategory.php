@@ -593,7 +593,7 @@ $schema = $Config->getSchema();
 		    $htmlLogosDrop .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink0">';
 		  }
 		}else{
-		  $htmlLogosDrop .= '<li><a class="dropdown-item" href="#"><img src="./imagenes/' . mb_convert_encoding((string)$row2["Logo"], 'UTF-8', 'ISO-8859-1') . '.png?tmp=' . $fecha->getTimestamp() . '" style="width: 17px;"/> ' . $row2["Equipo_FULLDESC"] . '</a></li>';
+		  $htmlLogosDrop .= '<li><a class="dropdown-item" href="#" onclick="loadTeam(' . mb_convert_encoding((string)$row2["Equipo_ID"], 'UTF-8', 'ISO-8859-1') . ',' . mb_convert_encoding((string)$Season, 'UTF-8', 'ISO-8859-1') . '); return false;"><img src="./imagenes/' . mb_convert_encoding((string)$row2["Logo"], 'UTF-8', 'ISO-8859-1') . '.png?tmp=' . $fecha->getTimestamp() . '" style="width: 17px;"/> ' . $row2["Equipo_FULLDESC"] . '</a></li>';
 		}
 		$htmlLogosDrop .= '';
 		$count = $count + 1;
@@ -605,6 +605,7 @@ $schema = $Config->getSchema();
     }
     $htmlLogosDrop .= '</div></div>';
     $htmlLogos .= '</div></div>';
+    $htmlLogos .= $htmlLogosDrop;
 	
 					
 	$htmlMenu = '<span>';

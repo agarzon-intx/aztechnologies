@@ -15,7 +15,7 @@
 	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
 	$jornada = htmlspecialchars($_GET['Jornada_ID']);
 	
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
@@ -25,11 +25,15 @@
 	$pdf->AddPage();
 	$pdf->SetAutoPageBreak(false,1);
 	$pdf->SetMargins(5, 5, 5, 5);	
+	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
+
+    // restore full opacity
+    //$pdf->SetAlpha(.5);
 	$x = 0;
 	$y = 40;
 	$pdf->SetTextColor(255,255,255);
-	$pdf->SetFillColor(0, 110, 191);
-	$pdf->SetDrawColor(0, 110, 191);
+	$pdf->SetFillColor(252, 1, 2);
+	$pdf->SetDrawColor(252, 1, 2);
 	$pdf->SetFont('Times' , '' , 6);
 	$pdf->SetXY($x+5,$y+3);
 	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , true);
@@ -38,27 +42,27 @@
 	$pdf->SetXY($x+13,$y+3);
 	$pdf->Cell(20 , 3, strtoupper('Categoria'), 1, 0 , 'C' , true);
 	$pdf->SetXY($x+33,$y+3);
-	$pdf->Cell(45 , 3, strtoupper('Local'), 1, 0 , 'C' , true);
-	$pdf->SetXY($x+78,$y+3);
+	$pdf->Cell(35 , 3, strtoupper('Local'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+68,$y+3);
 	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+84,$y+3);
+	$pdf->SetXY($x+74,$y+3);
 	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+90,$y+3);
+	$pdf->SetXY($x+80,$y+3);
 	$pdf->Cell(6 , 3, 'VS', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+96,$y+3);
+	$pdf->SetXY($x+86,$y+3);
 	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+102,$y+3);
+	$pdf->SetXY($x+92,$y+3);
 	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+108,$y+3);
-	$pdf->Cell(45 , 3, strtoupper('Visitante'), 1, 0 , 'C' , true);
-	$pdf->SetXY($x+153,$y+3);
-	$pdf->Cell(40 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
-	$pdf->SetXY($x+193,$y+3);
-	$pdf->Cell(45 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+98,$y+3);
+	$pdf->Cell(35 , 3, strtoupper('Visitante'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+133,$y+3);
+	$pdf->Cell(35 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+168,$y+3);
+	$pdf->Cell(70 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
 	$pdf->SetXY($x+238,$y+3);
 	$pdf->Cell(37 , 3, strtoupper('Campo'), 1, 0 , 'C' , true);
 	
-	$sql = "select distinct b.Jornada_DescCorta, g.Torneo_Desc
+	$sql = "select distinct b.Jornada_Desc Jornada_DescCorta, g.Torneo_Desc
 			from $schema.Juegos a
 				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
@@ -71,91 +75,159 @@
         	$y = 0;
         	$col = 0;
         	$rowc = 0;
-        
-        	$pdf->SetXY(0,0);
-        	$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',5+((35 - (35 * ($Config->logowidth / 110)))/2),5+((35 - (35 * ($Config->logoheight / 110)))/2),(35 * ($Config->logowidth / 110)), (35 * ($Config->logoheight / 110)), 'PNG');
-        	$pdf->SetFont('Helvetica' , 'B' , 25);
-	        $pdf->SetTextColor(0, 110, 191);
-	        $pdf->SetDrawColor(0, 0, 0);
-        	$pdf->SetXY(40,8);
-        	$pdf->Cell(225 , 8, az_utf8_decode($Config->liga), 35, 0 , 'C' , false);
-        	$pdf->SetXY(40,16);
-        	$pdf->SetFont('Helvetica' , 'IB' , 18);
-        	$pdf->Cell(225 , 8, '"INNOVANDO EL FUTBOL"', 35, 0 , 'C' , false);
-        	$pdf->SetXY(40,24);
-        	$pdf->SetFont('Helvetica' , 'B' , 22);
-        	$pdf->Cell(225 , 8, az_utf8_decode($row1["Torneo_Desc"]), 35, 0 , 'C' , false);
+        	$pdf->SetTextColor(252, 1, 2);
         	$pdf->SetXY(40,32);
         	$pdf->SetFont('Helvetica' , 'B' , 20);
-        	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . ' (Fecha)', 35, 0 , 'C' , false);
+        	$pdf->Cell(225 , 8, az_utf8_decode($row1["Jornada_DescCorta"]) . ' (Fecha)', 35, 0 , 'C' , false);
         	$pdf->SetTextColor(0, 0, 0);
 
 		} 
 	}else {
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
+	$count = 1;
     $x = 0;
     $y = 43;
-	$sql = "select dc.Categoria_DESC, b.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, b.Fecha, day(b.Fecha) Dia, 
+	$sql = "select distinct dc.Categoria_DESC, SUBSTRING(jor.Jornada_Desc, 1, 4) Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia, 
 					ELT(DATE_FORMAT(a.Fecha,'%m'),'Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic')  Mes, year(a.Fecha) Anio, a.Campo_ID, DATE_FORMAT(a.Fecha, '%W') dia_sem,
 					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(a.Fecha, ' %d %Y') Fecha_String, Comentarios, TIME_FORMAT(a.Horario, '%H:%i %p') hora
 			from $schema.Juegos a
 				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID
 				join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
-			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada
-			order by a.Fecha, a.Horario asc";
+				join $schema.Jornada jor on a.Jornada_ID = jor.Jornada_ID
+			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and ((weekday(a.Fecha) <> 2) or (weekday(a.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and a.Horario <> (SELECT MarcadorHoraDefault FROM $schema.Configuration)))
+			order by a.Fecha, c.Campo_DESC, a.Horario, a.Juego_ID asc";
+	//echo $sql;
 	$result1 = $Config->query($sql);
 	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
         	
+        	
+        	$height = 1;
+			$text = $row1["Comentarios"];
+			$column_width = 70; // Width of your cell in FPDF units
+
+			// 1. Get total width of the string in user units
+			$string_width = $pdf->GetStringWidth($text);
+
+			// 2. Divide by the column width to find the number of rows (use ceil to round up)
+			$height = ceil($string_width / $column_width);
+
+			// 3. (Optional) Account for explicit line breaks in your text
+			$hard_breaks = substr_count($text, "\n");
+			$height = max($height, $hard_breaks + 1);
+        	/*
+			if(strlen($row1["Comentarios"])/57 > 1){
+        	    $height = intdiv(strlen($row1["Comentarios"]), 57);
+        	    if(strlen($row1["Comentarios"])%15 > 0){
+        	       $height++;
+        	    }
+        	}
+			*/
         	$pdf->SetTextColor(0, 0, 0);
 	        $pdf->SetDrawColor(0, 0, 0);
         	$pdf->SetFont('Times' , '' , 6);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
+        	//$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(8 , 3, az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(8 , (3*$height), az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+13,$y+3);
-        	$pdf->Cell(20 , 3, az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->SetFont('Times' , '' , 5);
+        	$pdf->Cell(20 , (3*$height), az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+33,$y+3);
-        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+78,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+84,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+90,$y+3);
-        	$pdf->Cell(6 , 3, 'VS', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+96,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+102,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+108,$y+3);
-        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+153,$y+3);
-        	$pdf->Cell(40 , 3, az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+193,$y+3);
-        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Comentarios"]), 1, 0 , 'C' , false);
+        	$pdf->SetFont('Times' , '' , 6);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+68,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+74,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+80,$y+3);
+        	$pdf->Cell(6 , (3*$height), 'VS', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+86,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+92,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+98,$y+3);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+133,$y+3);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+168,$y+3);
+        	$pdf->MultiCell(70, (3), az_utf8_decode($row1["Comentarios"]), 1,'L', false);
         	$pdf->SetXY($x+238,$y+3);
-        	$pdf->Cell(37 , 3, az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
-        	$y = $y + 3;
+        	$pdf->Cell(37 , (3*$height), az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
+        	$y = $y + (3*$height);
+            $count = $count + $height;
+            
+            if($count >= 51){
+                $pdf->AddPage();
+            	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
+            	
+            	$x = 0;
+            	$y = 40;
+            	$pdf->SetTextColor(255,255,255);
+            	$pdf->SetFillColor(252, 1, 2);
+            	$pdf->SetDrawColor(252, 1, 2);
+            	$pdf->SetFont('Times' , '' , 6);
+            	$pdf->SetXY($x+5,$y+3);
+            	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+5,$y+3);
+            	$pdf->Cell(8 , 3, strtoupper('Jor'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+13,$y+3);
+            	$pdf->Cell(20 , 3, strtoupper('Categoria'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+33,$y+3);
+            	$pdf->Cell(45 , 3, strtoupper('Local'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+78,$y+3);
+            	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+84,$y+3);
+            	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+90,$y+3);
+            	$pdf->Cell(6 , 3, 'VS', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+96,$y+3);
+            	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+102,$y+3);
+            	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+108,$y+3);
+            	$pdf->Cell(45 , 3, strtoupper('Visitante'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+153,$y+3);
+            	$pdf->Cell(40 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+193,$y+3);
+            	$pdf->Cell(70 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+238,$y+3);
+            	$pdf->Cell(37 , 3, strtoupper('Campo'), 1, 0 , 'C' , true);
+            	
+    	    	$x = 0;
+            	$y = 0;
+            	$col = 0;
+            	$rowc = 0;
+            	$pdf->SetTextColor(252, 1, 2);
+            	$pdf->SetXY(40,32);
+            	$pdf->SetFont('Helvetica' , 'B' , 20);
+            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($Jornada_Desc_Corta) . ' (Fecha)', 35, 0 , 'C' , false);
+            	$pdf->SetTextColor(0, 0, 0);
+            	
+                $x = 0;
+                $y = 43;
+                $count = 1;
+        	}
 		} 
 	}else {
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
 	
 	$pdf->AddPage();
+	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
 	
 	$x = 0;
 	$y = 40;
 	$pdf->SetTextColor(255,255,255);
-	$pdf->SetFillColor(0, 110, 191);
-	$pdf->SetDrawColor(0, 110, 191);
+	$pdf->SetFillColor(252, 1, 2);
+	$pdf->SetDrawColor(252, 1, 2);
 	$pdf->SetFont('Times' , '' , 6);
 	$pdf->SetXY($x+5,$y+3);
 	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , true);
@@ -164,27 +236,29 @@
 	$pdf->SetXY($x+13,$y+3);
 	$pdf->Cell(20 , 3, strtoupper('Categoria'), 1, 0 , 'C' , true);
 	$pdf->SetXY($x+33,$y+3);
-	$pdf->Cell(45 , 3, strtoupper('Local'), 1, 0 , 'C' , true);
-	$pdf->SetXY($x+78,$y+3);
+	$pdf->Cell(35 , 3, strtoupper('Local'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+68,$y+3);
 	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+84,$y+3);
+	$pdf->SetXY($x+74,$y+3);
 	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+90,$y+3);
+	$pdf->SetXY($x+80,$y+3);
 	$pdf->Cell(6 , 3, 'VS', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+96,$y+3);
+	$pdf->SetXY($x+86,$y+3);
 	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+102,$y+3);
+	$pdf->SetXY($x+92,$y+3);
 	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
-	$pdf->SetXY($x+108,$y+3);
-	$pdf->Cell(45 , 3, strtoupper('Visitante'), 1, 0 , 'C' , true);
-	$pdf->SetXY($x+153,$y+3);
-	$pdf->Cell(40 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
-	$pdf->SetXY($x+193,$y+3);
-	$pdf->Cell(45 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+98,$y+3);
+	$pdf->Cell(35 , 3, strtoupper('Visitante'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+133,$y+3);
+	$pdf->Cell(35 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
+	$pdf->SetXY($x+168,$y+3);
+	$pdf->Cell(70 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
 	$pdf->SetXY($x+238,$y+3);
 	$pdf->Cell(37 , 3, strtoupper('Campo'), 1, 0 , 'C' , true);
 	
-	$sql = "select distinct b.Jornada_DescCorta, g.Torneo_Desc
+	$Jornada_Desc_Corta = '';
+	
+	$sql = "select distinct b.Jornada_Desc Jornada_DescCorta, g.Torneo_Desc
 			from $schema.Juegos a
 				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
@@ -193,83 +267,149 @@
 	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
-	    	$x = 0;
-        	$y = 0;
-        	$col = 0;
-        	$rowc = 0;
-        
-        	$pdf->SetXY(0,0);
-        	$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',5+((35 - (35 * ($Config->logowidth / 110)))/2),5+((35 - (35 * ($Config->logoheight / 110)))/2),(35 * ($Config->logowidth / 110)), (35 * ($Config->logoheight / 110)), 'PNG');
-        	$pdf->SetFont('Helvetica' , 'B' , 25);
-	        $pdf->SetTextColor(0, 110, 191);
-	        $pdf->SetDrawColor(0, 0, 0);
-        	$pdf->SetXY(40,8);
-        	$pdf->Cell(225 , 8, az_utf8_decode($Config->liga), 35, 0 , 'C' , false);
-        	$pdf->SetXY(40,16);
-        	$pdf->SetFont('Helvetica' , 'IB' , 18);
-        	$pdf->Cell(225 , 8, '"INNOVANDO EL FUTBOL"', 35, 0 , 'C' , false);
-        	$pdf->SetXY(40,24);
-        	$pdf->SetFont('Helvetica' , 'B' , 22);
-        	$pdf->Cell(225 , 8, az_utf8_decode($row1["Torneo_Desc"]), 35, 0 , 'C' , false);
-        	$pdf->SetXY(40,32);
-        	$pdf->SetFont('Helvetica' , 'B' , 20);
-        	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . ' (Categoria)', 35, 0 , 'C' , false);
-        	$pdf->SetTextColor(0, 0, 0);
-
+		    $Jornada_Desc_Corta = $row1["Jornada_DescCorta"];
 		} 
 	}else {
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
+	
+    $x = 0;
+	$y = 0;
+	$col = 0;
+	$rowc = 0;
+	$pdf->SetTextColor(252, 1, 2);
+	$pdf->SetXY(40,32);
+	$pdf->SetFont('Helvetica' , 'B' , 20);
+	$pdf->Cell(225 , 8, az_utf8_decode($Jornada_Desc_Corta) . ' (Categoria)', 35, 0 , 'C' , false);
+	$pdf->SetTextColor(0, 0, 0);
     $x = 0;
     $y = 43;
-	$sql = "select dc.Categoria_DESC, b.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, b.Fecha, day(b.Fecha) Dia, 
+    $count = 1;
+	$sql = "select distinct dc.Categoria_DESC, SUBSTRING(jor.Jornada_Desc, 1, 4) Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia, 
 					ELT(DATE_FORMAT(a.Fecha,'%m'),'Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic')  Mes, year(a.Fecha) Anio, a.Campo_ID, DATE_FORMAT(a.Fecha, '%W') dia_sem,
-					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(a.Fecha, ' %d %Y') Fecha_String, Comentarios, TIME_FORMAT(a.Horario, '%H:%i %p') hora
+					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(a.Fecha, ' %d %Y') Fecha_String, Comentarios, TIME_FORMAT(a.Horario, '%H:%i %p') hora, dc.Categoria_Orden
 			from $schema.Juegos a
 				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID
 				join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
-			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada
-			order by dc.Categoria_DESC,a.Fecha, a.Horario asc";
+				join $schema.Jornada jor on a.Jornada_ID = jor.Jornada_ID
+			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and ((weekday(a.Fecha) <> 2) or (weekday(a.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and a.Horario <> (SELECT MarcadorHoraDefault FROM $schema.Configuration)))
+			order by dc.Categoria_Orden asc, a.Fecha, c.Campo_DESC, a.Horario, a.Juego_ID asc";
 	$result1 = $Config->query($sql);
 	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
         	
+        	$height = 1;
+        	$text = $row1["Comentarios"];
+			$column_width = 70; // Width of your cell in FPDF units
+
+			// 1. Get total width of the string in user units
+			$string_width = $pdf->GetStringWidth($text);
+
+			// 2. Divide by the column width to find the number of rows (use ceil to round up)
+			$height = ceil($string_width / $column_width);
+
+			// 3. (Optional) Account for explicit line breaks in your text
+			$hard_breaks = substr_count($text, "\n");
+			$height = max($height, $hard_breaks + 1);
+        	/*
+			if(strlen($row1["Comentarios"])/57 > 1){
+        	    $height = intdiv(strlen($row1["Comentarios"]), 57);
+        	    if(strlen($row1["Comentarios"])%15 > 0){
+        	       $height++;
+        	    }
+        	}
+			*/
         	$pdf->SetTextColor(0, 0, 0);
 	        $pdf->SetDrawColor(0, 0, 0);
         	$pdf->SetFont('Times' , '' , 6);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
+        	//$pdf->Cell(270 , 3, '', 1, 0 , 'C' , false);
         	$pdf->SetXY($x+5,$y+3);
-        	$pdf->Cell(8 , 3, az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
+        	$pdf->Cell(8 , (3*$height), az_utf8_decode($row1["Jornada_DescCorta"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+13,$y+3);
-        	$pdf->Cell(20 , 3, az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
+        	$pdf->SetFont('Times' , '' , 5);
+        	$pdf->Cell(20 , (3*$height), az_utf8_decode($row1["Categoria_DESC"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+33,$y+3);
-        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+78,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+84,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+90,$y+3);
-        	$pdf->Cell(6 , 3, 'VS', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+96,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+102,$y+3);
-        	$pdf->Cell(6 , 3, '', 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+108,$y+3);
-        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+153,$y+3);
-        	$pdf->Cell(40 , 3, az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
-        	$pdf->SetXY($x+193,$y+3);
-        	$pdf->Cell(45 , 3, az_utf8_decode($row1["Comentarios"]), 1, 0 , 'C' , false);
+        	$pdf->SetFont('Times' , '' , 6);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Local"]), 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+68,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+74,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+80,$y+3);
+        	$pdf->Cell(6 , (3*$height), 'VS', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+86,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+92,$y+3);
+        	$pdf->Cell(6 , (3*$height), '', 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+98,$y+3);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["Visitante"]), 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+133,$y+3);
+        	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
+        	$pdf->SetXY($x+168,$y+3);
+        	$pdf->MultiCell(70, (3), az_utf8_decode($row1["Comentarios"]), 1,'L', false);
         	$pdf->SetXY($x+238,$y+3);
-        	$pdf->Cell(37 , 3, az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
-        	$y = $y + 3;
+        	$pdf->Cell(37 , (3*$height), az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
+        	$y = $y + (3*$height);
+            $count = $count + $height;
+            
+            if($count >= 51){
+                $pdf->AddPage();
+            	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
+            	
+            	$x = 0;
+            	$y = 40;
+            	$pdf->SetTextColor(255,255,255);
+            	$pdf->SetFillColor(252, 1, 2);
+            	$pdf->SetDrawColor(252, 1, 2);
+            	$pdf->SetFont('Times' , '' , 6);
+            	$pdf->SetXY($x+5,$y+3);
+            	$pdf->Cell(270 , 3, '', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+5,$y+3);
+            	$pdf->Cell(8 , 3, strtoupper('Jor'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+13,$y+3);
+            	$pdf->Cell(20 , 3, strtoupper('Categoria'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+33,$y+3);
+            	$pdf->Cell(45 , 3, strtoupper('Local'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+78,$y+3);
+            	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+84,$y+3);
+            	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+90,$y+3);
+            	$pdf->Cell(6 , 3, 'VS', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+96,$y+3);
+            	$pdf->Cell(6 , 3, 'G', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+102,$y+3);
+            	$pdf->Cell(6 , 3, 'P', 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+108,$y+3);
+            	$pdf->Cell(45 , 3, strtoupper('Visitante'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+153,$y+3);
+            	$pdf->Cell(40 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+193,$y+3);
+            	$pdf->Cell(70 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
+            	$pdf->SetXY($x+238,$y+3);
+            	$pdf->Cell(37 , 3, strtoupper('Campo'), 1, 0 , 'C' , true);
+            	
+    	    	$x = 0;
+            	$y = 0;
+            	$col = 0;
+            	$rowc = 0;
+            	$pdf->SetTextColor(252, 1, 2);
+            	$pdf->SetXY(40,32);
+            	$pdf->SetFont('Helvetica' , 'B' , 20);
+            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($Jornada_Desc_Corta) . ' (Categoria)', 35, 0 , 'C' , false);
+            	$pdf->SetTextColor(0, 0, 0);
+            	
+                $x = 0;
+                $y = 43;
+                $count = 1;
+        	}
 		} 
 	}else {
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);

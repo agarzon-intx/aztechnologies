@@ -303,6 +303,7 @@
 		<script src="../assets/js/plugins/nouislider.min.js"></script>
 		<!--<script src="./assets/js/material-dashboard.js"></script>-->
 		<script type="text/javascript">var MSG_AJAX_GENERIC = <?php echo json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;</script>
+		<?php require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_facebook_lang_js.inc.php'; ?>
 		<script src="./javascript/main.js.php" type="text/javascript"></script>
 		<script src="./javascript/mainVoleibol.js.php" type="text/javascript"></script>
                 <script src="./javascript/mainBasket.js.php" type="text/javascript"></script>

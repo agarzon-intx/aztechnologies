@@ -6,6 +6,7 @@ $sql2Teams = "	SELECT a.*, concat(a.Torneo_ID,'-', a.Equipo_ID) newLogo, c.Campo
 				left outer join $schema.Categorias d on a.fuerza = d.Categoria_ID and d.Torneo_ID = $Season
 			WHERE a.Torneo_ID = $Season and Fuerza = $Category
 				and IFNULL(a.Activo, 0) = 1
+				$teamListFilterSql
 			order by Equipo_DESC asc;";
 
 $htmlTeams .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">

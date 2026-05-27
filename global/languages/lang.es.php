@@ -1117,6 +1117,8 @@
 	$lang['10759'] = 'Revisar Curp';
 	$lang['10760'] = 'Ver';
 	$lang['10761'] = 'Arbitro';
+	$lang['10762'] = 'Buscar por usuario, nombre o apellidos…';
+	$lang['10763'] = 'Buscar equipo por nombre…';
 	
 	$lang['js10700'] = 'El nombre no puede estar vacio';
 	$lang['js10701'] = 'El apellido paterno no puede estar vacio';
@@ -1255,5 +1257,47 @@
 	$lang['110814']='159';
 	$lang['110815']='160';
 	
+	// Flyer — Facebook (compartir + publicar en Página)
+	$lang['jsfb01'] = 'Facebook';
+	$lang['jsfb02'] = 'Página de Facebook';
+	$lang['jsfb03'] = "¿Generar las imágenes del flyer, descargarlas y abrir Facebook para crear una publicación con fotos?";
+	$lang['jsfb26'] = 'Texto para la publicación en Facebook (opcional):';
+	$lang['jsfb04'] = '¿Abrir Compartir en Facebook para este flyer?';
+	$lang['jsfb05'] = "¿Abrir Compartir en Facebook para el flyer %1 de %2?\n\n%3";
+	$lang['jsfb06'] = '¿Omitir este flyer y continuar con el siguiente?';
+	$lang['jsfb07'] = '¿Compartir el flyer %1 de %2 en Facebook?';
+	$lang['jsfb08'] = "Permite ventanas emergentes en este sitio, o abre:\n%1";
+	$lang['jsfb09'] = '¿Publicar todas las imágenes del flyer en tu Página de Facebook (una publicación por imagen)?';
+	$lang['jsfb10'] = "\n\n¿Abrir Facebook en el navegador?";
+	$lang['jsfb11'] = 'Publicado en Facebook.';
+	$lang['jsfb12'] = 'Preparando imágenes para compartir…';
+	$lang['jsfb28'] = 'No se pudo abrir Compartir. En el celular usa el menú del sistema → Facebook. Toca aquí otra vez para descargar los PNG y subirlos manualmente.';
+	$lang['jsfb30'] = 'Toca la pantalla para compartir en Facebook.';
+	$lang['jsfb33'] = "Se abrió Facebook con la vista previa del flyer.\n\nConfirma la publicación allí.\n\nSi necesitas todas las imágenes como fotos, toca esta pantalla otra vez para descargar los PNG.";
+	$lang['jsfb34'] = 'Descargando imágenes PNG… Súbelas en Facebook (crear publicación con fotos).';
+	$lang['jsfb35'] = 'Publicación creada en Facebook con las imágenes del flyer. Si no se abrió, permite ventanas emergentes.';
+	$lang['jsfb36'] = 'Toca la pantalla para abrir Facebook con las imágenes del flyer (publicación nueva).';
+	$lang['jsfb37'] = "No se pudo compartir automáticamente. Se descargaron los PNG: en Facebook pulsa Foto/video y súbelos.";
+	$lang['jsfb38'] = 'Toca la pantalla para abrir Compartir con las imágenes ya listas (elige Facebook).';
+	$lang['jsfb39'] = "Imágenes descargadas.\n\nFacebook ya está abierto. Arriba verás «¿Qué estás pensando?»: escribe tu texto, pulsa Foto/video y sube los PNG.";
+	$lang['jsfb40'] = "Se descargó un ZIP con todas las imágenes.\n\nExtrae los PNG, abre Facebook y súbelos con Foto/video.";
+	$lang['jsfb41'] = 'Descargando imagen %1 de %2…';
+	$lang['jsfb29'] = 'El texto se copió al portapapeles. Cuando abras Facebook, pégalo en la publicación (Ctrl+V o mantener pulsado → Pegar). Facebook no siempre acepta el texto automáticamente al compartir fotos.';
+	$lang['jsfb13'] = 'Listo para compartir %1 flyers en Facebook (uno por uno).';
+	$lang['jsfb14'] = 'Se publicaron %1 imagen(es) del flyer en la Página de Facebook.';
+	$lang['jsfb15'] = 'Jornada %1 — Flyers';
+	$lang['jsfb16'] = 'Calendario jornada %1';
+	$lang['jsfb17'] = 'Jornada %1 — Cat. %2';
+	$lang['jsfb18'] = 'Flyers categoría %1, jornada %2';
+	$lang['jsfb19'] = 'Juego %1';
+	$lang['jsfb20'] = 'Flyer juego %1';
+	$lang['jsfb21'] = '%1 (%2/%3)';
+	$lang['jsfb22'] = 'Flyer';
+	$lang['jsfb23'] = 'Enlace de compartir expirado o no encontrado.';
+	$lang['jsfb24'] = 'No se encontró la imagen PNG del flyer.';
+	$lang['jsfb25'] = 'No se pudo guardar la imagen del flyer para compartir.';
+	$lang['jsfb31'] = 'Sesión expirada. Cierra esta ventana, inicia sesión de nuevo y vuelve a intentar.';
+	$lang['jsfb32'] = 'El servidor tardó demasiado generando las imágenes. Prueba con menos juegos o contacta al administrador.';
+
 	$lang['120000']='Por Equipo';
 ?>

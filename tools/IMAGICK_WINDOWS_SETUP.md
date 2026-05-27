@@ -48,3 +48,16 @@ If you see a warning that Imagick was compiled against ImageMagick **1809** but 
 ## PDF
 
 Install **Ghostscript** and ensure its `bin` folder is on PATH so ImageMagick can read PDFs.
+
+## Laragon (elite.test, lidep.test, …)
+
+Laragon often uses **PHP 8.3** while `php_imagick.dll` in `C:\php8.2\ext` is for **PHP 8.2** only — the extension will not load in the browser.
+
+**Quick fix (no PHP Imagick needed):**
+
+1. Copy `.local/flyer-export.env.example` → `.local/flyer-export.env` (adjust paths if your install folders differ).
+2. In Laragon `php.ini`, **do not** load imagick from `global/include/imagick/` (wrong/missing DLL).
+3. **Restart Laragon** (Stop All → Start All).
+4. While logged in, open `http://elite.test/ajax/Flyers/pngBackendCheck.php` — you should see `imagemagick_cli` and `ghostscript_cli` with full paths.
+
+**Optional — PHP Imagick in Laragon:** install a **PHP 8.3 NTS** `php_imagick.dll` into `C:\laragon\bin\php\php-8.x\ext\` and set `extension=imagick` in that version’s `php.ini`, with ImageMagick on PATH for Apache.

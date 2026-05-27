@@ -19,7 +19,7 @@
 	$edad1 = htmlspecialchars($_GET["Edad1"]);	
 	$edad2 = htmlspecialchars($_GET["Edad2"]);	
 
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 	
 	$x = 0;
 	$y = 0;
@@ -88,41 +88,15 @@
 
 				
 				try{
-				    $pdf->Image($server . '/pdf/Credencial.png',$x+0,$y+0,108, 70, 'PNG');
+				    az_pdf_image_file($pdf, $siteRoot, '/pdf/Credencial.png', $x+0,$y+0,108, 70);
 			    }catch(Exception $e){
 			        echo $e->getTraceAsString();
 			    }
 			    
-				try{
-					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+10,$y+15,26, 35, 'PNG');
-				}catch(Exception $e){
-					try{
-    					$pdf->SetAlpha(1);
-    					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+10,$y+15,26, 35, 'JPG');
-    				}catch(Exception $e){
-    					try{
-        					$pdf->SetAlpha(1);
-        					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+10,$y+15,26, 35, 'JPEG');
-        				}catch(Exception $e){
-        					try{
-            					$pdf->SetAlpha(1);
-            					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+10,$y+15,26, 35, 'GIF');
-            				}catch(Exception $e){
-            					echo $e->getTraceAsString();
-            				}
-        				}
-    				}
-				}
-				try{
-				    $headers = @get_headers($server . '/imagenes/' . $row["Logo"] . '.png');
-				    $pdf->SetAlpha(1);
-					if($headers && strpos($headers[0], '200 OK') !== false){
-						$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+15.5,$y+45,15, 15, 'PNG');
-					}
-				}catch(Exception $e){
-					echo $e;
-				}
+				$pdf->SetAlpha(1);
+				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+10, $y+15, 26, 35);
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $row['Logo'] . '.png',$x+15.5,$y+45,15, 15);
+
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetAlpha(1);
 				$pdf->SetXY($x+40,$y+16);
@@ -140,7 +114,7 @@
 				$pdf->Cell(65 , 5, '' . az_utf8_decode(substr($row["Curp"],0,11)) . 'XXXXXXX', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+46);
 				$pdf->Cell(65 , 5, $row["FechaAlta"], 0, 0 , 'L' , false);
-				//$pdf->Image($server . '/include/qrcode/image.php?msg=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+92,$y+2,13, 13, 'PNG');
+				//az_pdf_qrcode($pdf, $fgmembersite, $row["Jugador_ID"],$x+92,$y+2,13, 13);
 
 				
 				//$pdf->Table();

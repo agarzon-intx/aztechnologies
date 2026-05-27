@@ -12,7 +12,7 @@
 
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
 	
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$logo = "";
 	$equipoDesc = "";
@@ -50,42 +50,12 @@
 		for($col = 0; $col < 2; $col++){
 			$pdf->SetXY($x+6,$y+47);
 			$pdf->SetAlpha(.4);
-			try{
-			    $headers = @get_headers($server . '/imagenes/Original/' . $logo . '.png');
-				if($headers && strpos($headers[0], '200 OK') !== false){
-    				try{
-    					$pdf->Image($server . '/imagenes/Original/' . $logo . '.png',$x+31,$y+6,52, 52, 'PNG');
-    				}catch(Exception $e){
-    					try{
-        					$pdf->Image($server . '/imagenes/Original/' . $logo . '.png',$x+31,$y+6,52, 52, 'JPG');
-        				}catch(Exception $e){
-        					try{
-            					$pdf->Image($server . '/imagenes/Original/' . $logo . '.png',$x+31,$y+6,52, 52, 'JPEG');
-            				}catch(Exception $e){
-            					try{
-                					$pdf->Image($server . '/imagenes/Original/' . $logo . '.png',$x+31,$y+6,52, 52, 'GIF');
-                				}catch(Exception $e){
-                					echo $e->getTraceAsString();
-                				}
-            				}
-        				}
-    				}
-				}
-			}catch(Exception $e){
-				echo $e;
-			}
+			az_pdf_image($pdf, az_pdf_resolve_extensions($siteRoot, 'imagenes/Original/' . $logo), $x+31, $y+6, 52, 52);
 			$pdf->SetTextColor(40, 151, 101);
 			$pdf->SetFont('Courier' , 'B' , 40);
 			$pdf->SetXY($x+60,$y+47);
 			$pdf->SetAlpha(.3);
-			try{
-			    $headers = @get_headers($server . '/imagenes/' . $Config->logo . '.png');
-				if($headers && strpos($headers[0], '200 OK') !== false){
-					$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+88+((15 - (15 * ($Config->logowidth / 110)))/2),$y+7+((15 - (15 * ($Config->logoheight / 110)))/2),(15 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)), 'PNG');
-				}
-			}catch(Exception $e){
-				echo $e;
-			}
+			az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $Config->logo . '.png', $x+88+((15 - (15 * ($Config->logowidth / 110)))/2), $y+7+((15 - (15 * ($Config->logoheight / 110)))/2), (15 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)));
 			$pdf->SetXY($x+25,$y+4);
 			$pdf->SetTextColor(0, 0, 0);
 			$pdf->SetFont('Helvetica' , '' , 12);

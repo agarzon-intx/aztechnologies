@@ -1,5 +1,7 @@
 # Promote: Git + SFTP (Development)
 
+> **macOS (primary):** see **`tools/MAC-MIGRATION.md`** — Production deploy uses SFTP shell scripts, not this Windows/PuTTY flow.
+
 Use this checklist when **another agent** (or you) needs to **commit, push, and deploy** the `aztechnologies` repo to **cPanel Development** over SFTP.
 
 Repository root (Windows): `C:\cursor\aztechnologies`  

@@ -15,7 +15,7 @@
 	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
 	$equipo = htmlspecialchars($_GET['Equipo']);
 	
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
@@ -25,7 +25,7 @@
 	$pdf->AddPage();
 	$pdf->SetAutoPageBreak(false,1);
 	$pdf->SetMargins(5, 5, 5, 5);	
-	$pdf->Image($server . '/imagenes/FondoReporte.png',0,0,279,216);
+	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
 
     // restore full opacity
     //$pdf->SetAlpha(.5);
@@ -75,7 +75,7 @@
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
 				join $schema.Jornada jor on a.Jornada_ID = jor.Jornada_ID
-			where a.Torneo_ID = $torneo and (d.Equipo_FULLDESC like '%" . $equipo . "%' or f.Equipo_FULLDESC like '%" . $equipo . "%') and a.Jugado = 1
+			where a.Torneo_ID = $torneo and (d.Equipo_FULLDESC like '%" . $equipo . "%' or f.Equipo_FULLDESC like '%" . $equipo . "%')and a.Jugado = 1
 			order by dc.Categoria_Orden,a.Fecha, c.Campo_DESC, a.Horario, a.Juego_ID asc";
 	//echo $sql;
 	$result1 = $Config->query($sql);
@@ -98,12 +98,26 @@
         	
         	
         	$height = 1;
-        	if(strlen($row1["Comentarios"])/65 > 1){
-        	    $height = intdiv(strlen($row1["Comentarios"]), 65);
-        	    if(strlen($row1["Comentarios"])%65 > 0){
+        	$text = $row1["Comentarios"];
+			$column_width = 70; // Width of your cell in FPDF units
+
+			// 1. Get total width of the string in user units
+			$string_width = $pdf->GetStringWidth($text);
+
+			// 2. Divide by the column width to find the number of rows (use ceil to round up)
+			$height = ceil($string_width / $column_width);
+
+			// 3. (Optional) Account for explicit line breaks in your text
+			$hard_breaks = substr_count($text, "\n");
+			$height = max($height, $hard_breaks + 1);
+        	/*
+			if(strlen($row1["Comentarios"])/57 > 1){
+        	    $height = intdiv(strlen($row1["Comentarios"]), 57);
+        	    if(strlen($row1["Comentarios"])%15 > 0){
         	       $height++;
         	    }
         	}
+			*/
         	$pdf->SetTextColor(0, 0, 0);
 	        $pdf->SetDrawColor(0, 0, 0);
         	$pdf->SetFont('Times' , '' , 6);
@@ -132,11 +146,7 @@
         	$pdf->SetXY($x+133,$y+3);
         	$pdf->Cell(35 , (3*$height), az_utf8_decode($row1["dia_sem"]) . ', ' . az_utf8_decode($row1["Mes"]) . az_utf8_decode($row1["Fecha_String"]) . '/' .az_utf8_decode($row1["hora"]), 1, 0 , 'C' , false);
         	$pdf->SetXY($x+168,$y+3);
-        	if(strlen($row1["Comentarios"])/65 > 1){
-        	    $pdf->MultiCell(70, (3), substr_replace(az_utf8_decode($row1["Comentarios"]), "\n", strpos(az_utf8_decode($row1["Comentarios"]), " ", 65), 0), 1,'L', false);
-        	}else{
-        	    $pdf->MultiCell(70, (3), az_utf8_decode($row1["Comentarios"]), 1,'L', false);
-        	}
+			$pdf->MultiCell(70, (3), az_utf8_decode($row1["Comentarios"]), 1,'L', false);
         	$pdf->SetXY($x+238,$y+3);
         	$pdf->Cell(37 , (3*$height), az_utf8_decode($row1["Campo_DESC"]), 1, 0 , 'C' , false);
         	$y = $y + (3*$height);
@@ -144,7 +154,7 @@
             
             if($count >= 51){
                 $pdf->AddPage();
-            	$pdf->Image($server . '/imagenes/FondoReporte.png',0,0,279,216);
+            	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
             	
             	$x = 0;
             	$y = 40;
@@ -175,7 +185,7 @@
             	$pdf->SetXY($x+153,$y+3);
             	$pdf->Cell(40 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
             	$pdf->SetXY($x+193,$y+3);
-            	$pdf->Cell(45 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
+            	$pdf->Cell(70 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
             	$pdf->SetXY($x+238,$y+3);
             	$pdf->Cell(37 , 3, strtoupper('Campo'), 1, 0 , 'C' , true);
             	

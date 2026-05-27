@@ -1053,7 +1053,7 @@ class FGMembersite {
 	
 	function UserEquipo()
 	{
-		return isset($_SESSION[$this->Config->getAlias() . 'equipo'])?SanitizeRealName($_SESSION[$this->Config->getAlias() . 'equipo']):'';
+		return isset($_SESSION[$this->Config->getAlias() . 'equipo'])?SanitizeTextComa($_SESSION[$this->Config->getAlias() . 'equipo']):'';
 	}
 	
 	function UserActive()

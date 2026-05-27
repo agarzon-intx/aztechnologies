@@ -1,0 +1,30 @@
+[21-May-2026 05:50:12 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 05:51:51 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 06:22:58 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 06:22:58 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 06:22:59 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 06:56:09 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 06:56:09 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 06:56:09 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 07:36:54 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 07:36:54 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 07:48:04 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 07:48:04 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 08:20:19 UTC] PHP Warning:  require_once(C:\cursor\aztechnologies\global\membersite_config.php): Failed to open stream: No such file or directory in C:\cursor\aztechnologies\global\include\flyer_facebook_share.php on line 415
+[21-May-2026 08:20:19 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\cursor\aztechnologies\global\membersite_config.php' (include_path='C:\cursor\aztechnologies\elite;C:\cursor\aztechnologies\elite\include;C:\cursor\aztechnologies\global\include;C:\cursor\aztechnologies\elite\config;C:\cursor\aztechnologies\elite\languages;C:\cursor\aztechnologies\elite\ini;.;C:/laragon/etc/php/pear') in C:\cursor\aztechnologies\global\include\flyer_facebook_share.php:415
+Stack trace:
+#0 C:\cursor\aztechnologies\elite\pdf\flyerFacebookShareLaunch.php(23): az_flyer_facebook_share_launch_http()
+#1 {main}
+  thrown in C:\cursor\aztechnologies\global\include\flyer_facebook_share.php on line 415
+[21-May-2026 08:20:53 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 08:21:05 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 08:28:44 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[21-May-2026 08:37:24 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[22-May-2026 04:51:39 UTC] PHP Warning:  Undefined variable $count in C:\cursor\aztechnologies\elite\pdf\reportePendientes.php on line 161
+[23-May-2026 05:16:21 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1809 but version 1810 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[26-May-2026 08:52:00 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: MySQL server has gone away in /Users/aztechnologies/Desarrollo/Aztechnologies/WEB/global/config/Configuration.php:370
+Stack trace:
+#0 /Users/aztechnologies/Desarrollo/Aztechnologies/WEB/global/config/Configuration.php(370): mysqli->query('SET lc_time_nam...')
+#1 /Users/aztechnologies/Desarrollo/Aztechnologies/WEB/elite/index.php(322): Configuration->query('SELECT Aviso_ID...')
+#2 {main}
+  thrown in /Users/aztechnologies/Desarrollo/Aztechnologies/WEB/global/config/Configuration.php on line 370

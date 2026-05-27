@@ -1117,6 +1117,8 @@
 	$lang['10759'] = 'Validate Curp';
 	$lang['10760'] = 'See';
 	$lang['10761'] = 'Referee';
+	$lang['10762'] = 'Search by username, first or last name…';
+	$lang['10763'] = 'Search team by name…';
 	
 	$lang['js10700'] = 'The Name cant be blank';
 	$lang['js10701'] = 'The Last Name cant be blank';
@@ -1255,5 +1257,47 @@
 	$lang['110814']='159';
 	$lang['110815']='160';
 	
+	// Flyer — Facebook (share + Page publish)
+	$lang['jsfb01'] = 'Facebook';
+	$lang['jsfb02'] = 'Facebook Page';
+	$lang['jsfb03'] = "Generate flyer images, download them, and open Facebook to create a photo post?";
+	$lang['jsfb26'] = 'Text for your Facebook post (optional):';
+	$lang['jsfb04'] = 'Open Facebook Share for this flyer?';
+	$lang['jsfb05'] = "Open Facebook Share for flyer %1 of %2?\n\n%3";
+	$lang['jsfb06'] = 'Skip this flyer and continue with the next?';
+	$lang['jsfb07'] = 'Share flyer %1 of %2 on Facebook?';
+	$lang['jsfb08'] = "Allow pop-ups for this site, or open:\n%1";
+	$lang['jsfb09'] = 'Publish all flyer images to your Facebook Page (one post per image)?';
+	$lang['jsfb10'] = "\n\nOpen Facebook in browser?";
+	$lang['jsfb11'] = 'Published to Facebook.';
+	$lang['jsfb12'] = 'Preparing images to share…';
+	$lang['jsfb28'] = 'Could not open Share. On your phone use the system menu → Facebook. Tap here again to download the PNG files and upload them manually.';
+	$lang['jsfb30'] = 'Tap the screen to share on Facebook.';
+	$lang['jsfb33'] = "Facebook opened with a flyer preview.\n\nConfirm the post there.\n\nIf you need every image as photos, tap this screen again to download the PNG files.";
+	$lang['jsfb34'] = 'Downloading PNG images… Upload them on Facebook (create a photo post).';
+	$lang['jsfb35'] = 'Your Facebook post was created with the flyer images. If it did not open, allow pop-ups for this site.';
+	$lang['jsfb36'] = 'Tap the screen to open Facebook with the flyer images (new post).';
+	$lang['jsfb37'] = "Could not share automatically. PNGs were downloaded: on Facebook tap Photo/video and upload them.";
+	$lang['jsfb38'] = 'Tap the screen to open Share with the images ready (choose Facebook).';
+	$lang['jsfb39'] = "Images downloaded.\n\nFacebook is open. At the top, use \"What's on your mind?\": add your text, tap Photo/video, and upload the PNGs.";
+	$lang['jsfb40'] = "A ZIP with all images was downloaded.\n\nExtract the PNGs, open Facebook, and upload them with Photo/video.";
+	$lang['jsfb41'] = 'Downloading image %1 of %2…';
+	$lang['jsfb29'] = 'Your caption was copied to the clipboard. When Facebook opens, paste it into the post (Ctrl+V or long-press → Paste). Facebook often does not accept text automatically when sharing photos.';
+	$lang['jsfb13'] = 'Ready to share %1 flyers on Facebook (one at a time).';
+	$lang['jsfb14'] = 'Published %1 flyer image(s) to the Facebook Page.';
+	$lang['jsfb15'] = 'Week %1 — Flyers';
+	$lang['jsfb16'] = 'Schedule week %1';
+	$lang['jsfb17'] = 'Week %1 — Cat. %2';
+	$lang['jsfb18'] = 'Category %1 flyers, week %2';
+	$lang['jsfb19'] = 'Game %1';
+	$lang['jsfb20'] = 'Game %1 flyer';
+	$lang['jsfb21'] = '%1 (%2/%3)';
+	$lang['jsfb22'] = 'Flyer';
+	$lang['jsfb23'] = 'Share link expired or not found.';
+	$lang['jsfb24'] = 'Flyer PNG image was not found.';
+	$lang['jsfb25'] = 'Could not store the flyer image for sharing.';
+	$lang['jsfb31'] = 'Session expired. Close this window, sign in again, and try again.';
+	$lang['jsfb32'] = 'The server took too long generating images. Try fewer games or contact the administrator.';
+
 	$lang['120000']='By Team';
 ?>

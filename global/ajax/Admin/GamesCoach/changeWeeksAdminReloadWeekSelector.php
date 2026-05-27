@@ -30,7 +30,8 @@ $schema = $Config->getSchema();
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
 	$Category = $_COOKIE[$Config->getAlias() . 'category'];
 	$Week = SanitizeInteger($_POST['Week']);
-    $Type = SanitizeInteger($_POST['Type']);
+    $Type = SanitizeInteger($_POST['Type'] ?? 0);
+    $sql1 = '';
     
     $Config->LoadFlags();
     $hideJuegosXNombre = "";
@@ -71,6 +72,21 @@ $schema = $Config->getSchema();
 			}
 		}
 	}
+
+	$htmlWeeks .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdownJornada">';
+	$sql1 = "select distinct j.Jornada_ID as Jornada, j.Jornada_Desc
+			from $schema.Jornada as j 
+			    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
+			where j.Torneo_ID = $Season and j.Jornada_ID <> $currentWeek
+			order by j.Jornada_ID;";
+	$result = $Config->query($sql1);
+	if ($result) {
+		if ($result->num_rows > 0) {
+			while ($row = $result->fetch_assoc()) {
+				$htmlWeeks .= '<li><a class="dropdown-item" onclick="loadWeekAdminC(' . $row["Jornada"] . ', \'\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);">' . $row["Jornada_Desc"] . '</a></li>';
+			}
+		}
+	}
 	$htmlWeeks .= '</ul>';
 	$htmlWeeks .= '</div>';
 	$htmlWeeks .= '</div>';
@@ -79,13 +95,16 @@ $schema = $Config->getSchema();
 	$htmlWeeks .= '<img src="./imagenes/refresh.png" width="20" height="20" onclick="loadWeekAdminC(' . $selectedWeek . ', \'\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);" style="margin-left: 10;  margin-top: 2px;">';
 	$htmlWeeks .= '</div>';
 	$checkStat = "checked";
-    if($Type == 0){
-        $checkStat = "";
-    }
-    $htmlWeeks .= '</div>';
+	if ($Type == 0) {
+		$checkStat = "";
+	}
+	$htmlWeeks .= '</div>
+	                    <div class="form-check mb-2 col-4 col-sm-4 col-md-3 col-lg-4 col-xl-4 col-xxl-4" style="' . $hideJuegosXNombre . '">
+							<input class="form-check-input" type="checkbox" name="byTeam" id="byTeam" onclick="$(\'#weekAdminTabContent\').toggle(); loadWeekAdminC(' . $currentWeek . ', \'\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);" ' . $checkStat . '>
+							<label class="custom-control-label" for="byTeam">' . $lang['120000'] . '</label>
+						</div>';
 	$htmlWeeks .= '</div>';
-	
-	
+
 	$retunData = array('status' => '1', 'message' => 'Success.', 'dataWeeks' => $htmlWeeks, 'sql' => $sql, 'sql1' => $sql1);
     $Config->Close();
     echo json_encode($retunData);

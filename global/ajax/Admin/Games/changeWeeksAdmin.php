@@ -30,7 +30,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     //print_r($_COOKIE);
     $Season = $_COOKIE[$Config->getAlias() . 'season'];
     $Category = $_COOKIE[$Config->getAlias() . 'category'];
-    $Type = SanitizeInteger($_POST['Type']);    
+    $Type = SanitizeInteger($_POST['Type'] ?? 0);
     
     $Config->LoadFlags();
     $hideJuegosXNombre = "";

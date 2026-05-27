@@ -15,7 +15,7 @@
 	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
 	$jornada = htmlspecialchars($_GET['Jornada_ID']);
 	
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
@@ -25,7 +25,7 @@
 	$pdf->AddPage();
 	$pdf->SetAutoPageBreak(false,1);
 	$pdf->SetMargins(5, 5, 5, 5);	
-	$pdf->Image($server . '/imagenes/FondoReporte.png',0,0,279,216);
+	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
 	
 	$x = 0;
 	$y = 40;
@@ -92,12 +92,12 @@
 				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID
 				join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
 				join $schema.Jornada jor on a.Jornada_ID = jor.Jornada_ID
-			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and ((weekday(a.Fecha) = 2 and a.Horario in ('08:00', '14:00')))
+			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and ((weekday(a.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and a.Horario = (SELECT MarcadorHoraDefault FROM $schema.Configuration)))
 			order by dc.Categoria_Orden asc,a.Fecha, a.Horario asc";
 	//echo $sql;
 	$result1 = $Config->query($sql);
@@ -106,12 +106,26 @@
 		while($row1 = $result1->fetch_assoc()) {
         	
         	$height = 1;
-        	if(strlen($row1["Comentarios"])/57 > 1){
+        	$text = $row1["Comentarios"];
+			$column_width = 70; // Width of your cell in FPDF units
+
+			// 1. Get total width of the string in user units
+			$string_width = $pdf->GetStringWidth($text);
+
+			// 2. Divide by the column width to find the number of rows (use ceil to round up)
+			$height = ceil($string_width / $column_width);
+
+			// 3. (Optional) Account for explicit line breaks in your text
+			$hard_breaks = substr_count($text, "\n");
+			$height = max($height, $hard_breaks + 1);
+        	/*
+			if(strlen($row1["Comentarios"])/57 > 1){
         	    $height = intdiv(strlen($row1["Comentarios"]), 57);
         	    if(strlen($row1["Comentarios"])%15 > 0){
         	       $height++;
         	    }
         	}
+			*/
         	$pdf->SetTextColor(0, 0, 0);
 	        $pdf->SetDrawColor(0, 0, 0);
         	$pdf->SetFont('Times' , '' , 6);
@@ -148,7 +162,7 @@
             
             if($count >= 51){
                 $pdf->AddPage();
-            	$pdf->Image($server . '/imagenes/FondoReporte.png',0,0,279,216);
+            	az_pdf_image_file($pdf, $siteRoot, '/imagenes/FondoReporte.png', 0,0,279,216);
             	
             	$x = 0;
             	$y = 40;
@@ -179,7 +193,7 @@
             	$pdf->SetXY($x+153,$y+3);
             	$pdf->Cell(40 , 3, strtoupper('Fecha/Hora'), 1, 0 , 'C' , true);
             	$pdf->SetXY($x+193,$y+3);
-            	$pdf->Cell(45 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
+            	$pdf->Cell(70 , 3, strtoupper('Observaciones'), 1, 0 , 'C' , true);
             	$pdf->SetXY($x+238,$y+3);
             	$pdf->Cell(37 , 3, strtoupper('Campo'), 1, 0 , 'C' , true);
             	

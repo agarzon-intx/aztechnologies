@@ -27,6 +27,11 @@
 
 namespace Verot\Upload;
 
+if (defined('VEROT_UPLOAD_CLASS_LOADED')) {
+	return;
+}
+define('VEROT_UPLOAD_CLASS_LOADED', true);
+
 if (!defined('IMG_WEBP')) define('IMG_WEBP', 32);
 
 /**

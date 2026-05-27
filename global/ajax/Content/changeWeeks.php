@@ -15,6 +15,7 @@ if (!defined('APP_SITE_ROOT')) {
 	}
 }
 	require_once("membersite_config.php");
+	require_once dirname(dirname(__DIR__)) . '/include/flyer_download_menu.php';
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('changeWeeks.php');
 	
@@ -77,11 +78,11 @@ if (!defined('APP_SITE_ROOT')) {
     $htmlWeeks .= '<div class="row">';
 	$htmlWeeks .= '<div id="JornadasContent" class="col-xl-4" style="padding-top: 7px !important;padding-left: 0px !important;padding-right: 0px !important;padding-bottom: 0px !important;">';
 	$htmlWeeks .= '<div class="container-fluid" style="padding: 0px;">';
-	$htmlWeeks .= '<div class="row" id="weekselectorsection">';
+	$htmlWeeks .= '<div class="row align-items-center g-1" id="weekselectorsection">';
 	$htmlWeeks .= '<div class="col-4 col-sm-2 col-md-2 col-lg-2 col-xl-4 col-xxl-4">';
 	$htmlWeeks .= '<div class="">' . $lang['690'] . ': </div>';
 	$htmlWeeks .= '</div>';
-	$htmlWeeks .= '<div class="col-6 col-sm-3 col-md-2 col-lg-2 col-xl-4 col-xxl-4">';
+	$htmlWeeks .= '<div class="col-5 col-sm-3 col-md-2 col-lg-2 col-xl-4 col-xxl-4">';
 	$htmlWeeks .= '<div class="dropdown btn-tooltip" data-bs-toggle="tooltip" data-bs-placement="top">';
 	$selectedWeek = '';
 	// Create connection
@@ -135,11 +136,8 @@ if (!defined('APP_SITE_ROOT')) {
 	
 	$htmlWeeks .= '</div>';
 	$htmlWeeks .= '</div>';
-	$htmlWeeks .= '<div class="col-1 col-sm-2 col-md-2 col-lg-2 col-xl-4 col-xxl-4">';
-	$htmlWeeks .= '<div >';
-	$htmlWeeks .= '<img src="./imagenes/refresh.png" width="20" height="20" onclick="loadWeek(' . $selectedWeek . ');" style="margin-left: 10;  margin-top: 2px;">';
-	$htmlWeeks .= '<a href="pdf/flyerC.php?Jornada_ID=' . $selectedWeek . '" target="_blank" download=""><img src="imagenes/flyer.png" width="20" height="20"></a>';
-	$htmlWeeks .= '</div>';
+	$htmlWeeks .= '<div class="col-3 col-sm-2 col-md-2 col-lg-2 col-xl-4 col-xxl-4">';
+	$htmlWeeks .= az_flyer_week_actions_toolbar_html($selectedWeek, $Config->getPath());
 	$htmlWeeks .= '</div>';
 	$htmlWeeks .= '<script type="text/javascript">';
 	$htmlWeeks .= 'loadWeek(' . $selectedWeek . ');';

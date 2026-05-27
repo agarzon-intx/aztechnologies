@@ -4,6 +4,7 @@
 	header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 	header('Cache-Control: post-check=0, pre-check=0', false);
 	header('Pragma: no-cache');
+	header('Content-Type: application/json; charset=UTF-8');
 
 	$__APP_SITE_PATHS_START__ = __DIR__;
 	$__app_here = __DIR__;
@@ -31,10 +32,17 @@
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataConfigAnswer' => 'Error');
 
-	$basePath = rtrim($Config->getPath(), '/\\');
+	$basePath = rtrim((string) $Config->getPath(), '/\\');
+	if ($basePath === '' || !is_dir($basePath)) {
+		$retunData['dataConfigAnswer'] = 'Site path is not configured (ini [path]).';
+		echo json_encode($retunData);
+		exit;
+	}
 
-	if (!function_exists('imagecreatefromstring') || !function_exists('imagepng')) {
-		$retunData['dataConfigAnswer'] = 'PHP GD (imagecreatefromstring, imagepng) is required for image uploads.';
+	$hasGd = function_exists('imagecreatefromstring') && function_exists('imagepng');
+	$hasImagick = extension_loaded('imagick') && class_exists('Imagick');
+	if (!$hasGd && !$hasImagick) {
+		$retunData['dataConfigAnswer'] = 'PHP GD or Imagick is required to save images.';
 		echo json_encode($retunData);
 		exit;
 	}
@@ -51,9 +59,6 @@
 		return '';
 	};
 
-	/**
-	 * @param string $mime may be empty if finfo unavailable
-	 */
 	$rasterMimeOk = function ($mime) {
 		if ($mime === '') {
 			return true;
@@ -62,36 +67,82 @@
 		return in_array($mime, $ok, true);
 	};
 
+	$removeLegacyVariants = function ($destPath) {
+		if (!preg_match('/\.png$/i', $destPath)) {
+			return;
+		}
+		$base = preg_replace('/\.png$/i', '', $destPath);
+		foreach (array('jpeg', 'jpg', 'JPEG', 'JPG', 'gif', 'GIF') as $ext) {
+			$old = $base . '.' . $ext;
+			if (is_file($old)) {
+				@unlink($old);
+			}
+		}
+	};
+
 	/**
-	 * Decode upload, re-encode as PNG (all config image destinations use .png).
 	 * @return string empty on success, error message otherwise
 	 */
-	$normalizeUploadToDest = function ($tmpPath, $destPath) {
-		$bin = @file_get_contents($tmpPath);
-		if ($bin === false || $bin === '') {
-			return 'read failed';
-		}
-		$im = @imagecreatefromstring($bin);
-		if ($im === false) {
-			return 'unsupported or corrupt image';
-		}
-		if (function_exists('imagepalettetotruecolor') && !imageistruecolor($im)) {
-			imagepalettetotruecolor($im);
-		}
-		$low = strtolower($destPath);
-		if (substr($low, -4) !== '.png') {
-			imagedestroy($im);
+	$normalizeUploadToDest = function ($tmpPath, $destPath) use ($hasGd, $hasImagick, $removeLegacyVariants) {
+		if (strtolower(substr($destPath, -4)) !== '.png') {
 			return 'destination must be .png';
 		}
-		if (function_exists('imagealphablending')) {
-			imagealphablending($im, false);
+		if ($hasGd) {
+			$bin = @file_get_contents($tmpPath);
+			if ($bin === false || $bin === '') {
+				return 'read failed';
+			}
+			$im = @imagecreatefromstring($bin);
+			if ($im !== false) {
+				if (function_exists('imagepalettetotruecolor') && !imageistruecolor($im)) {
+					imagepalettetotruecolor($im);
+				}
+				if (function_exists('imagealphablending')) {
+					imagealphablending($im, false);
+				}
+				if (function_exists('imagesavealpha')) {
+					imagesavealpha($im, true);
+				}
+				$ok = @imagepng($im, $destPath, 6);
+				imagedestroy($im);
+				if ($ok) {
+					$removeLegacyVariants($destPath);
+					return '';
+				}
+			}
 		}
-		if (function_exists('imagesavealpha')) {
-			imagesavealpha($im, true);
+		if ($hasImagick) {
+			try {
+				$im = new Imagick($tmpPath);
+				$im->setImageFormat('png');
+				if (method_exists($im, 'setImageBackgroundColor')) {
+					$im->setImageBackgroundColor(new ImagickPixel('transparent'));
+				}
+				if (defined('Imagick::LAYERMETHOD_FLATTEN')) {
+					$im = $im->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+				}
+				$im->writeImage($destPath);
+				$im->clear();
+				$im->destroy();
+				if (is_file($destPath) && filesize($destPath) > 0) {
+					$removeLegacyVariants($destPath);
+					return '';
+				}
+			} catch (Throwable $e) {
+				return 'imagick: ' . $e->getMessage();
+			}
 		}
-		$ok = @imagepng($im, $destPath, 6);
-		imagedestroy($im);
-		return $ok ? '' : 'write png failed';
+		return 'unsupported or corrupt image';
+	};
+
+	$uploadTmpOk = function ($tmp, $fileError) {
+		if ((int) $fileError !== UPLOAD_ERR_OK) {
+			return false;
+		}
+		if (is_uploaded_file($tmp)) {
+			return true;
+		}
+		return is_readable($tmp) && filesize($tmp) > 0;
 	};
 
 	$saved = 0;
@@ -101,16 +152,16 @@
 		if (!isset($_FILES[$field]) || !is_array($_FILES[$field])) {
 			continue;
 		}
-		if ((int)$_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) {
+		if ((int) $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) {
 			continue;
 		}
-		if ((int)$_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
-			$errors[] = $field . ': upload error ' . (int)$_FILES[$field]['error'];
+		if ((int) $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+			$errors[] = $field . ': upload error ' . (int) $_FILES[$field]['error'];
 			continue;
 		}
 
 		$tmp = $_FILES[$field]['tmp_name'];
-		if (!is_uploaded_file($tmp)) {
+		if (!$uploadTmpOk($tmp, $_FILES[$field]['error'])) {
 			$errors[] = $field . ': invalid upload';
 			continue;
 		}
@@ -129,6 +180,10 @@
 				continue;
 			}
 		}
+		if (!is_writable($dir)) {
+			$errors[] = $field . ': folder not writable';
+			continue;
+		}
 
 		$err = $normalizeUploadToDest($tmp, $dest);
 		if ($err !== '') {
@@ -138,17 +193,22 @@
 		$saved++;
 	}
 
-	if (count($errors) > 0) {
-		$retunData['dataConfigAnswer'] = implode('; ', $errors);
-		echo json_encode($retunData);
-		exit;
-	}
-
 	if ($saved === 0) {
-		$retunData['dataConfigAnswer'] = $lang['452-8'];
+		$retunData['dataConfigAnswer'] = count($errors) > 0
+			? implode('; ', $errors)
+			: $lang['452-8'];
 		echo json_encode($retunData);
 		exit;
 	}
 
-	$retunData = array('status' => '1', 'message' => 'Success.', 'dataConfigAnswer' => $lang['441'], 'saved' => $saved);
+	$msg = $lang['441'];
+	if (count($errors) > 0) {
+		$msg .= ' (' . implode('; ', $errors) . ')';
+	}
+	$retunData = array(
+		'status' => '1',
+		'message' => 'Success.',
+		'dataConfigAnswer' => $msg,
+		'saved' => $saved,
+	);
 	echo json_encode($retunData);

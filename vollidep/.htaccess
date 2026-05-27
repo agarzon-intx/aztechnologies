@@ -84,6 +84,7 @@ RewriteRule . /index.php [L]
 # END cPanel-generated php ini directives, do not edit
 
 RewriteEngine On
+RewriteCond %{HTTP_HOST} !\.test$ [NC]
 RewriteCond %{HTTPS} !=on
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301,NE]
 

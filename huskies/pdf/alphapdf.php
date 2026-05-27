@@ -5,6 +5,14 @@ if (!function_exists('az_utf8_decode')) {
 }
 require('fpdf.php');
 
+
+if (!function_exists('az_pdf_site_root')) {
+	$__azPdfHelpers = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'pdf_image_helpers.php';
+	if (is_readable($__azPdfHelpers)) {
+		require_once $__azPdfHelpers;
+	}
+	unset($__azPdfHelpers);
+}
 class AlphaPDF extends FPDF
 {
     protected $extgstates = array();

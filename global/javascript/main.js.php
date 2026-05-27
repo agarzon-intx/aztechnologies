@@ -39,10 +39,8 @@ function checkSessionExpire(){
 		url: 'ajax/sessionExpiredCheck.php',
 		success: function (res) {
 			if (res.status === '0') {
-				clearInterval(nIntervId);
 				alert(res.message.replace("\\n", "\n"));
-				loadMenu();
-				showLogin();
+				logout();
 			}
 			if (res.status === '1') {
 				var d = new Date();
@@ -801,6 +799,42 @@ function abrirFichaS(id, week, game, gamedesc, lgoals, vgoals){
 /*****************************************************************************************************************
 ********************************************User MAnagement*******************************************************
 *****************************************************************************************************************/
+var userManagementFilterTimer = null;
+
+function userManagementFilterListDebounced() {
+	if (userManagementFilterTimer) {
+		clearTimeout(userManagementFilterTimer);
+	}
+	userManagementFilterTimer = setTimeout(function () {
+		userManagementReloadList();
+	}, 350);
+}
+
+function userManagementReloadList() {
+	var filterVal = '';
+	var $input = $('#userListFilter');
+	if ($input.length) {
+		filterVal = $input.val();
+	}
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Login/userManagementReloadList.php',
+		data: { userListFilter: filterVal },
+		success: function (res) {
+			if (res.status === '1') {
+				var $wrap = $('#userManagementListTables');
+				if ($wrap.length) {
+					$wrap.replaceWith(res.dataUserList);
+				}
+			}
+		},
+		error: function (jqxhr, status, exception) {
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
 function userManagementShow(){
 	//console.log('loadUsersAdmin');
 	mainLoadingOn();
@@ -3067,6 +3101,46 @@ function fieldManagementEditSave(id, descripcion, lat, long, zoom, google){
 /*****************************************************************************************************************
 ***********************************************Team Admin*****************************************************
 *****************************************************************************************************************/
+var teamsManagementFilterTimer = null;
+
+function teamsManagementFilterListDebounced() {
+	if (teamsManagementFilterTimer) {
+		clearTimeout(teamsManagementFilterTimer);
+	}
+	teamsManagementFilterTimer = setTimeout(function () {
+		teamsManagementReloadList();
+	}, 350);
+}
+
+function teamsManagementReloadList() {
+	var filterVal = '';
+	var $input = $('#teamListFilter');
+	if ($input.length) {
+		filterVal = $input.val();
+	}
+	var category = $('#playersManagementAdminSelectedCategory').val();
+	if (!category) {
+		return;
+	}
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Teams/TeamsManagementReloadList.php',
+		data: { Category: category, teamListFilter: filterVal },
+		success: function (res) {
+			if (res.status === '1') {
+				var $wrap = $('#teamsManagementListTables');
+				if ($wrap.length) {
+					$wrap.replaceWith(res.dataTeamList);
+				}
+			}
+		},
+		error: function (jqxhr, status, exception) {
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
 function teamsManagementAdminCategoryShow(){
 	//console.log('teamsManagementAdminCategoryShow');
 	mainLoadingOn();
@@ -4295,6 +4369,43 @@ function abrirFichaEditSC(id, week, game, gamedesc, Comentarios, SQL){
 		});
 	}
 }
+
+function azFlyerLang(key, replacements) {
+	var text = (typeof LANG_FLYER_FB !== 'undefined' && LANG_FLYER_FB[key]) ? LANG_FLYER_FB[key] : '';
+	if (!text) {
+		return '';
+	}
+	if (replacements && replacements.length) {
+		for (var i = 0; i < replacements.length; i++) {
+			text = text.split('%' + (i + 1)).join(String(replacements[i]));
+		}
+	}
+	return text;
+}
+
+/**
+ * Facebook: one popup prepares images and opens the system share sheet (pick Facebook).
+ * type: jornada | categoria | juego
+ */
+function azShareFlyersFacebook(type, jornadaId, categoriaId, juegoId) {
+	var q = 'type=' + encodeURIComponent(type)
+		+ '&Jornada_ID=' + encodeURIComponent(jornadaId)
+		+ '&Categoria_ID=' + encodeURIComponent(categoriaId)
+		+ '&Juego_ID=' + encodeURIComponent(juegoId);
+	var launchUrl = new URL('pdf/flyerFacebookShareLaunch.php?' + q, window.location.href).href;
+	var popW = 420;
+	var popH = 520;
+	var popLeft = Math.max(0, Math.round((window.screen.width - popW) / 2));
+	var popTop = Math.max(0, Math.round((window.screen.height - popH) / 2));
+	var popFeatures = 'popup=yes,width=' + popW + ',height=' + popH
+		+ ',left=' + popLeft + ',top=' + popTop
+		+ ',menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=no';
+	var w = window.open(launchUrl, 'azFbShare', popFeatures);
+	if (!w) {
+		alert(azFlyerLang('jsfb08') || MSG_AJAX_GENERIC);
+	}
+}
+
 /*****************************************************************************************************************
 **********************************************Games Admin COACH***************************************************
 *****************************************************************************************************************/

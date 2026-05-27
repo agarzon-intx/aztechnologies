@@ -29,7 +29,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 	
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
+	$equipoIds = $fgmembersite->UserEquipo();
+	if ($equipoIds === '' || $equipoIds === '0' || $equipoIds === '-1') {
+		$retunData = array('status' => '0', 'message' => 'No teams assigned to your account.');
+		$Config->Close();
+		header('Content-Type: application/json; charset=utf-8');
+		echo json_encode($retunData);
+		exit;
+	}
 	$Category = 'null';
+	$totCat = 0;
 	$htmlCat = '<div class="container-fluid py-0">
 					<div class="row">
 						<div id="playerAdminContent" class="" style="padding-top: 7px !important;padding-left: 0px !important;padding-right: 0px !important;padding-bottom: 0px !important;">
@@ -47,7 +56,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			from $schema.Categorias
 			where Categoria_ID in ( select Fuerza
 									from $schema.Equipos
-									where Torneo_ID = $Season and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . "))
+									where Torneo_ID = $Season and Equipo_ID in ($equipoIds)) and Torneo_Id = $Season
 			order by Categoria_Orden asc
 			limit 1;";
 	$result = $Config->query($sql);
@@ -60,8 +69,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
 	$sql = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
-				join $schema.Categorias b on a.Fuerza = b.Categoria_ID
-			Where a.Torneo_ID = $Season and a.Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+				join $schema.Categorias b on a.Fuerza = b.Categoria_ID and b.Torneo_Id = $Season
+			Where a.Torneo_ID = $Season and a.Equipo_ID in ($equipoIds)
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql);
 	if ($result->num_rows > 0) {
@@ -70,8 +79,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
 	$sql = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
-				join $schema.Categorias b on a.Fuerza = b.Categoria_ID
-			Where a.Torneo_ID = $Season and a.Fuerza = $Category and a.Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+				join $schema.Categorias b on a.Fuerza = b.Categoria_ID and b.Torneo_Id = $Season
+			Where a.Torneo_ID = $Season and a.Fuerza = $Category and a.Equipo_ID in ($equipoIds)
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql);
 	if ($result->num_rows > 0) {
@@ -92,7 +101,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$sql = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
 				join $schema.Categorias b on a.Fuerza = b.Categoria_ID
-			Where a.Torneo_ID = $Season and a.Fuerza <> $Category and a.Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+			Where a.Torneo_ID = $Season and a.Fuerza <> $Category and a.Equipo_ID in ($equipoIds)
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql);
 	if ($result->num_rows > 0) {
@@ -132,7 +141,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			FROM $schema.Equipos
 			where Torneo_ID = $Season 
 				and Fuerza = $Category 
-				and Equipo_ID > 0 and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+				and Equipo_ID > 0 and Equipo_ID in ($equipoIds)
 			order by Equipo_FULLDESC asc
 			limit 1;";
 	$result = $Config->query($sql);
@@ -147,7 +156,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			FROM $schema.Equipos
 			where Torneo_ID = $Season 
 				and Fuerza = $Category 
-				and Equipo_ID > 0 and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+				and Equipo_ID > 0 and Equipo_ID in ($equipoIds)
 			order by Equipo_FULLDESC asc";
 	$result = $Config->query($sql);
 	if ($result->num_rows > 0) {
@@ -181,7 +190,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				and Fuerza = $Category 
 				and Equipo_ID <> $team
 				and Equipo_ID > 0
-				and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+				and Equipo_ID in ($equipoIds)
 			order by Equipo_FULLDESC asc";
 	$result = $Config->query($sql);
 	if ($result->num_rows > 0) {

@@ -15,7 +15,7 @@
 	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
 	$jornada = htmlspecialchars($_GET['Jornada_ID']);
 	
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
@@ -51,7 +51,7 @@
 			$pdf->SetMargins(4, 4, 4, 4);	
 			/*
 			$pdf->SetXY(0,0);
-			$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',5+((35 - (35 * ($Config->logowidth / 110)))/2),5+((35 - (35 * ($Config->logoheight / 110)))/2),(35 * ($Config->logowidth / 110)), (35 * ($Config->logoheight / 110)), 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', 5+((35 - (35 * ($Config->logowidth / 110)))/2),5+((35 - (35 * ($Config->logoheight / 110)))/2),(35 * ($Config->logowidth / 110)), (35 * ($Config->logoheight / 110)));
 			*/
 			$pdf->SetFont('Helvetica' , '' , 12);
 			$pdf->SetTextColor(0, 0, 0);

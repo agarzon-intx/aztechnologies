@@ -1,4 +1,7 @@
 	            <?php
+			if (!function_exists('az_flyer_game_download_menu_html')) {
+				require_once dirname(__DIR__, 3) . '/include/flyer_download_menu.php';
+			}
 			$fecha = new DateTime();
             $sqlcat = "and l.Fuerza = $Category";
 			if($vs == 1){
@@ -218,7 +221,7 @@
 							if (strpos($row2["Comentarios"],$lang['654']) !== false){
     							$htmlWeek .= "";
     						}else{
-    							$htmlWeek .= '<a href="pdf/flyer.php?Juego_ID=' . $row2["juego"] . '" target="_blank" download=""><img src="imagenes/flyer.png" width="20" height="20"></a></td>';
+    							$htmlWeek .= az_flyer_game_download_menu_html($row2["juego"], $Config->getPath()) . '</td>';
     							
     						}
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){

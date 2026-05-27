@@ -15,7 +15,7 @@ set_time_limit(300);
         $categoria = $_COOKIE[$Config->getAlias() . 'category'];
         $jornada = htmlspecialchars($_GET['Jornada_ID']);
 
-        $server = $fgmembersite->getSitename();
+        $siteRoot = az_pdf_site_root($Config);
 
         $Config->LoadLogo();
         $Config->LoadFlags();
@@ -104,45 +104,12 @@ set_time_limit(300);
 				$pdf->SetFont('Arial','',14);
 				$pdf->SetFillColor(255,255,255);
 				$pdf->Rect($x+0, $y+5, 69, 100 , 'DF');
-				try{
-				    $headers = @get_headers($server . '/imagenes/' . $row["Logo"] . '.png');
-				    $pdf->SetAlpha(1);
-					if($headers && strpos($headers[0], '200 OK') !== false){
-						$pdf->Image($server . '/imagenes/' . $row["Logo"] . '.png',$x+3,$y+64,19, 19, 'PNG');
-					}
-				}catch(Exception $e){
-					echo $e;
-				}
-				try{
-				    $headers = @get_headers($server . '/imagenes/' . $Config->logo . '.png');
-				    $pdf->SetAlpha(1);
-					if($headers && strpos($headers[0], '200 OK') !== false){
-						$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+2+((27 - (27 * ($Config->logowidth / 110)))/2),$y+6+((27 - (27 * ($Config->logoheight / 110)))/2),(27 * ($Config->logowidth / 110)), (27 * ($Config->logoheight / 110)), 'PNG');
-					}
-				}catch(Exception $e){
-					echo $e;
-				}
-				try{
-					$pdf->SetAlpha(1);
-					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2,$y+34,20, 26, 'PNG');
-				}catch(Exception $e){
-					try{
-    					$pdf->SetAlpha(1);
-    					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2,$y+34,20, 26, 'JPG');
-    				}catch(Exception $e){
-    					try{
-        					$pdf->SetAlpha(1);
-        					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2,$y+34,20, 26, 'JPEG');
-        				}catch(Exception $e){
-        					try{
-            					$pdf->SetAlpha(1);
-            					$pdf->Image($server . '/Form/fetch_image.php?Jugador_ID=' . $row["Jugador_ID"] . '&Imagen=Foto',$x+2,$y+34,20, 26, 'GIF');
-            				}catch(Exception $e){
-            					echo $e->getTraceAsString();
-            				}
-        				}
-    				}
-				}
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $row['Logo'] . '.png',$x+3,$y+64,19, 19);
+
+				$pdf->SetAlpha(1);
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $Config->logo . '.png', $x+2+((27 - (27 * ($Config->logowidth / 110)))/2), $y+6+((27 - (27 * ($Config->logoheight / 110)))/2), (27 * ($Config->logowidth / 110)), (27 * ($Config->logoheight / 110)));
+				$pdf->SetAlpha(1);
+				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+2, $y+34, 20, 26);
 				$pdf->SetAlpha(1);
 				$pdf->SetXY($x+32,$y+9.5);
 				$pdf->SetTextColor(0, 0, 0);
@@ -179,13 +146,7 @@ set_time_limit(300);
 				$pdf->SetXY($x+25,$y+70);
 				$pdf->Cell(42 , 14, '' . $row["Numero"] . '', 0, 0 , 'C' , false);
 
-                try{
-                    $pdf->Image($server . '/include/qrcode/image.php?msg=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2,$y+85,20, 20, 'PNG');
-    				//$pdf->Image('http://chart.googleapis.com/chart?cht=qr&chs=200x200&chld=L|1&chf=bg,s,65432100&chl=http://www.hectorbarraza.com/Reportes/jugador.php?Jugador_ID=' . $row["Jugador_ID"] . '',$x+2,$y+85,20, 20, 'PNG');
-    				//$pdf->Image('https://qrcode.tec-it.com/API/QRCode?data=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2,$y+85,20, 20, 'PNG');
-	            }catch(Exception $e){
-					echo $e->getTraceAsString();
-				}
+				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+2, $y+85, 20, 20));
 				
 				$pdf->SetDrawColor(0 ,0, 0);
 				$pdf->SetTextColor(0, 0, 0);

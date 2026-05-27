@@ -12,7 +12,7 @@
 
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
 	
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$logo = "";
 	$equipoDesc = "";
@@ -46,13 +46,13 @@
 			$pdf->SetXY($x+6,$y+47);
 			$pdf->SetAlpha(.4);
 			if(file_exists ('../imagenes/Original/' . $logo . '.png')){
-				$pdf->Image($server . '/imagenes/Original/' . $logo . '.png',$x+31,$y+6,52, 52, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $logo . '.png', $x+31,$y+6,52, 52);
 			}
 			$pdf->SetTextColor(40, 151, 101);
 			$pdf->SetFont('Courier' , 'B' , 40);
 			$pdf->SetXY($x+60,$y+47);
 			$pdf->SetAlpha(.3);
-			$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',$x+88+((15 - (15 * ($Config->logowidth / 110)))/2),$y+7+((15 - (15 * ($Config->logoheight / 110)))/2),(15 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)), 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+88+((15 - (15 * ($Config->logowidth / 110)))/2),$y+7+((15 - (15 * ($Config->logoheight / 110)))/2),(15 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)));
 			$pdf->SetXY($x+25,$y+4);
 			$pdf->SetTextColor(0, 0, 0);
 			$pdf->SetFont('Helvetica' , '' , 12);

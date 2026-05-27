@@ -10,7 +10,7 @@ if (!is_file($p)) {
 	header('Content-Type: text/plain; charset=utf-8');
 	$msg = "membersite_config.php is missing at:\n  {$p}\n\n"
 		. "Restore from Git:\n  git checkout HEAD -- global/include/membersite_config.php\n\n"
-		. "Or run (Windows junctions to global):\n  tools\\recreate-site-junctions.ps1\n";
+		. "Or recreate site links to global:\n  macOS/Linux: bash tools/recreate-site-symlinks.sh\n  Windows: tools\\recreate-site-junctions.ps1\n";
 	die($msg);
 }
 require $p;

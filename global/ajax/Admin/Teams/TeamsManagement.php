@@ -72,11 +72,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							</div>
 						</div>
 						<div class="tabla-content">';
+	require __DIR__ . DIRECTORY_SEPARATOR . 'teams_management_list_filter.inc.php';
+	$tmFilterValue = htmlspecialchars($teamListFilter, ENT_QUOTES, 'UTF-8');
+	$tmFilterPlaceholder = isset($lang['10763']) ? $lang['10763'] : 'Search team by name';
+	if (empty($tmSkipFilterRow)) {
+		$htmlTeams .= '<div class="row mb-3 align-items-center" id="teamsManagementListFilterRow">
+							<div class="col-12 col-md-8 col-lg-6">
+								<input type="search" class="form-control" id="teamListFilter" name="teamListFilter"
+									placeholder="' . htmlspecialchars($tmFilterPlaceholder, ENT_QUOTES, 'UTF-8') . '"
+									value="' . $tmFilterValue . '"
+									autocomplete="off"
+									oninput="teamsManagementFilterListDebounced();" />
+							</div>
+						</div>';
+	}
+	$htmlTeams .= '<div id="teamsManagementListTables">';
 	$htmlTeams .= '<div id="teamsTabActive" class="tabla active" style="display: block; height: auto;">';
 	require 'TeamsManagementActiveList.php';
 	$htmlTeams .= '</div>';
 	$htmlTeams .= '<div id="teamsTabInactive" class="tabla" style="display: none; height: auto;">';
 	require 'TeamsManagementInactiveList.php';
+	$htmlTeams .= '</div>';
 	$htmlTeams .= '</div>';
 	$htmlTeams .= '</div>
 					</div>';

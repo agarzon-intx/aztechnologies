@@ -1,4 +1,5 @@
 # Recreate NTFS junctions for each site -> global (Windows / Laragon).
+# macOS/Linux: bash tools/recreate-site-symlinks.sh
 # After clone/pull, Git may check out ../global/* as symlinks; if checkout fails or you prefer
 # junctions, run: powershell -ExecutionPolicy Bypass -File tools\recreate-site-junctions.ps1
 #

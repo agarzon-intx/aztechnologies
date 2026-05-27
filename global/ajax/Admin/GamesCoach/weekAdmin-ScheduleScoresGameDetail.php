@@ -30,6 +30,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$Week = htmlspecialchars($_POST["week"]);
 	$Game = htmlspecialchars($_POST["game"]);
 	$Game_DESC = htmlspecialchars($_POST["gamedesc"]);
+	$lgoal = htmlspecialchars($_POST["lgoals"] ?? '');
+	$vgoal = htmlspecialchars($_POST["vgoals"] ?? '');
 	$comentario = htmlspecialchars($_POST["Comentarios"]);
 	$sqlcat = htmlspecialchars($_POST["SQL"]);
 

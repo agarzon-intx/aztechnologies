@@ -349,7 +349,7 @@ $schema = $Config->getSchema();
     								<ul class="nav ">
     
     									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="loadWeeksAdmin(); toggleSidenav();">
+    										<a class="nav-link text-white " aria-expanded="false" onClick="loadWeeksAdmin(0); toggleSidenav();">
     											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">scoreboard</i> </span>
     											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101'] . ' <b class="caret"></b></span>
     										</a>

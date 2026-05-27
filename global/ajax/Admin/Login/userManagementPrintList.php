@@ -1,4 +1,39 @@
 <?php
+	$userListFilter = '';
+	if (isset($_POST['userListFilter'])) {
+		$userListFilter = trim((string) $_POST['userListFilter']);
+	} elseif (isset($_GET['userListFilter'])) {
+		$userListFilter = trim((string) $_GET['userListFilter']);
+	}
+	$userListFilterSql = '';
+	if ($userListFilter !== '') {
+		$umConn = $Config->connect();
+		if ($umConn) {
+			$umEsc = $umConn->real_escape_string($userListFilter);
+			$umLike = "'%" . $umEsc . "%'";
+			$userListFilterSql = " WHERE (
+				a.username LIKE $umLike
+				OR a.name LIKE $umLike
+				OR a.ApellidoP LIKE $umLike
+				OR a.ApellidoM LIKE $umLike
+				OR CONCAT(IFNULL(a.name, ''), ' ', IFNULL(a.ApellidoP, ''), ' ', IFNULL(a.ApellidoM, '')) LIKE $umLike
+			)";
+		}
+	}
+	$umFilterValue = htmlspecialchars($userListFilter, ENT_QUOTES, 'UTF-8');
+	$umFilterPlaceholder = isset($lang['10762']) ? $lang['10762'] : 'Search user, name or last names';
+	if (empty($umSkipFilterRow)) {
+	$htmlUsers .= '<div class="row mb-3 align-items-center" id="userManagementListFilterRow">
+						<div class="col-12 col-md-8 col-lg-6">
+							<input type="search" class="form-control" id="userListFilter" name="userListFilter"
+								placeholder="' . htmlspecialchars($umFilterPlaceholder, ENT_QUOTES, 'UTF-8') . '"
+								value="' . $umFilterValue . '"
+								autocomplete="off"
+								oninput="userManagementFilterListDebounced();" />
+						</div>
+					</div>';
+	}
+	$htmlUsers .= '<div id="userManagementListTables">';
 	$htmlUsers .= '<div class="d-none d-sm-none d-md-none d-lg-block d-xl-block">
 					<div class="row">
 						<div class="col-8 col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6" >
@@ -58,6 +93,7 @@
 									where a.Torneo_ID = $Season and c.Torneo_ID = $Season) c on c.Equipo_ID = b.Equipo_ID
 				left outer join (	SELECT count(*) ct, User_ID FROM $schema.Control_Table
 									group by User_ID) d on a.username = d.User_ID
+			$userListFilterSql
 			GROUP BY id_user
 			order by rank, username desc;";
 			//echo $sql2;
@@ -145,6 +181,7 @@
 									where a.Torneo_ID = $Season and c.Torneo_ID = $Season) c on c.Equipo_ID = b.Equipo_ID
 			left outer join (	SELECT count(*) ct, User_ID FROM $schema.Control_Table
 								group by User_ID) d on a.username = d.User_ID
+		$userListFilterSql
 		GROUP BY id_user
 		order by rank, username desc;";
 	$result2 = $Config->query($sql1);
@@ -255,6 +292,7 @@
 									where a.Torneo_ID = $Season and c.Torneo_ID = $Season) c on c.Equipo_ID = b.Equipo_ID
 			left outer join (	SELECT count(*) ct, User_ID FROM $schema.Control_Table
 								group by User_ID) d on a.username = d.User_ID
+		$userListFilterSql
 		GROUP BY id_user
 		order by rank, username desc;";
 	$result2 = $Config->query($sql2);
@@ -313,6 +351,7 @@
 	}
 	$htmlUsers .= '</tbody>';
 	$htmlUsers .= '</table>';
+	$htmlUsers .= '</div>';
 	$htmlUsers .= '</div>';
 	$htmlUsers .= '</div>';
 	$htmlUsers .= '</div>';

@@ -15,7 +15,7 @@
 	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
 	$jornada = htmlspecialchars($_GET['Jornada_ID']);
 	
-	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
@@ -88,10 +88,10 @@
 
 			/*LOGO*/
 			$pdf->SetXY(97,2);
-			$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',179+((20 - (20 * ($Config->logowidth / 110)))/2),.5+((20 - (20 * ($Config->logoheight / 110)))/2),(30 * ($Config->logowidth / 110)), (30 * ($Config->logoheight / 110)), 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', 179+((20 - (20 * ($Config->logowidth / 110)))/2),.5+((20 - (20 * ($Config->logoheight / 110)))/2),(30 * ($Config->logowidth / 110)), (30 * ($Config->logoheight / 110)));
 
 			$pdf->SetXY(190,2);
-			//$pdf->Image($server . '/imagenes/fmvb.PNG' ,258, 5.5, 13, 0 ,'PNG');
+			//az_pdf_image_file($pdf, $siteRoot, 'imagenes/fmvb.PNG' ,258, 5.5, 13, 0 ,'PNG'));
 
 			/*Titulo Equipos */
 			$pdf->SetXY(115,10);
@@ -4329,21 +4329,21 @@
 			$y = 47;
 			try{
 				$pdf->SetAlpha(1);
-				$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x-1.9+5,$y+152,50, 15, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png', $x-1.9+5,$y+152,50, 15);
 			}catch(Exception $e){
 				echo $e;
 			}
 			$y = 5;
 			try{
 				$pdf->SetAlpha(0.05);
-				$pdf->Image($server . '/imagenes/voleibolFondo.png',$x+35,$y+0,200, 200, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, '/imagenes/voleibolFondo.png', $x+35,$y+0,200, 200);
 			}catch(Exception $e){
 				echo $e;
 			}
 			/*
 			try{
 				$pdf->SetAlpha(1);
-				$pdf->Image($server . '/imagenes/wos.png',$x+212,$y+185,60, 24, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, '/imagenes/wos.png', $x+212,$y+185,60, 24);
 			}catch(Exception $e){
 				echo $e;
 			}
