@@ -1,0 +1,86 @@
+#!/usr/bin/expect -f
+# SFTP upload/delete for Production deploy (password auth).
+# Usage:
+#   deploy-production-sftp-helper.exp upload HOST USER PASS LOCAL REMOTE
+#   deploy-production-sftp-helper.exp delete HOST USER PASS REMOTE
+set timeout 120
+if {$argc < 5} {
+	puts stderr "usage: upload HOST USER PASS LOCAL REMOTE | delete HOST USER PASS REMOTE"
+	exit 2
+}
+
+set action [lindex $argv 0]
+set host [lindex $argv 1]
+set user [lindex $argv 2]
+set pass [lindex $argv 3]
+
+if {$action eq "upload"} {
+	if {$argc != 6} { exit 2 }
+	set local [lindex $argv 4]
+	set remote [lindex $argv 5]
+} elseif {$action eq "delete"} {
+	if {$argc != 5} { exit 2 }
+	set remote [lindex $argv 4]
+} else {
+	exit 2
+}
+
+spawn sftp -oStrictHostKeyChecking=accept-new -oBatchMode=no -oConnectTimeout=30 $user@$host
+expect {
+	-re "(?i)password:" {
+		send "$pass\r"
+	}
+	timeout {
+		puts stderr "SFTP timeout waiting for password prompt"
+		exit 1
+	}
+	eof {
+		puts stderr "SFTP connection failed before password prompt"
+		exit 1
+	}
+}
+expect {
+	-re "sftp>" {}
+	-re "(?i)permission denied" {
+		puts stderr "SFTP auth failed"
+		exit 1
+	}
+	timeout {
+		puts stderr "SFTP timeout after login"
+		exit 1
+	}
+}
+
+if {$action eq "upload"} {
+	# Ensure remote directory exists (mkdir each segment; ignore exists errors)
+	set parts [split $remote /]
+	set path ""
+	foreach part $parts {
+		if {$part eq ""} { continue }
+		if {$path eq ""} {
+			set path $part
+		} else {
+			set path "$path/$part"
+		}
+		if {[string match *.* $part] || [string match *.*/* $path]} {
+			# skip if looks like filename in last segment — only mkdir dirs
+			if {$part eq [lindex $parts end]} { continue }
+		}
+		if {$part ne [lindex $parts end]} {
+			send "mkdir $path\r"
+			expect -re "sftp>"
+		}
+	}
+	send "put \"$local\" \"$remote\"\r"
+	expect {
+		-re "100%" { expect -re "sftp>" }
+		-re "sftp>" {}
+	}
+} else {
+	send "rm \"$remote\"\r"
+	expect -re "sftp>"
+}
+
+send "bye\r"
+expect eof
+exit 0

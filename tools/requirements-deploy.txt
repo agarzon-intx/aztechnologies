@@ -1,0 +1,2 @@
+# Production SFTP deploy (macOS): pip3 install --user -r tools/requirements-deploy.txt
+paramiko>=3.0

@@ -30,7 +30,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     //print_r($_COOKIE);
     $Season = $_COOKIE[$Config->getAlias() . 'season'];
     $Category = $_COOKIE[$Config->getAlias() . 'category'];
-    $Type = SanitizeInteger($_POST['Type']);    
+    $Type = SanitizeInteger($_POST['Type'] ?? 0);
     
     $Config->LoadFlags();
     $hideJuegosXNombre = "";
@@ -72,7 +72,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                     and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
                 order by 1 asc
                 limit 1;";
-			//echo $sql00;
 	$result00 = $Config->query($sql00);
     $count = 0;
     if($result00){
@@ -158,7 +157,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			while($row01 = $result01->fetch_assoc()) {
 				$htmlWeeks .= '<a class="btn bg-gradient-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownJornada" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;">' . $row01["Equipo_FULLDESC"] . '</a>';
 				$selectedTeam = $row01["Equipo_FULLDESC"];
-				setcookie($Config->getAlias() . "selteam",$selectedTeam,0,'/');
 			}
 		}
 	}
@@ -206,6 +204,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					</div>';
 
 	$retunData = array('status' => '1', 'message' => 'Success.', 'dataWeeksAdmin' => $htmlWeeks, 'sql0' => $sql0, 'sql1' => $sql1);
+	if ($selectedTeam !== '' && $selectedTeam !== null) {
+		setcookie($Config->getAlias() . 'selteam', $selectedTeam, 0, '/');
+	}
     $Config->Close();
     echo json_encode($retunData);
 ?>
