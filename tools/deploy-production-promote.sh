@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sync Production via FTP: upload new/edited promotable git files, delete promotable removals.
+# Sync Production via SFTP: upload new/edited promotable git files, delete promotable removals.
 # Skips site junction paths (elite/ajax etc.) and ini/imagenes/tools/.local.
 #
 # Usage: bash tools/deploy-production-promote.sh
@@ -98,36 +98,21 @@ ftp_delete() {
 	python3 "$REPO/tools/deploy-production-sftp.py" delete "$rel" --repo "$REPO"
 }
 
-ok_u=0 fail_u=0 ok_d=0 fail_d=0
-n=0
-total=${#upload_files[@]}
-
+batch_file="$(mktemp "${TMPDIR:-/tmp}/az-production-batch.XXXXXX")"
+trap 'rm -f "$batch_file" /tmp/az-promote-files.txt' EXIT
 for rel in "${upload_files[@]}"; do
-	n=$((n + 1))
-	if ftp_upload "$rel"; then
-		ok_u=$((ok_u + 1))
-		printf '\rOK upload %d/%d' "$n" "$total"
-	else
-		fail_u=$((fail_u + 1))
-		echo ""
-		echo "FAIL upload: $rel"
-	fi
+	printf 'UPLOAD\t%s\n' "$rel" >> "$batch_file"
 done
-echo ""
-echo "Upload done: OK=$ok_u FAIL=$fail_u"
-
 for rel in "${delete_files[@]}"; do
-	if ftp_delete "$rel"; then
-		ok_d=$((ok_d + 1))
-		echo "OK delete: $rel"
-	else
-		fail_d=$((fail_d + 1))
-		echo "FAIL delete: $rel"
-	fi
+	printf 'DELETE\t%s\n' "$rel" >> "$batch_file"
 done
-echo "Delete done: OK=$ok_d FAIL=$fail_d"
-echo ""
-if [[ $fail_u -gt 0 || $fail_d -gt 0 ]]; then
+
+if [[ ! -s "$batch_file" ]]; then
+	echo "Nothing to promote."
+	exit 0
+fi
+
+if ! python3 "$REPO/tools/deploy-production-sftp.py" batch --repo "$REPO" --batch-file "$batch_file"; then
 	echo "Completed with errors."
 	exit 1
 fi

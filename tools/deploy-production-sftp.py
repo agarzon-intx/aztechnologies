@@ -73,25 +73,85 @@ def delete(sftp, remote: str) -> None:
     sftp.remove(remote)
 
 
+def remote_for(root: str, rel: str) -> str:
+    return f"{root}/{rel}".replace("\\", "/")
+
+
+def local_for(repo: str, rel: str) -> str:
+    return os.path.join(repo, rel.replace("/", os.sep))
+
+
+def run_batch(repo: str, root: str, sftp, batch_file: str) -> int:
+    ok = 0
+    fail = 0
+    with open(batch_file, encoding="utf-8", errors="replace") as f:
+        for raw in f:
+            line = raw.rstrip("\n\r")
+            if not line:
+                continue
+            try:
+                action, rel = line.split("\t", 1)
+            except ValueError:
+                print(f"FAIL malformed batch line: {line}", file=sys.stderr)
+                fail += 1
+                continue
+
+            rel = rel.strip().replace("\\", "/").lstrip("/")
+            remote = remote_for(root, rel)
+            try:
+                if action == "UPLOAD":
+                    local = local_for(repo, rel)
+                    if not os.path.isfile(local):
+                        raise FileNotFoundError(local)
+                    upload(sftp, local, remote)
+                elif action == "DELETE":
+                    delete(sftp, remote)
+                else:
+                    raise ValueError(f"unknown action: {action}")
+            except Exception as exc:  # keep batch going and report all failures
+                fail += 1
+                print(f"FAIL {action.lower()} {rel}: {exc}", file=sys.stderr)
+            else:
+                ok += 1
+                print(f"OK {action.lower()} {rel}")
+
+    print(f"Batch done: OK={ok} FAIL={fail}")
+    return 1 if fail else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("upload", "delete"))
-    parser.add_argument("rel", help="repo-relative path")
+    parser.add_argument("action", choices=("upload", "delete", "batch", "test"))
+    parser.add_argument("rel", nargs="?", help="repo-relative path")
     parser.add_argument("--repo", default=None)
+    parser.add_argument("--batch-file", default=None)
     args = parser.parse_args()
 
     repo = args.repo or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cfg = load_env(repo)
     root = remote_root(cfg["SFTP_PRODUCTION_BASE"])
-    remote = f"{root}/{args.rel}".replace("\\", "/")
 
     if args.action == "upload":
-        local = os.path.join(repo, args.rel.replace("/", os.sep))
+        if not args.rel:
+            parser.error("upload requires rel")
+        local = local_for(repo, args.rel)
         if not os.path.isfile(local):
             print(f"SKIP missing: {args.rel}", file=sys.stderr)
             return 1
+        remote = remote_for(root, args.rel)
+    elif args.action == "delete":
+        if not args.rel:
+            parser.error("delete requires rel")
+        remote = remote_for(root, args.rel)
+        local = None
+    elif args.action == "batch":
+        if not args.batch_file:
+            parser.error("batch requires --batch-file")
+        local = None
+        remote = ""
     else:
         local = None
+        remote = ""
 
     import paramiko  # noqa: F401
 
@@ -99,8 +159,13 @@ def main() -> int:
     try:
         if args.action == "upload":
             upload(sftp, local, remote)
-        else:
+        elif args.action == "delete":
             delete(sftp, remote)
+        elif args.action == "batch":
+            return run_batch(repo, root, sftp, args.batch_file)
+        else:
+            print(f"OK connected to {cfg['SFTP_HOST']}")
+            return 0
     finally:
         sftp.close()
         client.close()
