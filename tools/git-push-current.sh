@@ -26,14 +26,16 @@ if [[ -z "$branch" ]]; then
 	exit 1
 fi
 
-if [[ "${1:-}" == "--dry-run" ]]; then
-	dry=(--dry-run)
-else
-	dry=()
-fi
-
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-	git -c "http.extraHeader=AUTHORIZATION: bearer ${GITHUB_TOKEN}" push "${dry[@]}" origin "HEAD:${branch}"
+	if [[ "${1:-}" == "--dry-run" ]]; then
+		git -c "http.extraHeader=AUTHORIZATION: bearer ${GITHUB_TOKEN}" push --dry-run origin "HEAD:${branch}"
+	else
+		git -c "http.extraHeader=AUTHORIZATION: bearer ${GITHUB_TOKEN}" push origin "HEAD:${branch}"
+	fi
 else
-	git push "${dry[@]}" origin "HEAD:${branch}"
+	if [[ "${1:-}" == "--dry-run" ]]; then
+		git push --dry-run origin "HEAD:${branch}"
+	else
+		git push origin "HEAD:${branch}"
+	fi
 fi
