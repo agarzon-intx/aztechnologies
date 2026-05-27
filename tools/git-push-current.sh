@@ -27,10 +27,14 @@ if [[ -z "$branch" ]]; then
 fi
 
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+	remote="$(git remote get-url origin)"
+	if [[ "$remote" == https://github.com/* ]]; then
+		remote="https://x-access-token:${GITHUB_TOKEN}@${remote#https://}"
+	fi
 	if [[ "${1:-}" == "--dry-run" ]]; then
-		git -c "http.extraHeader=AUTHORIZATION: bearer ${GITHUB_TOKEN}" push --dry-run origin "HEAD:${branch}"
+		git push --dry-run "$remote" "HEAD:${branch}"
 	else
-		git -c "http.extraHeader=AUTHORIZATION: bearer ${GITHUB_TOKEN}" push origin "HEAD:${branch}"
+		git push "$remote" "HEAD:${branch}"
 	fi
 else
 	if [[ "${1:-}" == "--dry-run" ]]; then
