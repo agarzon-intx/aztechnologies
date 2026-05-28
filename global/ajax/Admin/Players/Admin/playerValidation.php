@@ -46,7 +46,7 @@ if (!defined('APP_SITE_ROOT')) {
 	
 	$sql0 = "SELECT b.Equipo_FULLDESC, b.Equipo_ID, c.Categoria_Desc, c.Categoria_ID, a.Jugador_ID
 		FROM $schema.Jugadores a 
-			JOIN $schema.Equipos b ON a.Equipo_ID = b.Equipo_ID
+			JOIN $schema.Equipos b ON a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = $Season
 			JOIN $schema.Categorias c ON b.Fuerza = c.Categoria_ID
 		WHERE Curp LIKE '$curp' AND a.Equipo_ID = $Team";
 						

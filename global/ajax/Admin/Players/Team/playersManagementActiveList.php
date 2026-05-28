@@ -48,7 +48,7 @@ $sql2 = "	SELECT distinct Jugador_ID,
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
 				LEFT OUTER JOIN $schema.Categorias d on year(now())-year(a.Fecha_Nacimiento) between d.Edad_Inicial and d.Edad_Final
-				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID in ($Season)
+				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID = $Season
 				JOIN $schema.Categorias f ON e.Fuerza = f.Categoria_ID 
 			where a.Equipo_ID = $Team
 				and Estatus = 'A' 
@@ -170,7 +170,7 @@ $sql2 = "	SELECT distinct Jugador_ID,
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
 				LEFT OUTER JOIN $schema.Categorias d on year(now())-year(a.Fecha_Nacimiento) between d.Edad_Inicial and d.Edad_Final
-				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID in (select Torneo_Id from $schema.Torneos Where Actual = 'S')
+				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID = $Season
 				JOIN $schema.Categorias f ON e.Fuerza = f.Categoria_ID 
 			where a.Equipo_ID = $Team
 				and Estatus = 'A' 

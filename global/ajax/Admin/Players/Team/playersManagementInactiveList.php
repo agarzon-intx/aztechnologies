@@ -20,9 +20,9 @@ $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 								
 								
 $count = 1;
-$sql2 = "SET @rank:=0;";
-$Config->query($sql2);
-$sql2 = "	SELECT distinct Jugador_ID,
+$sql21 = "SET @rank:=0;";
+$Config->query($sql21);
+$sql22 = "	SELECT distinct Jugador_ID,
 				Numero,
 				Clave,
 				Apodo,
@@ -48,18 +48,12 @@ $sql2 = "	SELECT distinct Jugador_ID,
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
 				LEFT OUTER JOIN $schema.Categorias d on year(now())-year(a.Fecha_Nacimiento) between d.Edad_Inicial and d.Edad_Final
-				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID in (select Torneo_Id from $schema.Torneos Where Actual = 'S')
+				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID = $Season
 				JOIN $schema.Categorias f ON e.Fuerza = f.Categoria_ID 
 			where a.Equipo_ID = $Team
 				and Estatus = 'B' 
 			order by cast(Numero as decimal) asc, Nombre, Apellido_P;";
-//echo $sql2;
-//SE quita estos case EMA 27092024
-//	CASE WHEN f.Categoria_ID <> ifnull(d.Categoria_ID,-1) and year(now())-year(a.Fecha_Nacimiento) > f.Edad_Final 
-//							THEN '<strike>' ELSE '' END strikei, 
-//					CASE WHEN f.Categoria_ID <> ifnull(d.Categoria_ID,-1) and year(now())-year(a.Fecha_Nacimiento) > f.Edad_Final 
-//					THEN '</strike>' ELSE '' END strikef 
-$result2 = $Config->query($sql2);
+$result2 = $Config->query($sql22);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
@@ -112,49 +106,8 @@ $htmlPlayer .= '<div class="d-block d-sm-block d-md-none d-lg-none d-xl-none">
 								
 								
 $count = 1;
-$sql2 = "SET @rank:=0;";
-$Config->query($sql2);
-$sql2 = "	SELECT distinct Jugador_ID,
-				Numero,
-				Clave,
-				Apodo,
-				Nombre,
-				Apellido_P,
-				Apellido_M,
-				Fecha_Nacimiento,
-				Case when Estatus = 'A' then '" . $lang['927'] . "'
-					when Estatus = 'B' then '" . $lang['928'] . "'
-					when Estatus = 'S' then '" . $lang['929'] . "'
-					end Estatus,
-				case when Validado = 0 then '" . $lang["941"] . "'
-					when Validado = 1 then '" . $lang["940"] . "'
-					end Validado,
-					case when Sexo = 0 then '" . $lang["942"] . "'
-						when Sexo = 1 then '" . $lang["943"] . "'
-						end SexoT,
-					Sexo,
-					case when FechaValidacionCurp is null then '" . $lang["941"] . "' else '" . $lang["940"] . "' end CurpValida,
-					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
-					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef
-						FROM $schema.Jugadores a  
-				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
-				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
-				LEFT OUTER JOIN $schema.Categorias d on year(now())-year(a.Fecha_Nacimiento) between d.Edad_Inicial and d.Edad_Final
-				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID in (select Torneo_Id from $schema.Torneos Where Actual = 'S')
-				JOIN $schema.Categorias f ON e.Fuerza = f.Categoria_ID 
-			where a.Equipo_ID = $Team
-				and Estatus = 'B' 
-			order by cast(Numero as decimal) asc, Nombre, Apellido_P;";
-
-// Se quita la líneas de los case
-//		CASE WHEN f.Categoria_ID <> ifnull(d.Categoria_ID,-1) and year(now())-year(a.Fecha_Nacimiento) > f.Edad_Final 
-//							THEN '<strike>' ELSE '' END strikei, 
-//					CASE WHEN f.Categoria_ID <> ifnull(d.Categoria_ID,-1) and year(now())-year(a.Fecha_Nacimiento) > f.Edad_Final 
-//							THEN '</strike>' ELSE '' END strikef 
-
-
-//echo $sql2;
-$result2 = $Config->query($sql2);
+$Config->query($sql21);
+$result2 = $Config->query($sql22);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
