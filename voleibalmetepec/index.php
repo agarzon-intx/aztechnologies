@@ -8,6 +8,8 @@
 	require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'load_membersite.php';
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('index.php');
+	require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'index_js_cache_bust.inc.php';
+
 	$Season = 0;
 	$Category = 'null';
 	$Language = 'null';
@@ -101,9 +103,9 @@
 		<link href="./assets/css/nucleo-svg.css" rel="stylesheet" />
 		<!-- Font Awesome Icons -->
 	<!--	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer">-->
-		<!--<script src="./javascript/42d5adcbca.js" crossorigin="anonymous"></script>-->
-		<!--<script src="./javascript/42d5adcbca.js" crossorigin="anonymous"></script>-->
-		<!--<script src=".css/42d5adcbca.js" crossorigin="anonymous"></script>-->
+		<!--<script src="<?php echo index_js_src('./javascript/42d5adcbca.js'); ?>" crossorigin="anonymous"></script>-->
+		<!--<script src="<?php echo index_js_src('./javascript/42d5adcbca.js'); ?>" crossorigin="anonymous"></script>-->
+		<!--<script src="<?php echo index_js_src('.css/42d5adcbca.js'); ?>" crossorigin="anonymous"></script>-->
 		<script src="https://kit.fontawesome.com/0ae04dd81a.js" crossorigin="anonymous"></script>
 		<!-- Material Icons -->
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
@@ -111,8 +113,8 @@
 		<!-- CSS Files -->
 		<link id="pagestyle" href="./assets/css/material-dashboard.css?v=3.1.0" rel="stylesheet" />
 		
-		<!--<script src="javascript/tools/jquery-latest.min.js" type="text/javascript"></script>-->
-		<script src="assets/js/core/jquery.min.js" type="text/javascript"></script>
+		<!--<script src="<?php echo index_js_src('javascript/tools/jquery-latest.min.js'); ?>" type="text/javascript"></script>-->
+		<script src="<?php echo index_js_src('assets/js/core/jquery.min.js'); ?>" type="text/javascript"></script>
 		
 		<link rel="stylesheet" type="text/css" href="css/login/fg_membersite.css">
 		<link rel="stylesheet" type="text/css" href="css/main.css">
@@ -120,55 +122,55 @@
 		<link rel="stylesheet" type="text/css" href="css/farbtastic.css">
 		<link rel="stylesheet" type="text/css" href="css/style.css">
 		
-		<script src="javascript/rgraph/RGraph.common.core.js"></script>
-		<script src="javascript/rgraph/RGraph.common.dynamic.js"></script>   <!-- Just needed for dynamic features -->
-		<script src="javascript/rgraph/RGraph.common.annotate.js"></script>  <!-- Just needed for annotating -->
-		<script src="javascript/rgraph/RGraph.common.context.js"></script>   <!-- Just needed for context menus -->
-		<script src="javascript/rgraph/RGraph.common.effects.js"></script>   <!-- Just needed for visual effects -->
-		<script src="javascript/rgraph/RGraph.common.key.js"></script>       <!-- Just needed for keys -->
-		<script src="javascript/rgraph/RGraph.common.resizing.js"></script>  <!-- Just needed for resizing -->
-		<script src="javascript/rgraph/RGraph.common.tooltips.js"></script>  <!-- Just needed for tooltips -->
-		<script src="javascript/rgraph/RGraph.common.zoom.js"></script>      <!-- Just needed for zoom -->
-		<script src="javascript/rgraph/RGraph.svg.common.core.js"></script>
-		<script src="javascript/rgraph/RGraph.svg.common.ajax.js"></script>
-		<script src="javascript/rgraph/RGraph.svg.bar.js"></script>   
-		<script src="javascript/rgraph/RGraph.bar.js"></script>              <!-- Just needed for Bar charts -->
-		<script src="javascript/rgraph/RGraph.hbar.js"></script>             <!-- Just needed for Horizontal Bar charts -->
-		<script src="javascript/rgraph/RGraph.line.js"></script>             <!-- Just needed for Line charts -->
-		<script src="javascript/rgraph/RGraph.drawing.xaxis.js"></script>
-		<script src="javascript/rgraph/RGraph.drawing.yaxis.js"></script>
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.core.js'); ?>"></script>
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.dynamic.js'); ?>"></script>   <!-- Just needed for dynamic features -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.annotate.js'); ?>"></script>  <!-- Just needed for annotating -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.context.js'); ?>"></script>   <!-- Just needed for context menus -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.effects.js'); ?>"></script>   <!-- Just needed for visual effects -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.key.js'); ?>"></script>       <!-- Just needed for keys -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.resizing.js'); ?>"></script>  <!-- Just needed for resizing -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.tooltips.js'); ?>"></script>  <!-- Just needed for tooltips -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.common.zoom.js'); ?>"></script>      <!-- Just needed for zoom -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.svg.common.core.js'); ?>"></script>
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.svg.common.ajax.js'); ?>"></script>
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.svg.bar.js'); ?>"></script>   
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.bar.js'); ?>"></script>              <!-- Just needed for Bar charts -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.hbar.js'); ?>"></script>             <!-- Just needed for Horizontal Bar charts -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.line.js'); ?>"></script>             <!-- Just needed for Line charts -->
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.drawing.xaxis.js'); ?>"></script>
+		<script src="<?php echo index_js_src('javascript/rgraph/RGraph.drawing.yaxis.js'); ?>"></script>
 		
-		<script src="javascript/login/pbkdf2.js"></script>
-		<script src="javascript/login/enc-utf16-min.js"></script>
-		<script src="javascript/login/ajax.js"></script>
-		<script src="javascript/login/pwdwidget.js" type="text/javascript"></script>
-		<script src="javascript/login/gen_validatorv31.js" type="text/javascript"></script>
-		<script src="javascript/jquery.form.js" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/login/pbkdf2.js'); ?>"></script>
+		<script src="<?php echo index_js_src('javascript/login/enc-utf16-min.js'); ?>"></script>
+		<script src="<?php echo index_js_src('javascript/login/ajax.js'); ?>"></script>
+		<script src="<?php echo index_js_src('javascript/login/pwdwidget.js'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/login/gen_validatorv31.js'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/jquery.form.js'); ?>" type="text/javascript"></script>
 		
 		
-		<script src="javascript/configAdmin.js.php" type="text/javascript"></script>
-		<script src="javascript/color.js.php" type="text/javascript"></script>
-		<script src="javascript/farbtastic.js" type="text/javascript"></script>
-		<script src="javascript/alta.js.php" type="text/javascript"></script>
-		<script src="javascript/curp.js" type="text/javascript"></script>
-		<script src="javascript/torneo.js.php" type="text/javascript"></script>
-		<script src="javascript/categoria.js.php" type="text/javascript"></script>
-		<script src="javascript/moment.js" type="text/javascript"></script>
-		<script src="javascript/week.js.php" type="text/javascript"></script>
-		<script src="javascript/campo.js.php" type="text/javascript"></script>
-		<script src="javascript/equipo.js.php" type="text/javascript"></script>
-		<script src="javascript/avisos.js.php" type="text/javascript"></script>
-		<script src="javascript/minutasAdmin.js.php" type="text/javascript"></script>
-		<script src="javascript/jornadaAdmin.js.php" type="text/javascript"></script>
-		<script src="javascript/calendario.js.php" type="text/javascript"></script>
-		<script src="javascript/usuarios.js.php" type="text/javascript"></script>
-		<script src="javascript/arbitroValidateAdmin.js.php" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/configAdmin.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/color.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/farbtastic.js'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/alta.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/curp.js'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/torneo.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/categoria.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/moment.js'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/week.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/campo.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/equipo.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/avisos.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/minutasAdmin.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/jornadaAdmin.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/calendario.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/usuarios.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/arbitroValidateAdmin.js.php'); ?>" type="text/javascript"></script>
 			
 		<!--
 			
-			<script src="javascript/jornadaAdmin.js.php" type="text/javascript"></script>
+			<script src="<?php echo index_js_src('javascript/jornadaAdmin.js.php'); ?>" type="text/javascript"></script>
 			-->
-		<script src="javascript/ckeditor/ckeditor.js"></script>
+		<script src="<?php echo index_js_src('javascript/ckeditor/ckeditor.js'); ?>"></script>
 		<style>
 			.table-name-text {
 			  font-size: 1rem;
@@ -278,14 +280,14 @@
 		</main>
 
 		<!--   Core JS Files   -->
-		<script src="./assets/js/core/popper.min.js" ></script>
-		<script src="./assets/js/core/bootstrap.min.js" ></script>
-                <!--<script src="./assets/js/core/bootstrap.bundle.min.js"></script>-->
-		<script src="./assets/js/plugins/perfect-scrollbar.min.js" ></script>
-		<script src="./assets/js/plugins/smooth-scrollbar.min.js" ></script>
+		<script src="<?php echo index_js_src('./assets/js/core/popper.min.js'); ?>" ></script>
+		<script src="<?php echo index_js_src('./assets/js/core/bootstrap.min.js'); ?>" ></script>
+                <!--<script src="<?php echo index_js_src('./assets/js/core/bootstrap.bundle.min.js'); ?>"></script>-->
+		<script src="<?php echo index_js_src('./assets/js/plugins/perfect-scrollbar.min.js'); ?>" ></script>
+		<script src="<?php echo index_js_src('./assets/js/plugins/smooth-scrollbar.min.js'); ?>" ></script>
 		<!-- Kanban scripts -->
-		<script src="./assets/js/plugins/dragula/dragula.min.js"></script>
-		<script src="./assets/js/plugins/jkanban/jkanban.min.js"></script>
+		<script src="<?php echo index_js_src('./assets/js/plugins/dragula/dragula.min.js'); ?>"></script>
+		<script src="<?php echo index_js_src('./assets/js/plugins/jkanban/jkanban.min.js'); ?>"></script>
 		<script>
 			var win = navigator.platform.indexOf('Win') > -1;
 			if (win && document.querySelector('#sidenav-scrollbar')) {
@@ -298,15 +300,15 @@
 		<!-- Github buttons -->
 		<script async defer src="https://buttons.github.io/buttons.js"></script>
 		<!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
-		<script src="./assets/js/material-dashboard.js?v=3.1.0"></script>
-		<script src="../assets/js/plugins/sweetalert.min.js"></script>
-		<script src="../assets/js/plugins/nouislider.min.js"></script>
-		<!--<script src="./assets/js/material-dashboard.js"></script>-->
+		<script src="<?php echo index_js_src('./assets/js/material-dashboard.js?v=3.1.0'); ?>"></script>
+		<script src="<?php echo index_js_src('../assets/js/plugins/sweetalert.min.js'); ?>"></script>
+		<script src="<?php echo index_js_src('../assets/js/plugins/nouislider.min.js'); ?>"></script>
+		<!--<script src="<?php echo index_js_src('./assets/js/material-dashboard.js'); ?>"></script>-->
 		<script type="text/javascript">var MSG_AJAX_GENERIC = <?php echo json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;</script>
 		<?php require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_facebook_lang_js.inc.php'; ?>
-		<script src="./javascript/main.js.php" type="text/javascript"></script>
-		<script src="./javascript/mainVoleibol.js.php" type="text/javascript"></script>
-                <script src="./javascript/mainBasket.js.php" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('./javascript/main.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('./javascript/mainVoleibol.js.php'); ?>" type="text/javascript"></script>
+                <script src="<?php echo index_js_src('./javascript/mainBasket.js.php'); ?>" type="text/javascript"></script>
 		<?php if (($googleMapsBrowserKey ?? '') !== ''): ?>
 		<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($googleMapsBrowserKey, ENT_QUOTES, 'UTF-8'); ?>&libraries=marker&loading=async" type="text/javascript"></script>
 		<?php endif; ?>
