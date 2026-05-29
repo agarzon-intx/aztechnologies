@@ -167,7 +167,7 @@
 	$lang['222'] = 'Please type the code you received by Email';
 	$lang['223'] = 'Code: ';
 	
-	$lang['230'] = 'Your session is not valid, or it has expired\\n(30 min without activity). \\n Please login again.';
+	$lang['230'] = "Your session is not valid, or it has expired\n(30 min without activity).\nPlease login again.";
 
 	//Index Items
   	$lang['300'] = 'Competition System';

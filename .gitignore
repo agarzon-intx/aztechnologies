@@ -1,2 +1,11 @@
 # Local secrets (SFTP passwords, etc.)
 .local/
+
+# macOS Finder metadata
+.DS_Store
+
+# Local editor / agent workspace
+.cursor/
+
+# Local documentation (not part of deploy)
+docs/

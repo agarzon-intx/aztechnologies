@@ -39,7 +39,7 @@ function checkSessionExpire(){
 		url: 'ajax/sessionExpiredCheck.php',
 		success: function (res) {
 			if (res.status === '0') {
-				alert(res.message.replace("\\n", "\n"));
+				alert(res.message.replace(/\\n/g, "\n").replace(/<br\s*\/?>/gi, "\n"));
 				logout();
 			}
 			if (res.status === '1') {

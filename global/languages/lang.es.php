@@ -167,7 +167,7 @@
 	$lang['222'] = 'Por favor ingresa el codigo que recibiste via Correo Electronico';
 	$lang['223'] = 'Codigo: ';
 	
-	$lang['230'] = "Tu sesion ya no es valida, o han expirado<br>(Mas de 30 minutos sin actividad).<br>Es necesario que ingreses tu usuario y password de nuevo.";
+	$lang['230'] = "Tu sesion ya no es valida, o han expirado\n(Mas de 30 minutos sin actividad).\nEs necesario que ingreses tu usuario y password de nuevo.";
 	
 	//Index Items
   	$lang['300'] = 'Sistema de Competencia';
