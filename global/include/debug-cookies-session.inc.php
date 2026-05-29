@@ -4,14 +4,80 @@
  * Included from each site’s debug-cookies-session.php in the site root.
  */
 
+if (!function_exists('debug_cookies_session_is_logged_in')) {
+	function debug_cookies_session_is_logged_in(): bool
+	{
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			return false;
+		}
+		foreach ($_SESSION as $key => $value) {
+			if (!is_string($key) || !is_string($value) || $value === '') {
+				continue;
+			}
+			if (substr($key, -8) === 'username') {
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
+if (!function_exists('debug_cookies_session_ini_enabled')) {
+	function debug_cookies_session_ini_enabled(): bool
+	{
+		if (!defined('APP_SITE_BOOTSTRAP_ROOT')) {
+			return false;
+		}
+		$ini = APP_SITE_BOOTSTRAP_ROOT . DIRECTORY_SEPARATOR . 'ini' . DIRECTORY_SEPARATOR . 'config.ini';
+		if (!is_readable($ini)) {
+			return false;
+		}
+		$cfg = @parse_ini_file($ini, true, INI_SCANNER_RAW);
+		if (!is_array($cfg) || !isset($cfg['debug'])) {
+			return false;
+		}
+		$flag = $cfg['debug']['cookies_session'] ?? $cfg['debug']['cookies-session'] ?? '';
+		return in_array(strtolower((string) $flag), ['1', 'true', 'yes', 'on'], true);
+	}
+}
+
+if (!function_exists('debug_cookies_session_is_production_host')) {
+	function debug_cookies_session_is_production_host(string $host): bool
+	{
+		$host = strtolower(preg_replace('/:\d+$/', '', $host));
+		if ($host === '') {
+			return false;
+		}
+		$domains = ['lidep.net', 'aztechnologies.tech', 'hectorbarraza.com'];
+		foreach ($domains as $domain) {
+			if ($host === $domain || (strlen($host) > strlen($domain) + 1 && substr($host, -strlen($domain) - 1) === '.' . $domain)) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
 if (!function_exists('debug_cookies_session_allowed')) {
 	function debug_cookies_session_allowed(): bool
 	{
+		if (getenv('DISABLE_DEBUG_COOKIES_SESSION') === '1') {
+			return false;
+		}
 		if (getenv('ALLOW_DEBUG_COOKIES_SESSION') === '1') {
+			return true;
+		}
+		if (debug_cookies_session_ini_enabled()) {
+			return true;
+		}
+		if (debug_cookies_session_is_logged_in()) {
 			return true;
 		}
 		$host = (string) ($_SERVER['HTTP_HOST'] ?? '');
 		if ($host !== '' && preg_match('/\.test$/i', $host)) {
+			return true;
+		}
+		if (debug_cookies_session_is_production_host($host)) {
 			return true;
 		}
 		$ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
@@ -61,7 +127,7 @@ if (!function_exists('debug_cookies_session_render_table')) {
 if (!debug_cookies_session_allowed()) {
 	http_response_code(403);
 	header('Content-Type: text/plain; charset=UTF-8');
-	echo "Forbidden. Use *.test, localhost, or set ALLOW_DEBUG_COOKIES_SESSION=1 on the server.\n";
+	echo "Forbidden. Use a production host (lidep.net / aztechnologies.tech), *.test, localhost, log in first, set [debug] cookies_session=1 in config.ini, or ALLOW_DEBUG_COOKIES_SESSION=1.\n";
 	return;
 }
 
