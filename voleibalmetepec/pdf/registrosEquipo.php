@@ -1,67 +1,47 @@
 <?php
-	// registrosEquipo — PDF must exist before any $pdf->* call (v2026-05-30)
 	require_once dirname(__DIR__) . '/site_paths.php';
 	set_time_limit(300);
+    require('qrcode/qrcode.class.php');
 	require("alphapdf.php");
 	require("membersite_config.php");
 	$Config = new Configuration();
 	$schema = $Config->getSchema();
-	az_pdf_require_login($fgmembersite, 'registrosEquipo.php');
+	$sessionstat = $fgmembersite->CheckLogin('registrosEquipo.php');
 	$Config->connect();
-
-	$pdf = az_pdf_create_alphapdf('L', 'mm', 'Letter');
-	$pdf->SetAutoPageBreak(false);
-	$pdf->AddPage();
 
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 	$folder = substr(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])),1,strlen(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])))-5);
 
-	$torneo = (int) ($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
-	$torneo_desc = '';
-	$categoria = $_COOKIE[$Config->getAlias() . 'category'] ?? null;
+	$torneo = $_COOKIE[$Config->getAlias() . 'season'];
+	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
 
-	$equipo = isset($_GET['Equipo_ID']) ? (int) $_GET['Equipo_ID'] : 0;
-	$edad1 = isset($_GET['Edad1']) ? (int) $_GET['Edad1'] : 0;
-	$edad2 = isset($_GET['Edad2']) ? (int) $_GET['Edad2'] : 150;
-	if ($equipo <= 0 || $torneo <= 0) {
-		http_response_code(400);
-		header('Content-Type: text/plain; charset=UTF-8');
-		exit('Equipo_ID and season are required.');
-	}
+	$equipo = htmlspecialchars($_GET["Equipo_ID"]);
+	$edad1 = htmlspecialchars($_GET["Edad1"]);	
+	$edad2 = htmlspecialchars($_GET["Edad2"]);	
 
 	$siteRoot = az_pdf_site_root($Config);
-
-	$x = 1;
+	  
+	$x = 0;
 	$y = 0;
 	$col = 0;
 	$rowc = 0;
 
+	$pdf = new AlphaPDF('P','mm','Letter');
+	$pdf->SetAutoPageBreak(false);
+	$pdf->AddPage();
+
 	$Config->LoadLogo();
-	$Config->LoadFlags();
+	$Config->connect();
 
-	$sql = "SELECT Torneo_DESC 
-            FROM $schema.Torneos
-            where Torneo_ID = $torneo;";
-
-	$result = $Config->query($sql);
-	$pages = 0;
-	if ($result->num_rows > 0) {
-		// output data of each row
-		while($row = $result->fetch_assoc()) {
-            $torneo_desc = $row["Torneo_DESC"];
-		}
-	}
-	
 	$sql = "SELECT 	Jugador_ID, 
 					Clave, 
 					Nombre, 
 					Apellido_P, 
 					Apellido_M, 
 					Apodo, 
-					CONCAT(Apellido_P,' ',SUBSTRING(Nombre,1,1),'.') AS Jugador,
 					date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento, 
 					YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad, 
-					Curp, 
+					CONCAT(Apellido_P,' ',SUBSTRING(Nombre,1,1),'.') AS Curp, 
 					Numero, 
 					Estatus, 
 					a.Equipo_ID, 
@@ -73,22 +53,17 @@
 					c.Categoria_Desc, 
 					c.Color, 
 					d.Color_HEX,
-					date_format(a.FechaAlta,'%d/%m/%Y') FechaAlta
+					date_format(CURDATE(),'%d %M %Y') FechaAlta,
+					e.Torneo_Desc
 			FROM $schema.Jugadores a 
-				join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = $torneo
-				join $schema.Categorias c on b.Fuerza = c.Categoria_ID AND b.Torneo_ID= c.Torneo_ID
+				join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = (select max(Torneo_ID) from $schema.Equipos where Equipo_ID = $equipo) 
+				join $schema.Categorias c on b.Fuerza = c.Categoria_ID and c.Torneo_ID = $torneo
 				join $schema.Colores d on c.Color = d.Color_HEX
-			where a.Equipo_ID = $equipo and Estatus = 'A' and a.Foto is not null 
-				and Validado = 1
-				and case 
-					when month(Fecha_Nacimiento) < 8 then 
-						year(now())-year(Fecha_Nacimiento)+1 
-					else 
-						year(now())-year(Fecha_Nacimiento) 
-				    end between " . $edad1 . " and " . $edad2 . "
-			order by convert(Numero,unsigned) asc";
-    /*and Validado = 1 se quita del query por unica vez*/
-    
+				join $schema.Torneos e on b.Torneo_ID = e.Torneo_ID
+			where a.Equipo_ID = $equipo and Estatus = 'A' and Validado = 1 and a.Foto is not null
+				and YEAR(CURDATE())-YEAR(Fecha_Nacimiento) between $edad1 and $edad2
+			order by convert(Numero,unsigned), Nombre, Apellido_P";
+	//echo $sql;
 	$result = $Config->query($sql);
 	$pages = 0;
 	if ($result->num_rows > 0) {
@@ -99,142 +74,72 @@
 				if($col == 0 && $rowc == 0 && $pages > 0){
 					$pdf->AddPage();
 				}
+				
 				$colorR = 0;
 				$colorG = 0;
 				$colorB = 0;
 
-				$colorR = 255;
-				$colorG = 255;
-				$colorB = 255;
-				$pdf->SetDrawColor(200, 200, 200);
+				$date = DateTime::createFromFormat("d/m/Y", $row["Fecha_Nacimiento"]);
+				$birthDate = explode("/", $date->format("m/d/Y"));
+				//get age from date or birthdate
+				$age = date("Y") - $birthDate[2];
+				$Edad = $age;
+				$BG = "";
 
-				$pdf->SetXY($x+6,$y+47);
-				$pdf->SetFont('Arial','',14);
-				$pdf->SetFillColor($colorR ,$colorG, $colorB);
-				$pdf->Rect($x+0, $y+5, 69, 100 , 'DF');
+				
 				try{
-					$pdf->SetAlpha(1);
-					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2,$y+34,20, 26);
-				}catch(Exception $e){
-					try{
-    					$pdf->SetAlpha(1);
-    					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2,$y+34,20, 26);
-    				}catch(Exception $e){
-    					try{
-        					$pdf->SetAlpha(1);
-        					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2,$y+34,20, 26);
-        				}catch(Exception $e){
-        					try{
-            					$pdf->SetAlpha(1);
-            					az_pdf_player_photo($pdf, $Config, $schema, $row["Jugador_ID"], 'Foto', $x+2,$y+34,20, 26);
-            				}catch(Exception $e){
-            					echo $e->getMessage();
-            				}
-        				}
-    				}
-				}
-				try{
-					$pdf->SetAlpha(1);
-					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $row["Logo"] . '.png', $x+3,$y+64,19, 19);
-				}catch(Exception $e){
-					echo $e;
-				}
-				try{
-					$pdf->SetAlpha(1);
-					az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+2+((20 - (20 * ($Config->logowidth / 110)))/2),$y+5+((20 - (20 * ($Config->logoheight / 110)))/2),(20 * ($Config->logowidth / 110)), (20 * ($Config->logoheight / 110)));
-				}catch(Exception $e){
-					echo $e;
-				}
-				$pdf->SetXY($x+25,$y+6);
-				$pdf->SetTextColor(255, 255, 255);
-				$pdf->SetFont('Helvetica' , 'B' , 10);
+				   
+				    az_pdf_image_file($pdf, $siteRoot, '/pdf/Credencial.png', $x+1,$y+1,106, 67);
+				    $pdf->SetDrawColor(0,0,0);
+                    $pdf->SetLineWidth(0.1);
+                    $pdf->Rect($x, $y, 106, 67);
+				     }catch(Exception $e){
+			        echo $e->getTraceAsString();
+			    }
+			    
 				$pdf->SetAlpha(1);
-				$pdf->SetFillColor(23, 204, 56);
-				$pdf->Cell(42 , 6.65, 'Pro League', 0, 0 , 'C' , true);
-				$pdf->SetXY($x+25,$y+12.65);
-				$pdf->SetTextColor(0, 0, 0);
-				$pdf->SetFont('Helvetica' , 'B' , 10);
-				$pdf->SetAlpha(1);
-				$pdf->SetFillColor(255 ,255, 255);
-				$pdf->Cell(42 , 6.65, 'Volleyball Metepec', 0, 0 , 'C' , true);
-				$pdf->SetXY($x+25,$y+19.30);
-				$pdf->SetTextColor(255, 255, 255);
-				$pdf->SetFont('Helvetica' , 'B' , 10);
-				$pdf->SetAlpha(1);
-				$pdf->SetFillColor(23, 128, 204);
-				$pdf->Cell(42 , 6.65, az_utf8_decode($torneo_desc), 0, 0 , 'C' , true);
-				$pdf->SetXY($x+2,$y+28);
-				$pdf->SetTextColor(0, 0, 0);
-				$pdf->SetFont('Helvetica' , 'B' , 10);
-				$pdf->SetAlpha(1);
-				$pdf->SetFillColor(hexdec(substr($row["Color"],1,2)),hexdec(substr($row["Color"],3,2)), hexdec(substr($row["Color"],5,2)));
-				$pdf->Cell(65 , 4, '' . $row["Categoria_Desc"] . '', 0, 0 , 'C' , true);
+				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+10, $y+15, 26, 35);
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $row['Logo'] . '.png',$x+15.5,$y+50,15, 15);
+			
 
 				$pdf->SetTextColor(0, 0, 0);
-				$pdf->SetFont('Helvetica' , 'B' , 9);
 				$pdf->SetAlpha(1);
-				$pdf->SetFillColor(184 ,211, 220);
-				$pdf->SetXY($x+25,$y+34);
-				$pdf->Cell(42 , 4, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , true);
-				$pdf->SetXY($x+25,$y+40);
-				$pdf->SetFont('Helvetica' , 'B' , 9);
-				$pdf->MultiCell(42	 , 4, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , true);
-				$pdf->SetFont('Helvetica' , 'B' , 9);
+				$pdf->SetXY($x+40,$y+16);
+				$pdf->SetFont('Helvetica' , '' , 11);
+				$pdf->Cell(45 , 5, '' . az_utf8_decode($row["Equipo_FULLDESC"]) . '', 0, 0 , 'L' , false);
+				$pdf->SetXY($x+40,$y+21);
+				$pdf->Cell(45 , 5, '' . $row["Categoria_Desc"] . '', 0, 0 , 'L' , false);
+				$pdf->SetXY($x+40,$y+26);
+				$pdf->MultiCell(45	 , 5, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , false);
+				//$pdf->SetXY($x+40,$y+36);
+				//$pdf->Cell(65 , 5, az_utf8_decode('' . $row["Apodo"] . ''), 0, 0 , 'L' , false);
+				$pdf->SetXY($x+40,$y+36);
+				$pdf->Cell(65 , 5, 'Fech Nac ' . az_utf8_decode($row["Fecha_Nacimiento"]) . '', 0, 0 , 'L' , false);
+				$pdf->SetXY($x+40,$y+41);
+				$pdf->Cell(65 , 5, '' . az_utf8_decode(substr($row["Curp"],0,11)) , 0, 0 , 'L' , false);
+				$pdf->SetXY($x+40,$y+46);
+				$pdf->Cell(65 , 5, $row["FechaAlta"], 0, 0 , 'L' , false);
+				//az_pdf_qrcode($pdf, $fgmembersite, $row["Jugador_ID"],$x+92,$y+2,13, 13);
 
-				$pdf->SetXY($x+25,$y+50);
-				$pdf->SetFont('Helvetica' , 'B' , 10);
-				$pdf->Cell(42 , 4, '' . $row["Fecha_Nacimiento"] . '', 0, 0 , 'L' , true);
-				$pdf->SetXY($x+25,$y+56);
-				$pdf->SetFont('Helvetica' , 'B' , 9);
-				$pdf->Cell(42 , 4, '' . substr($row["Curp"],0,11) . 'XXXXXXX', 0, 0 , 'L' , true);
-
-				$pdf->SetXY($x+25,$y+63);
-				$pdf->SetTextColor(0, 0, 0);
-				$pdf->SetFont('Helvetica' , 'B' , 10);
-				$pdf->SetAlpha(1);
-				$pdf->SetFillColor(184 ,211, 220);
-				$pdf->MultiCell(42 , 4, '' . az_utf8_decode($row["Equipo_FULLDESC"]) . '', 0 , 'C' , true);
-				$pdf->SetTextColor(0, 0, 0);
-				$pdf->SetFont('Courier' , 'B' , 30);
-				$pdf->SetXY($x+25,$y+70);
-				$pdf->Cell(42 , 14, '' . $row["Numero"] . '', 0, 0 , 'C' , false);
-                
-                az_pdf_qrcode($pdf, $fgmembersite, $row["Jugador_ID"],$x+2,$y+85,20, 20);
-				//$pdf->Image('http://chart.googleapis.com/chart?cht=qr&chs=200x200&chld=L|1&chf=bg,s,65432100&chl=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2,$y+85,20, 20, 'PNG');
-				//$pdf->Image('https://qrcode.tec-it.com/API/QRCode?data=' . $server . 'ajax/QR.php?Jugador_ID=' . $row["Jugador_ID"],$x+2,$y+85,20, 20, 'PNG');
-
-				$pdf->SetDrawColor(0 ,0, 0);
-
-				try{
-					$pdf->SetAlpha(1);
-					az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png', $x+25,$y+93,42, 12);
-				}catch(Exception $e){
-					echo $e;
-				}	
-				try{
-					$pdf->SetAlpha(.2);
-					az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-A.png', $x+25,$y+30,40, 50);
-				}catch(Exception $e){
-					echo $e;
-				}
+				
 				//$pdf->Table();
-				if($col == 3){
-					$x = 1;
+				if($col == 1){
+					$x = 0;
 					$col = 0;
-					if($rowc == 1){
+					if($rowc == 3){
 						$y = 0;
 						$rowc = 0;
 					}else{
-						$y = $y + 100;
+						$y = $y + 70;
 						$rowc = $rowc + 1;
 					}
 				}else{
-					$x = $x + 69;
+					$x = $x + 108;
 					$col = $col + 1;
 				}
 				$pages++;
-			}catch (Throwable $ae) {
-				error_log('registrosEquipo.php row ' . ($row['Jugador_ID'] ?? '?') . ': ' . $ae->getMessage());
+			}catch(Exception $ae){
+				
 			}
 		}
 	} else {
