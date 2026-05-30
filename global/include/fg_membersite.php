@@ -866,59 +866,97 @@ class FGMembersite {
 		return true;
 	}
 	
-	function CheckLogin($arg1, $arg2 = null){
-		// Support both CheckLogin('page.php') and legacy CheckLogin($Config, 'page.php').
-		$source = ($arg2 !== null) ? $arg2 : $arg1;
-		
-		// Check that they at least have a session, and if not, create it
-		if(!isset($_SESSION)){ 
-			session_set_cookie_params(3600,'/','',true,true); // make it expire after 1 hour
-			session_start();
-			$Config = $this->Config;
-			$schema = $Config->getSchema();
-			$Season = 0;
-			$Category = 'null';
-			$Language = 'null';
-			if(!isset($_COOKIE[$Config->getAlias() . "season"]) || $_COOKIE[$Config->getAlias() . "season"] === ''){
-				$sql = "select max(Torneo_ID) Torneo_ID
-					from $schema.Torneos
-					where Actual = 'S'";
-				$result = $Config->query($sql);
-				if ($result && $result->num_rows > 0) {
-					while($row2 = $result->fetch_assoc()) {
-						setcookie($Config->getAlias() . "season",$row2["Torneo_ID"],0,'/');
-						$Season = $row2["Torneo_ID"];
-					}
+	/**
+	 * Persist season/category/language for this site (cookie + session + current request).
+	 */
+	private function setSiteContextValue($key, $value)
+	{
+		$value = (string) $value;
+		setcookie($key, $value, 0, '/');
+		$_COOKIE[$key] = $value;
+		$_SESSION[$key] = $value;
+	}
+
+	/**
+	 * Ensure league context cookies exist (PDF/ajax after session refresh or expired browser cookies).
+	 */
+	private function ensureSiteContextCookies()
+	{
+		$Config = $this->Config;
+		if (!$Config) {
+			return;
+		}
+		$Config->connect();
+		$schema = $Config->getSchema();
+		$alias = $Config->getAlias();
+		$seasonKey = $alias . 'season';
+		$categoryKey = $alias . 'category';
+		$languageKey = $alias . 'language';
+
+		$season = $_COOKIE[$seasonKey] ?? $_SESSION[$seasonKey] ?? '';
+		if ($season === '' || $season === null) {
+			$sql = "select max(Torneo_ID) Torneo_ID
+				from $schema.Torneos
+				where Actual = 'S'";
+			$result = $Config->query($sql);
+			if ($result && $result->num_rows > 0) {
+				while ($row2 = $result->fetch_assoc()) {
+					$season = (string) $row2['Torneo_ID'];
+					$this->setSiteContextValue($seasonKey, $season);
 				}
-			}else{
-				$Season = $_COOKIE[$Config->getAlias() . "season"];
 			}
-			if(!isset($_COOKIE[$Config->getAlias() . "category"]) || $_COOKIE[$Config->getAlias() . "category"] === ''){
+		} else {
+			$_COOKIE[$seasonKey] = $season;
+			$_SESSION[$seasonKey] = $season;
+		}
+
+		$category = $_COOKIE[$categoryKey] ?? $_SESSION[$categoryKey] ?? '';
+		if ($category === '' || $category === null) {
+			$seasonId = (int) $season;
+			if ($seasonId > 0) {
 				$sql = "select Categoria_ID
 					from $schema.Categorias
 					where Categoria_ID in ( select Fuerza
 								from $schema.Equipos
-								where Torneo_ID = $Season)
+								where Torneo_ID = $seasonId)
 					order by Categoria_Orden asc
 					limit 1;";
 				$result = $Config->query($sql);
 				if ($result && $result->num_rows > 0) {
-					while($row2 = $result->fetch_assoc()) {
-						setcookie($Config->getAlias() . "category",$row2["Categoria_ID"],0,'/');
-						$Category = $row2["Categoria_ID"];
+					while ($row2 = $result->fetch_assoc()) {
+						$category = (string) $row2['Categoria_ID'];
+						$this->setSiteContextValue($categoryKey, $category);
 					}
 				}
-			}else{
-				$Category = $_COOKIE[$Config->getAlias() . "category"];
 			}
-			if(!isset($_COOKIE[$Config->getAlias() . "language"]) || $_COOKIE[$Config->getAlias() . "language"] === ''){
-				$Config->LoadLanguage();
-				setcookie($Config->getAlias() . "language",$Config->lan,0,'/');
-				$Language = $Config->lan;
-			}else{
-				$Language = $_COOKIE[$Config->getAlias() . "language"];
-			}
+		} else {
+			$_COOKIE[$categoryKey] = $category;
+			$_SESSION[$categoryKey] = $category;
 		}
+
+		$language = $_COOKIE[$languageKey] ?? $_SESSION[$languageKey] ?? '';
+		if ($language === '' || $language === null) {
+			$Config->LoadLanguage();
+			$language = (string) $Config->lan;
+			if ($language !== '') {
+				$this->setSiteContextValue($languageKey, $language);
+			}
+		} else {
+			$_COOKIE[$languageKey] = $language;
+			$_SESSION[$languageKey] = $language;
+		}
+	}
+
+	function CheckLogin($arg1, $arg2 = null){
+		// Support both CheckLogin('page.php') and legacy CheckLogin($Config, 'page.php').
+		$source = ($arg2 !== null) ? $arg2 : $arg1;
+
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			session_set_cookie_params(3600,'/','',true,true); // make it expire after 1 hour
+			session_start();
+		}
+
+		$this->ensureSiteContextCookies();
 		
 		/*
 		$datetime = new DateTime();
@@ -947,7 +985,13 @@ class FGMembersite {
 		// They were properly logged in, but that was too long ago (sessionLifeTime) so they need to login again
 		if (isset($_SESSION[$this->Config->getAlias() . 'LAST_ACTIVITY']) && (time() - $_SESSION[$this->Config->getAlias() . 'LAST_ACTIVITY'] > $this->sessionLifeTime)) {
 			/* last request was more than sessionLifeTime ago*/
-			session_destroy(); // destroy session data in storage
+			session_unset();
+			session_destroy();
+			if (session_status() !== PHP_SESSION_ACTIVE) {
+				session_set_cookie_params(3600,'/','',true,true);
+				session_start();
+			}
+			$this->ensureSiteContextCookies();
 			//http_response_code(401);
 			return false;
 		}

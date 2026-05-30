@@ -216,8 +216,13 @@ class Configuration
     public function LoadRegionalSettings()
     {
         // Try and connect to the database
+        $langId = $_COOKIE[$this->getAlias() . 'language'] ?? $_SESSION[$this->getAlias() . 'language'] ?? '';
+        if ($langId === '' || $langId === null) {
+            $this->LoadLanguage();
+            $langId = $this->lan ?? '';
+        }
         $query = "SELECT * FROM " . $this->config["schema"] . ".Lenguaje
-			            where Lenguaje_ID = '" . $_COOKIE[$this->getAlias() . 'language'] . "'";
+			            where Lenguaje_ID = '" . $langId . "'";
         $result = $this->query($query);
         if (!$result)
             return null;
