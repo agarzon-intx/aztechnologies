@@ -8,6 +8,22 @@ if (!function_exists('az_pdf_site_root')) {
 		return rtrim((string) $Config->getPath(), '/\\');
 	}
 
+	/** Create AlphaPDF after require alphapdf.php; fails fast with a clear message. */
+	function az_pdf_create_alphapdf($orientation = 'P', $unit = 'mm', $size = 'Letter') {
+		if (!class_exists('AlphaPDF', false)) {
+			throw new RuntimeException('AlphaPDF is not loaded. Require alphapdf.php before generating PDFs.');
+		}
+		return new AlphaPDF($orientation, $unit, $size);
+	}
+
+	function az_pdf_require_login($fgmembersite, $page = 'registrosEquipo.php') {
+		if ($fgmembersite->CheckLogin($page) === false) {
+			http_response_code(401);
+			header('Content-Type: text/plain; charset=UTF-8');
+			exit('Session expired or not logged in.');
+		}
+	}
+
 	function az_pdf_path_readable($siteRoot, $relativePath) {
 		if ($siteRoot === '') {
 			return null;

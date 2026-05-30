@@ -14,7 +14,7 @@
 										</li>
 										<li class="nav-item" id="primeraGoles' . $row["Jornada"] . 'li">
 											<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#primeraGoles' . $row["Jornada"] . '" role="tab" aria-controls="primeraGoles' . $row["Jornada"] . 'li" aria-selected="false">';
-                                if($Config->getSport() == 0){
+                                if(app_sport_uses_soccer((int) $Config->getSport())){
                                         $htmlWeek .= '                                          <div class="d-none d-xs-none d-md-block d-lg-block d-xl-block">
                                                                                                         <img src="./imagenes/goal.png" style="width: 20px; height: auto;" alt=""/>' . $lang['613'] . '
                                                                                                 </div>
@@ -22,10 +22,10 @@
                                                                                                         <img src="./imagenes/goal.png" style="width: 20px; height: auto;" alt=""/>
                                                                                                 </div>';
                                 }
-                                if($Config->getSport() == 1){
+                                if(app_sport_uses_voleibol((int) $Config->getSport())){
                                     require 'week-ScheduleScoresVolleyBall.php';
                                 }
-                                if($Config->getSport() == 2){
+                                if(app_sport_uses_basket((int) $Config->getSport())){
                                         $htmlWeek .= '                                          <div class="d-none d-xs-none d-md-block d-lg-block d-xl-block">
                                                                                                         <img src="./imagenes/Pointb.png" style="width: 20px; height: auto;" alt=""/>' . $lang['613-B'] . '
                                                                                                 </div>
@@ -39,7 +39,7 @@
 										</li>
 										<li class="nav-item" id="primeraAmonestados' . $row["Jornada"] . 'li">
 											<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#primeraAmonestados' . $row["Jornada"] . '" role="tab" aria-controls="primeraAmonestados' . $row["Jornada"] . 'li" aria-selected="false">';
-                                if($Config->getSport() == 0){
+                                if(app_sport_uses_soccer((int) $Config->getSport())){
                                         $htmlWeek .= '                                          <div class="d-none d-xs-none d-md-block d-lg-block d-xl-block">
                                                                                                         <img src="./imagenes/amarilla.png" style="width: 20px; height: auto;" alt=""/>' . $lang['614'] . '
                                                                                                 </div>
@@ -47,10 +47,10 @@
                                                                                                         <img src="./imagenes/amarilla.png" style="width: 20px; height: auto;" alt=""/>
                                                                                                 </div>';
                                 }
-                                if($Config->getSport() == 1){
+                                if(app_sport_uses_voleibol((int) $Config->getSport())){
                                     require 'week-ScheduleScoresVolleyBall.php';
                                 }
-                                if($Config->getSport() == 2){
+                                if(app_sport_uses_basket((int) $Config->getSport())){
                                         $htmlWeek .= '                                          <div class="d-none d-xs-none d-md-block d-lg-block d-xl-block">
                                                                                                         <img src="./imagenes/faltabasket.png" style="width: 20px; height: auto;" alt=""/>' . $lang['614-B'] . '
                                                                                                 </div>
@@ -63,7 +63,7 @@
                                                                                         
 											</a>
 										</li>';
-				if($Config->getSport() == 0){
+				if(app_sport_uses_soccer((int) $Config->getSport())){
 					$htmlWeek .= '				<li class="nav-item" id="primeraExpulsados' . $row["Jornada"] . 'li">
 											<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#primeraExpulsados' . $row["Jornada"] . '" role="tab" aria-controls="primeraExpulsados' . $row["Jornada"] . 'li" aria-selected="false">
 												<div class="d-none d-xs-none d-md-block d-lg-block d-xl-block">

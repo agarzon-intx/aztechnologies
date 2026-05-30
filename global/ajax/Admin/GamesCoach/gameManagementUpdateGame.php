@@ -29,14 +29,30 @@ $schema = $Config->getSchema();
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
-    $Date = SanitizeText($_POST['Date']);
-    $Time = SanitizeTime($_POST['Time']);
-    $Field = SanitizeInteger($_POST['Field']);
-    $GameID = SanitizeInteger($_POST['GameID']);
+    $Date = SanitizeText($_POST['Date'] ?? '');
+    $Time = SanitizeTime($_POST['Time'] ?? '');
+    $Field = (int) SanitizeInteger($_POST['Field'] ?? '0');
+    $GameID = (int) SanitizeInteger($_POST['GameID'] ?? '0');
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataColorAnswer' => 'Error');
-		
-	$sql = "CALL $schema.GameUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', 0, 0, '$Date', 0, 0, 0, '$Time:00', $Field, $GameID, @out);";
+
+	if ($GameID <= 0) {
+		$Config->Close();
+		echo json_encode(array('status' => '0', 'message' => 'Invalid game.', 'dataColorAnswer' => 'Error'));
+		exit;
+	}
+	if ($Date === '' || $Field <= 0) {
+		$Config->Close();
+		echo json_encode(array('status' => '0', 'message' => 'Date and field are required.', 'dataColorAnswer' => 'Error'));
+		exit;
+	}
+
+	$timeSql = '00:00:00';
+	if ($Time !== '') {
+		$timeSql = (strpos($Time, ':') !== false && substr_count($Time, ':') >= 2) ? $Time : ($Time . ':00');
+	}
+
+	$sql = "CALL $schema.GameUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', 0, 0, '$Date', 0, 0, 0, '$timeSql', $Field, $GameID, @out);";
 
 	//echo $sql;
 

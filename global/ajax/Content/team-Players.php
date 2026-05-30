@@ -33,18 +33,22 @@
 
 				$htmlTeam .= '<div class="tabla-content">';
 				$htmlTeam .= '<div id="jugadores1" class="tabla active" style="display: block; width: 100% !important;">';
-				if($Config->getSport() == 0){
-            		require 'team-PlayersPlayerList.php';
+				if(app_sport_uses_soccer((int) $Config->getSport())){
+            		require app_sport_uses_flag((int) $Config->getSport())
+            		    ? 'team-PlayersPlayerListFlag.php'
+            		    : 'team-PlayersPlayerList.php';
             	}
-            	if($Config->getSport() == 1){
+            	if(app_sport_uses_voleibol((int) $Config->getSport())){
         		    require 'team-PlayersPlayerListVoleibol.php';
         		}
 				$htmlTeam .= '</div>';
 				$htmlTeam .= '<div id="jugadores2" class="tabla" style="display: none; width: 100% !important;">';
-				if($Config->getSport() == 0){
-            		require 'team-PlayersPlayerProfileList.php';
+				if(app_sport_uses_soccer((int) $Config->getSport())){
+            		require app_sport_uses_flag((int) $Config->getSport())
+            		    ? 'team-PlayersPlayerProfileListFlag.php'
+            		    : 'team-PlayersPlayerProfileList.php';
             	}
-            	if($Config->getSport() == 1){
+            	if(app_sport_uses_voleibol((int) $Config->getSport())){
         		    require 'team-PlayersPlayerProfileListVoleibol.php';
         		}
 				$htmlTeam .= '</div>';

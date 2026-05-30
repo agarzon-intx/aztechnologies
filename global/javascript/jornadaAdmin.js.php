@@ -319,7 +319,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					visitante = $(this).find('#visitante' + juego).val();
 					fecha = $(this).find('#fecha' + juego).val();
 					horario = $(this).find('#horario' + juego).val();
-					actualizarJuegoC(fecha, horario, campo, juego, week);
+					if (campo !== undefined && campo !== '' && fecha && horario && juego) {
+				   		actualizarJuegoC(fecha, horario, campo, juego, week);
+					}
 			});
 		}
 		
@@ -377,7 +379,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     						golesv = 0;
     					}
 					}
-				   	actualizarJuego(golesl, golesv, fecha, jugado, penaltiesl, penaltiesv, horario, campo, juego, week);
+					if (typeof campo !== \"undefined\") {
+						actualizarJuego(golesl, golesv, fecha, jugado, penaltiesl, penaltiesv, horario, campo, juego, week);
+					}
 			});
 		}
 		
@@ -399,7 +403,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					visitante = $(this).find('#visitante' + juego).val();
 					fecha = $(this).find('#fecha' + juego).val();
 					horario = $(this).find('#horario' + juego).val();
-				   	actualizarJuegoC(fecha, horario, campo, juego, week);
+					if (campo !== undefined && campo !== '' && fecha && horario && juego) {
+				   		actualizarJuegoC(fecha, horario, campo, juego, week);
+					}
 			});
 		}
 		

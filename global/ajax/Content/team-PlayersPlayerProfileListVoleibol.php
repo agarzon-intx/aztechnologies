@@ -45,7 +45,7 @@
 				if ($result2->num_rows > 0) {
 					// output data of each row
 					while ($row2 = $result2->fetch_assoc()) {
-					//	$Edad = $row2["Edad"];
+						$Edad = $row2["Edad"];
 						//$birthDate = date_format($date, "m-d-Y");
 						$htmlTeam .= '<div class="col-12 col-sm-6 col-md-4 col-lg-4 col-xl-4 col-xxl-3" style="margin: 20px 0px;">
 										<div class="card p-0"> 

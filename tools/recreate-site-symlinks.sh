@@ -15,7 +15,7 @@ if [[ ! -d "$GLOBAL/ajax" ]]; then
 	exit 1
 fi
 
-SITES=(elite huskies lidep nuestrodeporte vollidep voleibalmetepec)
+SITES=(elite huskies lidep nuestrodeporte vollidep voleibalmetepec aztflag)
 LINKS=(ajax assets config css Form include javascript languages objects)
 
 remove_path() {

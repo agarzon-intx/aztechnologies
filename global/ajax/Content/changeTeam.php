@@ -72,7 +72,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 													<div class="d-none d-xs-none d-md-block d-lg-block d-xl-block"><img src="./imagenes/Calendar.png" style="width: 20px; height: auto;" alt=""/>  ' . $lang['351'] . '</div><div class="d-block d-xs-block d-md-none d-lg-none d-xl-none"><img src="./imagenes/Calendar.png" style="width: 20px; height: auto;" alt=""/></div>
 												</a>
 											</li>';
-											if($Config->getSport() == 0){
+											if(app_sport_uses_soccer((int) $Config->getSport())){
 											    $htmlTeam .= '  <li class="nav-item" id="graph1li">
                     												<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#graph1" role="tab" aria-controls="graph1li" aria-selected="false">
                     													<div class="d-none d-xs-none d-md-block d-lg-block d-xl-block"><img src="./imagenes/graph.png" style="width: 20px; height: auto;" alt=""/>  ' . $lang['352'] . '</div><div class="d-block d-xs-block d-md-none d-lg-none d-xl-none"><img src="./imagenes/graph.png" style="width: 20px; height: auto;" alt=""/></div>
@@ -80,17 +80,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                     											</li>';
 	                                        }
 											$htmlTeam .= '<li class="nav-item" id="jugadoresli">';
-											if($Config->getSport() == 0){
+											if(app_sport_uses_soccer((int) $Config->getSport())){
                                         		    $htmlTeam .= '<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#jugadores" role="tab" aria-controls="jugadoresli" aria-selected="false">
                 													<div class="d-none d-xs-none d-md-block d-lg-block d-xl-block"><img src="./imagenes/jugador.png" style="width: 20px; height: auto;" alt=""/>  ' . $lang['353'] . '</div><div class="d-block d-xs-block d-md-none d-lg-none d-xl-none"><img src="./imagenes/jugador.png" style="width: 20px; height: auto;" alt=""/></div>
                 												</a>';
                                         	}
-                                        	if($Config->getSport() == 1){
+                                        	if(app_sport_uses_voleibol((int) $Config->getSport())){
                                     		    $htmlTeam .= '<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#jugadores" role="tab" aria-controls="jugadoresli" aria-selected="false">
             													<div class="d-none d-xs-none d-md-block d-lg-block d-xl-block"><img src="./imagenes/jugadorVoleibol.png" style="width: 20px; height: auto;" alt=""/>  ' . $lang['353'] . '</div><div class="d-block d-xs-block d-md-none d-lg-none d-xl-none"><img src="./imagenes/jugadorVoleibol.png" style="width: 20px; height: auto;" alt=""/></div>
             												</a>';
                                     		}
-                                        	if($Config->getSport() == 2){
+                                        	if(app_sport_uses_basket((int) $Config->getSport())){
                                     		    $htmlTeam .= '<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#jugadores" role="tab" aria-controls="jugadoresli" aria-selected="false">
             													<div class="d-none d-xs-none d-md-block d-lg-block d-xl-block"><img src="./imagenes/jugadorBasket.png" style="width: 20px; height: auto;" alt=""/>  ' . $lang['353'] . '</div><div class="d-block d-xs-block d-md-none d-lg-none d-xl-none"><img src="./imagenes/jugadorVoleibol.png" style="width: 20px; height: auto;" alt=""/></div>
             												</a>';
@@ -130,13 +130,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	/*-----------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------------------*/
 	$htmlTeam .= '<div id="calendario" class="tabla" style="display: none; width: 100% !important;">';
-	if($Config->getSport() == 0){
+	if(app_sport_uses_soccer((int) $Config->getSport())){
 	    require 'team-Schedule.php';
 	}
-    if($Config->getSport() == 1){
+    if(app_sport_uses_voleibol((int) $Config->getSport())){
 	    require 'team-ScheduleVoleibol.php';
 	}
-    if($Config->getSport() == 2){
+    if(app_sport_uses_basket((int) $Config->getSport())){
 	    require 'team-ScheduleBasket.php';
 	}
 
@@ -146,12 +146,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	-----------------------------------------------------------------------------------------------------------------------------*/
 
 	
-	if($Config->getSport() == 0){
+	if(app_sport_uses_soccer((int) $Config->getSport())){
 	    	$htmlTeam .= '<div id="graph1" class="tabla" style="display: none; width: 100% !important;">';
 	        require 'team-Graph.php';
 	        $htmlTeam .= '</div>';
 	}else{
-	    if($Config->getSport() == 1){
+	    if(app_sport_uses_voleibol((int) $Config->getSport())){
 	   	    $htmlTeam .= '<div id="graph1" class="tabla" style="display: none; width: 100% !important;">';
 		    require 'team-GraphVoleibol.php';
 		    $htmlTeam .= '</div>';
@@ -163,13 +163,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	/*-----------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------------------*/
 	$htmlTeam .= '<div id="jugadores" class="tabla" style="display: none; width: 100% !important;">';
-	if($Config->getSport() == 0){
+	if(app_sport_uses_soccer((int) $Config->getSport())){
 	    require 'team-Players.php';
 	}
-	if($Config->getSport() == 1){
+	if(app_sport_uses_voleibol((int) $Config->getSport())){
 	    require 'team-PlayersVoleibol.php';
 	}
-	if($Config->getSport() == 2){
+	if(app_sport_uses_basket((int) $Config->getSport())){
 	    require 'team-PlayersBasket.php';
 	}
     $htmlTeam .= '</div>';

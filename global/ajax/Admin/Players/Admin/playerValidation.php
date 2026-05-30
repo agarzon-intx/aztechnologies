@@ -33,8 +33,7 @@ if (!defined('APP_SITE_ROOT')) {
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 	
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
-    $Category = SanitizeInteger($_POST['Category']);
-	$Team = SanitizeInteger($_POST['team']);
+	$Team = SanitizeInteger($_POST['team'] ?? 0);
 
 	$retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 

@@ -103,6 +103,7 @@
 	$result1 = $Config->query($sql);
 	if ($result1->num_rows > 0) {
 		// output data of each row
+		$count = 0;
 		while($row1 = $result1->fetch_assoc()) {
         	
         	$height = 1;
@@ -204,7 +205,7 @@
             	$pdf->SetTextColor(252, 1, 2);
             	$pdf->SetXY(40,32);
             	$pdf->SetFont('Helvetica' , 'B' , 20);
-            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($Jornada_Desc_Corta) . ' (Fecha)', 35, 0 , 'C' , false);
+            	$pdf->Cell(225 , 8, $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . ' (Fecha)', 35, 0 , 'C' , false);
             	$pdf->SetTextColor(0, 0, 0);
             	
                 $x = 0;

@@ -22,13 +22,15 @@
 				/*-----------------------------------------------------------------------------------------------------------------------------
 				-----------------------------------------------------------------------------------------------------------------------------*/
 				$htmlWeek .= '<div id="1resultados' . $row0["Jornada"] . '" class="tabla active" style="display: block">';
-				if($Config->getSport() == 0){
-				    require 'weekAdmin-ScheduleScores.php';
+				if(app_sport_uses_soccer((int) $Config->getSport())){
+				    require app_sport_uses_flag((int) $Config->getSport())
+				        ? 'weekAdmin-ScheduleScoresFlag.php'
+				        : 'weekAdmin-ScheduleScores.php';
 				}
-			    if($Config->getSport() == 1){
+			    if(app_sport_uses_voleibol((int) $Config->getSport())){
 				    require 'weekAdmin-ScheduleScoresVoleibol.php';
 				} 
-			    if($Config->getSport() == 2){
+			    if(app_sport_uses_basket((int) $Config->getSport())){
 				    require 'weekAdmin-ScheduleScoresBasket.php';
 				} 
 				                    

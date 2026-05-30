@@ -25,13 +25,15 @@
 										</li>
 										<li class="nav-item" id="estadisticas' . $row["Jornada"] . 'li">
 											<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#estadisticas' . $row["Jornada"] . '" role="tab" aria-controls="estadisticas' . $row["Jornada"] . 'li" aria-selected="false">';
-				if($Config->getSport() == 0){
+				if(app_sport_uses_flag((int) $Config->getSport())){
+            		    $htmlWeekTab .= '<img src="./imagenes/statsFlag.png" style="width: 20px; height: auto;" alt=""/>' . $lang['601'];
+            	} elseif(app_sport_uses_soccer((int) $Config->getSport())){
             		    $htmlWeekTab .= '<img src="./imagenes/stats.png" style="width: 20px; height: auto;" alt=""/>' . $lang['601'];
             	}
-            	if($Config->getSport() == 1){
+            	if(app_sport_uses_voleibol((int) $Config->getSport())){
         		    $htmlWeekTab .= '<img src="./imagenes/statsVoleibol.png" style="width: 20px; height: auto;" alt=""/>' . $lang['601'];
         		}
-            	if($Config->getSport() == 2){
+            	if(app_sport_uses_basket((int) $Config->getSport())){
         		    $htmlWeekTab .= '<img src="./imagenes/statsBasket.png" style="width: 20px; height: auto;" alt=""/>' . $lang['601'];
         		}
 				$htmlWeekTab .= '	        </a>
@@ -51,13 +53,15 @@
 				/*-----------------------------------------------------------------------------------------------------------------------------
 				-----------------------------------------------------------------------------------------------------------------------------*/
 				$htmlWeek .= '<div id="resultados' . $row["Jornada"] . '" class="tabla active" style="display: block">';
-				if($Config->getSport() == 0){
-				    require 'week-ScheduleScores.php';
+				if(app_sport_uses_soccer((int) $Config->getSport())){
+				    require app_sport_uses_flag((int) $Config->getSport())
+				        ? 'week-ScheduleScoresFlag.php'
+				        : 'week-ScheduleScores.php';
 				}
-				if($Config->getSport() == 1){
+				if(app_sport_uses_voleibol((int) $Config->getSport())){
 				    require 'week-ScheduleScoresVolleyBall.php';
 				}
-				if($Config->getSport() == 2){
+				if(app_sport_uses_basket((int) $Config->getSport())){
 				    require 'week-ScheduleScoresBasket.php';
 				}
 				$htmlWeek .= '</div>';
@@ -65,13 +69,15 @@
 				/*-----------------------------------------------------------------------------------------------------------------------------
 				-----------------------------------------------------------------------------------------------------------------------------*/
 				$htmlWeek .= '<div id="estadisticas' . $row["Jornada"] . '" class="tabla" style="display: block">';
-				if($Config->getSport() == 0){
-				    require 'week-Stats.php'; 
+				if(app_sport_uses_soccer((int) $Config->getSport())){
+				    require app_sport_uses_flag((int) $Config->getSport())
+				        ? 'week-StatsFlag.php'
+				        : 'week-Stats.php';
 				}
-				if($Config->getSport() == 1){
+				if(app_sport_uses_voleibol((int) $Config->getSport())){
 				    require 'week-StatsVolleyBall.php'; 
 				} 
-				if($Config->getSport() == 2){
+				if(app_sport_uses_basket((int) $Config->getSport())){
 				    require 'week-StatsBasket.php'; 
 				}               
 				$htmlWeek .= '</div>';

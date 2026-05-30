@@ -309,6 +309,7 @@
 		<script src="<?php echo index_js_src('./javascript/main.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('./javascript/mainVoleibol.js.php'); ?>" type="text/javascript"></script>
                 <script src="<?php echo index_js_src('./javascript/mainBasket.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('./javascript/mainFlag.js.php'); ?>" type="text/javascript"></script>
 		<?php if (($googleMapsBrowserKey ?? '') !== ''): ?>
 		<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($googleMapsBrowserKey, ENT_QUOTES, 'UTF-8'); ?>&libraries=marker&loading=async" type="text/javascript"></script>
 		<?php endif; ?>

@@ -226,7 +226,7 @@
 									</div>
 								</div>';
 								$styleSP0 = 'style="display: none;"';
-								if($Config->getSport() == 0){
+								if(app_sport_uses_soccer((int) $Config->getSport())){
 								    $styleSP0 = '';
 								}
 								$htmlConfig .= '<div class="row" ' . $styleSP0 . '>

@@ -305,6 +305,7 @@
 		<script src="<?php echo index_js_src('./javascript/main.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('./javascript/mainVoleibol.js.php'); ?>" type="text/javascript"></script>
                 <script src="<?php echo index_js_src('./javascript/mainBasket.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('./javascript/mainFlag.js.php'); ?>" type="text/javascript"></script>
 		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYiDvsZGN5SeQjZIuwO1KwyW6BTkyuNBc&loading=async" type="text/javascript"></script>
 		<script>
 			window.onload = function() {

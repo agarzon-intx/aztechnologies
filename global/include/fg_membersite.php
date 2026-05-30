@@ -874,52 +874,50 @@ class FGMembersite {
 		if(!isset($_SESSION)){ 
 			session_set_cookie_params(3600,'/','',true,true); // make it expire after 1 hour
 			session_start();
-			if ($source === 'cedulas.php') {
-				$Config = $this->Config;
-				$schema = $Config->getSchema();
-				$Season = 0;
-				$Category = 'null';
-				$Language = 'null';
-				if(!isset($_COOKIE[$Config->getAlias() . "season"]) || $_COOKIE[$Config->getAlias() . "season"] === ''){
-					$sql = "select max(Torneo_ID) Torneo_ID
-						from $schema.Torneos
-						where Actual = 'S'";
-					$result = $Config->query($sql);
-					if ($result && $result->num_rows > 0) {
-						while($row2 = $result->fetch_assoc()) {
-							setcookie($Config->getAlias() . "season",$row2["Torneo_ID"],0,'/');
-							$Season = $row2["Torneo_ID"];
-						}
+			$Config = $this->Config;
+			$schema = $Config->getSchema();
+			$Season = 0;
+			$Category = 'null';
+			$Language = 'null';
+			if(!isset($_COOKIE[$Config->getAlias() . "season"]) || $_COOKIE[$Config->getAlias() . "season"] === ''){
+				$sql = "select max(Torneo_ID) Torneo_ID
+					from $schema.Torneos
+					where Actual = 'S'";
+				$result = $Config->query($sql);
+				if ($result && $result->num_rows > 0) {
+					while($row2 = $result->fetch_assoc()) {
+						setcookie($Config->getAlias() . "season",$row2["Torneo_ID"],0,'/');
+						$Season = $row2["Torneo_ID"];
 					}
-				}else{
-					$Season = $_COOKIE[$Config->getAlias() . "season"];
 				}
-				if(!isset($_COOKIE[$Config->getAlias() . "category"]) || $_COOKIE[$Config->getAlias() . "category"] === ''){
-					$sql = "select Categoria_ID
-						from $schema.Categorias
-						where Categoria_ID in ( select Fuerza
-									from $schema.Equipos
-									where Torneo_ID = $Season)
-						order by Categoria_Orden asc
-						limit 1;";
-					$result = $Config->query($sql);
-					if ($result && $result->num_rows > 0) {
-						while($row2 = $result->fetch_assoc()) {
-							setcookie($Config->getAlias() . "category",$row2["Categoria_ID"],0,'/');
-							$Category = $row2["Categoria_ID"];
-						}
+			}else{
+				$Season = $_COOKIE[$Config->getAlias() . "season"];
+			}
+			if(!isset($_COOKIE[$Config->getAlias() . "category"]) || $_COOKIE[$Config->getAlias() . "category"] === ''){
+				$sql = "select Categoria_ID
+					from $schema.Categorias
+					where Categoria_ID in ( select Fuerza
+								from $schema.Equipos
+								where Torneo_ID = $Season)
+					order by Categoria_Orden asc
+					limit 1;";
+				$result = $Config->query($sql);
+				if ($result && $result->num_rows > 0) {
+					while($row2 = $result->fetch_assoc()) {
+						setcookie($Config->getAlias() . "category",$row2["Categoria_ID"],0,'/');
+						$Category = $row2["Categoria_ID"];
 					}
-				}else{
-					$Category = $_COOKIE[$Config->getAlias() . "category"];
 				}
-				if(!isset($_COOKIE[$Config->getAlias() . "language"]) || $_COOKIE[$Config->getAlias() . "language"] === ''){
-					$Config->LoadLanguage();
-					setcookie($Config->getAlias() . "language",$Config->lan,0,'/');
-					$Language = $Config->lan;
-				}else{
-					$Language = $_COOKIE[$Config->getAlias() . "language"];
-				}
-			} 
+			}else{
+				$Category = $_COOKIE[$Config->getAlias() . "category"];
+			}
+			if(!isset($_COOKIE[$Config->getAlias() . "language"]) || $_COOKIE[$Config->getAlias() . "language"] === ''){
+				$Config->LoadLanguage();
+				setcookie($Config->getAlias() . "language",$Config->lan,0,'/');
+				$Language = $Config->lan;
+			}else{
+				$Language = $_COOKIE[$Config->getAlias() . "language"];
+			}
 		}
 		
 		/*

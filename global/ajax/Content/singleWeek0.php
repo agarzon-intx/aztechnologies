@@ -7,10 +7,10 @@
 				/*-----------------------------------------------------------------------------------------------------------------------------
 				-----------------------------------------------------------------------------------------------------------------------------*/
 				$htmlWeek .= '<div id="estadisticas' . $row["Jornada"] . '" class="tabla" style="display: block">';
-				if($Config->getSport() == 0){
+				if(app_sport_uses_soccer((int) $Config->getSport())){
 				    //require 'week-Stats.php'; 
 				}else{
-				    if($Config->getSport() == 1){
+				    if(app_sport_uses_voleibol((int) $Config->getSport())){
     				    require 'week-StatsVolleyBall0.php'; 
     				}else{
     				    

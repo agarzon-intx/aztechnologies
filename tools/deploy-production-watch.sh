@@ -16,7 +16,7 @@ if ! python3 -c "import paramiko" 2>/dev/null; then
 	exit 1
 fi
 
-SITES=(elite huskies lidep nuestrodeporte vollidep voleibalmetepec)
+SITES=(elite huskies lidep nuestrodeporte vollidep voleibalmetepec aztflag)
 WATCH=("$REPO/global")
 for s in "${SITES[@]}"; do
 	[[ -d "$REPO/$s" ]] && WATCH+=("$REPO/$s")

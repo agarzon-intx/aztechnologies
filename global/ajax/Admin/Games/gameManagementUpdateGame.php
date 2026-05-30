@@ -29,23 +29,30 @@ $schema = $Config->getSchema();
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
-	$GoalsHome = SanitizeInteger($_POST['GoalsHome']);
-    $GoalsAway = SanitizeInteger($_POST['GoalsAway']);
-    //$Referee = SanitizeText($_POST['Referee']);
-    $Date = SanitizeText($_POST['Date']);
-    //$Comments = SanitizeText($_POST['Comments']);
-    $Played = SanitizeInteger($_POST['Played']);
-    $PenaltiesHome = SanitizeInteger($_POST['PenaltiesHome']);
-    $PenaltiesAway = SanitizeInteger($_POST['PenaltiesAway']);
-    //$ExtraPointsHome = SanitizeInteger($_POST['ExtraPointsHome']);
-    //$ExtraPointsAway = SanitizeInteger($_POST['ExtraPointsAway']);
-    $Time = SanitizeTime($_POST['Time']);
-    $Field = SanitizeInteger($_POST['Field']);
-    $GameID = SanitizeInteger($_POST['GameID']);
+	$GoalsHome = (int) SanitizeInteger($_POST['GoalsHome'] ?? '0');
+    $GoalsAway = (int) SanitizeInteger($_POST['GoalsAway'] ?? '0');
+    $Date = SanitizeText($_POST['Date'] ?? '');
+    $Played = (int) SanitizeInteger($_POST['Played'] ?? '0');
+    $PenaltiesHome = (int) SanitizeInteger($_POST['PenaltiesHome'] ?? '0');
+    $PenaltiesAway = (int) SanitizeInteger($_POST['PenaltiesAway'] ?? '0');
+    $Time = SanitizeTime($_POST['Time'] ?? '');
+    $Field = (int) SanitizeInteger($_POST['Field'] ?? '0');
+    $GameID = (int) SanitizeInteger($_POST['GameID'] ?? '0');
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataColorAnswer' => 'Error');
-		
-	$sql = "CALL $schema.GameUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $GoalsHome, $GoalsAway, '$Date', $Played, $PenaltiesHome, $PenaltiesAway, '$Time:00', $Field, $GameID, @out);";
+
+	if ($GameID <= 0) {
+		$Config->Close();
+		echo json_encode(array('status' => '0', 'message' => 'Invalid game.', 'dataColorAnswer' => 'Error'));
+		exit;
+	}
+
+	$timeSql = '00:00:00';
+	if ($Time !== '') {
+		$timeSql = (strpos($Time, ':') !== false && substr_count($Time, ':') >= 2) ? $Time : ($Time . ':00');
+	}
+
+	$sql = "CALL $schema.GameUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $GoalsHome, $GoalsAway, '$Date', $Played, $PenaltiesHome, $PenaltiesAway, '$timeSql', $Field, $GameID, @out);";
 
 	//echo $sql;
 

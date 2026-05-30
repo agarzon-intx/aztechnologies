@@ -1,40 +1,43 @@
 <?php
+	// registrosEquipo — PDF must exist before any $pdf->* call (v2026-05-30)
 	require_once dirname(__DIR__) . '/site_paths.php';
 	set_time_limit(300);
-	require('qrcode/qrcode.class.php');
 	require("alphapdf.php");
 	require("membersite_config.php");
 	$Config = new Configuration();
 	$schema = $Config->getSchema();
-	$sessionstat = $fgmembersite->CheckLogin($Config,'cedulas.php');
+	az_pdf_require_login($fgmembersite, 'registrosEquipo.php');
 	$Config->connect();
+
+	$pdf = az_pdf_create_alphapdf('L', 'mm', 'Letter');
+	$pdf->SetAutoPageBreak(false);
+	$pdf->AddPage();
 
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 	$folder = substr(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])),1,strlen(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])))-5);
 
-	$torneo = $_COOKIE[$Config->getAlias() . 'season'];
+	$torneo = (int) ($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
 	$torneo_desc = '';
-	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
+	$categoria = $_COOKIE[$Config->getAlias() . 'category'] ?? null;
 
-	$equipo = htmlspecialchars($_GET["Equipo_ID"]);
-	$edad1 = htmlspecialchars($_GET["Edad1"]);	
-	$edad2 = htmlspecialchars($_GET["Edad2"]);	
-	$imprimir = htmlspecialchars($_GET["Imprimir"]);
+	$equipo = isset($_GET['Equipo_ID']) ? (int) $_GET['Equipo_ID'] : 0;
+	$edad1 = isset($_GET['Edad1']) ? (int) $_GET['Edad1'] : 0;
+	$edad2 = isset($_GET['Edad2']) ? (int) $_GET['Edad2'] : 150;
+	if ($equipo <= 0 || $torneo <= 0) {
+		http_response_code(400);
+		header('Content-Type: text/plain; charset=UTF-8');
+		exit('Equipo_ID and season are required.');
+	}
 
 	$siteRoot = az_pdf_site_root($Config);
-	
+
 	$x = 1;
 	$y = 0;
 	$col = 0;
 	$rowc = 0;
 
-	$pdf = new AlphaPDF('L','mm','Letter');
-	$pdf->SetAutoPageBreak(false);
-	$pdf->AddPage();
-
 	$Config->LoadLogo();
 	$Config->LoadFlags();
-	$Config->connect();
 
 	$sql = "SELECT Torneo_DESC 
             FROM $schema.Torneos
@@ -230,8 +233,8 @@
 					$col = $col + 1;
 				}
 				$pages++;
-			}catch(Exception $ae){
-				
+			}catch (Throwable $ae) {
+				error_log('registrosEquipo.php row ' . ($row['Jugador_ID'] ?? '?') . ': ' . $ae->getMessage());
 			}
 		}
 	} else {

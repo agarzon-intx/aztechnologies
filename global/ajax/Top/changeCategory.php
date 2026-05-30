@@ -131,7 +131,7 @@ $schema = $Config->getSchema();
     
     $sql = "SET @rank:=0;";
 	$Config->query($sql);
-	if($Config->getSport() == 0){
+	if(app_sport_uses_soccer((int) $Config->getSport())){
 	    $sql = "SELECT @rank:=@rank+1 AS rank, Logo, Equipo_ID, Equipo_DESC, Equipo_FULLDESC, JJ, JG, JE, JP, GF, GC, DIFF, Puntos, Reales, Extra
         		from (
         				Select 	Logo, 
@@ -280,7 +280,7 @@ $schema = $Config->getSchema();
                             Group by j.Equipo_ID, Equipo_DESC, Fuerza) jj
                         order by Reales desc, DIFF desc, GF desc, Equipo_FULLDESC";
 	}
-	if($Config->getSport() == 1){
+	if(app_sport_uses_voleibol((int) $Config->getSport())){
 	    $sql = "SELECT @rank:=@rank+1 AS rank, Logo, Equipo_ID, Equipo_DESC, 	Equipo_FULLDESC, JJ, JG, JP, GF, GC, DIFF, Puntos, PF, PC, SF, SC, CP, CS
 					   from (
 							Select  Logo, 
@@ -422,7 +422,7 @@ $schema = $Config->getSchema();
 							) jj
 					order by Puntos desc, CS desc, CP desc, Equipo_DESC";
 	}
-	if($Config->getSport() == 2){
+	if(app_sport_uses_basket((int) $Config->getSport())){
 	    $sql = "SELECT 
                   @rank := @rank + 1 AS rank, 
                   Equipo_ID, 
