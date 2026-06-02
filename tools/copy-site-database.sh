@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clone one league MySQL schema into another (e.g. nuestrodeporte -> demo / demomina).
+# Clone one league MySQL schema into another (tables + functions + procedures + triggers).
 #
 # Local (XAMPP): start MySQL in XAMPP Control, then:
 #   MYSQL_USER=root MYSQL_PASSWORD= bash tools/copy-site-database.sh
@@ -7,6 +7,8 @@
 # Remote (cPanel host): if your IP is allowed for remote MySQL:
 #   MYSQL_HOST=www.aztechnologies.tech MYSQL_USER=... MYSQL_PASSWORD=... \
 #     bash tools/copy-site-database.sh
+#
+# Non-interactive: NON_INTERACTIVE=1 bash tools/copy-site-database.sh
 #
 # Defaults: aztechn1_nuestrodeporte -> aztechn1_demomina
 set -euo pipefail
@@ -18,6 +20,7 @@ MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
 MYSQL_PORT="${MYSQL_PORT:-3306}"
 MYSQL_USER="${MYSQL_USER:-root}"
 MYSQL_PASSWORD="${MYSQL_PASSWORD:-}"
+NON_INTERACTIVE="${NON_INTERACTIVE:-0}"
 
 # Prefer XAMPP client on macOS when present
 if [[ -x /Applications/XAMPP/xamppfiles/bin/mysql ]]; then
@@ -37,6 +40,37 @@ if [[ -n "$MYSQL_PASSWORD" ]]; then
 	export MYSQL_PWD="$MYSQL_PASSWORD"
 fi
 
+count_tables() {
+	local schema="$1"
+	"$MYSQL_BIN" "${mysql_args[@]}" -Nse \
+		"SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$schema' AND TABLE_TYPE = 'BASE TABLE'"
+}
+
+count_routines() {
+	local schema="$1"
+	local type="$2"
+	"$MYSQL_BIN" "${mysql_args[@]}" -Nse \
+		"SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = '$schema' AND ROUTINE_TYPE = '$type'"
+}
+
+print_schema_summary() {
+	local label="$1"
+	local schema="$2"
+	local tables funcs procs triggers
+	tables="$(count_tables "$schema")"
+	funcs="$(count_routines "$schema" FUNCTION)"
+	procs="$(count_routines "$schema" PROCEDURE)"
+	triggers="$("$MYSQL_BIN" "${mysql_args[@]}" -Nse \
+		"SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = '$schema'")"
+	echo "  $label"
+	echo "    tables:      $tables"
+	echo "    functions:   $funcs"
+	echo "    procedures:  $procs"
+	echo "    triggers:    $triggers"
+}
+
+echo "Copy includes: tables, stored FUNCTIONS, stored PROCEDURES, triggers, events"
+echo ""
 echo "Source: $SOURCE_SCHEMA"
 echo "Target: $TARGET_SCHEMA"
 echo "Host:   $MYSQL_HOST:$MYSQL_PORT"
@@ -53,28 +87,72 @@ if ! "$MYSQL_BIN" "${mysql_args[@]}" -Nse "SELECT SCHEMA_NAME FROM information_s
 	exit 1
 fi
 
-read -r -p "Replace ALL data in '$TARGET_SCHEMA'? [y/N] " confirm
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-	echo "Aborted."
-	exit 0
+echo "Source inventory:"
+print_schema_summary "$SOURCE_SCHEMA" "$SOURCE_SCHEMA"
+echo ""
+
+if [[ "$NON_INTERACTIVE" != "1" ]]; then
+	read -r -p "Replace ALL data in '$TARGET_SCHEMA' (tables + routines)? [y/N] " confirm
+	if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+		echo "Aborted."
+		exit 0
+	fi
 fi
 
-echo "Creating target schema (if missing)..."
+# Helps import user-defined functions that touch data (common on league DBs)
+"$MYSQL_BIN" "${mysql_args[@]}" -e "SET GLOBAL log_bin_trust_function_creators = 1;" 2>/dev/null || true
+
+echo "Recreating target schema..."
 "$MYSQL_BIN" "${mysql_args[@]}" -e "DROP DATABASE IF EXISTS \`$TARGET_SCHEMA\`; CREATE DATABASE \`$TARGET_SCHEMA\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-echo "Copying tables (this may take a few minutes)..."
+echo "Dumping and importing (tables + routines + triggers + events)..."
+# --routines = stored procedures AND functions
+# Strip DEFINER so import works when target server uses different MySQL users
 "$DUMP_BIN" "${dump_args[@]}" \
 	--single-transaction \
 	--routines \
 	--triggers \
 	--events \
+	--no-tablespaces \
 	--set-gtid-purged=OFF \
 	"$SOURCE_SCHEMA" \
+	| sed -E 's/DEFINER=`[^`]+`@`[^`]+`/DEFINER=CURRENT_USER/g' \
 	| "$MYSQL_BIN" "${mysql_args[@]}" "$TARGET_SCHEMA"
 
-table_count="$("$MYSQL_BIN" "${mysql_args[@]}" -Nse "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$TARGET_SCHEMA'")"
 echo ""
-echo "Done. $TARGET_SCHEMA has $table_count table(s)."
+echo "Target inventory:"
+print_schema_summary "$TARGET_SCHEMA" "$TARGET_SCHEMA"
+
+src_tables="$(count_tables "$SOURCE_SCHEMA")"
+tgt_tables="$(count_tables "$TARGET_SCHEMA")"
+src_funcs="$(count_routines "$SOURCE_SCHEMA" FUNCTION)"
+tgt_funcs="$(count_routines "$TARGET_SCHEMA" FUNCTION)"
+src_procs="$(count_routines "$SOURCE_SCHEMA" PROCEDURE)"
+tgt_procs="$(count_routines "$TARGET_SCHEMA" PROCEDURE)"
+
+ok=1
+if [[ "$src_tables" != "$tgt_tables" ]]; then
+	echo "warn: table count mismatch (source $src_tables, target $tgt_tables)" >&2
+	ok=0
+fi
+if [[ "$src_funcs" != "$tgt_funcs" ]]; then
+	echo "warn: function count mismatch (source $src_funcs, target $tgt_funcs)" >&2
+	ok=0
+fi
+if [[ "$src_procs" != "$tgt_procs" ]]; then
+	echo "warn: procedure count mismatch (source $src_procs, target $tgt_procs)" >&2
+	ok=0
+fi
+
+if [[ "$ok" -eq 1 ]]; then
+	echo ""
+	echo "OK: tables, functions, and procedures match source counts."
+else
+	echo ""
+	echo "Copy finished with warnings — check MySQL error output above or re-run as a user with ROUTINE privileges."
+	exit 1
+fi
+
 echo "demo/ini/config.ini should use schema = $TARGET_SCHEMA (already set)."
 if [[ "$MYSQL_HOST" == "127.0.0.1" || "$MYSQL_HOST" == "localhost" ]]; then
 	echo "For local PHP, set servername = 127.0.0.1 in demo/ini/config.ini if not already."
