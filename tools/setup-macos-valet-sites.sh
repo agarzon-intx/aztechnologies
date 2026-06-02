@@ -10,7 +10,7 @@ if ! command -v valet >/dev/null 2>&1; then
 fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SITES=(elite huskies lidep nuestrodeporte vollidep voleibalmetepec aztflag)
+SITES=(elite huskies lidep nuestrodeporte vollidep voleibalmetepec aztflag demo)
 
 for site in "${SITES[@]}"; do
 	dir="$ROOT/$site"

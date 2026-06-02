@@ -18,7 +18,7 @@ bash tools/deploy-production-promote.sh
 
 echo ""
 echo "== Git commit =="
-git add -A -- .gitignore global elite huskies lidep nuestrodeporte vollidep voleibalmetepec tools
+git add -A -- .gitignore global elite huskies lidep nuestrodeporte vollidep voleibalmetepec aztflag demo tools
 if git diff --cached --quiet; then
 	echo "No git changes to commit."
 else

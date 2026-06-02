@@ -13,7 +13,7 @@ $globalRoot = Join-Path $root 'global'
 if (-not (Test-Path (Join-Path $globalRoot 'ajax'))) {
 	throw "global/ajax not found; run from repo root (expected under: $root)"
 }
-$sites = @('elite', 'huskies', 'lidep', 'nuestrodeporte', 'vollidep', 'voleibalmetepec')
+$sites = @('elite', 'huskies', 'lidep', 'nuestrodeporte', 'vollidep', 'voleibalmetepec', 'aztflag', 'demo')
 $links = @('ajax', 'assets', 'config', 'css', 'Form', 'include', 'javascript', 'languages', 'objects')
 foreach ($s in $sites) {
 	foreach ($l in $links) {
