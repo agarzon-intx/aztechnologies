@@ -525,15 +525,18 @@ class Configuration
         $tmp = getcwd();
         $iniFile = null;
         $candidates = [];
-        if (defined('APP_INI_FILE') && is_string(APP_INI_FILE)) {
-            $candidates[] = APP_INI_FILE;
-        }
         if (!empty($_SERVER['DOCUMENT_ROOT'])) {
             $candidates[] = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . DIRECTORY_SEPARATOR . 'ini' . DIRECTORY_SEPARATOR . 'config.ini';
         }
         if (!empty($_SERVER['SCRIPT_FILENAME'])) {
             $candidates[] = dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'ini' . DIRECTORY_SEPARATOR . 'config.ini';
         }
+		// Fallback: some sites set APP_INI_FILE via bootstrap constants, but constants can
+		// become stale between requests in long-running PHP workers. Therefore we try
+		// request-derived paths first, and only use APP_INI_FILE if needed.
+		if (defined('APP_INI_FILE') && is_string(APP_INI_FILE)) {
+			$candidates[] = APP_INI_FILE;
+		}
         foreach ($candidates as $path) {
             if ($path !== '' && is_readable($path)) {
                 $iniFile = $path;
