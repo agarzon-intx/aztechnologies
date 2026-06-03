@@ -105,7 +105,7 @@ $schema = $Config->getSchema();
 	$htmlWeeks .= '</div>';
 	
 	
-	$retunData = array('status' => '1', 'message' => 'Success.', 'dataWeeks' => $htmlWeeks, 'sql' => $sql, 'sql1' => $sql1);
+	$retunData = array('status' => '1', 'message' => 'Success.', 'dataWeeks' => $htmlWeeks, 'sql' => $sql01, 'sql1' => $sql02);
     $Config->Close();
     echo json_encode($retunData);
 ?>
