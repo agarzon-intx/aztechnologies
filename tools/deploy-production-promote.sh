@@ -32,7 +32,7 @@ export REPO
 python3 << 'PY' > /tmp/az-promote-files.txt
 import subprocess, os
 REPO = os.environ['REPO']
-SITES = ['elite','huskies','lidep','nuestrodeporte','vollidep','voleibalmetepec','aztflag','demo']
+SITES = ['elite','huskies','lidep','nuestrodeporte','vollidep','voleibalmetepec','aztflag','demo','candlesStore']
 JUNCTIONS = {'ajax','assets','config','css','Form','include','javascript','languages','objects'}
 
 def should_deploy(rel):
