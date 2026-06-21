@@ -186,7 +186,7 @@
             							join $schema.Jornada as jor on j.Jornada_ID = jor.Jornada_ID
             						where j.Jornada_ID = $Week and Visitante_ID is null $sqlcat $sqlJuegosXNombre  and (Local_Id in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ") or Visitante_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . "))) a
                 		order by Categoria_Orden, Fecha asc, VisitanteS, Torneo, Jornada, Juego;";
-			    //echo $sql2;
+			    echo $sql2;
 				//$htmlWeek .= $sql2;
 				$result2 = $Config->query($sql2);
                 $htmlWeek .= '<div class="d-none  d-xs-none d-md-none d-lg-none d-xl-block"><div class="card">
