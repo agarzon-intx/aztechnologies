@@ -55,7 +55,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			where j.Torneo_ID = $Season and DATE_ADD(CURDATE(), INTERVAL 8 - WEEKDAY(CURDATE()) DAY) between Fecha_Inicio and Fecha_Fin between Fecha_Inicio and Fecha_Fin
 			order by j.Jornada_ID
 			limit 1;";
-			//echo $sql0;
+			echo $sql0;
 	$result = $Config->query($sql0);
     $count = 0;
     if($result){
