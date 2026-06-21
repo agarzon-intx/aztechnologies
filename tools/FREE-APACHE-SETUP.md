@@ -36,7 +36,7 @@ sudo nano /etc/hosts
 Add:
 
 ```
-127.0.0.1 elite.test huskies.test lidep.test nuestrodeporte.test vollidep.test voleibalmetepec.test
+127.0.0.1 elite.test huskies.test lidep.test soccer.test nuestrodeporte.test vollidep.test voleibalmetepec.test demo.test
 ```
 
 ### Virtual hosts
@@ -71,6 +71,7 @@ Paste at the end (use your real path; no `${WEB}` if Apache complains):
 
 <VirtualHost *:80>
     ServerName lidep.test
+    ServerAlias soccer.test
     DocumentRoot "/Users/aztechnologies/Desarrollo/Aztechnologies/WEB/lidep"
     <Directory "/Users/aztechnologies/Desarrollo/Aztechnologies/WEB/lidep">
         AllowOverride All
