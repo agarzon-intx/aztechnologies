@@ -73,6 +73,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                     and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
                 order by 1 asc
                 limit 1;";
+			echo $sql00;
 	$result00 = $Config->query($sql00);
     $count = 0;
     if($result00){
@@ -101,7 +102,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
 			where j.Torneo_ID = $Season and j.Jornada_ID = $currentWeek
 			order by j.Jornada_ID;";
-    //echo $sql;
+    		echo $sql1;
 	$result = $Config->query($sql1);
 	if($result){
 		$totJor = $result->num_rows;
