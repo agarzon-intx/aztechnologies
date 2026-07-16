@@ -188,19 +188,41 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				<script type="text/javascript">
 				(function(){
 					var tries = 0;
+					function setMapMarkerPosition(marker, latLng) {
+						if (!marker || !latLng) return;
+						if (typeof marker.setPosition === "function") {
+							marker.setPosition(latLng);
+						} else {
+							marker.position = latLng;
+						}
+					}
+					function createMapMarker(map, position) {
+						if (google.maps.marker && google.maps.marker.AdvancedMarkerElement) {
+							return new google.maps.marker.AdvancedMarkerElement({
+								position: position,
+								map: map
+							});
+						}
+						return new google.maps.Marker({
+							position: position,
+							map: map
+						});
+					}
 					function initFieldMapCreate(){
-					if (typeof google === "undefined" || !google.maps) {
+					if (typeof google === "undefined" || !google.maps || !document.getElementById("latlongmap")) {
 						tries++;
-						if (typeof window !== "undefined" && window.__GOOGLE_MAPS_API_KEY && tries < 200) {
+						if (tries < 200) {
 							setTimeout(initFieldMapCreate, 100);
 						}
 						return;
 					}
-					var map;
-					var geocoder;
-					var marker;
-					var infowindow;
-				
+					// Advanced markers need libraries=marker; wait briefly, then fall back to classic Marker.
+					if (!(google.maps.marker && google.maps.marker.AdvancedMarkerElement) && tries < 40) {
+						tries++;
+						setTimeout(initFieldMapCreate, 100);
+						return;
+					}
+					
 					var map1;
 					var geocoder1;
 					var marker1;
@@ -214,6 +236,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						center: latlng2,
 						panControl: true,
 						scrollwheel: true,
+						gestureHandling: "greedy",
 						scaleControl: true,
 						overviewMapControl: true,
 						overviewMapControlOptions: { opened: true },
@@ -227,16 +250,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					document.getElementById(\'buscar\').addEventListener(\'click\', function() {
 						geocodeAddress(geocoder1, map1, \'address\');
 					});
-					marker1 = new google.maps.marker.AdvancedMarkerElement({
-						position: latlng1,
-						map: map1
-					});
+					try {
+						marker1 = createMapMarker(map1, latlng1);
+					} catch (e) {
+						marker1 = new google.maps.Marker({ position: latlng1, map: map1 });
+					}
 					infowindow1 = new google.maps.InfoWindow({
 						content: "(1.10, 1.10)"
 					});
 			
 					google.maps.event.addListener(map1, \'click\', function(event) {
-						marker1.position = event.latLng;
+						setMapMarkerPosition(marker1, event.latLng);
 			
 						var yeri1 = event.latLng;
 			
