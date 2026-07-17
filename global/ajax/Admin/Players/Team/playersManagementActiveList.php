@@ -101,29 +101,6 @@ $htmlPlayer .= '			<tr>
 									<span class="text-secondary text-xs font-weight-normal">
 										<button type="button" class="btn btn-primary" onClick="playersManagementTeamShowCreate(' . $Team . ');" >' . $lang['0013'] . '</button></span></td>
 								<td colspan="5" scope="row" class="align-middle text-center">
-									<div class="d-flex px-0 py-1">
-										<div style="width: 50%;text-align: left;padding-top: 0px;">
-											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['915'] . '</span></p>
-											<span style="display: none;" class="text-secondary text-xs font-weight-bold">' . $lang['js913'] . '</span>
-										</div>
-										<div style="width: 50%;text-align: left;padding-top: 0px;">
-											<a hidden id="downloadPlayersIDBtn1" href="" target="_blank" download ></a>
-											<select style="width:200px;" name="printRegisters1" id="printRegisters1" onchange="printID1();" size="1">
-												<option value="" selected>' . $lang['js914'] . '</option>';
-$sql = "SELECT Range_Name, concat('pdf/registrosEquipoT.php?Equipo_ID=" . $Team . "&Edad1=', Range_Start,'&Edad2=', Range_End,'&Imprimir=1') url 
-		FROM $schema.Range_Age a
-		where Range_Active = 1 and Range_Id <> 1 
-		order by Range_Sort";	
-$result = $Config->query($sql);
-if ($result->num_rows > 0) {
-	// output data of each row
-	while($row2 = $result->fetch_assoc()) {
-		$htmlPlayer .= '						<option value="' . $row2["url"] . '">' . $row2["Range_Name"]. '</option>';
-	}
-}
-$htmlPlayer .= '		</select>
-										</div>
-									</div>
 								</td>
 							</thead>';
 $htmlPlayer .= '		</table>
