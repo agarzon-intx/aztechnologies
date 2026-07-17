@@ -48,7 +48,7 @@ if (!defined('APP_SITE_ROOT')) {
 				$alertlist .= '<li class="mb-2">
 									<a class="dropdown-item border-radius-md" onclick="loadAlert(' . (int) $row2["Aviso_ID"] . ');">
 										<div class="d-flex align-items-center py-1">
-											<span class="material-icons">email</span>
+											<span class="material-symbols-rounded">mail</span>
 											<div class="ms-2">
 												<h6 class="text-sm font-weight-normal my-auto">
 													' . htmlspecialchars((string) $row2["Aviso_Titulo"], ENT_QUOTES, 'UTF-8') . '
@@ -63,7 +63,7 @@ if (!defined('APP_SITE_ROOT')) {
 	}
 	
 	$htmlAlert .= '	<a href="javascript:;" class="nav-link text-body p-0 position-relative" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-						<i class="material-icons cursor-pointer">notifications</i>
+						<i class="material-symbols-rounded cursor-pointer">notifications</i>
 						<span class="position-absolute top-5 start-100 translate-middle badge rounded-pill bg-danger border border-white small py-1 px-2">
 							<span class="small">' . $alertNumber . '</span>
 							<span class="visually-hidden">unread notifications</span>
