@@ -1,3 +1,3 @@
 <?php
-/** Flag football coach admin schedule/scores. Customize; defaults to soccer. */
+/** Flag football admin schedule/scores. Customize this file; defaults to soccer layout. */
 require __DIR__ . '/weekAdmin-ScheduleScores.php';

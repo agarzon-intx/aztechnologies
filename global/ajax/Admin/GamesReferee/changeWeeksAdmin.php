@@ -1,5 +1,4 @@
 <?php
-    // test
     session_start();
     header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
     header("Cache-Control: post-check=0, pre-check=0", false);
@@ -51,11 +50,34 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$sql0 = "select distinct j.Jornada_ID as Jornada, j.Jornada_Desc
 			from $schema.Jornada as j 
 			    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
+			    join ( 
+                        select ifnull( 
+                                (   SELECT Jornada_ID 
+                                    FROM $schema.Jornada j 
+                                        join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID 
+                                    where j.Torneo_ID = $Season and DATE_ADD(date(now()) , INTERVAL-3 DAY) between Fecha_Inicio and Fecha_Fin LIMIT 1), 
+                                (   select  case when now() > max(fecha) 
+                                            then (	select Jornada_ID from (select Jornada_ID, fecha, now()  
+													from $schema.Jornada j 
+                                                        join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
+													where j.Torneo_ID = $Season and fecha < now()
+													order by fecha desc
+													limit 1) a ) 
+                                        	else (	select Jornada_ID from (select Jornada_ID, fecha, now()  
+													from $schema.Jornada j 
+                                                        join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
+													where j.Torneo_ID = $Season and fecha > now()
+													order by fecha asc
+													limit 1) a ) end Jornada_ID 
+                                	from $schema.Jornada j 
+	                                    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
+	                                where j.Torneo_ID = $Season)
+								) Jornada_ID) k on j.Jornada_ID = k.Jornada_ID 
 				left outer join $schema.Juegos l on j.Jornada_ID = l.Jornada_ID and l.Torneo_ID = $Season 
-			where j.Torneo_ID = $Season and DATE_ADD(CURDATE(), INTERVAL 8 - WEEKDAY(CURDATE()) DAY) between Fecha_Inicio and Fecha_Fin
+			where j.Torneo_ID = $Season
 			order by j.Jornada_ID
 			limit 1;";
-			//echo $sql0;
+			//echo $sql;
 	$result = $Config->query($sql0);
     $count = 0;
     if($result){
@@ -101,7 +123,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
 			where j.Torneo_ID = $Season and j.Jornada_ID = $currentWeek
 			order by j.Jornada_ID;";
-    		//echo $sql1;
+    //echo $sql;
 	$result = $Config->query($sql1);
 	if($result){
 		$totJor = $result->num_rows;
@@ -109,9 +131,29 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			// output data of each row
 			//$htmlWeeks .= "         <option value='All'>" . $lang['692'] . "</option>";
 			while($row = $result->fetch_assoc()) {
-				$htmlWeeks .= '<a class="btn bg-gradient-dark" data-bs-toggle="dropdown" id="navbarDropdownJornada" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;">' . $row["Jornada_Desc"] . '</a>';
+				$htmlWeeks .= '<a class="btn bg-gradient-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownJornada" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;">' . $row["Jornada_Desc"] . '</a>';
 				$selectedWeek = $row["Jornada"];
 			}
+		}
+	}
+	
+	$sql2 = "select distinct j.Jornada_ID as Jornada, j.Jornada_Desc
+			from $schema.Jornada as j 
+			    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
+			where j.Torneo_ID = $Season and j.Jornada_ID <> $currentWeek
+			order by j.Jornada_ID;";
+    //echo $sql;
+	$result = $Config->query($sql2);
+	if($result){
+		$totJor = $result->num_rows;
+		if ($result->num_rows > 0) {
+			// output data of each row
+			$htmlWeeks .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdownJornada">';
+			//$htmlWeeks .= "         <option value='All'>" . $lang['692'] . "</option>";
+			while($row = $result->fetch_assoc()) {
+				$htmlWeeks .= '<li><a class="dropdown-item" onclick="loadWeekAdminR(' . $row["Jornada"] . ', \'\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);">' . $row["Jornada_Desc"] . '</a></li>';
+			}
+			$htmlWeeks .= '</ul>';
 		}
 	}
 	
@@ -122,7 +164,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$htmlWeeks .= '<div >';
 	$htmlWeeks .= '<img src="./imagenes/refresh.png" width="20" height="20" onclick="loadWeekAdminR(' . $selectedWeek . ', \'\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);" style="margin-left: 10;  margin-top: 2px;">';
 	$htmlWeeks .= '</div>';
-	$htmlWeeks .= '</div>';
+	$htmlWeeks .= '</div>
+	                    <div class="form-check mb-2 col-4 col-sm-4 col-md-3 col-lg-4 col-xl-4 col-xxl-4" style="' . $hideJuegosXNombre . '">
+							<input class="form-check-input" type="checkbox" name="byTeam" id="byTeam" onclick="$(\'#weekAdminTabContent\').toggle(); loadWeekAdminR(' . $currentWeek . ', \'' . $currentTeam . '\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);">
+							<label class="custom-control-label" for="byTeam">' . $lang['120000'] . '</label>
+						</div>';
 	$htmlWeeks .= '<script type="text/javascript">';
 	$htmlWeeks .= 'loadWeekAdminR(' . $selectedWeek . ', \'\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);';
 	$htmlWeeks .= '</script>';
@@ -158,6 +204,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			while($row01 = $result01->fetch_assoc()) {
 				$htmlWeeks .= '<a class="btn bg-gradient-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownJornada" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;">' . $row01["Equipo_FULLDESC"] . '</a>';
 				$selectedTeam = $row01["Equipo_FULLDESC"];
+				setcookie($Config->getAlias() . "selteam",$selectedTeam,0,'/');
 			}
 		}
 	}
@@ -202,12 +249,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								</div>
 							</div>
 						</div>
+					</div>';	
+	$htmlWeeks .= '<div class="container-fluid margin-left" id="rojaInputDiv" style="height: 100%;position: fixed;top: 0px;z-index: -1;background-color: rgb(240 240 240 / 96%);width: 100%;">
+						<div class="row">
+							<div class="col-lg-12 position-relative z-index-2" style="padding-left: 0; padding-right: 0;">
+								<div class="card mb-4 ">
+									<div id="rojaInput" style="height: 100%;width: 100%;position: absolute;margin: auto;top: 0; background-color: #f0f0f0c7;"></div>
+								</div>
+							</div>
+						</div>
+					</div>';
+	$htmlWeeks .= '<div class="container-fluid margin-left" id="gameDocInputDiv" style="height: 100%;position: fixed;top: 0px;z-index: -1;background-color: rgb(240 240 240 / 96%);width: 100%;">
+						<div class="row">
+							<div class="col-lg-12 position-relative z-index-2" style="padding-left: 0; padding-right: 0;">
+								<div class="card mb-4 ">
+									<div id="gameDocInput" style="height: 100%;width: 100%;position: absolute;margin: auto;top: 0; background-color: #f0f0f0c7;"></div>
+								</div>
+							</div>
+						</div>
 					</div>';
 
-	$retunData = array('status' => '1', 'message' => 'Success.', 'dataWeeksAdmin' => $htmlWeeks, 'sql0' => $sql0, 'sql1' => $sql1);
-	if ($selectedTeam !== '' && $selectedTeam !== null) {
-		setcookie($Config->getAlias() . 'selteam', $selectedTeam, 0, '/');
-	}
+	$retunData = array('status' => '1', 'message' => 'Success.', 'dataWeeksAdmin' => $htmlWeeks, 'sql0' => $sql0, 'sql1' => $sql1, 'sql2' => $sql2);
     $Config->Close();
     echo json_encode($retunData);
 ?>

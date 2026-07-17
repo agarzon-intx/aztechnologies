@@ -48,6 +48,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$vequipo = "";
 	$vequipodesc = "";
 	$vlogo = "";
+	$gameData = "";
 
 	$jugado = 0;
 
@@ -100,10 +101,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				Extra_Local,
 				Extra_Visitante, 
 				case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
-				Comentarios
+				Comentarios,
+				LoadInfo
 			from  $schema.Juegos as j 
 				join $schema.Jornada as jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin
-			where jo.Jornada_ID = $Week and j.Juego_ID = $Game $sqlcat;";
+			where jo.Jornada_ID = $Week and j.Juego_ID = $Game;";
 	$result = $Config->query($sql);
 	if ($result->num_rows > 0) {
 		// output data of each row
@@ -112,6 +114,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$arbitro = $row["Arbitro"];
 			$extral = $row["Extra_Local"];
 			$extrav = $row["Extra_Visitante"];
+	        $gameData = $row["LoadInfo"];
 		}
 	}
 	$Config->LoadFlags();
@@ -119,7 +122,79 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 
-	$htmlWeekGameDetail = '<table width="98%" id="fichaTecnicaEdit" >
+	$htmlWeekGameDetail = '<table width="90%" id="fichaTecnicaEdit" >
+            <tr style="background: url(./imagenes/marcador.png?tmp=' . $fecha->getTimestamp() . ') no-repeat; background-size:100% 100%;">
+        	    <td colspan="3" height="120">
+        	        <div style="width:auto; margin: auto;">';
+                	
+        $sql = "SELECT ifnull(s.Set1_L,0) Set1_L,
+                		ifnull(s.Set1_V,0) Set1_V,
+                		case when ifnull(s.Set1_L,0) <> ifnull(s.Set1_V,0) then case when ifnull(s.Set1_L,0) > ifnull(s.Set1_V,0) then '00800026' else '80000026' end else '80000000' end colorS1L,
+                		case when ifnull(s.Set1_L,0) <> ifnull(s.Set1_V,0) then case when ifnull(s.Set1_V,0) > ifnull(s.Set1_L,0) then '00800026' else '80000026' end else '80000000' end colorS1V,
+                        ifnull(s.Set2_L,0) Set2_L,
+                        ifnull(s.Set2_V,0) Set2_V,
+                		case when ifnull(s.Set2_L,0) <> ifnull(s.Set2_V,0) then case when ifnull(s.Set2_L,0) > ifnull(s.Set2_V,0) then '00800026' else '80000026' end else '80000000' end colorS2L,
+                		case when ifnull(s.Set2_L,0) <> ifnull(s.Set2_V,0) then case when ifnull(s.Set2_V,0) > ifnull(s.Set2_L,0) then '00800026' else '80000026' end else '80000000' end colorS2V,
+                        ifnull(s.Set3_L,'') Set3_L,
+                        ifnull(s.Set3_V,'') Set3_V,
+                		case when ifnull(s.Set3_L,0) <> ifnull(s.Set3_V,0) then case when ifnull(s.Set3_L,0) > ifnull(s.Set3_V,0) then '00800026' else '80000026' end else '80000000' end colorS3L,
+                		case when ifnull(s.Set3_L,0) <> ifnull(s.Set3_V,0) then case when ifnull(s.Set3_V,0) > ifnull(s.Set3_L,0) then '00800026' else '80000026' end else '80000000' end colorS3V,
+                        ifnull(s.Set4_L,'') Set4_L,
+                        ifnull(s.Set4_V,'') Set4_V,
+                		case when ifnull(s.Set4_L,0) <> ifnull(s.Set4_V,0) then case when ifnull(s.Set4_L,0) > ifnull(s.Set4_V,0) then '00800026' else '80000026' end else '80000000' end colorS4L,
+                		case when ifnull(s.Set4_L,0) <> ifnull(s.Set4_V,0) then case when ifnull(s.Set4_V,0) > ifnull(s.Set4_L,0) then '00800026' else '80000026' end else '80000000' end colorS4V,
+                        ifnull(s.Set5_L,'') Set5_L,
+                        ifnull(s.Set5_V,'') Set5_V,
+                		case when ifnull(s.Set5_L,0) <> ifnull(s.Set5_V,0) then case when ifnull(s.Set5_L,0) > ifnull(s.Set5_V,0) then '00800026' else '80000026' end else '80000000' end colorS5L,
+                		case when ifnull(s.Set5_L,0) <> ifnull(s.Set5_V,0) then case when ifnull(s.Set5_V,0) > ifnull(s.Set5_L,0) then '00800026' else '80000026' end else '80000000' end colorS5V
+                FROM $schema.Juegos_Set s
+                WHERE Juego_ID = $Game;";
+    	$result = $Config->query($sql);
+    	if ($result->num_rows > 0) {
+    		// output data of each row
+    		while($row = $result->fetch_assoc()) {
+    		    $q1l = $row["Set1_L"];
+    		    $q2l = $row["Set2_L"];
+    		    $q3l = $row["Set3_L"];
+    		    $q4l = $row["Set4_L"];
+    		    $q5l = $row["Set5_L"];
+    		    $q1v = $row["Set1_V"];
+    		    $q2v = $row["Set2_V"];
+    		    $q3v = $row["Set3_V"];
+    		    $q4v = $row["Set4_V"];
+    		    $q5v = $row["Set5_V"];
+    		}
+    	}
+    	
+    	$htmlWeekGameDetail .= '<table style="margin: 0 auto;background: white;color: black;">
+                                	    <tr>
+                                	        <th style="border: 1px solid #000000;text-align: center;">' . $lang['669'] . '</th>
+                                	        <th style="border: 1px solid #000000;text-align: center;">' . $lang['670'] . '</th>
+                                	        <th style="border: 1px solid #000000;text-align: center;">' . $lang['671'] . '</th>
+                                	        <th style="border: 1px solid #000000;text-align: center;">' . $lang['672'] . '</th>
+                                	        <th style="border: 1px solid #000000;text-align: center;">' . $lang['673'] . '</th>
+                                            <th style="border: 1px solid #000000;text-align: center;">' . $lang['674'] . '</th>';
+        $htmlWeekGameDetail .= '</tr>
+    	            <tr>
+                    	<td style="text-align:left; border: none;border: 1px solid #000000;" width="180px"><img src="./imagenes/Original/' . $llogo . '.png?tmp=' . $fecha->getTimestamp() . '" width="70" height="70" alt=""/>' . $lequipo . '</td>
+                    	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q1l . '</td>
+                    	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q2l . '</td>
+                    	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q3l . '</td>
+                        <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q4l . '</td>
+                        <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q5l . '</td>';
+        $htmlWeekGameDetail .= '</tr>
+    	            <tr>
+                    	<td style="text-align:left; border: none;border: 1px solid #000000;" width="180px"><img src="./imagenes/Original/' . $vlogo . '.png?tmp=' . $fecha->getTimestamp() . '" width="70" height="70" alt=""/>' . $vequipo . '</td>
+                    	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q1v . '</td>
+                    	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q2v . '</td>
+                    	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q3v . '</td>
+                        <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q4v . '</td>
+                        <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q5v . '</td>';
+        $htmlWeekGameDetail .= '</tr>
+                            </table>';
+        $htmlWeekGameDetail .= '</div>
+                    </td>
+                </tr>
 							<tr >
 								<td style="text-align:left; border: none; width: 100%">
 									<div class="row">
@@ -127,7 +202,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['607'] . '</label>
-													<input type="text" class="form-control" name="arbitroS' . $Game . '" id="arbitroS' . $Game . '" value="' . $arbitro . '"/>
+													<input type="text" class="form-control" name="arbitroS" id="arbitroS" value="' . $arbitro . '"/>
 												</div>
 											</div>
 										</div>
@@ -141,7 +216,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['645'] . '</label>
-													<input type="text" class="form-control" name="comentarioS' . $Game . '" id="comentarioS' . $Game . '" value="' . $comentario . '"/>
+													<input type="text" class="form-control" name="comentarioS" id="comentarioS" value="' . $comentario . '"/>
 												</div>
 											</div>
 										</div>
@@ -151,25 +226,33 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							<tr>
 								<td style="text-align:left; border: none; width: 100%">
 									<div class="row">
-										<div class="col-3 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+										<div class="col-2 col-sm-2 col-md-2 col-lg-2 col-xl-2">
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['648'] . ' ' . $lang['650'] . '</label>
-													<input type="text" class="form-control" name="extralS' . $Game . '" id="extralS' . $Game . '" value="' . $extral . '"/>
+													<input type="text" class="form-control" name="extralS" id="extralS" value="' . $extral . '"/>
 												</div>
 											</div>
 										</div>
-										<div class="col-3 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+										<div class="col-2 col-sm-2 col-md-2 col-lg-2 col-xl-2">
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">' . $lang['648'] . ' ' . $lang['651'] . '</label>
-													<input type="text" class="form-control" name="extravS' . $Game . '" id="extravS' . $Game . '" value="' . $extrav . '"/>
+													<input type="text" class="form-control" name="extravS" id="extravS" value="' . $extrav . '"/>
 												</div>
 											</div>
 										</div>
-										<div class="col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6">
+										<div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4">
+											<div style="text-align:left;border: none;margin-top: 10px;">
+												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
+													<label class="form-label">Game Data</label>
+													<textarea class="form-control" spellcheck="false" name="gameDataS" id="gameDataS">' . $gameData . '</textarea>
+												</div>
+											</div>
+										</div>
+										<div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4">
 											<div style="text-align:left; border: none; margin-top: 10px !important">
-												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStatsSR(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', $(\'#arbitroS' . $Game . '\').val(), $(\'#comentarioS' . $Game . '\').val(), $(\'#extralS' . $Game . '\').val(), $(\'#extravS' . $Game . '\').val());">' . $lang['0000'] . '</button>
+												<button style="margin-top: -5px; margin-bottom: 15px;" type="button" class="btn btn-primary" onclick="SaveGameDetailPlayerStatsSBasketR(' . $Season . ',' . $Week . ',' . $Game . ',' . $lequipoid . ',' . $vequipoid . ', $(\'#arbitroS\').val(), $(\'#comentarioS\').val(), $(\'#extralS\').val(), $(\'#extravS\').val());">' . $lang['0000'] . '</button>
 											</div>
 										</div>
 									</div>
@@ -177,6 +260,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							</tr>
 							<script>
 								var inputs = document.querySelectorAll(\'input\');
+								var textareas = document.querySelectorAll(\'textarea\');
 								
 								for (var i = 0; i < inputs.length; i++) {
 									inputs[i].addEventListener(\'focus\', function(e) {
@@ -202,6 +286,29 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 										inputs[i].parentElement.classList.add(\'is-filled\');
 									}
 								  }
+								  
+								for (var i = 0; i < textareas.length; i++) {
+            						textareas[i].addEventListener(\'focus\', function(e) {
+            						  this.parentElement.classList.add(\'is-focused\');
+            						}, false);
+            
+            						textareas[i].onkeyup = function(e) {
+            						  if (this.value != "") {
+            							this.parentElement.classList.add(\'is-filled\');
+            						  } else {
+            							this.parentElement.classList.remove(\'is-filled\');
+            						  }
+            						};
+            
+            						textareas[i].addEventListener(\'focusout\', function(e) {
+            							if (this.value != "") {
+            								this.parentElement.classList.add(\'is-filled\');
+            							}
+            							this.parentElement.classList.remove(\'is-focused\');
+            						}, false);
+            						
+            						textareas[i].parentElement.classList.add(\'is-filled\');
+            					  }
 								
 							</script>
 						</table>';
@@ -238,24 +345,32 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 												<table id="local' . $Game . 'T" class=" table align-items-center mb-0" style="border-color: #136aeb;">';
 	$htmlWeekGameDetail .= '
 						<thead>
-							<tr>
+                            <tr>
 								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugador_ID</th>
 								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugado</th>
-								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Amarillas</th>
-								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Rojas</th>
-								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Goles</th>
+								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">FP</th>
+								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">FT</th>
+								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">EX</th>
+								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">P1</th>
+								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">P2</th>
+								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">P3</th>
 								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Dias</th>
 								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Multa</th>
 								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Comentarios</th>
 								<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Pago</th>
-								<th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['312'] . '</th>
-								<th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['313'] . ' ' . $lang['314'] . '</th>
-								<th style="text-align: center; padding: 0rem 0rem;" ' . $Config->JugadorJugado . '><img src="imagenes/gamePlayed.png" width="20" height="25" alt=""/></th>
-								<th style="text-align: center; padding: 0rem 0rem;"><img src="imagenes/amarilla.png" width="20" height="25" alt=""/></th>
-								<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/roja.png" width="20" height="25" alt=""/></span></th>
-								<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/goal.png" width="20" height="20" alt=""/></span></th>
-						</tr>
-					</thead>
+                            	<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugador_ID</th>
+                            	<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugado</th>
+                            	<th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['312'] . '</th>
+                            	<th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['313'] . ' ' . $lang['314'] . '</th>
+                            	<th style="text-align:center; padding: 0rem 0rem;" ' . $Config->JugadorJugado . '><img src="imagenes/gamePlayedBasket.png" width="20" height="25" alt=""/></th>
+                            	<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center">FP</span></th>
+                            	<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center">FT</span></th>
+                            	<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center">EX</span></th>
+                            	<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/Pointb1.png" width="20" height="20" alt=""/></span></th>
+                            	<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/Pointb2.png" width="20" height="20" alt=""/></span></th>
+                            	<th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/Pointb3.png" width="20" height="20" alt=""/></span></th>
+                            </tr>
+					    </thead>
 					<tbody>';
 	
 	$sql2 = "SELECT a.Jugador_ID,
@@ -263,30 +378,30 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				a.Nombre,
 				a.Apellido_P,
 				a.Apellido_M,
-				ifnull(sum(b.Cantidad),0) as Amarillas,
+				ifnull(sum(b.CantidadP),0) as AmarillasP,
+				ifnull(sum(b.CantidadT),0) as AmarillasT,
 				ifnull(c.Cantidad,0) as Rojas,
-				ifnull(sum(d.Goles),0) as Goles,
+				ifnull(sum(d.Puntos1),0) as Puntos1,
+				ifnull(sum(d.Puntos2),0) as Puntos2,
+				ifnull(sum(d.Puntos3),0) as Puntos3,
 				ifnull(c.Comentario, '') Comentario,
 				ifnull(c.Dias_Castigo,0) Dias_Castigo,
 				ifnull(c.Multa, 0) Multa,
 				ifnull(c.Pagado, 0) Pagado,
 				ifnull(jj.Jugado, 0) Jugado
 			FROM $schema.Jugadores a
-				left outer join $schema.Amonestados b on a.Jugador_ID = b.Jugador_ID and b.Torneo_ID = $Season and Juego_ID = $Game
+				left outer join $schema.AmonestadosB b on a.Jugador_ID = b.Jugador_ID and b.Torneo_ID = $Season and Juego_ID = $Game
 				left outer join $schema.Expulsados c on a.Jugador_ID = c.Jugador_ID and c.Torneo_ID = $Season and c.Juego_ID = $Game
-				left outer join $schema.Goles d on a.Jugador_ID = d.Jugador_ID and d.Torneo_ID = $Season and d.Juego_ID = $Game
+				left outer join $schema.PuntosB d on a.Jugador_ID = d.Jugador_ID and d.Torneo_ID = $Season and d.Juego_ID = $Game
 				left outer join $schema.JugadorJugado jj on a.Jugador_ID = jj.Jugador_ID and jj.Torneo_ID = $Season and jj.Juego_ID = $Game
 			where a.Equipo_ID = $lequipoid and a.Estatus in ('A', 'D')
 			group by a.Numero,
 				a.Nombre,
 				a.Apellido_P,
 				a.Apellido_M,
-				a.Fecha_Nacimiento,
-				ifnull(c.Cantidad,0),
-				c.Comentario,
-				c.Dias_Castigo,
-				c.Multa
+				a.Fecha_Nacimiento
 			order by a.Estatus desc, cast(a.Numero as decimal) asc;";
+			//echo $sql2;
 	$result2 = $Config->query($sql2);
 
 	 $count = 0;
@@ -302,14 +417,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$htmlWeekGameDetail .= "
 				<td style='text-align:left' hidden='true'>" . $row2["Jugador_ID"] . "</td>
 				<td style='text-align:left' hidden='true'>" . $row2["Jugado"] . "</td>
-				<td style='text-align:left' hidden='true'>" . $row2["Amarillas"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["AmarillasP"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["AmarillasT"] . "</td>
 				<td style='text-align:left' id='rojasource" . $row2["Jugador_ID"] . "' hidden='true'>" . $row2["Rojas"] . "</td>
-				<td style='text-align:left' hidden='true'>" . $row2["Goles"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["Puntos1"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["Puntos2"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["Puntos3"] . "</td>				
 				<td style='text-align:left' hidden='true'><input type='text' id='rojaDiasS" . $row2["Jugador_ID"] . "' value='" . $row2["Dias_Castigo"] . "'></td>
 				<td style='text-align:left' hidden='true'><input type='text' id='rojaMultaS" . $row2["Jugador_ID"] . "' value='" . $row2["Multa"] . "'></td>
 				<td style='text-align:left' hidden='true'><input type='text' id='rojaComentarioS" . $row2["Jugador_ID"] . "' value=' " . $row2["Comentario"] . "'></td>
 				<td style='text-align:left' hidden='true'><input type='text' id='rojaPagadoS" . $row2["Jugador_ID"] . "' value=' " . $row2["Pagado"] . "'></td>
-
 				<td style='text-align:left'><span class='text-secondary text-xs font-weight-normal'>" . $row2["Numero"] . "</span></td>
 				<td style='text-align:left'><span class='text-secondary text-xs font-weight-normal'>" . $row2["Nombre"] . " " . $row2["Apellido_P"] . " " . $row2["Apellido_M"] . "</span></td>
 				<td style='text-align:center' " .  $Config->JugadorJugado . ">";
@@ -320,36 +437,39 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				 }
 				$htmlWeekGameDetail .= "</td>
 				<td style='text-align:center'>
-					<input maxlength='1' size='1' type='text' name='amarillaS' id='amarillaS" . $row2["Jugador_ID"] . "' value='" . $row2["Amarillas"] . "' style='width:28px'>
+					<input maxlength='1' size='1' type='text' name='amarilla' id='amarilla" . $row2["Jugador_ID"] . "' value='" . $row2["AmarillasP"] . "' style='width:28px'>
+				</td>
+				<td style='text-align:center'>
+					<input maxlength='1' size='1' type='text' name='amarilla' id='amarilla" . $row2["Jugador_ID"] . "' value='" . $row2["AmarillasT"] . "' style='width:28px'>
 				</td>
 				<td style='text-align:center'>";
 				 if($row2["Rojas"] > 0){   
 					$htmlWeekGameDetail .= "<input type='checkbox' name='rojaS' id='rojaS" . $row2["Jugador_ID"] . "' checked onClick='if(this.checked){
-																																				$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
+																																				$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																				$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
-																																				loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
+																																				loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"\");
 																																			}else{
 																																				$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
 																																				$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																				$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
-																																				loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
+																																				loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"\");
 																																			}' title='" . $lang['655'] . " " . $row2["Comentario"] . ", " . $lang['656'] . " " . $row2["Multa"] . ", " . $lang['657'] . " " . $row2["Dias_Castigo"] . "'>";
 				 }else{
 					$htmlWeekGameDetail .= "<input type='checkbox' name='rojaS' id='rojaS" . $row2["Jugador_ID"] . "' onClick='if(this.checked){
-																																		$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
+																																		$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																		$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
-																																		loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
+																																		loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"\");
 																																	}else{
 																																		$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
 																																		$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																		$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
-																																		loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
+																																	loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"\");
 																																	}' title='" . $lang['655'] . " " . $row2["Comentario"] . ", " . $lang['656'] . " " . $row2["Multa"] . ", " . $lang['657'] . " " . $row2["Dias_Castigo"] . "'>";
 				 }
 				$htmlWeekGameDetail .= "</td>
-				<td style='text-align:center'>
-					<input maxlength='2' size='2' type='text' name='lgolesS' id='lgoleS" . $row2["Jugador_ID"] . "' value='" . $row2["Goles"] . "' style='width:28px'>
-				</td>
+				<td style='text-align:center'>" . $row2["Puntos1"] . "</td>
+				<td style='text-align:center'>" . $row2["Puntos2"] . "</td>
+				<td style='text-align:center'>" . $row2["Puntos3"] . "</td>
 
 			</tr>";
 			$count++;
@@ -372,54 +492,62 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$htmlWeekGameDetail .= '
 					<thead>
 					  <tr>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugador_ID</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugado</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Amarillas</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Rojas</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Goles</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Dias</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Multa</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Comentarios</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Pago</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['312'] . '</th>
-						  <th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['313'] . ' ' . $lang['314'] . '</th>
-						  <th style="text-align: center; padding: 0rem 0rem;" ' . $Config->JugadorJugado . '><img src="imagenes/gamePlayed.png" width="20" height="25" alt=""/></th>
-						  <th style="text-align: center; padding: 0rem 0rem;"><img src="imagenes/amarilla.png" width="20" height="25" alt=""/></th>
-						  <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/roja.png" width="20" height="25" alt=""/></span></th>
-						  <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/goal.png" width="20" height="20" alt=""/></span></th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugador_ID</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugado</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">FP</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">FT</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">EX</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">P1</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">P2</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">P3</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Dias</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Multa</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Comentarios</th>
+						<th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Roja Pago</th>
+                        <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugador_ID</th>
+                        <th style="text-align:left; padding: 0rem 0rem;" colspan="1" hidden="true">Jugado</th>
+                        <th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['312'] . '</th>
+                        <th style="text-align:left; padding: 0rem 0rem;" colspan="1">' . $lang['313'] . ' ' . $lang['314'] . '</th>
+                        <th style="text-align:center; padding: 0rem 0rem;" ' . $Config->JugadorJugado . '><img src="imagenes/gamePlayedBasket.png" width="20" height="25" alt=""/></th>
+                        <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center">FP</span></th>
+                        <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center">FT</span></th>
+                        <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center">EX</span></th>
+                        <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/Pointb1.png" width="20" height="20" alt=""/></span></th>
+                        <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/Pointb2.png" width="20" height="20" alt=""/></span></th>
+                        <th style="text-align:center; padding: 0rem 0rem;"><span style="text-align: center"><img src="imagenes/Pointb3.png" width="20" height="20" alt=""/></span></th>
 					  </tr>
 				  </thead>
 				  <tbody>';
 				  
-	$sql2 = "SELECT a.Jugador_ID,
+$sql2 = "SELECT a.Jugador_ID,
 				a.Numero,
 				a.Nombre,
 				a.Apellido_P,
 				a.Apellido_M,
-				ifnull(sum(b.Cantidad),0) as Amarillas,
+				ifnull(sum(b.CantidadP),0) as AmarillasP,
+				ifnull(sum(b.CantidadT),0) as AmarillasT,
 				ifnull(c.Cantidad,0) as Rojas,
-				ifnull(sum(d.Goles),0) as Goles,
+				ifnull(sum(d.Puntos1),0) as Puntos1,
+				ifnull(sum(d.Puntos2),0) as Puntos2,
+				ifnull(sum(d.Puntos3),0) as Puntos3,
 				ifnull(c.Comentario, '') Comentario,
 				ifnull(c.Dias_Castigo,0) Dias_Castigo,
 				ifnull(c.Multa, 0) Multa,
 				ifnull(c.Pagado, 0) Pagado,
 				ifnull(jj.Jugado, 0) Jugado
 			FROM $schema.Jugadores a
-				left outer join $schema.Amonestados b on a.Jugador_ID = b.Jugador_ID and b.Torneo_ID = $Season and Juego_ID = $Game
+				left outer join $schema.AmonestadosB b on a.Jugador_ID = b.Jugador_ID and b.Torneo_ID = $Season and Juego_ID = $Game
 				left outer join $schema.Expulsados c on a.Jugador_ID = c.Jugador_ID and c.Torneo_ID = $Season and c.Juego_ID = $Game
-				left outer join $schema.Goles d on a.Jugador_ID = d.Jugador_ID and d.Torneo_ID = $Season and d.Juego_ID = $Game
+				left outer join $schema.PuntosB d on a.Jugador_ID = d.Jugador_ID and d.Torneo_ID = $Season and d.Juego_ID = $Game
 				left outer join $schema.JugadorJugado jj on a.Jugador_ID = jj.Jugador_ID and jj.Torneo_ID = $Season and jj.Juego_ID = $Game
 			where a.Equipo_ID = $vequipoid and a.Estatus in ('A', 'D')
 			group by a.Numero,
 				a.Nombre,
 				a.Apellido_P,
 				a.Apellido_M,
-				a.Fecha_Nacimiento,
-				ifnull(c.Cantidad,0),
-				c.Comentario,
-				c.Dias_Castigo,
-				c.Multa
+				a.Fecha_Nacimiento
 			order by a.Estatus desc, cast(a.Numero as decimal) asc;";
+			//echo $sql2;
 	$result2 = $Config->query($sql2);
 		 $count = 0;
 	 if($result2){
@@ -431,15 +559,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}else{
 					$htmlWeekGameDetail .= "<tr class='alt'>";
 				}
-				$htmlWeekGameDetail .= "
+				$htmlWeekGameDetail .= "				
 				<td style='text-align:left' hidden='true'>" . $row2["Jugador_ID"] . "</td>
 				<td style='text-align:left' hidden='true'>" . $row2["Jugado"] . "</td>
-				<td style='text-align:left' hidden='true'>" . $row2["Amarillas"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["AmarillasP"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["AmarillasT"] . "</td>
 				<td style='text-align:left' id='rojasource" . $row2["Jugador_ID"] . "' hidden='true'>" . $row2["Rojas"] . "</td>
-				<td style='text-align:left' hidden='true'>" . $row2["Goles"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["Puntos1"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["Puntos2"] . "</td>
+				<td style='text-align:left' hidden='true'>" . $row2["Puntos3"] . "</td>				
 				<td style='text-align:left' hidden='true'><input type='text' id='rojaDiasS" . $row2["Jugador_ID"] . "' value='" . $row2["Dias_Castigo"] . "'></td>
 				<td style='text-align:left' hidden='true'><input type='text' id='rojaMultaS" . $row2["Jugador_ID"] . "' value='" . $row2["Multa"] . "'></td>
-				<td style='text-align:left' hidden='true'><input type='text' id='rojaComentarioS" . $row2["Jugador_ID"] . "' value='" . $row2["Comentario"] . "'></td>
+				<td style='text-align:left' hidden='true'><input type='text' id='rojaComentarioS" . $row2["Jugador_ID"] . "' value=' " . $row2["Comentario"] . "'></td>
 				<td style='text-align:left' hidden='true'><input type='text' id='rojaPagadoS" . $row2["Jugador_ID"] . "' value=' " . $row2["Pagado"] . "'></td>
 				<td style='text-align:left'><span class='text-secondary text-xs font-weight-normal'>" . $row2["Numero"] . "</span></td>
 				<td style='text-align:left'><span class='text-secondary text-xs font-weight-normal'>" . $row2["Nombre"] . " " . $row2["Apellido_P"] . " " . $row2["Apellido_M"] . "</span></td>
@@ -451,36 +582,40 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				 }
 				$htmlWeekGameDetail .= "</td>
 				<td style='text-align:center'>
-					<input maxlength='1' size='1' type='text' name='amarillaS' id='amarillaS" . $row2["Jugador_ID"] . "' value='" . $row2["Amarillas"] . "' style='width:28px'>
+					<input maxlength='1' size='1' type='text' name='amarilla' id='amarilla" . $row2["Jugador_ID"] . "' value='" . $row2["AmarillasP"] . "' style='width:28px'>
+				</td>
+				<td style='text-align:center'>
+					<input maxlength='1' size='1' type='text' name='amarilla' id='amarilla" . $row2["Jugador_ID"] . "' value='" . $row2["AmarillasT"] . "' style='width:28px'>
 				</td>
 				<td style='text-align:center'>";
 				 if($row2["Rojas"] > 0){   
-					$htmlWeekGameDetail .= "<input type='checkbox' name='rojaS' id='rojaS" . $row2["Jugador_ID"] . "' checked onClick='if(this.checked){
-																																				$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
+					$htmlWeekGameDetail .= "<input type='checkbox' name='roja' id='roja" . $row2["Jugador_ID"] . "' checked onClick='if(this.checked){
+																																				$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																				$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
-																																				loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
+																																				loadWeekAdminGameDetailRoja($(\"#rojaComentario" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDias" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMulta" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagado" . $row2["Jugador_ID"] . "\").val(),\"\");
 																																			}else{
 																																				$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
 																																				$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																				$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
-																																				loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
+																																				loadWeekAdminGameDetailRoja($(\"#rojaComentario" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDias" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMulta" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagado" . $row2["Jugador_ID"] . "\").val(),\"\");
 																																			}' title='" . $lang['655'] . " " . $row2["Comentario"] . ", " . $lang['656'] . " " . $row2["Multa"] . ", " . $lang['657'] . " " . $row2["Dias_Castigo"] . "'>";
 				 }else{
-					$htmlWeekGameDetail .= "<input type='checkbox' name='rojaS' id='rojaS" . $row2["Jugador_ID"] . "' onClick='if(this.checked){
-																																		$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
+					$htmlWeekGameDetail .= "<input type='checkbox' name='roja' id='roja" . $row2["Jugador_ID"] . "' onClick='if(this.checked){
+																																		$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																		$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
-																																		loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
+																																		loadWeekAdminGameDetailRoja($(\"#rojaComentario" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDias" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMulta" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagado" . $row2["Jugador_ID"] . "\").val(),\"\");
 																																	}else{
 																																		$(\"#rojaInputDiv\").css(\"z-index\", \"2\");
 																																		$(\"#roja" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
 																																		$(\"#rojaS" . $row2["Jugador_ID"] . "\").prop(\"checked\", true);
-																																		loadWeekAdminGameDetailRoja($(\"#rojaComentarioS" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDiasS" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMultaS" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagadoS" . $row2["Jugador_ID"] . "\").val(),\"S\");
-																																	}'>";
+																																	loadWeekAdminGameDetailRoja($(\"#rojaComentario" . $row2["Jugador_ID"] . "\").val(), " . $row2["Jugador_ID"] . ", $(\"#rojaDias" . $row2["Jugador_ID"] . "\").val(), $(\"#rojaMulta" . $row2["Jugador_ID"] . "\").val(),$(\"#rojaPagado" . $row2["Jugador_ID"] . "\").val(),\"\");
+																																	}' title='" . $lang['655'] . " " . $row2["Comentario"] . ", " . $lang['656'] . " " . $row2["Multa"] . ", " . $lang['657'] . " " . $row2["Dias_Castigo"] . "'>";
 				 }
 				$htmlWeekGameDetail .= "</td>
-				<td style='text-align:center'>
-					<input maxlength='2' size='2' type='text' name='lgolesS' id='lgolesS" . $row2["Jugador_ID"] . "' value='" . $row2["Goles"] . "' style='width:28px'>
-				</td>
+				<td style='text-align:center'>" . $row2["Puntos1"] . "</td>
+				<td style='text-align:center'>" . $row2["Puntos2"] . "</td>
+				<td style='text-align:center'>" . $row2["Puntos3"] . "</td>
+
 			</tr>";
 			$count++;
 			}

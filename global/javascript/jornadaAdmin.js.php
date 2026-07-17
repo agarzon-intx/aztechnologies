@@ -260,20 +260,21 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			});
 		}
 
-		function actualizarJuegoR(Date, Time, Field, GameID, weekid){
+		function actualizarJuegoR(GoalsHome, GoalsAway, Date, Played, PenaltiesHome, PenaltiesAway, Time, Field, GameID, weekid){
 			gameupdates++;
 			mainLoadingOn();
 			$.ajax({
 				type: 'POST',
 				dataType: 'json',
 				url: 'ajax/Admin/GamesReferee/gameManagementUpdateGame.php',
-				data: {Date: Date, Time: Time, Field: Field, GameID: GameID},
+				data: {GoalsHome: GoalsHome, GoalsAway: GoalsAway, Date: Date, Played: Played, PenaltiesHome: PenaltiesHome, PenaltiesAway: PenaltiesAway, Time: Time, Field: Field, GameID: GameID},
 				success: function (res) {
 					mainLoadingOff();
 					if (res.status === '1') {
 						gameupdates--;
 						if(gameupdates === 0){
 							alert('" . $lang['658'] . "');
+							actualizarJuegoAfterR(weekid);
 							loadWeekAdminR(weekid);
 						}
 					}

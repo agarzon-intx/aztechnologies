@@ -62,6 +62,13 @@ $schema = $Config->getSchema();
 	            FROM $schema.Equipos
                 where Torneo_ID = $Season and Equipo_FULLDESC = '$Team'
                 order by 1 asc;";
+    if($Team == ''){
+        	$sql01 = "  SELECT distinct Equipo_FULLDESC 
+        	            FROM $schema.Equipos
+                        where Torneo_ID = $Season
+                        order by 1 
+                        limit 1;"; 
+    }
     //echo $sql01;
 	$result01 = $Config->query($sql01);
 	if($result01){
@@ -81,7 +88,6 @@ $schema = $Config->getSchema();
                 where Torneo_ID = $Season and Equipo_FULLDESC <> '$Team'
                     and Equipo_ID in (select Local_ID from $schema.Juegos where Torneo_Id = $Season union select Visitante_ID from $schema.Juegos where Torneo_Id = $Season )
                 order by 1 asc;";
-	//$htmlWeeks .= $sql02;
 	$result02 = $Config->query($sql02);
 	if($result02){
 		$totJor = $result02->num_rows;
@@ -95,6 +101,7 @@ $schema = $Config->getSchema();
 			$htmlWeeks .= '</ul>';
 		}
 	}
+	$htmlWeeks .= '<a href="pdf/reporteEquipoJuegos.php?Equipo=' . $selectedTeam . '" target="_blank" download=""><img src="imagenes/cedula.png" width="20" height="20"></a>';
 		$htmlWeeks .= '</div>';
 	$htmlWeeks .= '</div>';
 	$htmlWeeks .= '<div class="col-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1">';

@@ -158,7 +158,7 @@
 								<input name="juego' . $row2["juego"] . '" type="hidden" id="juego' . $row2["juego"] . '" value="' . $row2["juego"] . '">
 								<input name="local' . $row2["juego"] . '" type="hidden" id="local' . $row2["juego"] . '" value="' . $row2["Local_ID"] . '">
 								<input name="visitante' . $row2["juego"] . '" type="hidden" id="visitante' . $row2["juego"] . '" value="' . $row2["Visitante_ID"] . '">
-							<td scope="row"><img src="imagenes/eliminar.png" height="18" width="18" onClick="borrarJuego(' . $row2["juego"] . ', ' . $Week . ')">
+							<td scope="row">
 							</td>';
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){
 								$htmlWeek .= '<td scope="row"><div class="d-flex px-2 py-1">
@@ -260,7 +260,7 @@
 							$htmlWeek .= '<td  scope="row" class="align-middle text-center"></td>';;
 						}else{
 							//if($row2["jugadoStat"] == 1){
-								$htmlWeek .= '<td  scope="row" class="align-middle text-center">' . '<img class="expandirButton" id="expandir' . $row2["juego"] . '" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditBasket(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', 0, 0, \'' . $sqlcat . '\'); "></td>';
+								$htmlWeek .= '<td  scope="row" class="align-middle text-center">' . '<img class="expandirButton" id="expandir' . $row2["juego"] . '" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditBasketR(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', 0, 0, \'' . $sqlcat . '\'); "></td>';
 							//}else{
 							//	$htmlWeek .= '<td  scope="row" class="align-middle text-center"></td>';
 							//}
@@ -278,7 +278,7 @@
 				}
 				$htmlWeek .= '	<tr>
 									<td style="border-bottom: 0;" colspan="2">
-										<button type="button" class="btn btn-primary" onclick="saveChanges(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
+										<button type="button" class="btn btn-primary" onclick="saveChangesR(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
 									</td>
 								</tr>';
 				
@@ -320,29 +320,22 @@
 												<div style="float: left;padding-top: 6px;padding-left: 10px;">
 													<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
 													<div style="float: right;padding-left: 10px;">
-														<select name="localAgregar" id="localAgregar" onChange="loadVisitanteAgregar()">';
-					// output data of each row
-					while($row3 = $result3->fetch_assoc()) {
-							$htmlWeek .= "<option value='" . $row3["Equipo_ID"] . "'>" . $row3["Equipo_DESC"] . "</option>";
-					}
-					$htmlWeek .= '						</select>
+														
 													</div>
 												</div>
 												<div style="float: left;padding-top: 6px;padding-left: 10px;">
 													<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
 													<div style="float: right;padding-left: 10px;">
-														<select name="visitanteAgregar" id="visitanteAgregar">
-															<option value="NULL">' . $lang['654'] . '</option>
-														</select>
+														
 													</div>
 												</div>
 												<div style="float: left;padding-left: 10px;">
-													<button type="button" class="btn btn-primary" onClick="agregarJuego(\'' . $row["Fecha"] . '\', ' . $Season . ', ' . $Week . ', $(\'#localAgregar\').val(), $(\'#visitanteAgregar\').val());" >' . $lang['664'] . '</button>
+													
 												</div>
 											</div>
 										</div>
 									</td>
-								</tr><script>loadVisitanteAgregar();</script>';
+								</tr>';
 				}
 					
 						
@@ -377,7 +370,7 @@
 								<input name="local' . $row2["juego"] . '" type="hidden" id="local' . $row2["juego"] . '" value="' . $row2["Local_ID"] . '">
 								<input name="visitante' . $row2["juego"] . '" type="hidden" id="visitante' . $row2["juego"] . '" value="' . $row2["Visitante_ID"] . '">
 								<div class="d-flex px-0 py-1">
-									<div class="align-self-center" style="width: 5%; text-align: left;padding-right: 3px; font-size:3vw;"><img src="imagenes/eliminar.png" height="18" width="18" onClick="borrarJuego(' . $row2["juego"] . ', ' . $Week . ')"></div>';
+									<div class="align-self-center" style="width: 5%; text-align: left;padding-right: 3px; font-size:3vw;"></div>';
 						if (strpos($row2["Comentarios"],$lang['654']) !== false){
 								$htmlWeek .= '<div class="align-self-center" style="width: 60%; text-align: right;padding-right: 3px; font-size:3vw;">' . $row2["Comentarios"] . '</div>
 											<div class="align-self-center" style="width: 150px; text-align: right;padding-right: 3px; font-size:3vw;"></div>';
@@ -429,7 +422,7 @@
                 				
     				        }
     				        $htmlWeek .= '<div style="width: 8%;text-align: right;padding-top: 6px;">
-									<p style="margin-bottom: 0rem !important;"><img class="expandirButtonS" id="expandirS' . $row2["juego"] . 'SA" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditSBasket(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', 0, 0, \'' . $sqlcat . '\'); "></p>
+									<p style="margin-bottom: 0rem !important;"><img class="expandirButtonS" id="expandirS' . $row2["juego"] . 'SA" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditSBasketR(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', 0, 0, \'' . $sqlcat . '\'); "></p>
 									</div></div>';
 
 						}
@@ -526,7 +519,7 @@
 				}
 				$htmlWeek .= '	<tr>
 									<td style="border-bottom: 0;">
-										<button type="button" class="btn btn-primary" onclick="saveChangesS(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
+										<button type="button" class="btn btn-primary" onclick="saveChangesSR(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
 									</td>
 								</tr>';
 				$sqlcat = "and a.Fuerza = $Category";
@@ -566,29 +559,22 @@
 												<div style="float: left;padding-top: 6px;padding-left: 10px;">
 													<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
 													<div style="float: right;padding-left: 10px;">
-														<select name="localAgregarS" id="localAgregarS" onChange="loadVisitanteAgregarS()">';
-					// output data of each row
-					while($row3 = $result3->fetch_assoc()) {
-							$htmlWeek .= "<option value='" . $row3["Equipo_ID"] . "'>" . $row3["Equipo_DESC"] . "</option>";
-					}
-					$htmlWeek .= '						</select>
+														
 													</div>
 												</div>
 												<div style="float: left;padding-top: 6px;padding-left: 10px;">
 													<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
 													<div style="float: right;padding-left: 10px;">
-														<select name="visitanteAgregarS" id="visitanteAgregarS">
-															<option value="NULL">' . $lang['654'] . '</option>
-														</select>
+														
 													</div>
 												</div>
 												<div style="float: left;padding-left: 10px;width: 100%;">
-													<button type="button" class="btn btn-primary" onClick="agregarJuego(\'' . $row["Fecha"] . '\', ' . $Season . ', ' . $Week . ', $(\'#localAgregarS\').val(), $(\'#visitanteAgregarS\').val());" >' . $lang['664'] . '</button>
+													
 												</div>
 											</div>
 										</div>
 									</td>
-								</tr><script>loadVisitanteAgregarS();</script>';
+								</tr>';
 				}
 				
                 $htmlWeek .= '</tbody>';
