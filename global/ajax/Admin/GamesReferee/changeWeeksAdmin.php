@@ -70,7 +70,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	            FROM $schema.Equipos
                 where Torneo_ID = $Season
                     and Equipo_ID in (select Local_ID from $schema.Juegos where Jornada_Id = $currentWeek and Torneo_Id = $Season union select Visitante_ID from $schema.Juegos where Jornada_Id = $currentWeek and Torneo_Id = $Season )
-                    and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
                 order by 1 asc
                 limit 1;";
 			//echo $sql00;
@@ -165,7 +164,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
 	$sql02 = "  SELECT distinct Equipo_FULLDESC
 	            FROM $schema.Equipos
-                where Torneo_ID = $Season and Equipo_FULLDESC <> '$currentTeam' and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+                where Torneo_ID = $Season and Equipo_FULLDESC <> '$currentTeam'
                     and Equipo_ID in (select Local_ID from $schema.Juegos where Torneo_Id = $Season union select Visitante_ID from $schema.Juegos where Torneo_Id = $Season )
                 order by 1 asc;";
                 //echo $sql02;

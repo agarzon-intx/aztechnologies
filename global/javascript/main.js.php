@@ -4370,6 +4370,198 @@ function abrirFichaEditSC(id, week, game, gamedesc, Comentarios, SQL){
 	}
 }
 
+/*****************************************************************************************************************
+**********************************************Games Admin REFEREE*************************************************
+*****************************************************************************************************************/
+
+function loadWeeksAdminR(type){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/GamesReferee/changeWeeksAdmin.php',
+		data: {Type: type},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				$("#body").html(res.dataWeeksAdmin);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function loadWeekAdminR(Week, team, type){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/GamesReferee/changeWeekAdmin.php',
+		data: {Week: Week, Team:team, Type: type},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				if(type === 0){
+				    loadWeekAdmminReloadListR(Week, team, type);
+				}
+				if(type === 1){
+				    loadWeekAdmminReloadListTeamR(Week, team, type);
+				}
+				$("#weekAdminContent").html(res.dataWeekAdmin);
+			}else{
+				console.log(res);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function loadWeekAdmminReloadListR(Week, team, type){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/GamesReferee/changeWeeksAdminReloadWeekSelector.php',
+		data: {Week: Week, Team:team, Type: type},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				$("#weekadminselectorsection").html(res.dataWeeks);
+			}else{
+				console.log(res);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function loadWeekAdmminReloadListTeamR(Week, team, type){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/GamesReferee/changeWeeksAdminReloadWeekTeamSelector.php',
+		data: {Week: Week, Team:team, Type: type},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				$("#teamadminselectorsection").html(res.dataWeeks);
+			}else{
+				console.log(res);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function loadWeekAdminGameCommentsR(Comment, GameID){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScores-Comment.php',
+		data: {GameID: GameID, Comment: Comment},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				$("#comentarioInput").html(res.dataWeekAdminGameComment);
+				$("#comentarioInput").toggle();
+			}else{
+				console.log(res);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function abrirFichaEditR(id, week, game, gamedesc,Comentarios, SQL){
+	var attr = $('#edit'+id).attr('style');
+	$('.juego').css('display', 'none');
+	$('#expandir'+id).attr('src', './imagenes/expandir.png');	
+	$('.expandirButton').attr('src', './imagenes/expandir.png');
+	if (typeof attr == typeof undefined) {
+		$('#edit'+id).css('display', 'none');					
+		$('#expandir'+id).attr('src', './imagenes/expandir.png');
+		$("#content" + id).html('');
+
+	}else{
+		$('#edit'+id).removeAttr('style');	
+		$('#expandir'+id).attr('src', './imagenes/colapsar.png');
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetail.php',
+			data: {week: week, game: game, gamedesc: gamedesc, Comentarios: Comentarios, SQL: SQL},
+			success: function (res) {
+				mainLoadingOff()
+				if (res.status === '1') {
+					$("#content" + id).html(res.dataWeekGameDetail);
+				}
+			},
+			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+				console.log('Exception:' + exception);
+			}
+		});
+	}
+}
+
+function abrirFichaEditSR(id, week, game, gamedesc, Comentarios, SQL){
+	var attr = $('#editS'+id).attr('style');
+	$('.juegoS').css('display', 'none');
+	$('#expandirS'+id+'SA').attr('src', './imagenes/expandir.png');	
+	$('.expandirButtonS').attr('src', './imagenes/expandir.png');
+	if (typeof attr == typeof undefined) {
+		$('#editS'+id).css('display', 'none');					
+		$('#expandirS'+id).attr('src', './imagenes/expandir.png');
+		$("#contentS" + id).html('');
+
+	}else{
+		$('#editS'+id).removeAttr('style');	
+		$('#expandirS'+id+'SA').attr('src', './imagenes/colapsar.png');
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetailS.php',
+			data: {week: week, game: game, gamedesc: gamedesc, Comentarios: Comentarios, SQL: SQL},
+			success: function (res) {
+				mainLoadingOff()
+				if (res.status === '1') {
+					$("#contentS" + id).html(res.dataWeekGameDetail);
+				}
+			},
+			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+				console.log('Exception:' + exception);
+			}
+		});
+	}
+}
+
 function azFlyerLang(key, replacements) {
 	var text = (typeof LANG_FLYER_FB !== 'undefined' && LANG_FLYER_FB[key]) ? LANG_FLYER_FB[key] : '';
 	if (!text) {

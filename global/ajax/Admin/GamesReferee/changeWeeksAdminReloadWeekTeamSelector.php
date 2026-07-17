@@ -78,7 +78,7 @@ $schema = $Config->getSchema();
 	
 	$sql02 = "  SELECT distinct Equipo_FULLDESC
 	            FROM $schema.Equipos
-                where Torneo_ID = $Season and Equipo_FULLDESC <> '$Team' and Equipo_ID in (" . $_SESSION[$Config->getAlias() . 'equipo'] . ")
+                where Torneo_ID = $Season and Equipo_FULLDESC <> '$Team'
                     and Equipo_ID in (select Local_ID from $schema.Juegos where Torneo_Id = $Season union select Visitante_ID from $schema.Juegos where Torneo_Id = $Season )
                 order by 1 asc;";
 	//$htmlWeeks .= $sql02;
@@ -99,7 +99,7 @@ $schema = $Config->getSchema();
 	$htmlWeeks .= '</div>';
 	$htmlWeeks .= '<div class="col-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1">';
 	$htmlWeeks .= '<div >';
-	$htmlWeeks .= '<img src="./imagenes/refresh.png" width="20" height="20" onclick="loadWeekAdmin(' . $currentWeek . ', \'' . $selectedTeam . '\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);" style="margin-left: 10;  margin-top: 2px;">';
+	$htmlWeeks .= '<img src="./imagenes/refresh.png" width="20" height="20" onclick="loadWeekAdminR(' . $currentWeek . ', \'' . $selectedTeam . '\', $(\'#byTeam\').prop(\'checked\') ? 1 : 0);" style="margin-left: 10;  margin-top: 2px;">';
 	$htmlWeeks .= '</div>';
 	$htmlWeeks .= '</div>';
 	$htmlWeeks .= '</div>';

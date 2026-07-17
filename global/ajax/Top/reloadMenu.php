@@ -403,6 +403,34 @@ $schema = $Config->getSchema();
     							</div>
     						</li>';
 			}
+			// GamesReferee: same coach-style UI for users whose email matches an active Arbitro
+			$isGamesReferee = false;
+			$sessionEmail = isset($_SESSION[$Config->getAlias() . 'email']) ? trim((string) $_SESSION[$Config->getAlias() . 'email']) : '';
+			if ($sessionEmail !== '') {
+				$sqlRef = "SELECT Arbitro_ID FROM $schema.Arbitro WHERE Correo = '" . $Config->real_escape_string($sessionEmail) . "' AND Estatus = 1 LIMIT 1";
+				$resultRef = $Config->query($sqlRef);
+				if ($resultRef && $resultRef->num_rows > 0) {
+					$isGamesReferee = true;
+				}
+			}
+			if ($isGamesReferee) {
+                $htmlMenu .= '<li class="nav-item">
+    							<a data-bs-toggle="collapse" href="#menuGamesReferee" class="nav-link text-white " aria-controls="menuGamesReferee" role="button" aria-expanded="false">
+    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">sports</i>
+    									<span class="nav-link-text ms-2 ps-1">' . $lang['135'] . '</span>
+    							</a>
+    							<div class="collapse " id="menuGamesReferee" style="margin-left: 5px;">
+    								<ul class="nav ">
+    									<li class="nav-item ">
+    										<a class="nav-link text-white " aria-expanded="false" onClick="loadWeeksAdminR(0); toggleSidenav();">
+    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">scoreboard</i> </span>
+    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101'] . ' </span>
+    										</a>
+    									</li>
+    								</ul>
+    							</div>
+    						</li>';
+			}
 			/*
 			$htmlMenu .= '<li class="nav-item">
 							<a data-bs-toggle="collapse" href="#Manual" class="nav-link text-white " aria-controls="Manual" role="button" aria-expanded="false">

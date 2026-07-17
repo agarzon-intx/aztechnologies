@@ -259,6 +259,32 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 			});
 		}
+
+		function actualizarJuegoR(Date, Time, Field, GameID, weekid){
+			gameupdates++;
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/GamesReferee/gameManagementUpdateGame.php',
+				data: {Date: Date, Time: Time, Field: Field, GameID: GameID},
+				success: function (res) {
+					mainLoadingOff();
+					if (res.status === '1') {
+						gameupdates--;
+						if(gameupdates === 0){
+							alert('" . $lang['658'] . "');
+							loadWeekAdminR(weekid);
+						}
+					}
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
+		}
 		
 		function saveChanges(season, week){
 			var torneo, jornada, juego, local, visitante, fecha, horario;
@@ -323,6 +349,29 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				   		actualizarJuegoC(fecha, horario, campo, juego, week);
 					}
 			});
+		}
+
+		function saveChangesR(season, week){
+			var torneo, jornada, juego, local, visitante, fecha, horario;
+			var golesl, golesv, penaltiesl, penaltiesv, arbitro, comentarios;
+			var jugado, estatus, extral, extrav, campo;
+			$('#scores tr.mainValues').each(function() {
+					juego = $(this).attr('id');
+					torneo = $(this).find('#torneo' + juego).val();
+					jornada = $(this).find('#jornada' + juego).val();
+					campo = $(this).find('#campo' + juego).val();
+					local = $(this).find('#local' + juego).val();
+					visitante = $(this).find('#visitante' + juego).val();
+					fecha = $(this).find('#fecha' + juego).val();
+					horario = $(this).find('#horario' + juego).val();
+					if (campo !== undefined && campo !== '' && fecha && horario && juego) {
+				   		actualizarJuegoR(fecha, horario, campo, juego, week);
+					}
+			});
+		}
+
+		function saveChangesSR(season, week){
+			saveChangesR(season, week);
 		}
 		
 		function actualizarJuegoAfter(weekid){
@@ -736,6 +785,28 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			var jugado, amarillas, rojas, goles;
 			var rojasd, rojasm, rojasc;
 			actualizarJuegoDetalleRefereeComentarios(Game, Week, Season, referee, comments, extral, extrav);
+		}
+
+		function SaveGameDetailPlayerStatsR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
+			gameplayerupdates = 0;
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/GamesReferee/gameManagementUpdateGamePlayerStatRefereeComm.php',
+				data: {Game: Game, Week: Week, Season: Season, Referee: referee, Comments: comments, Extral: extral, Extrav: extrav},
+				success: function (res) {
+					mainLoadingOff();
+					if (res.status === '1') {
+						alert('" . $lang['310'] . "');
+					}
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
 		}
 		
 		function SaveGameDetailPlayerStatsVoleibol(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
