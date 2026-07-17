@@ -407,7 +407,7 @@ $schema = $Config->getSchema();
 			$isGamesReferee = false;
 			$sessionEmail = isset($_SESSION[$Config->getAlias() . 'email']) ? trim((string) $_SESSION[$Config->getAlias() . 'email']) : '';
 			if ($sessionEmail !== '') {
-				$sqlRef = "SELECT Arbitro_ID FROM $schema.Arbitro WHERE Correo = '" . $Config->real_escape_string($sessionEmail) . "' AND Estatus = 1 LIMIT 1";
+				$sqlRef = "SELECT Arbitro_ID FROM $schema.Arbitro WHERE Correo = " . $Config->quote($sessionEmail) . " AND Estatus = 1 LIMIT 1";
 				$resultRef = $Config->query($sqlRef);
 				if ($resultRef && $resultRef->num_rows > 0) {
 					$isGamesReferee = true;
