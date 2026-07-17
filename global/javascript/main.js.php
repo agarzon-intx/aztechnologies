@@ -4494,7 +4494,7 @@ function loadWeekAdminGameCommentsR(Comment, GameID){
 	});
 }
 
-function abrirFichaEditR(id, week, game, gamedesc,Comentarios, SQL){
+function abrirFichaEditR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comentarios, Extral, Extrav, SQL){
 	var attr = $('#edit'+id).attr('style');
 	$('.juego').css('display', 'none');
 	$('#expandir'+id).attr('src', './imagenes/expandir.png');	
@@ -4512,7 +4512,7 @@ function abrirFichaEditR(id, week, game, gamedesc,Comentarios, SQL){
 			type: 'POST',
 			dataType: 'json',
 			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetail.php',
-			data: {week: week, game: game, gamedesc: gamedesc, Comentarios: Comentarios, SQL: SQL},
+			data: {week: week, game: game, gamedesc: gamedesc, lgoals: lgoals, vgoals: vgoals, Arbitro: Arbitro, Comentarios: Comentarios, Extral: Extral, Extrav: Extrav, SQL: SQL},
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
@@ -4528,7 +4528,7 @@ function abrirFichaEditR(id, week, game, gamedesc,Comentarios, SQL){
 	}
 }
 
-function abrirFichaEditSR(id, week, game, gamedesc, Comentarios, SQL){
+function abrirFichaEditSR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comentarios, Extral, Extrav, SQL){
 	var attr = $('#editS'+id).attr('style');
 	$('.juegoS').css('display', 'none');
 	$('#expandirS'+id+'SA').attr('src', './imagenes/expandir.png');	
@@ -4546,9 +4546,141 @@ function abrirFichaEditSR(id, week, game, gamedesc, Comentarios, SQL){
 			type: 'POST',
 			dataType: 'json',
 			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetailS.php',
-			data: {week: week, game: game, gamedesc: gamedesc, Comentarios: Comentarios, SQL: SQL},
+			data: {week: week, game: game, gamedesc: gamedesc, lgoals: lgoals, vgoals: vgoals, Arbitro: Arbitro, Comentarios: Comentarios, Extral: Extral, Extrav: Extrav, SQL: SQL},
 			success: function (res) {
 				mainLoadingOff()
+				if (res.status === '1') {
+					$("#contentS" + id).html(res.dataWeekGameDetail);
+				}
+			},
+			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+				console.log('Exception:' + exception);
+			}
+		});
+	}
+}
+
+function abrirFichaEditBasketR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comentarios, Extral, Extrav, SQL){
+	var attr = $('#edit'+id).attr('style');
+	$('.juego').css('display', 'none');
+	$('#expandir'+id).attr('src', './imagenes/expandir.png');
+	$('.expandirButton').attr('src', './imagenes/expandir.png');
+	if (typeof attr == typeof undefined) {
+		$('#edit'+id).css('display', 'none');
+		$('#expandir'+id).attr('src', './imagenes/expandir.png');
+		$("#content" + id).html('');
+	}else{
+		$('#edit'+id).removeAttr('style');
+		$('#expandir'+id).attr('src', './imagenes/colapsar.png');
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetailBasket.php',
+			data: {week: week, game: game, gamedesc: gamedesc, lgoals: lgoals, vgoals: vgoals, Arbitro: Arbitro, Comentarios: Comentarios, Extral: Extral, Extrav: Extrav, SQL: SQL},
+			success: function (res) {
+				mainLoadingOff();
+				if (res.status === '1') {
+					$("#content" + id).html(res.dataWeekGameDetail);
+				}
+			},
+			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+				console.log('Exception:' + exception);
+			}
+		});
+	}
+}
+
+function abrirFichaEditSBasketR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comentarios, Extral, Extrav, SQL){
+	var attr = $('#editS'+id).attr('style');
+	$('.juegoS').css('display', 'none');
+	$('#expandirS'+id+'SA').attr('src', './imagenes/expandir.png');
+	$('.expandirButtonS').attr('src', './imagenes/expandir.png');
+	if (typeof attr == typeof undefined) {
+		$('#editS'+id).css('display', 'none');
+		$('#expandirS'+id).attr('src', './imagenes/expandir.png');
+		$("#contentS" + id).html('');
+	}else{
+		$('#editS'+id).removeAttr('style');
+		$('#expandirS'+id+'SA').attr('src', './imagenes/colapsar.png');
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetailSBasket.php',
+			data: {week: week, game: game, gamedesc: gamedesc, lgoals: lgoals, vgoals: vgoals, Arbitro: Arbitro, Comentarios: Comentarios, Extral: Extral, Extrav: Extrav, SQL: SQL},
+			success: function (res) {
+				mainLoadingOff();
+				if (res.status === '1') {
+					$("#contentS" + id).html(res.dataWeekGameDetail);
+				}
+			},
+			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+				console.log('Exception:' + exception);
+			}
+		});
+	}
+}
+
+function abrirFichaEditVoleibolR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comentarios, Extral, Extrav, SQL){
+	var attr = $('#edit'+id).attr('style');
+	$('.juego').css('display', 'none');
+	$('#expandir'+id).attr('src', './imagenes/expandir.png');
+	$('.expandirButton').attr('src', './imagenes/expandir.png');
+	if (typeof attr == typeof undefined) {
+		$('#edit'+id).css('display', 'none');
+		$('#expandir'+id).attr('src', './imagenes/expandir.png');
+		$("#content" + id).html('');
+	}else{
+		$('#edit'+id).removeAttr('style');
+		$('#expandir'+id).attr('src', './imagenes/colapsar.png');
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetailVoleibol.php',
+			data: {week: week, game: game, gamedesc: gamedesc, lgoals: lgoals, vgoals: vgoals, Arbitro: Arbitro, Comentarios: Comentarios, Extral: Extral, Extrav: Extrav, SQL: SQL},
+			success: function (res) {
+				mainLoadingOff();
+				if (res.status === '1') {
+					$("#content" + id).html(res.dataWeekGameDetail);
+				}
+			},
+			error: function(jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+				console.log('Exception:' + exception);
+			}
+		});
+	}
+}
+
+function abrirFichaEditSVoleibolR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comentarios, Extral, Extrav, SQL){
+	var attr = $('#editS'+id).attr('style');
+	$('.juegoS').css('display', 'none');
+	$('#expandirS'+id+'SA').attr('src', './imagenes/expandir.png');
+	$('.expandirButtonS').attr('src', './imagenes/expandir.png');
+	if (typeof attr == typeof undefined) {
+		$('#editS'+id).css('display', 'none');
+		$('#expandirS'+id).attr('src', './imagenes/expandir.png');
+		$("#contentS" + id).html('');
+	}else{
+		$('#editS'+id).removeAttr('style');
+		$('#expandirS'+id+'SA').attr('src', './imagenes/colapsar.png');
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/GamesReferee/weekAdmin-ScheduleScoresGameDetailSVoleibol.php',
+			data: {week: week, game: game, gamedesc: gamedesc, lgoals: lgoals, vgoals: vgoals, Arbitro: Arbitro, Comentarios: Comentarios, Extral: Extral, Extrav: Extrav, SQL: SQL},
+			success: function (res) {
+				mainLoadingOff();
 				if (res.status === '1') {
 					$("#contentS" + id).html(res.dataWeekGameDetail);
 				}

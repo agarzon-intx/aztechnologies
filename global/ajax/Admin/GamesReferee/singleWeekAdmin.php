@@ -136,68 +136,7 @@
 						}
 					}
 					
-						$htmlWeek .= '<tr>
-										<td scope="row" colspan="7">
-											<div class="d-flex px-2 py-1">
-												<div style="width: 100%;text-align: left;padding-right: 3px;padding-top: 6px;">
-													<div style="float: left;padding-top: 6px;padding-left: 10px;">
-														<div class="form-check input-group input-group-outline">
-															<label class="custom-control-label">' . $lang['675'] . '</label>
-															<input type="checkbox" id="amistoso" name="amistoso" value="0" class="form-check-input" style="border-radius: 0.35rem" onClick="$(\'#amistosos\').toggle();$(\'#normal\').toggle();">
-														</div>
-													</div>	
-													<div id="normal">';
-					$result3 = $Config->query($sql33);
-					if ($result3->num_rows > 0) {// output data of each row
-						$htmlWeek .= '					<div style="float: left;padding-top: 6px;padding-left: 10px;">
-															<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
-															<div style="float: right;padding-left: 10px;">
-																
-															</div>
-														</div>
-														<div style="float: left;padding-top: 6px;padding-left: 10px;">
-															<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
-															<div style="float: right;padding-left: 10px;">
-																
-															</div>
-														</div>
-														<div style="float: left;padding-left: 10px;">
-															
-														</div>';
-					}		
-					$htmlWeek .= '				</div>
-													<div id="amistosos" style="display: none;">
-														
-														<div style="float: left;padding-top: 6px;padding-left: 10px;">
-															<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
-															<div style="float: left;padding-left: 10px;">
-																<div style="font-size: 11px;margin-bottom: 2px;">' . $lang['953'] . '</div>
-																
-																<div style="margin-top: 6px;">
-																	
-																</div>
-															</div>
-														</div>
-														<div style="float: left;padding-top: 6px;padding-left: 10px;">
-															<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
-															<div style="float: left;padding-left: 10px;">
-																<div style="font-size: 11px;margin-bottom: 2px;">' . $lang['953'] . '</div>
-																
-																<div style="margin-top: 6px;">
-																	
-																</div>
-															</div>
-														</div>
-														<div style="float: left;padding-left: 10px;">
-															
-														</div>
-													</div>
-												</div>
-											</div>
-										</td>
-									</tr>
-									
-									';
+						$htmlWeek .= '';
 
 						
 							

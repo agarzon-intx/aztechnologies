@@ -312,31 +312,7 @@
 							$sqloneperweekcond
 						 order by 2 asc;";
 				$result3 = $Config->query($sql33);
-				if ($result3->num_rows > 0) {
-					$htmlWeek .= '<tr>
-									<td scope="row" colspan="7">
-										<div class="d-flex px-2 py-1">
-											<div style="width: 100%;text-align: left;padding-right: 3px;padding-top: 6px;">
-												<div style="float: left;padding-top: 6px;padding-left: 10px;">
-													<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
-													<div style="float: right;padding-left: 10px;">
-														
-													</div>
-												</div>
-												<div style="float: left;padding-top: 6px;padding-left: 10px;">
-													<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
-													<div style="float: right;padding-left: 10px;">
-														
-													</div>
-												</div>
-												<div style="float: left;padding-left: 10px;">
-													
-												</div>
-											</div>
-										</div>
-									</td>
-								</tr>';
-				}
+				
 					
 						
                 $htmlWeek .= '</tbody>';
@@ -551,31 +527,7 @@
 							$sqloneperweekcond
 						 order by 2 asc;";
 				$result3 = $Config->query($sql33);
-				if ($result3->num_rows > 0) {
-					$htmlWeek .= '<tr>
-									<td scope="row" colspan="1">
-										<div class="d-flex px-2 py-1">
-											<div style="width: 100%;text-align: left;padding-right: 3px;padding-top: 6px;">
-												<div style="float: left;padding-top: 6px;padding-left: 10px;">
-													<div style="float: left;width: 67px;">' . $lang['652'] . '</div>
-													<div style="float: right;padding-left: 10px;">
-														
-													</div>
-												</div>
-												<div style="float: left;padding-top: 6px;padding-left: 10px;">
-													<div style="float: left;width: 67px;">' . $lang['653'] . '</div>
-													<div style="float: right;padding-left: 10px;">
-														
-													</div>
-												</div>
-												<div style="float: left;padding-left: 10px;width: 100%;">
-													
-												</div>
-											</div>
-										</div>
-									</td>
-								</tr>';
-				}
+				
 				
                 $htmlWeek .= '</tbody>';
                 $htmlWeek .= '</table>';

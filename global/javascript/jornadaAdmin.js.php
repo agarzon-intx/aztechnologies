@@ -363,16 +363,83 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					campo = $(this).find('#campo' + juego).val();
 					local = $(this).find('#local' + juego).val();
 					visitante = $(this).find('#visitante' + juego).val();
+					penaltiesl = +$(this).find('#penall' + juego).is( ':checked' );
+					penaltiesv = +$(this).find('#penalv' + juego).is( ':checked' );
 					fecha = $(this).find('#fecha' + juego).val();
 					horario = $(this).find('#horario' + juego).val();
-					if (campo !== undefined && campo !== '' && fecha && horario && juego) {
-				   		actualizarJuegoR(fecha, horario, campo, juego, week);
+					jugado = $(this).find('#jugado'+juego).val();
+					golesl = 0;
+					golesv = 0;
+					if($('#golesl' + juego).length){
+					    golesl = $(this).find('#golesl' + juego).val();
+    					if($(this).find('#golesl' + juego).val().localeCompare('') == 0){
+    							golesl = 0;
+    					}
+					}
+					if($('#golesv' + juego).length){
+					    golesv = $(this).find('#golesv' + juego).val();
+    					if($(this).find('#golesv' + juego).val().localeCompare('') == 0){
+    						golesv = 0;
+    					}
+					}
+					if (typeof campo !== \"undefined\") {
+						actualizarJuegoR(golesl, golesv, fecha, jugado, penaltiesl, penaltiesv, horario, campo, juego, week);
 					}
 			});
 		}
 
 		function saveChangesSR(season, week){
-			saveChangesR(season, week);
+			var torneo, jornada, juego, local, visitante, fecha, horario;
+			var golesl, golesv, penaltiesl, penaltiesv, arbitro, comentarios;
+			var jugado, estatus, extral, extrav, campo;
+			$('#scoresS tr.mainValues').each(function() {
+					juego = $(this).attr('id');
+					torneo = $(this).find('#torneo' + juego).val();
+					jornada = $(this).find('#jornada' + juego).val();
+					campo = $(this).find('#campo' + juego).val();
+					local = $(this).find('#local' + juego).val();
+					visitante = $(this).find('#visitante' + juego).val();
+					penaltiesl = +$(this).find('#penall' + juego).is( ':checked' );
+					penaltiesv = +$(this).find('#penalv' + juego).is( ':checked' );
+					fecha = $(this).find('#fecha' + juego).val();
+					horario = $(this).find('#horario' + juego).val();
+					jugado = $(this).find('#jugado'+juego).val();
+					golesl = 0;
+					golesv = 0;
+					if($('#golesl' + juego).length){
+					    golesl = $(this).find('#golesl' + juego).val();
+    					if($(this).find('#golesl' + juego).val().localeCompare('') == 0){
+    							golesl = 0;
+    					}
+					}
+					if($('#golesv' + juego).length){
+					    golesv = $(this).find('#golesv' + juego).val();
+    					if($(this).find('#golesv' + juego).val().localeCompare('') == 0){
+    						golesv = 0;
+    					}
+					}
+					if (typeof campo !== \"undefined\") {
+						actualizarJuegoR(golesl, golesv, fecha, jugado, penaltiesl, penaltiesv, horario, campo, juego, week);
+					}
+			});
+		}
+
+		function actualizarJuegoAfterR(weekid){
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/GamesReferee/gameManagementUpdateGameAfter.php',
+				data: {Week: weekid},
+				success: function (res) {
+					mainLoadingOff();
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
 		}
 		
 		function actualizarJuegoAfter(weekid){
@@ -789,25 +856,42 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 
 		function SaveGameDetailPlayerStatsR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
-			gameplayerupdates = 0;
-			mainLoadingOn();
-			$.ajax({
-				type: 'POST',
-				dataType: 'json',
-				url: 'ajax/Admin/GamesReferee/gameManagementUpdateGamePlayerStatRefereeComm.php',
-				data: {Game: Game, Week: Week, Season: Season, Referee: referee, Comments: comments, Extral: extral, Extrav: extrav},
-				success: function (res) {
-					mainLoadingOff();
-					if (res.status === '1') {
-						alert('" . $lang['310'] . "');
-					}
-				},
-				error: function(jqxhr, status, exception) {
-					mainLoadingOff();
-					alert(MSG_AJAX_GENERIC);
-					console.log('Exception:' + exception);
-				}
-			});
+			SaveGameDetailPlayerStats(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+		}
+		function SaveGameDetailPlayerStatsSR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
+			if (typeof SaveGameDetailPlayerStatsS === 'function') {
+				SaveGameDetailPlayerStatsS(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			} else {
+				SaveGameDetailPlayerStats(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			}
+		}
+		function SaveGameDetailPlayerStatsBasketR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
+			if (typeof SaveGameDetailPlayerStatsBasket === 'function') {
+				SaveGameDetailPlayerStatsBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			} else {
+				SaveGameDetailPlayerStats(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			}
+		}
+		function SaveGameDetailPlayerStatsSBasketR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
+			if (typeof SaveGameDetailPlayerStatsSBasket === 'function') {
+				SaveGameDetailPlayerStatsSBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			} else {
+				SaveGameDetailPlayerStatsBasketR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			}
+		}
+		function SaveGameDetailPlayerStatsVoleibolR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
+			if (typeof SaveGameDetailPlayerStatsVoleibol === 'function') {
+				SaveGameDetailPlayerStatsVoleibol(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			} else {
+				SaveGameDetailPlayerStats(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			}
+		}
+		function SaveGameDetailPlayerStatsSVoleibolR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
+			if (typeof SaveGameDetailPlayerStatsSVoleibol === 'function') {
+				SaveGameDetailPlayerStatsSVoleibol(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			} else {
+				SaveGameDetailPlayerStatsVoleibolR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+			}
 		}
 		
 		function SaveGameDetailPlayerStatsVoleibol(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
