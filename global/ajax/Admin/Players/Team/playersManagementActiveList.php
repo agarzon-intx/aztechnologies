@@ -265,24 +265,6 @@ $htmlPlayer .= '			<tr>
 												<button type="button" class="btn btn-primary" onClick="playersManagementTeamShowCreate(' . $Team . ');" >' . $lang['0013'] . '</button>
 											</span>
 										</div>
-										<div style="width: 55%;text-align: center;padding-top: 0px;">
-											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['915'] . '</span></p>
-											<a hidden id="downloadPlayersIDBtn2" href="" target="_blank" download ></a>
-											<select onChange="printID2();" style="width:150px;" name="printRegisters2" id="printRegisters2" size="1">
-												<option value="" selected>' . $lang['js914-1'] . '</option>';
-$sql = "SELECT Range_Name, concat('pdf/registrosEquipoT.php?Equipo_ID=" . $Team . "&Edad1=', Range_Start,'&Edad2=', Range_End,'&Imprimir=1') url 
-		FROM $schema.Range_Age a
-		where Range_Active = 1 and Range_Id <> 1 
-		order by Range_Sort";	
-$result = $Config->query($sql);
-if ($result->num_rows > 0) {
-	// output data of each row
-	while($row2 = $result->fetch_assoc()) {
-		$htmlPlayer .= '						<option value="' . $row2["url"] . '">' . $row2["Range_Name"]. '</option>';
-	}
-}
-$htmlPlayer .= '							</select>
-										</div>
 									</div>
 								</td>
 							</tr>';
