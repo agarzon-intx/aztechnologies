@@ -1,0 +1,43 @@
+<?php
+    session_start();
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+
+	error_reporting(0);
+
+$__APP_SITE_PATHS_START__ = __DIR__;
+$__app_here = __DIR__;
+for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
+	$__base = ($__i === 0) ? $__app_here : dirname($__app_here, $__i);
+	if ($__base === $__prev) {
+		break;
+	}
+	$__prev = $__base;
+	$__inc = $__base . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'app_site_paths.inc.php';
+	if (is_readable($__inc)) {
+		require_once $__inc;
+		break;
+	}
+}
+unset($__i, $__prev, $__base, $__inc, $__app_here);
+
+	require("membersite_config.php");
+	$schema = $Config->getSchema();
+	$sessionstat = $fgmembersite->CheckLogin('weekAdmin-ScheduleScores-Comment.php');
+	
+	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+
+
+    $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
+    
+    $GameID = SanitizeInteger($_POST['GameID']);
+    $Comment = SanitizeText($_POST['Comment']);
+    
+	$htmlWeekAdminGameComment = "<div style='height: 150px'></div>
+						<TEXTAREA id='comentariosInput$GameID' style='width:380px; height: 200px' maxlength='400' rows='2' cols='20' name='txttext'>$Comment</TEXTAREA><br>
+						<INPUT type='button' value='" . $lang['0000'] . "' onclick='$(\"#comentarios$GameID\").val($(\"#comentariosInput$GameID\").val()); $(\"#comentarioInput\").toggle();'>
+						<INPUT type='button' value='" . $lang['0001'] . "' onclick='$(\"#comentarioInput\").toggle();'>";
+    $retunData = array('status' => '1', 'message' => 'Success.', 'dataWeekAdminGameComment' => $htmlWeekAdminGameComment);
+    echo json_encode($retunData);
+?>

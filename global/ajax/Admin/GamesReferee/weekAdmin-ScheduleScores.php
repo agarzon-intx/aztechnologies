@@ -1,0 +1,529 @@
+	            <?php
+			if (!function_exists('az_flyer_game_download_menu_html')) {
+				require_once dirname(__DIR__, 3) . '/include/flyer_download_menu.php';
+			}
+			$fecha = new DateTime();
+            $sqlcat = "and l.Fuerza = $Category";
+			if($vs == 1){
+				$sqlcat = "";
+			}
+			
+
+            $sqlJuegosXNombre = "";
+            if($Type == 1){
+                $sqlJuegosXNombre = " and (Local_Id in (SELECT Equipo_ID FROM $schema.Equipos where Equipo_FULLDESC like '$teamdesc' and Torneo_ID = $Season) or Visitante_ID in (SELECT Equipo_ID FROM $schema.Equipos where Equipo_FULLDESC like '$teamdesc' and Torneo_ID = $Season))";
+                $sqlcat = "";
+            }
+
+            
+	        //$htmlWeek .= $sqlJuegosXNombre;
+			$game_status_opt = "case ";
+			$sql20 = "  SELECT * 
+                        FROM (
+                        		SELECT * FROM $schema.Juego_Estatus
+                        		UNION
+                                SELECT 0,'660','660',0,0,0,0,0,0,0,0,0,0
+                        		UNION
+                                SELECT 1,'661','661',0,0,0,0,0,0,0,0,0,0) a
+                        order by Juego_Estatus_ID;";
+			$result20 = $Config->query($sql20);
+            if ($result20->num_rows > 0) {
+				// output data of each row
+				while($row20 = $result20->fetch_assoc()) {
+					$game_status_opt .= "when jugado = " . $row20["Juego_Estatus_ID"] . " then concat(";
+					$sql21 = "  SELECT * 
+                                FROM (
+                                		SELECT * FROM $schema.Juego_Estatus
+                                		UNION
+                                        SELECT 0,'660','660',0,0,0,0,0,0,0,0,0,0
+                                		UNION
+                                        SELECT 1,'661','661',0,0,0,0,0,0,0,0,0,0) a
+                                order by Juego_Estatus_ID;";
+        			$result21 = $Config->query($sql21);
+                    if ($result21->num_rows > 0) {
+        				// output data of each row
+        				while($row21 = $result21->fetch_assoc()) {
+        				    $selectesStr = '';
+        				    if($row20["Juego_Estatus_ID"] === $row21["Juego_Estatus_ID"]){
+        				        $selectesStr = "selected";
+        				    }
+        					$game_status_opt .= "'<option value=''" . $row21["Juego_Estatus_ID"] . "'' " . $selectesStr . ">" . $lang[$row21["Juego_Estatus_DESC_ID"]] . "</option>'";
+        				}
+                    }
+                    $game_status_opt .= ") ";
+				}
+            }
+            $game_status_opt .= "end";
+            //$htmlWeek .= $game_status_opt;
+			$sql2 = "select * from (
+            						select 0 as VisitanteS, 
+            							j.Torneo_ID as Torneo, 
+            							jor.Jornada_ID as Jornada, 
+            							jor.Jornada_DescCorta,
+            							cat.Categoria_DESC,
+            							cat.Categoria_Orden,
+            							Juego_ID as juego,
+										Extra_Local,
+										Extra_Visitante, 
+										jugado as jugadoStat,
+										$game_status_opt as jugado,
+										j.Local_ID,
+            							case when j.Visitante_Id is null then '' else concat(l.equipo_desc,'') end  as 'Local',
+            							case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
+            							case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
+										j.Visitante_ID,
+            							concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', 
+            							case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+            							case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', 
+            							case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+            							case 
+            								when j.Visitante_Id is null then CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius:7px;margin-right: 5px;     text-align: left;''><img src=''imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt='''' style=''vertical-align:middle !important;''/></div><div style=''padding-top: 6px;''><span>',l.equipo_desc,' " . $lang['654'] . "</span></div>') 
+            								else Comentarios 
+            							end as Comentarios, 
+            							Estatus, 
+            							case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, 
+            							ifnull(jc.Google, lc.Google) as Google, 
+            							case 
+            								when j.Visitante_Id is null then ''
+            								else
+            									CONCAT('<div class='''' style=''height: 30px;width: 30px;''><img src=''imagenes/',concat(l.Torneo_ID,'-', l.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
+            							end as Logol, 
+            							case 
+            								when j.Visitante_Id is null then ''
+            								else
+            									CONCAT('<div class='''' style=''height: 30px;width: 30px; text-align: left;''><img src=''imagenes/',concat(v.Torneo_ID,'-', v.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
+            							end  as Logov,
+            							case 
+            								when jugado = 0 then '' 
+            								else '-'
+            							end as marcador,
+            							case 
+											when jugado = 0 then '' 
+											else case when Penal_local > Penal_Visitante then 'checked' else '' end
+										end as marcadorpl,
+										case 
+											when jugado = 0 then '' 
+											else case when Penal_local < Penal_Visitante then 'checked' else '' end
+										end as marcadorpv,
+            							TIME_FORMAT(j.Horario, '%H:%i') horario,
+            							case when j.Visitante_Id is null then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha
+            						from  $schema.Juegos as j 
+            							left outer join $schema.Campos jc on j.Campo_ID = jc.Campo_ID
+            							join $schema.Equipos as l on j.local_ID = l.Equipo_ID and j.Torneo_ID = $Season and l.Torneo_ID = $Season
+            							join $schema.Categorias as cat on l.Fuerza = cat.Categoria_ID and cat.Torneo_ID = $Season
+            							left outer join $schema.Campos lc on l.Campo_ID = lc.Campo_ID 
+            							left outer join $schema.Equipos as v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = $Season
+            							join $schema.Jornada as jor on j.Jornada_ID = jor.Jornada_ID
+            						where j.Jornada_ID = $Week and Visitante_ID is not null $sqlcat $sqlJuegosXNombre
+            						UNION
+            						select 1 as VisitanteS, 
+										j.Torneo_ID as Torneo, 
+										jor.Jornada_ID as Jornada, 
+            							jor.Jornada_DescCorta,
+            							cat.Categoria_DESC,
+            							cat.Categoria_Orden,
+										Juego_ID as juego, 
+										Extra_Local,
+										Extra_Visitante, 
+										jugado as jugadoStat,
+										case 
+											when jugado = 0 then 
+												concat('<option value=''0'' selected>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
+											when jugado = 1 then 
+												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1'' selected>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
+											when jugado = 2 then 
+												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2'' selected>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
+											when jugado = 3 then 
+												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3'' selected>" . $lang['662-1'] . "</option><option value=''4''>" . $lang['662-2'] . "</option>')
+											when jugado = 4 then 
+												concat('<option value=''0''>" . $lang['660'] . "</option><option value=''1''>" . $lang['661'] . "</option><option value=''2''>" . $lang['662'] . "</option><option value=''3''>" . $lang['662-1'] . "</option><option value=''4'' selected>" . $lang['662-2'] . "</option>')
+						
+										end as jugado,
+						
+										j.Local_ID, 
+										case when j.Visitante_Id is null then '' else concat(l.equipo_desc,'') end  as 'Local', 
+            							case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
+										case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
+										j.Visitante_ID,
+            							concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', 
+										case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+            							case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', 
+										case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+            							case 
+            								when j.Visitante_Id is null then 	CONCAT('<img src=\"imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "\" class=\"avatar avatar-sm me-0\" style=\"border-radius: 0rem !important;\"/>',l.equipo_desc,' " . $lang['654'] . "')
+            								else Comentarios 
+            							end as Comentarios, 
+            							Estatus, 
+										case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, 
+										ifnull(jc.Google, lc.Google) as Google, 
+            							case 
+            								when j.Visitante_Id is null then ''
+            								else
+            									CONCAT('<div class='''' style=''height: 30px;width: 30px;''><img src=''imagenes/',concat(l.Torneo_ID,'-', l.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
+            							end as Logol, 
+            							case 
+            								when j.Visitante_Id is null then ''
+            								else
+            									CONCAT('<div class='''' style=''height: 30px;width: 30px; text-align: left;''><img src=''imagenes/',concat(v.Torneo_ID,'-', v.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
+            							end  as Logov,
+            							case 
+            								when jugado = 0 then '' 
+            								else '-'
+            							end as marcador,
+            							case 
+											when jugado = 0 then '' 
+											else case when Penal_local > Penal_Visitante then 'checked' else '' end
+										end as marcadorpl,
+										case 
+											when jugado = 0 then '' 
+											else case when Penal_local < Penal_Visitante then 'checked' else '' end
+										end as marcadorpv,
+            							TIME_FORMAT(j.Horario, '%H:%i') horario,
+            							case when j.Visitante_Id is null then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha
+            						from  $schema.Juegos as j 
+            							left outer join $schema.Campos jc on j.Campo_ID = jc.Campo_ID
+            							join $schema.Equipos as l on j.local_ID = l.Equipo_ID and j.Torneo_ID = $Season and l.Torneo_ID = $Season
+            							join $schema.Categorias as cat on l.Fuerza = cat.Categoria_ID and cat.Torneo_ID = $Season
+            							left outer join $schema.Campos lc on l.Campo_ID = lc.Campo_ID
+            							left outer join $schema.Equipos as v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = $Season
+            							join $schema.Jornada as jor on j.Jornada_ID = jor.Jornada_ID
+            						where j.Jornada_ID = $Week and Visitante_ID is null $sqlcat $sqlJuegosXNombre ) a
+                		order by Categoria_Orden, Fecha asc, VisitanteS, Torneo, Jornada, Juego;";
+			    //echo $sql2;
+				//$htmlWeek .= $sql2;
+				$result2 = $Config->query($sql2);
+                $htmlWeek .= '<div class="d-none  d-xs-none d-md-none d-lg-none d-xl-block"><div class="card">
+								<div class="table-responsive">
+									<table class=" table align-items-center mb-0" style="border-color: #136aeb;" id="scores">
+										<thead class="">
+											<th scope="col" class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="padding-right: .25rem; padding-left: .25rem;"></th>
+											<th scope="col" class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="padding-right: .25rem; padding-left: .25rem;">' . $lang['609']  . ' ' . $row["Fecha_Inicio"] . ' ' . $lang['610'] . ' ' . $row["Fecha_Fin"] . '</th>';
+				$htmlWeek .= '<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="padding-right: .25rem; padding-left: .25rem;">' . $lang['604'] . '</th>';
+				$htmlWeek .= '<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" ' . $Config->time . ' style="padding-right: .25rem; padding-left: .25rem;">' . $lang['605'] . '</th>';
+				$htmlWeek .= '<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="padding-right: .25rem; padding-left: .25rem;">' . $lang['606'] . '</th>';
+				$htmlWeek .= '<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="padding-right: .25rem; padding-left: .25rem;">' . $lang['649'] . '</th>';
+				$htmlWeek .= '<th scope="col" class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>';
+				$htmlWeek .= '</thead>';
+				$htmlWeek .= '<tbody>';
+				$count = 0;
+				if ($result2->num_rows > 0) {
+					// output data of each row
+					while($row2 = $result2->fetch_assoc()) {
+						if (($count % 2) == 1){
+							$htmlWeek .= '<tr class="mainValues" id="' . $row2["juego"] . '">';
+						}else{
+							$htmlWeek .= '<tr class="alt mainValues" id="' . $row2["juego"] . '">';
+						}
+						
+						$htmlWeek .= '<input name="torneo' . $row2["juego"] . '" type="hidden" id="torneo' . $row2["juego"] . '" value="' . $row2["Torneo"] . '">
+								<input name="jornada' . $row2["juego"] . '" type="hidden" id="jornada' . $row2["juego"] . '" value="' . $row2["Jornada"] . '">
+								<input name="juego' . $row2["juego"] . '" type="hidden" id="juego' . $row2["juego"] . '" value="' . $row2["juego"] . '">
+								<input name="local' . $row2["juego"] . '" type="hidden" id="local' . $row2["juego"] . '" value="' . $row2["Local_ID"] . '">
+								<input name="visitante' . $row2["juego"] . '" type="hidden" id="visitante' . $row2["juego"] . '" value="' . $row2["Visitante_ID"] . '">
+							<td scope="row">[' .  $row2["Categoria_DESC"] . ']';
+							if (strpos($row2["Comentarios"],$lang['654']) !== false){
+    							$htmlWeek .= "";
+    						}else{
+    							$htmlWeek .= az_flyer_game_download_menu_html($row2["juego"], $Config->getPath()) . '</td>';
+    							
+    						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+								$htmlWeek .= '<td scope="row"><div class="d-flex px-2 py-1">
+								<div style="width: 200px;text-align: center;padding-top: 6px;">' . $row2["Comentarios"] . '</div></div></td>';
+						}else{
+							$htmlWeek .= '<td scope="row"><div class="d-flex px-2 py-1"><div style="text-wrap: balance; width: 240px;text-align: right;padding-right: 3px;padding-top: 6px;">' . $row2["Local"] . '</div>
+								<div>' . $row2["Logol"] . '</div>
+								<div ' .  $Config->EmpatesPenales . ' style="width: 20px;text-align: center;padding-top: 6px;">';
+							if (strpos($row2["Comentarios"],$lang['654']) !== false){
+									$htmlWeek .= "";
+							}else{
+								$htmlWeek .= '<div class="form-check" style="padding-left: 0px;">
+												<input class="form-check-input form-check-input-sm" type="checkbox" value="" name="penall' . $row2["juego"] . '" id="penall' . $row2["juego"] . '" ' . $row2["marcadorpl"] . ' disabled>
+												<label class="custom-control-label" for="penall"></label>
+											</div>';
+							}
+							$htmlWeek .= '</div>
+								<div style="width: 20px;text-align: right;padding-top: 6px;">';
+							if (strpos($row2["Comentarios"],$lang['654']) !== false){
+								$htmlWeek .= "";
+							}else{
+								$htmlWeek .= '<div class="input-group input-group-sm input-group-outline my-0">
+												<input disabled type="text" style="width: 22px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["Goles Local"] . '" name="golesl' . $row2["juego"] . '" id="golesl' . $row2["juego"] . '">
+											</div>';
+							}
+							$htmlWeek .= '</div>
+								<div style="width: 10px;text-align: center;padding-top: 6px;">' . $row2["marcador"] . '</div>
+								<div style="width: 20px;text-align: left;padding-top: 6px;">';
+							if (strpos($row2["Comentarios"],$lang['654']) !== false){
+								$htmlWeek .= "";
+							}else{
+								$htmlWeek .= '<div class="input-group input-group-sm input-group-outline my-0">
+												<input disabled type="text" style="width: 22px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["Goles Visitante"] . '" name="golesv' . $row2["juego"] . '" id="golesv' . $row2["juego"] . '">
+											</div>';
+							}
+							$htmlWeek .= '</div>
+								<div ' .  $Config->EmpatesPenales . ' style="width: 20px;text-align: center;padding-top: 6px;">';
+							if (strpos($row2["Comentarios"],$lang['654']) !== false){
+								$htmlWeek .= "";
+							}else{
+								$htmlWeek .= '<div class="form-check" style="padding-left: 0px;">
+												<input class="form-check-input form-check-input-sm" type="checkbox" value="" name="penalv' . $row2["juego"] . '" id="penalv' . $row2["juego"] . '" ' . $row2["marcadorpv"] . ' disabled>
+												<label class="custom-control-label" for="penall"></label>
+											</div>';
+							}
+							$htmlWeek .= '</div>
+								<div>' . $row2["Logov"] . '</div>
+								<div style="text-wrap: balance; width: 240px;text-left: right;padding-left: 3px;padding-top: 6px;">' . $row2["Visitante"] .'</div></div></td>';
+						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '<td  scope="row" class="align-middle text-center"></td>';
+						}else{
+							$htmlWeek .= '<td  scope="row" class="align-middle text-center">
+											<div class="input-group input-group-sm input-group-outline my-0">
+												<input type="date" style="width: 110px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["Fecha"] . '" name="fecha' . $row2["juego"] . '" id="fecha' . $row2["juego"] . '">
+											</div>
+										</td>';
+						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '<td  scope="row" class="align-middle text-center" ' .  $Config->time . ' ></td>';
+						}else{
+							$htmlWeek .= '<td  scope="row" class="align-middle text-center" ' .  $Config->time . ' >
+											<div class="input-group input-group-sm input-group-outline my-0">
+												<input type="time" style="width: 92px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["horario"] . '" name="horario' . $row2["juego"] . '" id="horario' . $row2["juego"] . '">
+											</div>
+										</td>';
+						}
+						
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= "<td scope='row' class='align-middle text-center'></td>";
+						}else{
+							$htmlWeek .= '<td scope="row" class="align-middle text-center">
+								<div class="input-group input-group-static mb-0">
+									<select class="form-control" style="width : 90px;" name="campo' . $row2["juego"] . '" id="campo' . $row2["juego"] . '">';
+							$sql3 = "SELECT Campo_ID, Campo_DESC FROM $schema.Campos
+										order by Campo_DESC asc;";
+							$result3 = $Config->query($sql3);
+							if ($result3->num_rows > 0) {
+								// output data of each row
+								while($row3 = $result3->fetch_assoc()) {
+									if($row3["Campo_DESC"] == $row2["Campo"]){
+										$htmlWeek .= "<option value='" . $row3["Campo_ID"] . "' selected>" . $row3["Campo_DESC"] . "</option>";
+									}else{
+										$htmlWeek .= "<option value='" . $row3["Campo_ID"] . "'>" . $row3["Campo_DESC"] . "</option>";
+									}
+								}
+							}
+							$htmlWeek .= '
+								 </select>
+							   </div>';
+							
+						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '<td  scope="row" class="align-middle text-center"></td>';
+						}else{
+							$htmlWeek .= '<td scope="row" class="align-middle text-center">
+											<div class="input-group input-group-static mb-0">
+												<select class="form-control" style="width : 40px;" name="jugado' . $row2["juego"] . '" id="jugado' . $row2["juego"] . '" disabled>' . $row2["jugado"] . '</select>
+											</div>';
+						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '<td  scope="row" class="align-middle text-center"></td>';;
+						}else{
+							//if($row2["jugadoStat"] == 1){
+								$htmlWeek .= '<td  scope="row" class="align-middle text-center">' . '<img class="expandirButton" id="expandir' . $row2["juego"] . '" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditR(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', ' . $row2["Extra_Local"] . ', ' . $row2["Extra_Visitante"] . ', \'\'); "></td>';
+							//}else{
+							//	$htmlWeek .= '<td  scope="row" class="align-middle text-center"></td>';
+							//}
+						}
+						$htmlWeek .= '</tr>';
+						if (strpos($row2["Comentarios"],$lang['654']) == false){
+							$htmlWeek .= '<tr id="edit' . $row2["juego"] . '" class="juego" style="display: none">
+									<td  scope="row" colspan="14" style="width: 1183px; padding-left: 0px; padding-right: 0px;">
+										<div class="contentEditFicha" width="100%" id="content' . $row2["juego"] . '" height="400"></div>
+									</td>
+								  </tr>';
+						}
+						$count++;
+					}
+				}
+				$htmlWeek .= '	<tr>
+									<td style="border-bottom: 0;" colspan="2">
+										<button type="button" class="btn btn-primary" onclick="saveChangesR(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
+									</td>
+									<td style="border-bottom: 0;text-align: end;" colspan="5">
+									</td>
+								</tr>';
+			
+                $htmlWeek .= '</tbody>';
+                $htmlWeek .= '</table>';
+				$htmlWeek .= '</div>';
+				$htmlWeek .= '</div>';
+                $htmlWeek .= '</div>';
+				
+			
+				//echo $sql2;
+				$result2 = $Config->query($sql2);
+                $htmlWeek .= '<div class="d-block  d-xs-block d-md-block d-lg-block d-xl-none"><div class="card">
+								<div class="table-responsive">
+									<table class=" table align-items-center mb-0" style="border-color: #136aeb;" id="scoresS">
+										<thead class="">
+											<th scope="col" class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="padding-right: .25rem; padding-left: .25rem;">' . $lang['609']  . ' ' . $row["Fecha_Inicio"] . ' ' . $lang['610'] . ' ' . $row["Fecha_Fin"] . '</th>';
+				$htmlWeek .= '</thead>';
+				$htmlWeek .= '<tbody>';
+				$count = 0;
+				if ($result2->num_rows > 0) {
+					// output data of each row
+					while($row2 = $result2->fetch_assoc()) {
+						if (($count % 2) == 1){
+							$htmlWeek .= '<tr class="mainValues" id="' . $row2["juego"] . '">';
+						}else{
+							$htmlWeek .= '<tr class="alt mainValues" id="' . $row2["juego"] . '">';
+						}
+						$htmlWeek .= '
+							<td scope="row">
+								<input name="torneo' . $row2["juego"] . '" type="hidden" id="torneo' . $row2["juego"] . '" value="' . $row2["Torneo"] . '">
+								<input name="jornada' . $row2["juego"] . '" type="hidden" id="jornada' . $row2["juego"] . '" value="' . $row2["Jornada"] . '">
+								<input name="juego' . $row2["juego"] . '" type="hidden" id="juego' . $row2["juego"] . '" value="' . $row2["juego"] . '">
+								<input name="local' . $row2["juego"] . '" type="hidden" id="local' . $row2["juego"] . '" value="' . $row2["Local_ID"] . '">
+								<input name="visitante' . $row2["juego"] . '" type="hidden" id="visitante' . $row2["juego"] . '" value="' . $row2["Visitante_ID"] . '">
+								<div class="justify-content-center d-flex px-0 py-1">
+									<div class="align-self-center" style="width: 5%; text-align: left;padding-right: 3px; font-size:3vw;"></div>';
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+								$htmlWeek .= '<div class="align-self-center" style="width: 60%; text-align: right;padding-right: 3px; font-size:3vw;">' . $row2["Comentarios"] . '</div>
+											<div class="align-self-center" style="width: 150px; text-align: right;padding-right: 3px; font-size:3vw;"></div>';
+						}else{
+							$htmlWeek .= '	<div class="align-self-center" style="text-wrap: balance; width: 30%; text-align: right;padding-right: 10px; font-size:3vw;">' . $row2["Local"] . '</div>
+											<div class="justify-content-center d-flex px-0 py-1" style="width: 30%; text-align: right;padding-right: 3px; font-size:3vw;">
+												<div>' . $row2["Logol"] . '</div>
+												<div ' .  $Config->EmpatesPenales . ' style="width: 20px;text-align: center;" class="align-self-center">
+													<div class="form-check" style="padding-left: 0px;">
+														<input class="form-check-input form-check-input-sm" type="checkbox" value="" name="penall' . $row2["juego"] . '" id="penall' . $row2["juego"] . '" ' . $row2["marcadorpl"] . ' disabled>
+														<label class="custom-control-label" for="penall"></label>
+													</div>';
+							$htmlWeek .= '		</div>';
+							$htmlWeek .= '		<div style="width: 20px;text-align: right;">';
+							$htmlWeek .= '			<div class="input-group input-group-sm input-group-outline my-0">
+														<input disabled type="text" style="width: 22px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["Goles Local"] . '" name="golesl' . $row2["juego"] . '" id="golesl' . $row2["juego"] . '">
+													</div>';
+							$htmlWeek .= '		</div>
+												<div style="width: 10px;text-align: center;">' . $row2["marcador"] . '</div>
+												<div style="width: 20px;text-align: left;" class="align-self-center">';
+							$htmlWeek .= '			<div class="input-group input-group-sm input-group-outline my-0">
+														<input disabled type="text" style="width: 22px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["Goles Visitante"] . '" name="golesv' . $row2["juego"] . '" id="golesv' . $row2["juego"] . '">
+													</div>';
+							$htmlWeek .= '		</div>';
+							$htmlWeek .= '		<div ' .  $Config->EmpatesPenales . ' style="width: 20px;text-align: center;">';
+							$htmlWeek .= '			<div class="form-check" style="padding-left: 0px;">
+														<input class="form-check-input form-check-input-sm" type="checkbox" value="" name="penalv' . $row2["juego"] . '" id="penalv' . $row2["juego"] . '" ' . $row2["marcadorpv"] . ' disabled>
+														<label class="custom-control-label" for="penall"></label>
+													</div>';
+							$htmlWeek .= '		</div>
+												<div>' . $row2["Logov"] . '</div>
+											</div>
+											<div style="text-wrap: balance; width: 30%; text-align: left; padding-left: 10px; font-size:3vw;" class="align-self-center">' . $row2["Visitante"] .'</div></div>';
+						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= "";
+						}else{
+							$htmlWeek .= '<div class="d-flex px-0 py-1">';
+							$htmlWeek .= '<div style="width: 20%;text-align: center;padding-top: 6px;">
+											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['604'] . '</span></p>
+											<div class="d-flex px-1 py-0 lh-1">
+												<div style="width: 100%;text-align: center;">
+													<div class="input-group input-group-sm input-group-outline my-0">
+														<input type="date" style="width: 90px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["Fecha"] . '" name="fecha' . $row2["juego"] . '" id="fecha' . $row2["juego"] . '">
+													</div>
+												</div>
+											</div>
+										</div>';
+							$htmlWeek .= '<div style="width: 20%;text-align: center;padding-top: 6px;" ' .  $Config->time . '>
+											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['605'] . '</span></p>
+											<div class="d-flex px-1 py-0 lh-1"><div style="width: 100%;text-align: center;">
+												<div class="input-group input-group-sm input-group-outline my-0">
+													<input type="time" style="width: 90px;text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $row2["horario"] . '" name="horario' . $row2["juego"] . '" id="horario' . $row2["juego"] . '">
+												</div>
+											</div>
+										</div>';
+							$htmlWeek .= '</div>';
+						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '';
+						}else{
+							$htmlWeek .= '<div style="width: 23%;text-align: center;padding-top: 6px;">
+											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['606']. '</span></a></p>
+											<p style="margin-bottom: 0rem !important;" class="lh-1">
+												<div class="input-group input-group-static mb-0" style=" padding-left: 0.25rem; padding-right: 0.25rem;">
+													<select class="form-control" style="width : 90px;padding-top: 0px;padding-bottom: 0px;" name="campo' . $row2["juego"] . '" id="campo' . $row2["juego"] . '">';
+							$sql3 = "SELECT Campo_ID, Campo_DESC FROM $schema.Campos
+										order by Campo_DESC asc;";
+							$result3 = $Config->query($sql3);
+							if ($result3->num_rows > 0) {
+								// output data of each row
+								while($row3 = $result3->fetch_assoc()) {
+									if($row3["Campo_DESC"] == $row2["Campo"]){
+										$htmlWeek .= "<option value='" . $row3["Campo_ID"] . "' selected>" . $row3["Campo_DESC"] . "</option>";
+									}else{
+										$htmlWeek .= "<option value='" . $row3["Campo_ID"] . "'>" . $row3["Campo_DESC"] . "</option>";
+									}
+								}
+							}
+							$htmlWeek .= '
+								 </select>
+							   </div>
+							   </p>
+							   </div>';
+						}
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '';
+						}else{
+							$htmlWeek .= '<div style="width: 23%;text-align: center;padding-top: 6px;">
+											<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['649'] . '</span></p>
+											<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;">
+												<div class="input-group input-group-static mb-0" style=" padding-left: 0.25rem; padding-right: 0.25rem;">
+													<select class="form-control" style="width : 90px;padding-top: 0px;padding-bottom: 0px;" name="jugado' . $row2["juego"] . '" id="jugado' . $row2["juego"] . '" disabled>' . $row2["jugado"] . '</select>
+												</div>
+											</div>
+										</div>';
+						}
+
+						$htmlWeek .= '</div>';
+						$htmlWeek .= '';
+						if (strpos($row2["Comentarios"],$lang['654']) !== false){
+							$htmlWeek .= '<div style="width: 8%;text-align: right;padding-top: 6px;">
+								<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"></span></p>
+								</div>';
+						}else{
+							//if($row2["jugadoStat"] == 1){
+								$htmlWeek .= '<div style="width: 8%;text-align: right;padding-top: 6px;">
+									<p style="margin-bottom: 0rem !important;"><img class="expandirButtonS" id="expandirS' . $row2["juego"] . 'SA" src="./imagenes/expandir.png" height="25" width="25" onClick="abrirFichaEditSR(' . $row2["juego"] . ', ' . $row2["Jornada"] . ', ' . $row2["juego"] . ', \'' . $row2["Local"] . ' vs ' . $row2["Visitante"] . '\', \'' . $row2["Goles Local"] . '\', \'' . $row2["Goles Visitante"] . '\', \'' . $row2["Arbitro"] . '\', \'' . $row2["Comentarios"] . '\', ' . $row2["Extra_Local"] . ', ' . $row2["Extra_Visitante"] . ', \'\'); "></p>
+									</div>';
+							//}else{
+							//	$htmlWeek .= '<div style="width: 8%;text-align: right;padding-top: 6px;">
+							//		<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"></span></p>
+							//		</div>';
+							//}
+						}
+						$htmlWeek .= '</div></td>';
+						$htmlWeek .= '</tr>';
+						if (strpos($row2["Comentarios"],$lang['654']) == false){
+							$htmlWeek .= '<tr id="editS' . $row2["juego"] . '" class="juegoS" style="display: none">
+									<td  scope="row" colspan="14" style="width: 1183px; padding-left: 0px; padding-right: 0px;">
+										<div class="contentEditFichaS" width="100%" id="contentS' . $row2["juego"] . '" height="400"></div>
+									</td>
+								  </tr>';
+						}
+						$count++;
+					}
+				}
+				$htmlWeek .= '	<tr>
+									<td style="border-bottom: 0;">
+										<button type="button" class="btn btn-primary" onclick="saveChangesSR(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
+									</td>
+								</tr>';
+				
+                $htmlWeek .= '</tbody>';
+                $htmlWeek .= '</table>';
+				$htmlWeek .= '</div>';
+				$htmlWeek .= '</div>';
+                $htmlWeek .= '</div>';
+                ?>
