@@ -101,17 +101,25 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
     $htmlWeekGameDetail = '<table width="100%">
     <tr style="background: url(./imagenes/marcador.png?tmp=' . $fecha->getTimestamp() . ') no-repeat; background-size:100% 100%;">
-	    <td colspan="3" height="200">
-        	<table width="100%" height="100%">
-	            <tr>
-                	<td style="text-align:right; border: none;" width="25%"><img src="./imagenes/Original/' . $llogo . '.png?tmp=' . $fecha->getTimestamp() . '" width="180" height="180" alt=""/></td>
-                	<td style="text-align:center; border: none;" width="20%"><h1>' . $lgoal . '</h1></td>
-                	<td style="text-align:center; border: none;" width="10%"><h1>-</h1></td>
-                	<td style="text-align:center; border: none;" width="20%"><h1>' . $vgoal . '</h1></td>
-                	<td style="text-align:left; border: none;" width="25%"><img src="./imagenes/Original/' . $vlogo . '.png?tmp=' . $fecha->getTimestamp() . '" width="180" height="180" alt=""/></td>
-                </tr>
-            </table>
-        </td>
+		<main class="vs-screen" style="--bw: 784px; --bh: 170.4296875px;">
+			<div class="field" aria-hidden="true">
+				<img class="field__image" alt="" draggable="false" src="/background.png">
+			</div>
+			<div class="vs-screen__grid" aria-label="Lobos FC 2, Potros UAEMéx 0">
+				<section class="team team--left" style="opacity: 1; transform: none;">
+					<div class="team__crest">
+						<img class="team__logo" alt="Lobos FC crest" src="./imagenes/Original/' . $llogo . '.png?tmp=' . $fecha->getTimestamp() . '" style="transform: translateY(-1.96045px) scale(1.0147);">
+						<span class="team__score" style="color: rgb(17, 17, 17); opacity: 1; transform: none;">' . $lgoal . '</span>
+						<h1 class="team__name" style="color: rgb(17, 17, 17);">Lobos FC</h1>
+					</div></section><section class="team team--right" style="opacity: 1; transform: none;">
+					<div class="team__crest team__crest--reverse">
+						<img class="team__logo" alt="Potros UAEMéx crest" src="./imagenes/Original/' . $vlogo . '.png?tmp=' . $fecha->getTimestamp() . '" style="transform: translateY(-1.96045px) scale(1.0147);">
+						<span class="team__score" style="color: rgb(15, 90, 50); opacity: 1; transform: none;">' . $vgoal . '</span>
+						<h1 class="team__name" style="color: rgb(15, 90, 50);">Potros UAEMéx</h1>
+					</div>
+				</section>
+			</div>
+		</main>
     </tr>';
 	$apellidos = 'a.Apellido_P, 
 				  a.Apellido_M,';
