@@ -101,25 +101,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
     $htmlWeekGameDetail = '<table width="100%">
     <tr>
-		<main class="vs-screen" style="--bw: 784px; --bh: 170.4296875px;">
-			<div class="field" aria-hidden="true">
-				<img class="field__image" alt="" draggable="false" src="./imagenes/marcador.png?tmp=' . $fecha->getTimestamp() . '">
-			</div>
-			<div class="vs-screen__grid" aria-label="Lobos FC 2, Potros UAEMéx 0">
-				<section class="team team--left" style="opacity: 1; transform: none;">
-					<div class="team__crest">
-						<img class="team__logo" alt="Lobos FC crest" src="./imagenes/Original/' . $llogo . '.png?tmp=' . $fecha->getTimestamp() . '" style="transform: translateY(-1.96045px) scale(1.0147);">
-						<span class="team__score" style="color: rgb(17, 17, 17); opacity: 1; transform: none;">' . $lgoal . '</span>
-						<h1 class="team__name" style="color: rgb(17, 17, 17);">Lobos FC</h1>
-					</div></section><section class="team team--right" style="opacity: 1; transform: none;">
-					<div class="team__crest team__crest--reverse">
-						<img class="team__logo" alt="Potros UAEMéx crest" src="./imagenes/Original/' . $vlogo . '.png?tmp=' . $fecha->getTimestamp() . '" style="transform: translateY(-1.96045px) scale(1.0147);">
-						<span class="team__score" style="color: rgb(15, 90, 50); opacity: 1; transform: none;">' . $vgoal . '</span>
-						<h1 class="team__name" style="color: rgb(15, 90, 50);">Potros UAEMéx</h1>
-					</div>
-				</section>
-			</div>
-		</main>
+		<div id="root"></div>
+    	<script>
+      		window.MATCH = <?= json_encode($match, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    	</script>
+    	<script type="module" crossorigin src="./js/scores.js"></script>
     </tr>';
 	$apellidos = 'a.Apellido_P, 
 				  a.Apellido_M,';
