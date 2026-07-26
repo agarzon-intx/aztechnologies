@@ -106,9 +106,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$marcadorAwayLogo = htmlspecialchars('./imagenes/Original/' . $vlogo . '.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
 	$marcadorBg = htmlspecialchars('./imagenes/marcador.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
 
-    $htmlWeekGameDetail = '<table width="100%">
+    $htmlWeekGameDetail = '<table width="100%" style="width:100%;table-layout:fixed;">
     <tr>
-	    <td colspan="3" height="200" style="padding:0;border:none;height:200px;"
+	    <td colspan="3" width="100%" height="200" style="padding:0;border:none;width:100%;height:200px;"
 			data-marcador-root
 			data-home-name="' . $marcadorHomeName . '"
 			data-home-score="' . $lgoal . '"
