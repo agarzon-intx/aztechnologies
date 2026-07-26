@@ -100,10 +100,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 
     $htmlWeekGameDetail = '<table width="100%">
-    <tr style="background: url(./imagenes/marcador.png?tmp=' . $fecha->getTimestamp() . ') no-repeat; background-size:100% 100%;">
+    <tr>
 		<main class="vs-screen" style="--bw: 784px; --bh: 170.4296875px;">
 			<div class="field" aria-hidden="true">
-				<img class="field__image" alt="" draggable="false" src="/background.png">
+				<img class="field__image" alt="" draggable="false" src="./imagenes/marcador.png?tmp=' . $fecha->getTimestamp() . '">
 			</div>
 			<div class="vs-screen__grid" aria-label="Lobos FC 2, Potros UAEMéx 0">
 				<section class="team team--left" style="opacity: 1; transform: none;">
