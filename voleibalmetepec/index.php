@@ -117,6 +117,7 @@
 			rel="stylesheet"
 		/>
 		<link rel="stylesheet" crossorigin href="./css/scores.css" />
+		<script src="<?php echo index_js_src('javascript/scores.js'); ?>"></script>
 
 		<!-- CSS Files -->
 		<link id="pagestyle" href="./assets/css/material-dashboard.css?v=3.1.0" rel="stylesheet" />

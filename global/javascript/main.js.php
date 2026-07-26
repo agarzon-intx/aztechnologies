@@ -722,6 +722,18 @@ function closeAlert(){
     $("#alertaContent").css("display", "none");
 }
 
+function mountMarcadoresIn(selector) {
+	if (typeof window.mountMarcador !== 'function') return;
+	$(selector).find('[data-marcador-root]').each(function () {
+		window.mountMarcador(this);
+	});
+}
+
+function setWeekGameDetailHtml(selector, html) {
+	$(selector).html(html);
+	mountMarcadoresIn(selector);
+}
+
 function abrirFicha(id, week, game, gamedesc, lgoals, vgoals){
 	//console.log('abrirFicha');
 	var attr = $('#'+id).attr('style');
@@ -747,7 +759,7 @@ function abrirFicha(id, week, game, gamedesc, lgoals, vgoals){
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#content" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#content" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -784,7 +796,7 @@ function abrirFichaS(id, week, game, gamedesc, lgoals, vgoals){
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#content" + id + 'S').html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#content" + id + 'S', res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -3982,7 +3994,7 @@ function abrirFichaEdit(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Comen
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#content" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#content" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4019,7 +4031,7 @@ function abrirFichaEditS(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Come
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#contentS" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#contentS" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4321,7 +4333,7 @@ function abrirFichaEditC(id, week, game, gamedesc,Comentarios, SQL){
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#content" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#content" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4358,7 +4370,7 @@ function abrirFichaEditSC(id, week, game, gamedesc, Comentarios, SQL){
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#contentS" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#contentS" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4516,7 +4528,7 @@ function abrirFichaEditR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Come
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#content" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#content" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4550,7 +4562,7 @@ function abrirFichaEditSR(id, week, game, gamedesc, lgoals, vgoals, Arbitro, Com
 			success: function (res) {
 				mainLoadingOff()
 				if (res.status === '1') {
-					$("#contentS" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#contentS" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4583,7 +4595,7 @@ function abrirFichaEditBasketR(id, week, game, gamedesc, lgoals, vgoals, Arbitro
 			success: function (res) {
 				mainLoadingOff();
 				if (res.status === '1') {
-					$("#content" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#content" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4616,7 +4628,7 @@ function abrirFichaEditSBasketR(id, week, game, gamedesc, lgoals, vgoals, Arbitr
 			success: function (res) {
 				mainLoadingOff();
 				if (res.status === '1') {
-					$("#contentS" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#contentS" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4649,7 +4661,7 @@ function abrirFichaEditVoleibolR(id, week, game, gamedesc, lgoals, vgoals, Arbit
 			success: function (res) {
 				mainLoadingOff();
 				if (res.status === '1') {
-					$("#content" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#content" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {
@@ -4682,7 +4694,7 @@ function abrirFichaEditSVoleibolR(id, week, game, gamedesc, lgoals, vgoals, Arbi
 			success: function (res) {
 				mainLoadingOff();
 				if (res.status === '1') {
-					$("#contentS" + id).html(res.dataWeekGameDetail);
+					setWeekGameDetailHtml("#contentS" + id, res.dataWeekGameDetail);
 				}
 			},
 			error: function(jqxhr, status, exception) {

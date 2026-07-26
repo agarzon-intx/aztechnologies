@@ -99,13 +99,24 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 
+	$marcadorTmp = $fecha->getTimestamp();
+	$marcadorHomeName = htmlspecialchars($lequipo, ENT_QUOTES, 'UTF-8');
+	$marcadorAwayName = htmlspecialchars($vequipo, ENT_QUOTES, 'UTF-8');
+	$marcadorHomeLogo = htmlspecialchars('./imagenes/Original/' . $llogo . '.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
+	$marcadorAwayLogo = htmlspecialchars('./imagenes/Original/' . $vlogo . '.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
+	$marcadorBg = htmlspecialchars('./imagenes/marcador.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
+
     $htmlWeekGameDetail = '<table width="100%">
     <tr>
-		<div id="root"></div>
-    	<script>
-      		window.MATCH = <?= json_encode($match, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-    	</script>
-    	<script type="module" crossorigin src="./js/scores.js"></script>
+	    <td colspan="3" height="200" style="padding:0;border:none;height:200px;"
+			data-marcador-root
+			data-home-name="' . $marcadorHomeName . '"
+			data-home-score="' . $lgoal . '"
+			data-home-logo="' . $marcadorHomeLogo . '"
+			data-away-name="' . $marcadorAwayName . '"
+			data-away-score="' . $vgoal . '"
+			data-away-logo="' . $marcadorAwayLogo . '"
+			data-background="' . $marcadorBg . '"></td>
     </tr>';
 	$apellidos = 'a.Apellido_P, 
 				  a.Apellido_M,';
