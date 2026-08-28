@@ -34,10 +34,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$idImageStyle = $idPdfEnabled ? 'style="display: none;"' : '';
 	$idPdfStyle = $idPdfEnabled ? '' : 'style="display: none;"';
 	$idPdfExists = false;
-	if ($idPdfEnabled && $Config->jugadoresHasColumn('IdentificacionPDF')) {
-		$pdfCheck = $Config->query("SELECT OCTET_LENGTH(IdentificacionPDF) len FROM $schema.Jugadores WHERE Jugador_ID = " . SanitizeInteger($_POST['player']));
+	$idImageExists = false;
+	if ($idPdfEnabled) {
+		$__pdfLen = $Config->jugadoresHasColumn('IdentificacionPDF') ? "OCTET_LENGTH(IdentificacionPDF)" : "0";
+		$pdfCheck = $Config->query("SELECT $__pdfLen pdflen, OCTET_LENGTH(Identificacion) imglen FROM $schema.Jugadores WHERE Jugador_ID = " . SanitizeInteger($_POST['player']));
 		if ($pdfCheck && $pdfRow = $pdfCheck->fetch_assoc()) {
-			$idPdfExists = (int) $pdfRow["len"] > 100;
+			$idPdfExists = (int) $pdfRow["pdflen"] > 100;
+			$idImageExists = (int) $pdfRow["imglen"] > 100;
 		}
 	}
 	
@@ -466,12 +469,13 @@ $htmlPlayer .= '													</select>
 								</div>
 								</div>
 								<div ' . $idPdfStyle . '>
-									<h4>' . $lang['539'] . '</h4>
+									<h4>' . $lang['948'] . '</h4>
 									<div class="row">
 										<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 											<span style="text-align: center; ">
 												<div style="width: 100%; height: 320px; background-color: #BFBFBF; margin: auto;">
-													<iframe id="identificacionPDFE" src="' . ($idPdfExists ? 'Form/fetch_pdf.php?Jugador_ID=' . $player . '&tmp=' . $fecha->getTimestamp() : '') . '" title="' . $lang['539'] . '" style="width: 100%; height: 320px; border: 0; ' . ($idPdfExists ? '' : 'display: none;') . '"></iframe>
+													<iframe id="identificacionPDFE" src="' . ($idPdfExists ? 'Form/fetch_player_pdf.php?Jugador_ID=' . $player . '&tmp=' . $fecha->getTimestamp() : '') . '" title="' . $lang['948'] . '" style="width: 100%; height: 320px; border: 0; ' . ($idPdfExists ? '' : 'display: none;') . '"></iframe>
+													<img id="identificacionPDFImgE" src="' . ((!$idPdfExists && $idImageExists) ? 'Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Identificacion&tmp=' . $fecha->getTimestamp() : '') . '" alt="" style="max-width: 100%; max-height: 320px; ' . ((!$idPdfExists && $idImageExists) ? '' : 'display: none;') . '"/>
 												</div>
 											</span>
 										</div>

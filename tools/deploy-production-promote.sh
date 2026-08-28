@@ -30,7 +30,7 @@ done < "$ENV_FILE"
 
 export REPO
 python3 << 'PY' > /tmp/az-promote-files.txt
-import subprocess, os, json, hashlib
+import os, json, hashlib
 REPO = os.environ['REPO']
 STATE = os.path.join(REPO, '.local', 'promote-state.json')
 SITES = ['elite','huskies','lidep','nuestrodeporte','vollidep','voleibalmetepec','aztflag','demo','candlesStore']
@@ -55,22 +55,6 @@ def is_junction_path(rel):
     parts = rel.split('/')
     return len(parts) >= 2 and parts[0] in SITES and parts[1] in JUNCTIONS
 
-def expand(path):
-    """An untracked directory is reported as a single entry; deploy every file inside it."""
-    full = os.path.join(REPO, path)
-    if os.path.isfile(full):
-        return [path]
-    if not os.path.isdir(full):
-        return []
-    found = []
-    for root, dirs, files in os.walk(full):
-        dirs[:] = [d for d in dirs if d not in ('.git', '.local', '.cursor')]
-        for name in files:
-            rel = os.path.relpath(os.path.join(root, name), REPO).replace('\\', '/')
-            if should_deploy(rel):
-                found.append(rel)
-    return found
-
 def digest(rel):
     h = hashlib.sha1()
     with open(os.path.join(REPO, rel), 'rb') as fh:
@@ -88,32 +72,29 @@ except Exception:
 promoted = state.get('uploaded', {})
 removed = set(state.get('deleted', []))
 
-out = subprocess.check_output(['git','status','--porcelain'], text=True, errors='replace')
-upload, delete = [], []
-for line in out.splitlines():
-    if len(line) < 4: continue
-    xy, path = line[:2], line[3:].strip().strip('"')
-    path = path.split(' -> ', 1)[0].replace('\\', '/')
-    # A path can carry both an index and a worktree status (e.g. 'MM', 'AM'); a
-    # deletion in either column means remove, anything else present means upload.
-    codes = {c for c in xy if c not in (' ', '?')}
-    if xy == '??':
-        codes = {'?'}
-    if 'D' in codes:
-        if should_deploy(path) and not is_junction_path(path):
-            delete.append(path)
-    elif codes & {'M', 'A', 'R', 'C', '?'}:
-        if should_deploy(path):
-            upload.extend(expand(path))
-
+# The working tree is the source of truth, not `git status`: an auto-commit job
+# can clear the dirty list at any moment and would otherwise hide pending work.
+on_disk = set()
 pending_upload = []
-for rel in sorted(set(upload)):
-    try:
-        if promoted.get(rel) != digest(rel):
-            pending_upload.append(rel)
-    except OSError:
-        continue
-pending_delete = [p for p in sorted(set(delete)) if p not in removed]
+for root, dirs, files in os.walk(REPO):
+    dirs[:] = [d for d in dirs if d not in ('.git', '.local', '.cursor', 'node_modules')]
+    for name in files:
+        rel = os.path.relpath(os.path.join(root, name), REPO).replace('\\', '/')
+        if not should_deploy(rel):
+            continue
+        on_disk.add(rel)
+        try:
+            if promoted.get(rel) != digest(rel):
+                pending_upload.append(rel)
+        except OSError:
+            continue
+pending_upload.sort()
+
+# Anything previously promoted that no longer exists locally should go away remotely.
+pending_delete = sorted(
+    rel for rel in promoted
+    if rel not in on_disk and rel not in removed and not is_junction_path(rel)
+)
 
 for kind, paths in [('UPLOAD', pending_upload), ('DELETE', pending_delete)]:
     print(f'#{kind} {len(paths)}')

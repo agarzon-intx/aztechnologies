@@ -2185,6 +2185,7 @@ function readIDPDFURLE(input, identificacion) {
 		}
 	});
 	if (input.files && input.files[0]) {
+		$('#identificacionPDFImgE').hide();
 		$('#' + identificacion).attr('src', URL.createObjectURL(input.files[0]));
 		$('#' + identificacion).show();
 	}

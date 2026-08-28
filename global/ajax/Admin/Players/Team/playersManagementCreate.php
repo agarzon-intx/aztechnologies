@@ -380,12 +380,12 @@ $htmlPlayer .= '													</select>
 							</div>
 							</div>
 							<div ' . $idPdfStyle . '>
-								<h4>' . $lang['539'] . '</h4>
+								<h4>' . $lang['948'] . '</h4>
 								<div class="row">
 									<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 										<span style="text-align: center; ">
 											<div style="width: 100%; height: 320px; background-color: #BFBFBF; margin: auto;">
-												<iframe id="identificacionPDF" src="" title="' . $lang['539'] . '" style="width: 100%; height: 320px; border: 0; display: none;"></iframe>
+												<iframe id="identificacionPDF" src="" title="' . $lang['948'] . '" style="width: 100%; height: 320px; border: 0; display: none;"></iframe>
 											</div>
 										</span>
 									</div>
