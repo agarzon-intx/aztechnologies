@@ -1535,14 +1535,14 @@ function playersManagementAdminShowCreate(Category, Team){
 	});
 }
 
-function playersManagementAdminCreatePlayer(name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, scat, steam){
+function playersManagementAdminCreatePlayer(name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, scat, steam, idpdf){
 	//console.log('playersManagementAdminCreatePlayer name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', nickname = ' + nickname + ', birthdate = ' + birthdate + ', playernumber = ' + playernumber + ', phone = ' + phone + ', sex = ' + sex + ', email = ' + email + ', id = ' + id + ', comments = ' + comments + ', valid = ' + valid + ', status = ' + status + ', team = ' + team + ', picture = ' + picture + ', idf = ' + idf + ', idb = ' + idb + ', signature = ' + signature + ', type = ' + type);
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Players/Admin/playersManagementCreateSave.php',
-		data: {name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type},
+		data: {name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type, idpdf: idpdf},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -1584,14 +1584,14 @@ function playersManagementAdminShowEdit(player){
 	});
 }
 
-function playersManagementAdminEditPlayer(playerid, name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, scat, steam){
+function playersManagementAdminEditPlayer(playerid, name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, scat, steam, idpdf){
 	console.log('playersManagementAdminEditPlayer playerid = ' + playerid + ', name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', nickname = ' + nickname + ', birthdate = ' + birthdate + ', playernumber = ' + playernumber + ', phone = ' + phone + ', sex = ' + sex + ', email = ' + email + ', id = ' + id + ', comments = ' + comments + ', valid = ' + valid + ', status = ' + status + ', team = ' + team + ', picture = ' + picture + ', idf = ' + idf + ', idb = ' + idb + ', signature = ' + signature + ', type = ' + type);
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Players/Admin/playersManagementEditSave.php',
-		data: {playerid: playerid, name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type},
+		data: {playerid: playerid, name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type, idpdf: idpdf},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -1964,7 +1964,7 @@ function playersManagementTeamShowCreate(Team){
 	});
 }
 
-function playersManagementTeamCreatePlayer(name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, srcteam){
+function playersManagementTeamCreatePlayer(name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, srcteam, idpdf){
 	//console.log('playersManagementTeamCreatePlayer name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', nickname = ' + nickname + ', birthdate = ' + birthdate + ', playernumber = ' + playernumber + ', phone = ' + phone + ', sex = ' + sex + ', email = ' + email + ', id = ' + id + ', comments = ' + comments + ', valid = ' + valid + ', status = ' + status + ', team = ' + team + ', picture = ' + picture + ', idf = ' + idf + ', idb = ' + idb + ', signature = ' + signature + ', type = ' + type);
 	mainLoadingOn();
 	$.ajax({
@@ -2013,7 +2013,7 @@ function playersManagementTeamShowEdit(player){
 	});
 }
 
-function playersManagementTeamEditPlayer(playerid, name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, steam){
+function playersManagementTeamEditPlayer(playerid, name, lastname, lastname2, nickname, birthdate, playernumber, phone, sex, email, id, comments, valid, status, team, picture, idf, idb, signature, type, steam, idpdf){
 	//console.log('playersManagementTeamEditPlayer playerid = ' + playerid + ', name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', nickname = ' + nickname + ', birthdate = ' + birthdate + ', playernumber = ' + playernumber + ', phone = ' + phone + ', sex = ' + sex + ', email = ' + email + ', id = ' + id + ', comments = ' + comments + ', valid = ' + valid + ', status = ' + status + ', team = ' + team + ', picture = ' + picture + ', idf = ' + idf + ', idb = ' + idb + ', signature = ' + signature + ', type = ' + type);
 	mainLoadingOn();
 	$.ajax({
