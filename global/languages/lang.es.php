@@ -714,6 +714,7 @@
 	$lang['js910'] = 'El archivo fue cargado exitosamente';
 	$lang['js911'] = 'El archifo no fue cargado';
 	$lang['js912'] = 'Por favor seleccione una imagen.';
+	$lang['js912-1'] = 'Por favor seleccione un archivo PDF.';
 	$lang['js913'] = 'Selecciona un Criterio: ';
 	$lang['js914'] = 'Selecciona una Opcion';
 	$lang['js914-1'] = 'Selecciona';

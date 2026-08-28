@@ -714,6 +714,7 @@
 	$lang['js910'] = 'File Upload complete';
 	$lang['js911'] = 'File Upload failed';
 	$lang['js912'] = 'Please select File';
+	$lang['js912-1'] = 'Please select a PDF file';
 	$lang['js913'] = 'Select Range: ';
 	$lang['js914'] = 'Select an Option';
 	$lang['js914-1'] = 'Select';
