@@ -29,6 +29,16 @@ $schema = $Config->getSchema();
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 	$signatureStyle = $Config->playerSignatureEnabled() ? '' : 'style="display: none;"';
+	$idPdfEnabled = $Config->playerIDPDFEnabled();
+	$idImageStyle = $idPdfEnabled ? 'style="display: none;"' : '';
+	$idPdfStyle = $idPdfEnabled ? '' : 'style="display: none;"';
+	$idPdfExists = false;
+	if ($idPdfEnabled && $Config->jugadoresHasColumn('IdentificacionPDF')) {
+		$pdfCheck = $Config->query("SELECT OCTET_LENGTH(IdentificacionPDF) len FROM $schema.Jugadores WHERE Jugador_ID = " . SanitizeInteger($_POST['player']));
+		if ($pdfCheck && $pdfRow = $pdfCheck->fetch_assoc()) {
+			$idPdfExists = (int) $pdfRow["len"] > 100;
+		}
+	}
 	
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
     $Category = $_COOKIE[$Config->getAlias() . 'category'];

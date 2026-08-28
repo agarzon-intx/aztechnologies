@@ -127,6 +127,23 @@ class Configuration
     }
 
     /**
+     * Whether the player document is captured as a PDF instead of ID images.
+     * Safe on schemas where the column has not been added yet.
+     */
+    public function playerIDPDFEnabled(): bool
+    {
+        if (!$this->configurationHasColumn('playerIDPDF')) {
+            return false;
+        }
+        $result = $this->query("SELECT playerIDPDF FROM " . $this->config["schema"] . ".Configuration WHERE id = 0");
+        if (!$result) {
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        return $row !== null && (int) $row["playerIDPDF"] === 1;
+    }
+
+    /**
      * Whether the player signature capture is enabled for this site.
      * Safe on schemas where the column has not been added yet.
      */

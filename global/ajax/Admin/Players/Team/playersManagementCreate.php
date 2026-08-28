@@ -32,6 +32,9 @@ if (!defined('APP_SITE_ROOT')) {
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 	$signatureStyle = $Config->playerSignatureEnabled() ? '' : 'style="display: none;"';
+	$idPdfEnabled = $Config->playerIDPDFEnabled();
+	$idImageStyle = $idPdfEnabled ? 'style="display: none;"' : '';
+	$idPdfStyle = $idPdfEnabled ? '' : 'style="display: none;"';
 	
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
 	$Team = SanitizeInteger($_POST['Team']);
