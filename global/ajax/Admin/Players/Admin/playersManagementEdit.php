@@ -29,6 +29,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+	$signatureStyle = $Config->playerSignatureEnabled() ? '' : 'style="display: none;"';
 	
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
     $Category = $_COOKIE[$Config->getAlias() . 'category'];
@@ -452,7 +453,7 @@ $htmlPlayer .= '													</select>
 										</div>
 									</div>
 								</div>
-								<div class="row">
+								<div class="row" ' . $signatureStyle . '>
 									<h4>' . $lang['949'] . '</h4>
 									<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 										<span style="text-align: center; ">
@@ -462,7 +463,7 @@ $htmlPlayer .= '													</select>
 										</span>
 									</div>
 								</div>
-								<div class="row">
+								<div class="row" ' . $signatureStyle . '>
 									<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 										<span style="text-align: left; ">
 											<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myFirmaE\'), \'click\');" id="subirfirmaE">' . $lang['935'] . '</button>' . $lang['936'] . '

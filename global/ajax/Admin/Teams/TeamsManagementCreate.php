@@ -95,8 +95,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$htmlTeams .= '							</select>
 										</div>
-									</div>
-									<div class="col-xl-12">
+									</div>';
+	$institucionSelected = 0;
+	require __DIR__ . DIRECTORY_SEPARATOR . 'teams_institution_select.inc.php';
+	$htmlTeams .= '									<div class="col-xl-12">
 										<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
 											<label class="form-label">' . $lang['520'] . '</label>
 											<input type="text" class="form-control" name="descripcionLarga" id="descripcionLarga" value=""/>
@@ -108,6 +110,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<input type="text" class="form-control" name="descripcion3" id="descripcion3" value="" maxlength="6"/>
 										</div>
 									</div>
+									';
+	$teamNameColor = '#000000';
+	$credentialColor = null;
+	require __DIR__ . DIRECTORY_SEPARATOR . 'teams_color_fields.inc.php';
+	$htmlTeams .= '
 									<div class="col-xl-12">
 										<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
 											<label class="form-label">' . $lang['521'] . '</label>

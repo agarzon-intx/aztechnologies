@@ -1,6 +1,8 @@
 <?php
 	require_once __DIR__ . '/site_paths.php';
 	session_start();
+	header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+	header('Pragma: no-cache');
 	//define('DEBUG', true);
 
 	//error_reporting(0);
@@ -107,14 +109,6 @@
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
 		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 		
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&family=Syne:wght@700;800&family=Teko:wght@500;600;700&display=swap"
-			rel="stylesheet"
-		/>
-		<link rel="stylesheet" crossorigin href="./css/scores.css" />
-		<script src="<?php echo index_js_src('javascript/scores.js'); ?>"></script>
 
 		<!-- CSS Files -->
 		<link id="pagestyle" href="./assets/css/material-dashboard.css?v=3.1.0" rel="stylesheet" />
@@ -164,6 +158,7 @@
 		<script src="<?php echo index_js_src('javascript/week.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('javascript/campo.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('javascript/equipo.js.php'); ?>" type="text/javascript"></script>
+		<script src="<?php echo index_js_src('javascript/institucion.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('javascript/avisos.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('javascript/minutasAdmin.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('javascript/jornadaAdmin.js.php'); ?>" type="text/javascript"></script>
@@ -306,8 +301,8 @@
 		<script async defer src="https://buttons.github.io/buttons.js"></script>
 		<!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
 		<script src="<?php echo index_js_src('./assets/js/material-dashboard.js?v=3.1.0'); ?>"></script>
-		<script src="<?php echo index_js_src('../assets/js/plugins/sweetalert.min.js'); ?>"></script>
-		<script src="<?php echo index_js_src('../assets/js/plugins/nouislider.min.js'); ?>"></script>
+		<script src="<?php echo index_js_src('./assets/js/plugins/sweetalert.min.js'); ?>"></script>
+		<script src="<?php echo index_js_src('./assets/js/plugins/nouislider.min.js'); ?>"></script>
 		<!--<script src="<?php echo index_js_src('./assets/js/material-dashboard.js'); ?>"></script>-->
 		<script type="text/javascript">var MSG_AJAX_GENERIC = <?php echo json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;</script>
 		<?php require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_facebook_lang_js.inc.php'; ?>
@@ -315,15 +310,19 @@
 		<script src="<?php echo index_js_src('./javascript/mainVoleibol.js.php'); ?>" type="text/javascript"></script>
                 <script src="<?php echo index_js_src('./javascript/mainBasket.js.php'); ?>" type="text/javascript"></script>
 		<script src="<?php echo index_js_src('./javascript/mainFlag.js.php'); ?>" type="text/javascript"></script>
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYiDvsZGN5SeQjZIuwO1KwyW6BTkyuNBc&libraries=marker&loading=async" type="text/javascript"></script>
 		<script>
-			window.onload = function() {
-				loadTournament(<?php echo $Season; ?>); 
+			function bootApp() {
+				loadTournament(<?php echo (int)$Season; ?>);
 				loadMenu();
 				reloadNotifications();
 				nIntervAlert = setInterval(reloadNotifications, 300000);
 				nIntervId = setInterval(checkSessionExpire, 1800000);
-			};
+			}
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', bootApp);
+			} else {
+				bootApp();
+			}
 			
 			<?php
 			$sql = "SELECT Aviso_ID 
@@ -335,11 +334,12 @@
     		if ($result->num_rows > 0) {
     				// output data of each row
     				while($row2 = $result->fetch_assoc()) {
-    						echo "loadAlert(" . $row2["Aviso_ID"] . ");";
+    						echo "queueAlert(" . $row2["Aviso_ID"] . ");";
     				}
     		}
     		?>
 		</script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYiDvsZGN5SeQjZIuwO1KwyW6BTkyuNBc&libraries=marker&loading=async" async defer></script>
 		<div id="mainLoading" style="z-index: -1;display: none;margin: auto;width: 100%;height: 100%;background: rgba(179, 177, 177, 0.6); position: fixed; inset: 0px;">
     		<div class="spinner-border text-info" role="status" style="left: 52%; position: absolute; top: 52%;" >
               <span class="sr-only">Loading...</span>

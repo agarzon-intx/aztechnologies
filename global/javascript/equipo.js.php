@@ -56,7 +56,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
               selectedValues.push($(this).val());
             });
         
-			teamManagementCreateSave(category, $('#descripcion').val(), $('#descripcionLarga').val(), +$('#estatus').is( ':checked' ), selectedValues.toString(), $('#campo').val(), $('#playeraA').val(), $('#shortA').val(), $('#calcetasA').val(), $('#myLogoFileName').val(), $('#descripcion3').val());
+			teamManagementCreateSave(category, $('#descripcion').val(), $('#descripcionLarga').val(), +$('#estatus').is( ':checked' ), selectedValues.toString(), $('#institucion').val(), $('#campo').val(), $('#playeraA').val(), $('#shortA').val(), $('#calcetasA').val(), $('#myLogoFileName').val(), $('#descripcion3').val(), $('#nombreColor').val(), $('#credencialColorUnset').is(':checked') ? '' : $('#credencialColor').val());
 		}	
 		
 		
@@ -79,6 +79,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				alert(error);
 				return false;
 			}
-			teamManagementEditSave(id, category, $('#descripcion').val(), $('#descripcionLarga').val(), +$('#estatus').is( ':checked' ), $('#fuerza').val(), $('#campo').val(), $('#playeraA').val(), $('#shortA').val(), $('#calcetasA').val(), $('#myLogoFileName').val(), $('#descripcion3').val());
+			teamManagementEditSave(id, category, $('#descripcion').val(), $('#descripcionLarga').val(), +$('#estatus').is( ':checked' ), $('#fuerza').val(), $('#institucion').val(), $('#campo').val(), $('#playeraA').val(), $('#shortA').val(), $('#calcetasA').val(), $('#myLogoFileName').val(), $('#descripcion3').val(), $('#nombreColor').val(), $('#credencialColorUnset').is(':checked') ? '' : $('#credencialColor').val());
 		}";
 ?>

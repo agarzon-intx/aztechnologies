@@ -33,6 +33,7 @@ $count = 1;
 $result2 = $Config->query($sql2Teams);
 if ($result2 && $result2->num_rows > 0) {
 	while($row2 = $result2->fetch_assoc()) {
+		$teamStatus = ((int) $row2["Activo"] === 1) ? $lang['523'] : $lang['416'];
 		if (($count % 2) == 1){
 			$htmlTeams .= "<tr>";
 		}else{
@@ -41,7 +42,7 @@ if ($result2 && $result2->num_rows > 0) {
 		$htmlTeams .=	'<td ' . $Config->ShowIDColumn . ' scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["Equipo_ID"]. '</span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal"><div class="" style="height: 30px;width: 30px;"><img src="imagenes/' . $row2["newLogo"] . '.png?tmp=' . $fecha->getTimestamp() . '" width="30" height="30" alt=""></div></span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["Equipo_DESC"]. '</span></td>
-						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["Activo"]. '</span></td>
+						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $teamStatus . '</span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["categoria_desc"]. '</span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["Equipo_FULLDESC"]. '</span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["Campo_DESC"]. '</span></td>
@@ -91,7 +92,7 @@ if ($result2 && $result2->num_rows > 0) {
 								</div>
 								<div style="flex: 0 0 14%; max-width:14%; min-width:0; text-align: center; padding-top: 0px;">
 									<p class="text-wrap" style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['518'] . '</span></p>
-									<div class="lh-sm"><span class="text-secondary text-xs font-weight-normal text-wrap d-inline-block" style="max-width:100%;">' . $row2["Activo"] . '</span></div>
+									<div class="lh-sm"><span class="text-secondary text-xs font-weight-normal text-wrap d-inline-block" style="max-width:100%;">' . $teamStatus . '</span></div>
 								</div>
 								<div style="flex: 0 0 14%; max-width:14%; min-width:0; text-align: center; padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important; padding-top: 0.5rem;"><span class="text-secondary text-xs font-weight-bold">&nbsp;</span></p>

@@ -168,6 +168,13 @@ $schema = $Config->getSchema();
     								<ul class="nav ">
     
     									<li class="nav-item ">
+    										<a class="nav-link text-white " aria-expanded="false" onClick="institutionsManagementShow(); toggleSidenav();">
+    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">account_balance</i> </span>
+    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['113-2'] . ' <b class="caret"></b></span>
+    										</a>
+    									</li>
+
+    									<li class="nav-item ">
     										<a class="nav-link text-white " aria-expanded="false" onClick="teamsManagementAdminCategoryShow(); toggleSidenav();">
     											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">groups</i> </span>
     											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['113'] . ' <b class="caret"></b></span>

@@ -111,6 +111,7 @@
   	$lang['112'] = 'Teams';
   	$lang['112-1'] = 'Choose a team';
   	$lang['113'] = 'Teams';
+	$lang['113-2'] = 'Institutions';
   	$lang['114'] = 'Colors';
   	$lang['115'] = 'Players';
   	$lang['116'] = 'Alerts';
@@ -378,9 +379,18 @@
 	$lang['526'] = 'Team Updated';
 	$lang['527'] = 'Create Team';
 	$lang['528'] = 'Update Team';
-	$lang['529'] = 'Team Info';
-	$lang['530'] = 'Team Uniform';
-	$lang['531'] = 'Team Logo';
+	$lang['529'] = 'Information';
+	$lang['530'] = 'Uniform';
+	$lang['531'] = 'Logo';
+	$lang['532'] = 'Name Color';
+	$lang['533'] = 'Credential Color';
+	$lang['534'] = 'No credential color';
+	$lang['535'] = 'Active Date';
+	$lang['536'] = 'Validation Date';
+	$lang['537'] = 'Inactive Date';
+	$lang['538'] = 'Validation';
+	$lang['539'] = 'Player Doc PDF';
+	$lang['539-1'] = 'Player Signature';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';
@@ -1300,4 +1310,19 @@
 	$lang['jsfb32'] = 'The server took too long generating images. Try fewer games or contact the administrator.';
 
 	$lang['120000']='By Team';
+
+	//Institutions
+	$lang['inst001'] = 'Institutions List';
+	$lang['inst002'] = 'Institution ID';
+	$lang['inst003'] = 'Logo';
+	$lang['inst004'] = 'Name';
+	$lang['inst005'] = 'Active';
+	$lang['inst006'] = 'Full Name';
+	$lang['inst007'] = 'Name 5';
+	$lang['inst008'] = 'Create Institution';
+	$lang['inst009'] = 'Update Institution';
+	$lang['inst010'] = 'Institution Saved';
+	$lang['inst011'] = 'Institution Updated';
+	$lang['inst012'] = 'Search institution by name';
+	$lang['inst013'] = 'Name 5 must be 3 to 5 characters';
 ?>

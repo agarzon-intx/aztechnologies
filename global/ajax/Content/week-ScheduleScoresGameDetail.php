@@ -99,24 +99,24 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 
-	$marcadorTmp = $fecha->getTimestamp();
-	$marcadorHomeName = htmlspecialchars($lequipo, ENT_QUOTES, 'UTF-8');
-	$marcadorAwayName = htmlspecialchars($vequipo, ENT_QUOTES, 'UTF-8');
-	$marcadorHomeLogo = htmlspecialchars('./imagenes/Original/' . $llogo . '.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
-	$marcadorAwayLogo = htmlspecialchars('./imagenes/Original/' . $vlogo . '.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
-	$marcadorBg = htmlspecialchars('./imagenes/marcador.png?tmp=' . $marcadorTmp, ENT_QUOTES, 'UTF-8');
+	$azMarcadorTmp = $fecha->getTimestamp();
+	$azMarcadorHomeName = htmlspecialchars($lequipo, ENT_QUOTES, 'UTF-8');
+	$azMarcadorAwayName = htmlspecialchars($vequipo, ENT_QUOTES, 'UTF-8');
+	$azMarcadorHomeLogo = htmlspecialchars('./imagenes/Original/' . $llogo . '.png?tmp=' . $azMarcadorTmp, ENT_QUOTES, 'UTF-8');
+	$azMarcadorAwayLogo = htmlspecialchars('./imagenes/Original/' . $vlogo . '.png?tmp=' . $azMarcadorTmp, ENT_QUOTES, 'UTF-8');
+	$azMarcadorBg = htmlspecialchars('./imagenes/marcador.png?tmp=' . $azMarcadorTmp, ENT_QUOTES, 'UTF-8');
 
-    $htmlWeekGameDetail = '<table width="100%" style="width:100%;table-layout:fixed;">
+    $htmlWeekGameDetail = '<table class="az-marcador-table" width="100%" style="width:100%;table-layout:fixed;">
     <tr>
-	    <td colspan="3" width="100%" height="200" style="padding:0;border:none;width:100%;height:200px;"
-			data-marcador-root
-			data-home-name="' . $marcadorHomeName . '"
+	    <td colspan="3" width="100%" height="200" class="az-marcador-host" style="padding:0;border:none;width:100%;height:200px;"
+			data-az-marcador
+			data-home-name="' . $azMarcadorHomeName . '"
 			data-home-score="' . $lgoal . '"
-			data-home-logo="' . $marcadorHomeLogo . '"
-			data-away-name="' . $marcadorAwayName . '"
+			data-home-logo="' . $azMarcadorHomeLogo . '"
+			data-away-name="' . $azMarcadorAwayName . '"
 			data-away-score="' . $vgoal . '"
-			data-away-logo="' . $marcadorAwayLogo . '"
-			data-background="' . $marcadorBg . '"></td>
+			data-away-logo="' . $azMarcadorAwayLogo . '"
+			data-background="' . $azMarcadorBg . '"></td>
     </tr>';
 	$apellidos = 'a.Apellido_P, 
 				  a.Apellido_M,';

@@ -30,11 +30,13 @@ if (!defined('APP_SITE_ROOT')) {
 	$retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 	
 	$Season = SanitizeInteger($_POST["Season"]);
+	$Category = 0;
 	
 	$htmlCategories = '';
 	$CategoryRows = 0;
 	$htmlLogos = '';
 	$htmlLogosList = '';
+	$__alias = $Config->getAlias();
 	//echo $Season;
 	if($Season == '-1'){
 		$sql = "select max(Torneo_ID) Torneo_ID
@@ -45,11 +47,15 @@ if (!defined('APP_SITE_ROOT')) {
 			// output data of each row
 			while($row2 = $result->fetch_assoc()) {
 				$Season = mb_convert_encoding((string)$row2["Torneo_ID"], 'UTF-8', 'ISO-8859-1');
-				setcookie($Config->getAlias() . "season",$Season,0,'/');
+				setcookie($__alias . "season",$Season,0,'/');
+				$_COOKIE[$__alias . "season"] = $Season;
+				$_SESSION[$__alias . "season"] = $Season;
 			}
 		}
 	}else{
-		setcookie($Config->getAlias() . "season",$Season,0,'/');
+		setcookie($__alias . "season",$Season,0,'/');
+		$_COOKIE[$__alias . "season"] = $Season;
+		$_SESSION[$__alias . "season"] = $Season;
 	}
 	
 	$sql = "select Categoria_ID
@@ -63,9 +69,17 @@ if (!defined('APP_SITE_ROOT')) {
 	if ($result->num_rows > 0) {
 		// output data of each row
 		while($row2 = $result->fetch_assoc()) {
-			setcookie($Config->getAlias() . "category",$row2["Categoria_ID"],0,'/');
 			$Category = $row2["Categoria_ID"];
+			setcookie($__alias . "category",$Category,0,'/');
+			$_COOKIE[$__alias . "category"] = $Category;
+			$_SESSION[$__alias . "category"] = $Category;
 		}
+	}
+	if (!$Category) {
+		$retunData = array('status' => '0', 'message' => 'No active category for season.', 'dataCategories' => '', 'category' => 0);
+		$Config->Close();
+		echo json_encode($retunData);
+		exit;
 	}
 	
 	$sql = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
@@ -95,7 +109,9 @@ if (!defined('APP_SITE_ROOT')) {
 				$htmlCategories .= '<a class="btn bg-gradient-dark" data-bs-toggle="dropdown" id="navbarDropdownMenuLinkCat" style="padding-top: 0px; padding-bottom: 0px; margin-bottom: 0px;" aria-expanded="false">' . $row2["Categoria_Desc"] . '</a>';
 			}
 			$Category = mb_convert_encoding((string)$row2["Categoria_ID"], 'UTF-8', 'ISO-8859-1');
-			setcookie($Config->getAlias() . "category",$Category,0,'/');
+			setcookie($__alias . "category",$Category,0,'/');
+			$_COOKIE[$__alias . "category"] = $Category;
+			$_SESSION[$__alias . "category"] = $Category;
 		}
 	} else {
 	   $htmlCategories .= "";

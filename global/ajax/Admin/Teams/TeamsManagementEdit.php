@@ -38,6 +38,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$htmlFields = "";
 	$fecha = new DateTime();
+	$institucionA = 0;
+	$teamNameColorA = '#000000';
+	$credentialColorA = '#000000';
 
 	$sql="	SELECT a.*, c.Campo_DESC 
 			FROM $schema.Equipos a 
@@ -61,6 +64,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$playeraAC = $row2["Playera"]; 
 			$calcetasAC = $row2["Calcetas"]; 
 			$descripcion3A = $row2["Equipo_DESC3"];
+			$institucionA = isset($row2["Institucion_ID"]) ? (int) $row2["Institucion_ID"] : 0;
+			$teamNameColorA = isset($row2["Nombre_Color"]) && $row2["Nombre_Color"] !== '' ? $row2["Nombre_Color"] : '#000000';
+			$credentialColorA = isset($row2["Credencial_Color"]) && $row2["Credencial_Color"] !== '' ? $row2["Credencial_Color"] : null;
 		}		
 	}
 	
@@ -121,8 +127,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$htmlTeams .= '							</select>
 										</div>
-									</div>
-									<div class="col-xl-12">
+									</div>';
+	$institucionSelected = $institucionA;
+	require __DIR__ . DIRECTORY_SEPARATOR . 'teams_institution_select.inc.php';
+	$htmlTeams .= '									<div class="col-xl-12">
 										<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
 											<label class="form-label">' . $lang['520'] . '</label>
 											<input type="text" class="form-control" name="descripcionLarga" id="descripcionLarga" value="' . $descripcionLargaA . '"/>
@@ -134,6 +142,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<input type="text" class="form-control" name="descripcion3" id="descripcion3" value="' . $descripcion3A . '" maxlength="6"/>
 										</div>
 									</div>
+									';
+	$teamNameColor = $teamNameColorA;
+	$credentialColor = $credentialColorA;
+	require __DIR__ . DIRECTORY_SEPARATOR . 'teams_color_fields.inc.php';
+	$htmlTeams .= '
 									<div class="col-xl-12">
 										<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
 											<label class="form-label">' . $lang['521'] . '</label>

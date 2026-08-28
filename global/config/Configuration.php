@@ -63,6 +63,8 @@ class Configuration
     public $Apodo = 0;
     public $BuscaCurp = 0;
     public $MultiJugador = 0;
+    public $playerIDPDF = 0;
+    public $playerSignature = 0;
     
 	public $MAILSMTPDebug = 0;
 	public $MAILSMTPAuth = 'true';
@@ -105,6 +107,23 @@ class Configuration
     }
 
     /**
+     * Whether the player signature capture is enabled for this site.
+     * Safe on schemas where the column has not been added yet.
+     */
+    public function playerSignatureEnabled(): bool
+    {
+        if (!$this->configurationHasColumn('playerSignature')) {
+            return false;
+        }
+        $result = $this->query("SELECT playerSignature FROM " . $this->config["schema"] . ".Configuration WHERE id = 0");
+        if (!$result) {
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        return $row !== null && (int) $row["playerSignature"] === 1;
+    }
+
+    /**
      * Load Config Flags
      *
      */
@@ -117,6 +136,12 @@ class Configuration
         $selTarjetaCambios = $this->schemaHasConfigurationColumn($conn, 'TarjetaCambios')
             ? 'TarjetaCambios'
             : '0 AS TarjetaCambios';
+        $selPlayerIDPDF = $this->schemaHasConfigurationColumn($conn, 'playerIDPDF')
+            ? 'playerIDPDF'
+            : '0 AS playerIDPDF';
+        $selPlayerSignature = $this->schemaHasConfigurationColumn($conn, 'playerSignature')
+            ? 'playerSignature'
+            : '0 AS playerSignature';
 
         $query = "SELECT  case when MarcadorArbitro = 1 then '' else 'hidden' end MarcadorArbitro,
                           case when MarcadorFecha = 1 then '' else 'hidden' end MarcadorFecha,
@@ -133,7 +158,9 @@ class Configuration
 			  ByeWeekPoints, ByeWeekPointsGoals, Latitude, Longitude,
 			  UnJuegoSemana, TresSets, PerfilJugadores, JugadoresApellidos1,JuegosxNombre,
 			  CoachJuegos, CoachJuegosDiaInicial, CoachJuegosDiaFinal, CoachJuegosHoraFinal,
-			  " . $selTarjetaCambios . ", VollByeWeekSets, VollByeWeekPoints, VollByeWeekSetPoints, Apodo, BuscaCurp, MultiJugador
+			  " . $selTarjetaCambios . ", VollByeWeekSets, VollByeWeekPoints, VollByeWeekSetPoints, Apodo, BuscaCurp, MultiJugador,
+			  " . $selPlayerIDPDF . ",
+			  " . $selPlayerSignature . "
 		  FROM " . $this->config["schema"] . ".Configuration";
         $result = $this->query($query);
         if (!$result){
@@ -171,6 +198,8 @@ class Configuration
             $this->Apodo = $row2["Apodo"];
             $this->BuscaCurp = $row2["BuscaCurp"];
             $this->MultiJugador = $row2["MultiJugador"];
+            $this->playerIDPDF = $row2["playerIDPDF"];
+            $this->playerSignature = $row2["playerSignature"];
        }
        return $this->template;
     }

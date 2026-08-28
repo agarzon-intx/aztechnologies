@@ -1,9 +1,12 @@
 <?php
+    ob_start();
     session_start();
     header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
     header("Cache-Control: post-check=0, pre-check=0", false);
     header("Pragma: no-cache");
+    header("Content-Type: application/json; charset=utf-8");
 
+	ini_set('display_errors', '0');
 	
 	//ok
 	$retunData = array('status' => '1');
@@ -26,9 +29,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
 	
-	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
-	
 	$__alias = $Config->getAlias();
+	$__langCk = $__alias . 'language';
+	if (!isset($_COOKIE[$__langCk]) || $_COOKIE[$__langCk] === '') {
+		$Config->LoadLanguage();
+		$__lang = (string) $Config->lan;
+	} else {
+		$__lang = $_COOKIE[$__langCk];
+	}
+	$__langFile = 'lang.' . $__lang . '.php';
+	if (!@include($__langFile)) {
+		include('lang.es.php');
+	}
+	
 	$__activityKey = $__alias . 'LAST_ACTIVITY';
 	$session_lifetime = $fgmembersite->sessionLifeTime;
 	
@@ -44,7 +57,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		// They were properly logged in, but that was too long ago (sessionLifeTime) so they need to login again
 		if ((time() - $_SESSION[$__activityKey]) > $fgmembersite->sessionLifeTime) {
 			//http_response_code(401);
-			$retunData = array('status' => '0', 'message' => $lang['230'], 'last_activity' => $last_activity, 'time' => time(), 'time_lapsed' => $time_lapsed, 'session_lifetime' => $session_lifetime);
+			$expiredMessage = isset($lang['230']) ? $lang['230'] : 'Your session has expired. Please login again.';
+			$retunData = array('status' => '0', 'message' => $expiredMessage, 'last_activity' => $last_activity, 'time' => time(), 'time_lapsed' => $time_lapsed, 'session_lifetime' => $session_lifetime);
 			$fgmembersite->LogOut();
 		}else{
 			$secondsO = (time() - $_SESSION[$__activityKey]);
@@ -58,5 +72,5 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	
 	
+	ob_end_clean();
 	echo json_encode($retunData);
-?>

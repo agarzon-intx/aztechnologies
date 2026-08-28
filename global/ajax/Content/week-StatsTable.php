@@ -182,10 +182,15 @@
 										where e.Fuerza = $Category and e.Torneo_ID = $Season and l.Fecha between ( SELECT min(Fecha_Inicio)
                                                                                                                    FROM   $schema.Jornada
                                                                                                                    WHERE  Fecha_Inicio <= CURDATE()
-                                                                                                                   AND    Torneo_ID = $Season) and (SELECT min(Fecha_Fin) Fecha_Fin
-                                                                                                                                                   FROM   $schema.Jornada
-                                                                                                                                                   WHERE  CURDATE() < Fecha_Fin
-                                                                                                                                                    AND    Torneo_ID = $Season)
+                                                                                                                   AND    Torneo_ID = $Season) and (SELECT COALESCE(
+                                                                                                                                                   	(SELECT MAX(Fecha_Fin)
+                                                                                                                                                   	 FROM   $schema.Jornada
+                                                                                                                                                   	 WHERE  Jornada_ID = $Week
+                                                                                                                                                   	 AND    Torneo_ID = $Season),
+                                                                                                                                                   	(SELECT MAX(Fecha_Fin)
+                                                                                                                                                   	 FROM   $schema.Jornada
+                                                                                                                                                   	 WHERE  Torneo_ID = $Season)
+                                                                                                                                                   ))
 										UNION
 										select distinct concat(e.Torneo_ID,'-', e.Equipo_ID) Logo, 
 												v.Jornada_ID, 
@@ -245,10 +250,15 @@
 										where e.Fuerza = $Category and e.Torneo_ID = $Season and v.Fecha between ( SELECT min(Fecha_Inicio)
                                                                                                                    FROM   $schema.Jornada
                                                                                                                    WHERE  Fecha_Inicio <= CURDATE()
-                                                                                                                   AND    Torneo_ID = $Season) and (SELECT min(Fecha_Fin) Fecha_Fin
-                                                                                                                                                   FROM   $schema.Jornada
-                                                                                                                                                   WHERE  CURDATE() < Fecha_Fin
-                                                                                                                                                    AND    Torneo_ID = $Season)) j
+                                                                                                                   AND    Torneo_ID = $Season) and (SELECT COALESCE(
+                                                                                                                                                   	(SELECT MAX(Fecha_Fin)
+                                                                                                                                                   	 FROM   $schema.Jornada
+                                                                                                                                                   	 WHERE  Jornada_ID = $Week
+                                                                                                                                                   	 AND    Torneo_ID = $Season),
+                                                                                                                                                   	(SELECT MAX(Fecha_Fin)
+                                                                                                                                                   	 FROM   $schema.Jornada
+                                                                                                                                                   	 WHERE  Torneo_ID = $Season)
+                                                                                                                                                   ))) j
 									left outer join (
 										select Equipo_ID, 
 												concat(CAST(sum(JG) AS char(20)),'-',CAST(sum(JP) AS char(20)),'-', CAST(sum(JE) AS char(20))) 'last5', 

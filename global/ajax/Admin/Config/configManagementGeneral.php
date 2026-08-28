@@ -1,5 +1,7 @@
 <?php
 	$__selTarjetaCambiosCfg = $Config->configurationHasColumn('TarjetaCambios') ? 'TarjetaCambios' : '0 AS TarjetaCambios';
+	$__selPlayerIDPDFCfg = $Config->configurationHasColumn('playerIDPDF') ? 'playerIDPDF' : '0 AS playerIDPDF';
+	$__selPlayerSignatureCfg = $Config->configurationHasColumn('playerSignature') ? 'playerSignature' : '0 AS playerSignature';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -37,9 +39,13 @@
 			    " . $__selTarjetaCambiosCfg . ",
 			    VollByeWeekSets,
 			    VollByeWeekPoints,
-			    VollByeWeekSetPoints
+			    VollByeWeekSetPoints,
+			    " . $__selPlayerIDPDFCfg . ",
+			    " . $__selPlayerSignatureCfg . "
 			FROM $schema.Configuration
 			where id = 0;";
+	$playerIDPDFCHK = '';
+	$playerSignatureCHK = '';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
@@ -152,6 +158,11 @@
 				$tarjetaCambios = $row2["TarjetaCambios"];
 				$tarjetaCambiosCHK = '';
 				if($tarjetaCambios == '1') $tarjetaCambiosCHK = 'checked';
+				$playerIDPDF = $row2["playerIDPDF"];
+				$playerIDPDFCHK = '';
+				if($playerIDPDF == '1') $playerIDPDFCHK = 'checked';
+				$playerSignature = $row2["playerSignature"];
+				if($playerSignature == '1') $playerSignatureCHK = 'checked';
 				
 			    $VollByeWeekSets = $row2["VollByeWeekSets"];
 			    $VollByeWeekPoints = $row2["VollByeWeekPoints"];
@@ -315,6 +326,14 @@
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="juegosxnombre" id="juegosxnombre" ' . $juegosxnombreCHK . '>
 										<label class="custom-control-label" for="juegosxnombre">' . $lang['485'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="playerIDPDF" id="playerIDPDF" ' . $playerIDPDFCHK . '>
+										<label class="custom-control-label" for="playerIDPDF">' . $lang['539'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="playerSignature" id="playerSignature" ' . $playerSignatureCHK . '>
+										<label class="custom-control-label" for="playerSignature">' . $lang['539-1'] . '</label>
 									</div>
 								</div>
 								<div class="row">

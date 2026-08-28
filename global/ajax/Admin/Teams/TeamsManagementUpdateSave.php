@@ -43,19 +43,44 @@ if (!defined('APP_SITE_ROOT')) {
 	$calcetas = sanitizeHexColor($_POST["calcetas"]);
 	$logoFileName = $_POST["file"];
 	$desc3 = SanitizeText($_POST["desc3"]);
+	$institucion = SanitizeInteger($_POST["institucion"]);
+	$nombreColorValue = isset($_POST["nombreColor"]) ? trim((string) $_POST["nombreColor"]) : '';
+	$credencialColorValue = isset($_POST["credencialColor"]) ? trim((string) $_POST["credencialColor"]) : '';
+	$nombreColor = sanitizeHexColor($nombreColorValue !== '' ? $nombreColorValue : "#000000");
+	$credencialColor = sanitizeHexColor($credencialColorValue !== '' ? $credencialColorValue : "#000000");
+	$credencialColorSql = $credencialColorValue === '' ? 'NULL' : "'" . $credencialColor . "'";
 
 	$__a = $Config->getAlias();
-	$Season = (isset($_COOKIE[$__a . 'season']) && $_COOKIE[$__a . 'season'] !== '') ? $_COOKIE[$__a . 'season'] : '0';
+	$Season = (isset($_COOKIE[$__a . 'season']) && $_COOKIE[$__a . 'season'] !== '') ? (int) $_COOKIE[$__a . 'season'] : 0;
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataTeamdAnswer' => 'Error');
 
-	$sql1 = "CALL $schema.TeamUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $id, '$descripcion', '$descripcionLarga', $fuerza, $estatus, $campo, '$playera', '$short', '$calcetas', '$desc3', @out);";
+	$sql1 = "CALL $schema.TeamUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $id, '$descripcion', '$descripcionLarga', $fuerza, $estatus, $campo, '$playera', '$short', '$calcetas', '$desc3', $institucion, '$nombreColor', $credencialColorSql, @out);";
 	//echo $sql1;
 	$Connection = $Config->connectAdmin();
+	if (!$Connection) {
+		$retunData['dataTeamdAnswer'] = $lang['206'];
+		echo json_encode($retunData);
+		exit;
+	}
 	$result = $Connection->query($sql1);
+	if ($result === false) {
+		error_log('TeamUpdate failed: ' . $Connection->error);
+		$retunData['dataTeamdAnswer'] = $lang['206'];
+		$Connection->close();
+		echo json_encode($retunData);
+		exit;
+	}
 
 	$sql2 = "Select @out as 'count'";
 	$result = $Connection->query($sql2);
+	if ($result === false) {
+		error_log('TeamUpdate result check failed: ' . $Connection->error);
+		$retunData['dataTeamdAnswer'] = $lang['206'];
+		$Connection->close();
+		echo json_encode($retunData);
+		exit;
+	}
 	if ($result->num_rows > 0) {
 		// output data of each row
 		while($row2 = $result->fetch_assoc()) {

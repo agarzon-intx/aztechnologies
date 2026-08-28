@@ -111,6 +111,7 @@
   	$lang['112'] = 'Equipos';
   	$lang['112-1'] = 'Elige un equipo';
   	$lang['113'] = 'Equipos';
+	$lang['113-2'] = 'Instituciones';
   	$lang['114'] = 'Colores';
   	$lang['115'] = 'Jugadores';
   	$lang['116'] = 'Avisos';
@@ -381,6 +382,15 @@
 	$lang['529'] = 'Informacion';
 	$lang['530'] = 'Uniforme';
 	$lang['531'] = 'Logotipo';
+	$lang['532'] = 'Color del Nombre';
+	$lang['533'] = 'Color de Credencial';
+	$lang['534'] = 'Sin color de credencial';
+	$lang['535'] = 'Fecha Activo';
+	$lang['536'] = 'Fecha Validación';
+	$lang['537'] = 'Fecha Baja';
+	$lang['538'] = 'Validación';
+	$lang['539'] = 'Jugador Doc PDF';
+	$lang['539-1'] = 'Jugador Firma';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';
@@ -1300,4 +1310,19 @@
 	$lang['jsfb32'] = 'El servidor tardó demasiado generando las imágenes. Prueba con menos juegos o contacta al administrador.';
 
 	$lang['120000']='Por Equipo';
+
+	//Instituciones
+	$lang['inst001'] = 'Lista de Instituciones';
+	$lang['inst002'] = 'Institucion ID';
+	$lang['inst003'] = 'Logo';
+	$lang['inst004'] = 'Nombre';
+	$lang['inst005'] = 'Activo';
+	$lang['inst006'] = 'Nombre Largo';
+	$lang['inst007'] = 'Nombre 5';
+	$lang['inst008'] = 'Crear Institucion';
+	$lang['inst009'] = 'Actualizar Institucion';
+	$lang['inst010'] = 'Institucion Guardada';
+	$lang['inst011'] = 'Institucion Actualizada';
+	$lang['inst012'] = 'Buscar institucion por nombre';
+	$lang['inst013'] = 'Nombre 5 debe tener de 3 a 5 caracteres';
 ?>

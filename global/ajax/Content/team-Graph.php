@@ -30,139 +30,48 @@
 						var linewidth = $(window).width() > 500 ? 2 : 1;
 						linewidth = $(window).width() > 750 ? 3 : linewidth;
 						canvas.__rgraph_aa_translated__ = false;';
-						
-						
-				$data1out = '';
-				$sql = "select distinct k.Jornada_DescCorta as Jornada,i.Pts,i.Reales,ifnull(i.PosGrupo, '0') PosGrupo,i.PosGeneral
-												from $schema.Juegos as j
-													left outer join $schema.Jornada as k on j.Fecha <= k.Fecha_Fin and j.Fecha >= k.Fecha_Inicio and j.Torneo_ID = $Season 
-													left outer join $schema.Equipos as l on j.local_ID = l.Equipo_ID and l.Torneo_ID = $Season and j.Local_ID = $Team
-													left outer join $schema.Equipos as v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = $Season and j.Visitante_ID = $Team
-													left outer join $schema.Equipo_Stats i 
-														on j.Torneo_ID = i.Torneo_ID and
-															j.Jornada_ID = i.Jornada_ID and
-															i.Equipo_ID = $Team
-													join $schema.Equipo_Stats ik 
-														on k.Torneo_ID = ik.Torneo_ID and
-															k.Jornada_ID = ik.Jornada_ID
-												where j.Jornada_ID <= (select max(Jornada_ID)-2 from $schema.Jornada where Torneo_ID = $Season) and k.Torneo_ID = $Season and j.Torneo_ID = $Season
-												order by j.Torneo_ID, j.Jornada_ID;";
-				//echo $sql;
-				$result = $Config->query($sql); 
 
-						
-				$count = 0;
-				if ($result->num_rows > 0) {
-					// output data of each row
-					while ($row = $result->fetch_assoc()) {
-						if ($count == 0) {
-							$data1out .= '' . $row["PosGrupo"] . '';
-						} else {
-							$data1out .= ', ' . $row["PosGrupo"] . '';
-						}
-						$count++;
-					}
-				}
-
-
-				$htmlTeam .= 'var data1 = [' . $data1out . ' ];';
-
-				$data2out = '';
-				$sql = "select distinct k.Jornada_DescCorta as Jornada,i.Pts,i.Reales,ifnull(i.PosGrupo, 0) PosGrupo,ifnull(i.PosGeneral, 0) PosGeneral
-												from $schema.Juegos as j
-													left outer join $schema.Jornada as k on j.Fecha <= k.Fecha_Fin and j.Fecha >= k.Fecha_Inicio and j.Torneo_ID = $Season 
-													left outer join $schema.Equipos as l on j.local_ID = l.Equipo_ID and l.Torneo_ID = $Season and j.Local_ID = $Team
-													left outer join $schema.Equipos as v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = $Season and j.Visitante_ID = $Team
-													left outer join $schema.Equipo_Stats i 
-														on j.Torneo_ID = i.Torneo_ID and
-															j.Jornada_ID = i.Jornada_ID and
-															i.Equipo_ID = $Team
-													join $schema.Equipo_Stats ik 
-														on k.Torneo_ID = ik.Torneo_ID and
-															k.Jornada_ID = ik.Jornada_ID
-												where j.Jornada_ID <= (select max(Jornada_ID)-2 from $schema.Jornada where Torneo_ID = $Season) and k.Torneo_ID = $Season and j.Torneo_ID = $Season
-												order by j.Torneo_ID, j.Jornada_ID;";
-				//echo $sql;
-				$result = $Config->query($sql); 
-
-				$count = 0;
-				if ($result->num_rows > 0) {
-					// output data of each row
-					while ($row = $result->fetch_assoc()) {
-						if ($count == 0) {
-							$data2out .= '' . $row["PosGeneral"] . '';
-						} else {
-							$data2out .= ', ' . $row["PosGeneral"] . '';
-						}
-						$count++;
-					}
-				}
-						
-				$htmlTeam .= "var data2 = [ " . $data2out . " ];";
-
-				$data3out = '';
-				$sql = "select distinct k.Jornada_DescCorta as Jornada,i.Pts,ifnull(i.Reales,0) Reales,i.PosGrupo,i.PosGeneral
-												from $schema.Juegos as j
-													left outer join $schema.Jornada as k on j.Fecha <= k.Fecha_Fin and j.Fecha >= k.Fecha_Inicio and j.Torneo_ID = $Season 
-													left outer join $schema.Equipos as l on j.local_ID = l.Equipo_ID and l.Torneo_ID = $Season and j.Local_ID = $Team
-													left outer join $schema.Equipos as v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = $Season and j.Visitante_ID = $Team
-													left outer join $schema.Equipo_Stats i 
-														on j.Torneo_ID = i.Torneo_ID and
-															j.Jornada_ID = i.Jornada_ID and
-															i.Equipo_ID = $Team
-													join $schema.Equipo_Stats ik 
-														on k.Torneo_ID = ik.Torneo_ID and
-															k.Jornada_ID = ik.Jornada_ID
-												where j.Jornada_ID <= (select max(Jornada_ID)-2 from $schema.Jornada where Torneo_ID = $Season) and k.Torneo_ID = $Season and j.Torneo_ID = $Season
-												order by j.Torneo_ID, j.Jornada_ID;";
-				//echo $sql;
+				$graphSeason = (int) $Season;
+				$graphTeam = (int) $Team;
+				$sql = "SELECT k.Jornada_DescCorta AS Jornada,
+								IFNULL(i.PosGrupo, 0) AS PosGrupo,
+								IFNULL(i.PosGeneral, 0) AS PosGeneral,
+								IFNULL(i.Reales, 0) AS Reales
+						FROM $schema.Jornada k
+						LEFT JOIN $schema.Equipo_Stats i
+							ON i.Torneo_ID = k.Torneo_ID
+							AND i.Jornada_ID = k.Jornada_ID
+							AND i.Equipo_ID = $graphTeam
+						WHERE k.Torneo_ID = $graphSeason
+							AND k.Jornada_ID <= (SELECT IFNULL(MAX(Jornada_ID), 0) - 2
+												FROM $schema.Jornada
+												WHERE Torneo_ID = $graphSeason)
+							AND EXISTS (
+								SELECT 1
+								FROM $schema.Equipo_Stats ik
+								WHERE ik.Torneo_ID = k.Torneo_ID
+									AND ik.Jornada_ID = k.Jornada_ID
+							)
+						ORDER BY k.Jornada_ID";
 				$result = $Config->query($sql);
-				$count = 0;
-				if ($result->num_rows > 0) {
-					// output data of each row
+
+				$data1 = array();
+				$data2 = array();
+				$data3 = array();
+				$labels = array();
+				if ($result && $result->num_rows > 0) {
 					while ($row = $result->fetch_assoc()) {
-						if ($count == 0) {
-							$data3out .= '' . $row["Reales"] . '';
-						} else {
-							$data3out .= ', ' . $row["Reales"] . '';
-						}
-						$count++;
+						$data1[] = (string) (int) $row['PosGrupo'];
+						$data2[] = (string) (int) $row['PosGeneral'];
+						$data3[] = (string) (int) $row['Reales'];
+						$labels[] = "'" . addslashes((string) $row['Jornada']) . "'";
 					}
 				}
-				$htmlTeam .= "var data3 = [ " . $data3out . " ];";
 
-				$labelsout = '';
-				// Create connection
-				$sql = "select distinct jk.Jornada_DescCorta as Jornada, case when k.Jornada_ID is null then 0 else 1 end as Activo
-						from $schema.Jornada as jk  
-							left outer join $schema.Juegos as j on j.Fecha <= jk.Fecha_Fin and j.Fecha >= jk.Fecha_Inicio and jk.Torneo_ID = $Season
-							left outer join (select ifnull((SELECT 
-											  Jornada_ID
-											FROM 
-											  $schema.Jornada
-											where Torneo_ID = $Season and Fecha >= DATE_ADD(date(now()) , INTERVAL-3 DAY)
-											LIMIT 1), (select max(Jornada_ID) from $schema.Jornada where Torneo_ID = $Season)) Jornada_ID) k on jk.Jornada_ID = k.Jornada_ID
-							join $schema.Equipo_Stats i 
-												on jk.Torneo_ID = i.Torneo_ID and
-													jk.Jornada_ID = i.Jornada_ID
-						where jk.Jornada_ID <= (select max(Jornada_ID)-2 from $schema.Jornada where Torneo_ID = $Season) and jk.Torneo_ID = $Season
-						order by jk.Jornada_ID;";
-						//echo $sql;
-				$result = $Config->query($sql); 
-
-				$count = 0;
-				if ($result->num_rows > 0) {
-					// output data of each row
-					while ($row = $result->fetch_assoc()) {
-						if ($count == 0) {
-							$labelsout .= "'" . $row["Jornada"] . "'";
-						} else {
-							$labelsout .= ", '" . $row["Jornada"] . "'";
-						}
-						$count++;
-					}
-				}
-				$htmlTeam .= "var labels = [ " . $labelsout . " ];";
+				$htmlTeam .= 'var data1 = [' . implode(', ', $data1) . ' ];';
+				$htmlTeam .= "var data2 = [ " . implode(', ', $data2) . " ];";
+				$htmlTeam .= "var data3 = [ " . implode(', ', $data3) . " ];";
+				$htmlTeam .= "var labels = [ " . implode(', ', $labels) . " ];";
 						
 				$htmlTeam .= "var bar = new RGraph.Bar({ 
 							id: 'puntos', 

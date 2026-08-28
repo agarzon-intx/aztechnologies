@@ -50,7 +50,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 													<div class="px-0 py-0">
 														<div class="nav-wrapper position-relative end-0">
 															<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important;" id="config1">
-																<li class="nav-item" id="activei">
+																<li class="nav-item" id="activeli">
 																	<a class="nav-link mb-0 px-0 py-1 active" data-bs-toggle="tab" style="cursor: pointer;" callval="#active" role="tab" aria-controls="activeli" aria-selected="true">
 																		' . $lang['js907'] . '
 																	</a>

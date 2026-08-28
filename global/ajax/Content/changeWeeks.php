@@ -18,14 +18,42 @@ if (!defined('APP_SITE_ROOT')) {
 	require_once dirname(dirname(__DIR__)) . '/include/flyer_download_menu.php';
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('changeWeeks.php');
-	
-	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
+	$__langCk = $Config->getAlias() . 'language';
+	if (!isset($_COOKIE[$__langCk]) || $_COOKIE[$__langCk] === '') {
+		$Config->LoadLanguage();
+		$__lang = $Config->lan;
+	} else {
+		$__lang = $_COOKIE[$__langCk];
+	}
+	include 'lang.' . $__lang . '.php';
 
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
-    //print_r($_COOKIE);
-    $Season = $_COOKIE[$Config->getAlias() . 'season'];
-    $Category = $_COOKIE[$Config->getAlias() . 'category'];
+    $__alias = $Config->getAlias();
+    $Season = 0;
+    if (isset($_POST['Season']) && $_POST['Season'] !== '') {
+    	$Season = SanitizeInteger($_POST['Season']);
+    }
+    if (!$Season && isset($_COOKIE[$__alias . 'season']) && $_COOKIE[$__alias . 'season'] !== '') {
+    	$Season = SanitizeInteger($_COOKIE[$__alias . 'season']);
+    }
+    if (!$Season && isset($_SESSION[$__alias . 'season']) && $_SESSION[$__alias . 'season'] !== '') {
+    	$Season = SanitizeInteger($_SESSION[$__alias . 'season']);
+    }
+    $Category = 0;
+    if (isset($_POST['Category']) && $_POST['Category'] !== '') {
+    	$Category = SanitizeInteger($_POST['Category']);
+    }
+    if (!$Category && isset($_COOKIE[$__alias . 'category']) && $_COOKIE[$__alias . 'category'] !== '') {
+    	$Category = SanitizeInteger($_COOKIE[$__alias . 'category']);
+    }
+    if (!$Category && isset($_SESSION[$__alias . 'category']) && $_SESSION[$__alias . 'category'] !== '') {
+    	$Category = SanitizeInteger($_SESSION[$__alias . 'category']);
+    }
+    if (!$Season || !$Category) {
+    	echo json_encode($retunData);
+    	exit;
+    }
     $htmlWeeks = '';
     
 	

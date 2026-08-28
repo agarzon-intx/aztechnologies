@@ -53,6 +53,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$VBByeWeekSets = SanitizeTime($_POST["VBByeWeekSets"]);
 	$VBByeWeekPoints = SanitizeInteger($_POST["VBByeWeekPoints"]);
 	$VBByeWeeSetkPoints = SanitizeInteger($_POST["VBByeWeekSetPoints"]);
+	$playerIDPDF = (isset($_POST["playerIDPDF"]) && SanitizeInteger($_POST["playerIDPDF"]) == 1) ? 1 : 0;
+	$playerSignature = (isset($_POST["playerSignature"]) && SanitizeInteger($_POST["playerSignature"]) == 1) ? 1 : 0;
 	
 	//echo $perfilJugadoresA;
 		
@@ -63,6 +65,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
 	$Connection = $Config->connectAdmin();
 	$result = $Connection->query($sql);
+
+	// playerIDPDF and playerSignature are not part of ConfigGeneralUpdate, so they are
+	// persisted separately and only where the column already exists in the schema.
+	if ($Config->configurationHasColumn('playerIDPDF')) {
+		$Connection->query("UPDATE $schema.Configuration SET playerIDPDF = $playerIDPDF WHERE id = 0;");
+	}
+	if ($Config->configurationHasColumn('playerSignature')) {
+		$Connection->query("UPDATE $schema.Configuration SET playerSignature = $playerSignature WHERE id = 0;");
+	}
 
 	$sql1 = "Select @out as 'count'";
 	$result = $Connection->query($sql1);

@@ -44,7 +44,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$htmlPlayer .= '';
 
 	$sql = "UPDATE $schema.Jugadores
-        SET Validado = 1
+        SET Validado = 1,
+            Fecha_Validacion = NOW()
         WHERE Equipo_ID = $team AND Validado = 0";
 
 	$Connection = $Config->connectAdmin();

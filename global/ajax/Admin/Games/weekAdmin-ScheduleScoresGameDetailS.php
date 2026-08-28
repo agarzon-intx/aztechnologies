@@ -228,7 +228,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$htmlWeekGameDetail .= '		</ul>
 								</div>
-							</div><script>initNavs();</script>';
+							</div><script>initNavs(\'scheduleS\');</script>';
 							
 	$htmlWeekGameDetail .= '<div class="container-fluid py-0" style="padding-left: 0px; padding-right: 0px;">
 								<div id="local' . $Game . 'S" class="tabla active" style="display: block">

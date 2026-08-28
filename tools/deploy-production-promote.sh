@@ -30,8 +30,9 @@ done < "$ENV_FILE"
 
 export REPO
 python3 << 'PY' > /tmp/az-promote-files.txt
-import subprocess, os
+import subprocess, os, json, hashlib
 REPO = os.environ['REPO']
+STATE = os.path.join(REPO, '.local', 'promote-state.json')
 SITES = ['elite','huskies','lidep','nuestrodeporte','vollidep','voleibalmetepec','aztflag','demo','candlesStore']
 JUNCTIONS = {'ajax','assets','config','css','Form','include','javascript','languages','objects'}
 
@@ -54,21 +55,67 @@ def is_junction_path(rel):
     parts = rel.split('/')
     return len(parts) >= 2 and parts[0] in SITES and parts[1] in JUNCTIONS
 
+def expand(path):
+    """An untracked directory is reported as a single entry; deploy every file inside it."""
+    full = os.path.join(REPO, path)
+    if os.path.isfile(full):
+        return [path]
+    if not os.path.isdir(full):
+        return []
+    found = []
+    for root, dirs, files in os.walk(full):
+        dirs[:] = [d for d in dirs if d not in ('.git', '.local', '.cursor')]
+        for name in files:
+            rel = os.path.relpath(os.path.join(root, name), REPO).replace('\\', '/')
+            if should_deploy(rel):
+                found.append(rel)
+    return found
+
+def digest(rel):
+    h = hashlib.sha1()
+    with open(os.path.join(REPO, rel), 'rb') as fh:
+        for chunk in iter(lambda: fh.read(65536), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+# Contents of everything successfully promoted so far, so a run only sends what
+# actually changed instead of the whole dirty working tree.
+try:
+    with open(STATE) as fh:
+        state = json.load(fh)
+except Exception:
+    state = {}
+promoted = state.get('uploaded', {})
+removed = set(state.get('deleted', []))
+
 out = subprocess.check_output(['git','status','--porcelain'], text=True, errors='replace')
 upload, delete = [], []
 for line in out.splitlines():
     if len(line) < 4: continue
     xy, path = line[:2], line[3:].strip().strip('"')
     path = path.split(' -> ', 1)[0].replace('\\', '/')
-    st = xy.strip()
-    if xy.strip() == 'D' or xy == ' D' or st == 'D':
+    # A path can carry both an index and a worktree status (e.g. 'MM', 'AM'); a
+    # deletion in either column means remove, anything else present means upload.
+    codes = {c for c in xy if c not in (' ', '?')}
+    if xy == '??':
+        codes = {'?'}
+    if 'D' in codes:
         if should_deploy(path) and not is_junction_path(path):
             delete.append(path)
-    elif st in ('M', 'A', '??') or xy.strip() in ('M', 'A') or xy == '??':
-        if should_deploy(path) and os.path.isfile(os.path.join(REPO, path)):
-            upload.append(path)
+    elif codes & {'M', 'A', 'R', 'C', '?'}:
+        if should_deploy(path):
+            upload.extend(expand(path))
 
-for kind, paths in [('UPLOAD', sorted(set(upload))), ('DELETE', sorted(set(delete)))]:
+pending_upload = []
+for rel in sorted(set(upload)):
+    try:
+        if promoted.get(rel) != digest(rel):
+            pending_upload.append(rel)
+    except OSError:
+        continue
+pending_delete = [p for p in sorted(set(delete)) if p not in removed]
+
+for kind, paths in [('UPLOAD', pending_upload), ('DELETE', pending_delete)]:
     print(f'#{kind} {len(paths)}')
     for p in paths:
         print(p)
@@ -99,7 +146,8 @@ ftp_delete() {
 }
 
 batch_file="$(mktemp "${TMPDIR:-/tmp}/az-production-batch.XXXXXX")"
-trap 'rm -f "$batch_file" /tmp/az-promote-files.txt' EXIT
+batch_out="$(mktemp "${TMPDIR:-/tmp}/az-production-out.XXXXXX")"
+trap 'rm -f "$batch_file" "$batch_out" /tmp/az-promote-files.txt' EXIT
 for rel in "${upload_files[@]}"; do
 	printf 'UPLOAD\t%s\n' "$rel" >> "$batch_file"
 done
@@ -112,7 +160,54 @@ if [[ ! -s "$batch_file" ]]; then
 	exit 0
 fi
 
-if ! python3 "$REPO/tools/deploy-production-sftp.py" batch --repo "$REPO" --batch-file "$batch_file"; then
+batch_status=0
+python3 "$REPO/tools/deploy-production-sftp.py" batch --repo "$REPO" --batch-file "$batch_file" | tee "$batch_out" || batch_status=1
+
+# Record what is now live so the next run skips it.
+BATCH_OUT="$batch_out" python3 << 'PY'
+import os, json, hashlib
+
+REPO = os.environ['REPO']
+STATE = os.path.join(REPO, '.local', 'promote-state.json')
+
+try:
+    with open(STATE) as fh:
+        state = json.load(fh)
+except Exception:
+    state = {}
+uploaded = state.get('uploaded', {})
+deleted = set(state.get('deleted', []))
+
+with open(os.environ['BATCH_OUT'], errors='replace') as fh:
+    lines = fh.read().splitlines()
+
+for line in lines:
+    if line.startswith('OK upload '):
+        rel = line[len('OK upload '):].strip()
+        try:
+            h = hashlib.sha1()
+            with open(os.path.join(REPO, rel), 'rb') as f:
+                for chunk in iter(lambda: f.read(65536), b''):
+                    h.update(chunk)
+            uploaded[rel] = h.hexdigest()
+        except OSError:
+            pass
+    elif line.startswith('OK delete '):
+        rel = line[len('OK delete '):].strip()
+        deleted.add(rel)
+        uploaded.pop(rel, None)
+    elif line.startswith('FAIL delete ') and 'No such file' in line:
+        # Already absent on the server; stop retrying it on every run.
+        rel = line[len('FAIL delete '):].split(':', 1)[0].strip()
+        deleted.add(rel)
+        uploaded.pop(rel, None)
+
+os.makedirs(os.path.dirname(STATE), exist_ok=True)
+with open(STATE, 'w') as fh:
+    json.dump({'uploaded': uploaded, 'deleted': sorted(deleted)}, fh, indent=1, sort_keys=True)
+PY
+
+if [[ "$batch_status" -ne 0 ]]; then
 	echo "Completed with errors."
 	exit 1
 fi

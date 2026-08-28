@@ -259,6 +259,8 @@ CREATE TABLE `Configuration` (
   `Apodo` int(1) NOT NULL DEFAULT '1',
   `BuscaCurp` int(1) NOT NULL DEFAULT '0',
   `MultiJugador` int(1) NOT NULL DEFAULT '0',
+  `playerIDPDF` int(11) NOT NULL DEFAULT '0',
+  `playerSignature` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -655,6 +657,10 @@ CREATE TABLE `Jugadores` (
   `ValidacionCurpComentario` varchar(500) COLLATE utf8_unicode_ci DEFAULT '',
   `Sexo` int(11) NOT NULL DEFAULT '0',
   `Jugador_tipo` int(11) NOT NULL DEFAULT '0',
+  `Fecha_Validacion` datetime DEFAULT NULL,
+  `Fecha_Alta` datetime DEFAULT NULL,
+  `Fecha_Baja` datetime DEFAULT NULL,
+  `IdentificacionPDF` longblob DEFAULT NULL,
   PRIMARY KEY (`Jugador_ID`),
   UNIQUE KEY `Jugador_ID_UNIQUE` (`Jugador_ID`),
   KEY `Equipo_ID_UNIQUE` (`Equipo_ID`)
@@ -4119,7 +4125,10 @@ CREATE DEFINER=CURRENT_USER PROCEDURE `TeamCreate`(
 	IN inteamshirt varchar(45),
 	IN inteamshort varchar(45),
 	IN inteamsoack varchar(45), 
-	IN inteamname3 varchar(45), 
+	IN inteamname3 varchar(45),
+	IN inteaminstitution bigint(20),
+	IN inteamnamecolor varchar(45),
+	IN inteamcredentialcolor varchar(45),
     OUT out_number int(11)
 )
 BEGIN
@@ -4138,7 +4147,10 @@ BEGIN
 		Playera,
 		Short,
 		Calcetas,
-		Equipo_DESC3)
+		Equipo_DESC3,
+		Institucion_ID,
+		Nombre_Color,
+		Credencial_Color)
 	VALUES
 		(inteamname,
 		 inteamstatus,
@@ -4150,7 +4162,10 @@ BEGIN
 		 inteamshirt,
 		 inteamshort,
 		 inteamsoack,
-		 inteamname3);
+		 inteamname3,
+		 inteaminstitution,
+		 inteamnamecolor,
+		 inteamcredentialcolor);
          
     SELECT ROW_COUNT() into count_insert;
     
@@ -4160,7 +4175,7 @@ BEGIN
 		SET status_insert = CONCAT('NO OK, total inserts: ',count_insert);
     END IF;
     
-	CALL insertIntoControlTable(inUserName, 'CREATE', 'TEAM', CONCAT('INSERT INTO Equipos (Equipo_DESC, Activo, Fuerza, Logo, Equipo_FULLDESC, Torneo_ID, Campo_ID, Playera, Short, Calcetas, Equipo_DESC3) VALUES (''' , inteamname , ''', ' , inteamstatus , ', ' , inteamcategory , ', '', ''' , inteamnamelong , ''', (SELECT Torneo_ID FROM $schema.Torneos where Actual = ''S''), ' , inteamfield , ', ''' , inteamshirt , ''', ''' , inteamshort , ''', ''' , inteamsoack , ''',''' , inteamname3 , ''');'), status_insert);
+	CALL insertIntoControlTable(inUserName, 'CREATE', 'TEAM', CONCAT('INSERT INTO Equipos (Equipo_DESC, Activo, Fuerza, Logo, Equipo_FULLDESC, Torneo_ID, Campo_ID, Playera, Short, Calcetas, Equipo_DESC3, Institucion_ID, Nombre_Color, Credencial_Color) VALUES (''' , inteamname , ''', ' , inteamstatus , ', ' , inteamcategory , ', '', ''' , inteamnamelong , ''', (SELECT Torneo_ID FROM $schema.Torneos where Actual = ''S''), ' , inteamfield , ', ''' , inteamshirt , ''', ''' , inteamshort , ''', ''' , inteamsoack , ''',''' , inteamname3 , ''', ' , inteaminstitution , ', ''' , inteamnamecolor , ''', ''' , IFNULL(inteamcredentialcolor, 'NULL') , ''');'), status_insert);
 	set out_number = count_insert;
 END ;;
 DELIMITER ;
@@ -4190,6 +4205,9 @@ CREATE DEFINER=CURRENT_USER PROCEDURE `TeamUpdate`(
 	IN inteamshort varchar(45),
 	IN inteamsoack varchar(45),
 	IN inteamname3 varchar(45),
+	IN inteaminstitution bigint(20),
+	IN inteamnamecolor varchar(45),
+	IN inteamcredentialcolor varchar(45),
     OUT out_number int(11)
 )
 BEGIN
@@ -4207,7 +4225,10 @@ BEGIN
 		Playera = inteamshirt,
 		Short = inteamshort,
 		Calcetas = inteamsoack,
-        Equipo_DESC3 = inteamname3
+        Equipo_DESC3 = inteamname3,
+		Institucion_ID = inteaminstitution,
+		Nombre_Color = inteamnamecolor,
+		Credencial_Color = inteamcredentialcolor
 	WHERE Torneo_ID = (SELECT Torneo_ID FROM Torneos where Actual = 'S') and Equipo_ID = inteamid;
     
     SELECT ROW_COUNT() into count_update;
@@ -4218,7 +4239,7 @@ BEGIN
 		SET status_update = CONCAT('NO OK, total updates: ',count_update);
     END IF;
     
-	CALL insertIntoControlTable(inUserName, 'UPDATE', 'TEAM', CONCAT('UPDATE Equipos SET Equipo_DESC = ''' , inteamname , ''', Activo = ' , inteamstatus , ', Fuerza = ' , inteamcategory , ', Logo = '', Equipo_FULLDESC = ''' , inteamnamelong , ''', Campo_ID = ' , inteamfield , ', Playera = ''' , inteamshirt , ''', Short = ''' , inteamshort , ''', Calcetas = ''' , inteamsoack , ''', Equipo_DESC3 = ''' , inteamname3 , ''' WHERE Torneo_ID = (SELECT Torneo_ID FROM Torneos where Actual = ''S'') and Equipo_ID = ' , inteamid , ';'), status_update);
+	CALL insertIntoControlTable(inUserName, 'UPDATE', 'TEAM', CONCAT('UPDATE Equipos SET Equipo_DESC = ''' , inteamname , ''', Activo = ' , inteamstatus , ', Fuerza = ' , inteamcategory , ', Logo = '', Equipo_FULLDESC = ''' , inteamnamelong , ''', Campo_ID = ' , inteamfield , ', Playera = ''' , inteamshirt , ''', Short = ''' , inteamshort , ''', Calcetas = ''' , inteamsoack , ''', Equipo_DESC3 = ''' , inteamname3 , ''', Institucion_ID = ' , inteaminstitution , ', Nombre_Color = ''' , inteamnamecolor , ''', Credencial_Color = ''' , IFNULL(inteamcredentialcolor, 'NULL') , ''' WHERE Torneo_ID = (SELECT Torneo_ID FROM $schema.Torneos where Actual = ''S'') and Equipo_ID = ' , inteamid , ';'), status_update);
 	set out_number = count_update;
 END ;;
 DELIMITER ;
@@ -4645,5 +4666,26 @@ ALTER TABLE `Torneos` AUTO_INCREMENT = 1;
 ALTER TABLE `registeredBrowsers` AUTO_INCREMENT = 1;
 ALTER TABLE `transactions` AUTO_INCREMENT = 1;
 ALTER TABLE `usuarios` AUTO_INCREMENT = 1;
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `Jugadores_Before_Insert_Dates`;;
+CREATE TRIGGER `Jugadores_Before_Insert_Dates`
+BEFORE INSERT ON `Jugadores`
+FOR EACH ROW
+BEGIN
+	IF NEW.Estatus = 'A' THEN SET NEW.Fecha_Alta = NOW(); END IF;
+	IF NEW.Estatus = 'B' THEN SET NEW.Fecha_Baja = NOW(); END IF;
+	IF NEW.Validado = '1' THEN SET NEW.Fecha_Validacion = NOW(); END IF;
+END;;
+DROP TRIGGER IF EXISTS `Jugadores_Before_Update_Dates`;;
+CREATE TRIGGER `Jugadores_Before_Update_Dates`
+BEFORE UPDATE ON `Jugadores`
+FOR EACH ROW
+BEGIN
+	IF NEW.Estatus = 'A' AND (OLD.Estatus IS NULL OR OLD.Estatus <> 'A' OR OLD.Fecha_Alta IS NULL) THEN SET NEW.Fecha_Alta = NOW(); END IF;
+	IF NEW.Estatus = 'B' AND (OLD.Estatus IS NULL OR OLD.Estatus <> 'B' OR OLD.Fecha_Baja IS NULL) THEN SET NEW.Fecha_Baja = NOW(); END IF;
+	IF NEW.Validado = '1' AND (OLD.Validado IS NULL OR OLD.Validado <> '1' OR OLD.Fecha_Validacion IS NULL) THEN SET NEW.Fecha_Validacion = NOW(); END IF;
+END;;
+DELIMITER ;
 
 SET FOREIGN_KEY_CHECKS = 1;

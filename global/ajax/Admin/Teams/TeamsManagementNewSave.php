@@ -39,9 +39,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$short = sanitizeHexColor($_POST["short"]); 
 	$calcetas = sanitizeHexColor($_POST["calcetas"]);
 	$desc3 = SanitizeText($_POST["desc3"]);
+	$institucion = SanitizeInteger($_POST["institucion"]);
+	$nombreColorValue = isset($_POST["nombreColor"]) ? trim((string) $_POST["nombreColor"]) : '';
+	$credencialColorValue = isset($_POST["credencialColor"]) ? trim((string) $_POST["credencialColor"]) : '';
+	$nombreColor = sanitizeHexColor($nombreColorValue !== '' ? $nombreColorValue : "#000000");
+	$credencialColor = sanitizeHexColor($credencialColorValue !== '' ? $credencialColorValue : "#000000");
+	$credencialColorSql = $credencialColorValue === '' ? 'NULL' : "'" . $credencialColor . "'";
 	$logoFileName = $_POST["file"];
 	
-	$Season = $_COOKIE[$Config->getAlias() . 'season'];
+	$Season = (int) $_COOKIE[$Config->getAlias() . 'season'];
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataTeamdAnswer' => 'Error');
 	$myArrayFuerza = explode(',', $fuerza);
@@ -64,7 +70,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
     for ($i = 0; $i < $length; $i++) { 
         $fuerza = $myArrayFuerza[$i] ; 
-        $sql1 = "CALL $schema.TeamCreate('" . $_SESSION[$Config->getAlias() . 'username'] . "', '$descripcion', '$descripcionLarga', $fuerza, $estatus, $campo, '$playera', '$short', '$calcetas', '$desc3', @out);";
+        $sql1 = "CALL $schema.TeamCreate('" . $_SESSION[$Config->getAlias() . 'username'] . "', '$descripcion', '$descripcionLarga', $fuerza, $estatus, $campo, '$playera', '$short', '$calcetas', '$desc3', $institucion, '$nombreColor', $credencialColorSql, @out);";
     	$Connection = $Config->connectAdmin();
     	$result = $Connection->query($sql1);
     	
@@ -87,7 +93,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     			$newequipoid = $row3["Equipo_ID"];
     		}
     	}
-    	
+
     	$found = 0;
     	
         //echo $logoFileName;

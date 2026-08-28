@@ -4,7 +4,10 @@
 
 var nIntervId;
 var nIntervAlert;
-
+var mainLoadingCount = 0;
+var pendingAlerts = [];
+var pendingAlertsFlushed = false;
+var AJAX_TIMEOUT_MS = 20000;
 
 function isNumberKey(evt){
 	var charCode = (evt.which) ? evt.which : event.keyCode
@@ -14,15 +17,39 @@ function isNumberKey(evt){
 }
 
 function mainLoadingOn(){
-	//console.log('Loading ON');
+	mainLoadingCount++;
 	$('#mainLoading').css("z-index", "99999");
 	$("#mainLoading").css("display", "block");
 }
 
 function mainLoadingOff(){
-	//console.log('Loading OFF');
-	$('#mainLoading').css("z-index", "-1");
-	$("#mainLoading").css("display", "none");
+	if (mainLoadingCount > 0) {
+		mainLoadingCount--;
+	}
+	if (mainLoadingCount <= 0) {
+		mainLoadingCount = 0;
+		$('#mainLoading').css("z-index", "-1");
+		$("#mainLoading").css("display", "none");
+	}
+}
+
+function queueAlert(alertId){
+	pendingAlerts.push(alertId);
+	if (pendingAlertsFlushed) {
+		flushPendingAlerts();
+	}
+}
+
+function flushPendingAlerts(){
+	pendingAlertsFlushed = true;
+	if (!pendingAlerts.length) {
+		return;
+	}
+	var alerts = pendingAlerts.slice();
+	pendingAlerts = [];
+	for (var i = 0; i < alerts.length; i++) {
+		loadAlert(alerts[i]);
+	}
 }
 
 var urlTarget = "";
@@ -37,6 +64,7 @@ function checkSessionExpire(){
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/sessionExpiredCheck.php',
+		timeout: AJAX_TIMEOUT_MS,
 		success: function (res) {
 			if (res.status === '0') {
 				alert(res.message.replace(/\\n/g, "\n").replace(/<br\s*\/?>/gi, "\n"));
@@ -53,9 +81,8 @@ function checkSessionExpire(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
-			mainLoadingOff();
-			alert(MSG_AJAX_GENERIC);
-			console.log('Exception:' + exception);
+			// Background poll: never interrupt the user with an alert, just log it.
+			console.log('checkSessionExpire failed: ' + status + ' ' + exception);
 		}
 	});
 }
@@ -76,17 +103,22 @@ function loadTournament(Season){
 		dataType: 'json',
 		url: 'ajax/Top/changeTournament.php',
 		data: {Season: Season},
+		timeout: AJAX_TIMEOUT_MS,
 		success: function (res) {
 			mainLoadingOff()
-			if (res.status === '1') {
+			if (res.status === '1' && res.category) {
 				$("#categorysel").html(res.dataCategories);
 				$("#teamLogos").html(res.dataLogos);
 				loadCategory(Season, res.category);
 				loadTournamentReloadList(Season);
+			} else {
+				flushPendingAlerts();
+				alert(MSG_AJAX_GENERIC);
 			}
 		},
 		error: function(jqxhr, status, exception) {
 			mainLoadingOff();
+			flushPendingAlerts();
 			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
@@ -121,17 +153,22 @@ function loadCategory(Season, Category){
 		dataType: 'json',
 		url: 'ajax/Top/changeCategory.php',
 		data: {Season: Season, Category: Category},
+		timeout: AJAX_TIMEOUT_MS,
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
 				$("#teamLogos").html(res.dataLogos);
 				$("#menuteams").html(res.menulogos);
-				loadWeeks();
+				loadWeeks(Season, Category);
 				loadCategoryReloadList(Season, Category)
+			} else {
+				flushPendingAlerts();
+				alert(MSG_AJAX_GENERIC);
 			}
 		},
 		error: function(jqxhr, status, exception) {
 			mainLoadingOff();
+			flushPendingAlerts();
 			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
@@ -236,21 +273,35 @@ function reloadNotifications(){
 *************************************************Load Weeks*******************************************************
 *****************************************************************************************************************/
 
-function loadWeeks(){
+function loadWeeks(Season, Category){
     //console.log('loadWeeks');
+	if (typeof Season === 'undefined' || Season === null || Season === '') {
+		var $seasonHidden = $('#selectedSeason');
+		Season = $seasonHidden.length ? $seasonHidden.val() : '';
+	}
+	if (typeof Category === 'undefined' || Category === null || Category === '') {
+		var $catHidden = $('#selectedCategory');
+		Category = $catHidden.length ? $catHidden.val() : '';
+	}
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Content/changeWeeks.php',
+		data: {Season: Season, Category: Category},
+		timeout: AJAX_TIMEOUT_MS,
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
 				$("#body").html(res.dataWeeks);
+			} else {
+				alert(MSG_AJAX_GENERIC);
 			}
+			flushPendingAlerts();
 		},
 		error: function(jqxhr, status, exception) {
 			mainLoadingOff();
+			flushPendingAlerts();
 			alert(MSG_AJAX_GENERIC);
 			console.log('Exception:' + exception);
 		}
@@ -722,16 +773,66 @@ function closeAlert(){
     $("#alertaContent").css("display", "none");
 }
 
-function mountMarcadoresIn(selector) {
-	if (typeof window.mountMarcador !== 'function') return;
-	$(selector).find('[data-marcador-root]').each(function () {
-		window.mountMarcador(this);
+/* AzMarcador: scoped scoreboard widget — loads assets only when a host is present */
+var AZ_MARCADOR_VER = '20260726c';
+var AZ_MARCADOR_CSS = './css/az-marcador.css?v=' + AZ_MARCADOR_VER;
+var AZ_MARCADOR_JS = './javascript/az-marcador.js?v=' + AZ_MARCADOR_VER;
+var AZ_MARCADOR_FONTS = 'https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&family=Syne:wght@700;800&family=Teko:wght@500;600;700&display=swap';
+
+function ensureAzMarcadorAssets(done) {
+	if (!document.getElementById('az-marcador-fonts')) {
+		var fonts = document.createElement('link');
+		fonts.id = 'az-marcador-fonts';
+		fonts.rel = 'stylesheet';
+		fonts.href = AZ_MARCADOR_FONTS;
+		document.head.appendChild(fonts);
+	}
+	if (!document.getElementById('az-marcador-css')) {
+		var link = document.createElement('link');
+		link.id = 'az-marcador-css';
+		link.rel = 'stylesheet';
+		link.href = AZ_MARCADOR_CSS;
+		document.head.appendChild(link);
+	}
+	if (window.AzMarcador && typeof window.AzMarcador.mount === 'function') {
+		done();
+		return;
+	}
+	var existing = document.getElementById('az-marcador-js');
+	if (existing) {
+		existing.addEventListener('load', done);
+		return;
+	}
+	var script = document.createElement('script');
+	script.id = 'az-marcador-js';
+	script.src = AZ_MARCADOR_JS;
+	script.onload = done;
+	script.onerror = function () {
+		console.log('AzMarcador failed to load');
+	};
+	document.head.appendChild(script);
+}
+
+function azMountMarcadoresIn(selector) {
+	var $hosts = $(selector).find('[data-az-marcador]');
+	if (!$hosts.length) return;
+	ensureAzMarcadorAssets(function () {
+		if (!window.AzMarcador || typeof window.AzMarcador.mount !== 'function') return;
+		$hosts.each(function () {
+			window.AzMarcador.mount(this);
+		});
 	});
 }
 
 function setWeekGameDetailHtml(selector, html) {
 	$(selector).html(html);
-	mountMarcadoresIn(selector);
+	azMountMarcadoresIn(selector);
+	// jQuery may eval inline scripts, but always (re)bind pill tabs after AJAX insert.
+	$(selector).find('ul.nav-pills[id]').each(function () {
+		if (typeof window.initNavs === 'function') {
+			window.initNavs(this.id);
+		}
+	});
 }
 
 function abrirFicha(id, week, game, gamedesc, lgoals, vgoals){
@@ -2393,7 +2494,7 @@ function configManagementAlertSave(Alert){
 }
 
 function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, JuegoCedulas, MarcadorArbitro, MarcadorFecha, MarcadorDiaDefault, JornadaCedulas, columnid, ByeWeekPoints, ByeWeekPointsGoals, juegoSemanal, tressets, 
-                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints){
+                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints, playerIDPDF, playerSignature){
 	//console.log('configManagementAlertSave');
 	mainLoadingOn();
 	$.ajax({
@@ -2403,7 +2504,7 @@ function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, Ju
 		data: {EmpatesPenales: EmpatesPenales, JugadorJugado: JugadorJugado, JuegoCedulas: JuegoCedulas, MarcadorArbitro: MarcadorArbitro, MarcadorFecha: MarcadorFecha, 
 		JornadaCedulas: JornadaCedulas, columnid: columnid, MarcadorDiaDefault: MarcadorDiaDefault, lenguaje: lenguaje, ByeWeekPoints: ByeWeekPoints, ByeWeekPointsGoals: ByeWeekPointsGoals, 
 		juegoSemanal: juegoSemanal, tressets: tressets, perfilJugador:perfilJugador,jugadoresApellidos1: jugadoresApellidos1,juegosXNombre: juegosxnombre, coachjuegos: coachjuegos, coachjuegosdiainicial: coachjuegosdiainicial, 
-		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints},
+		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints, playerIDPDF: playerIDPDF, playerSignature: playerSignature},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -3249,14 +3350,14 @@ function teamManagementHideAdd(){
 	$("#teamsManagementCreate").html('');
 }
 
-function teamManagementCreateSave(categoria, descripcion, descripcionlarga, estatus, fuerza, campo, playera, short, calcetas, file, desc3){
+function teamManagementCreateSave(categoria, descripcion, descripcionlarga, estatus, fuerza, institucion, campo, playera, short, calcetas, file, desc3, nombreColor, credencialColor){
 	//console.log('teamManagementCreateSave descripcion = ' + descripcion + ', descripcionLarga = ' + descripcionLarga + ', estatus = ' + estatus + ', fuerza = ' + fuerza + ', campo = ' + campo);
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Teams/TeamsManagementNewSave.php',
-		data: {descripcion: descripcion, descripcionlarga: descripcionlarga, estatus: estatus, fuerza: fuerza, campo: campo, playera: playera, short: short, calcetas: calcetas, file: file, desc3: desc3},
+		data: {descripcion: descripcion, descripcionlarga: descripcionlarga, estatus: estatus, fuerza: fuerza, institucion: institucion, campo: campo, playera: playera, short: short, calcetas: calcetas, file: file, desc3: desc3, nombreColor: nombreColor, credencialColor: credencialColor},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -3305,14 +3406,14 @@ function teamManagementHideEdit(){
 	$("#teamsManagementEdit").html('');
 }
 
-function teamManagementEditSave(id, categoria, descripcion, descripcionlarga, estatus, fuerza, campo, playera, short, calcetas, file, desc3){
+function teamManagementEditSave(id, categoria, descripcion, descripcionlarga, estatus, fuerza, institucion, campo, playera, short, calcetas, file, desc3, nombreColor, credencialColor){
 	//console.log('teamManagementEditSave id = ' + id + ', descripcion = ' + descripcion + ', descripcionLarga = ' + descripcionLarga + ', estatus = ' + estatus + ', fuerza = ' + fuerza + ', campo = ' + campo);
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Teams/TeamsManagementUpdateSave.php',
-		data: {id: id, descripcion: descripcion, descripcionlarga: descripcionlarga, estatus: estatus, fuerza: fuerza, campo: campo, playera: playera, short: short, calcetas: calcetas, file: file, desc3: desc3},
+		data: {id: id, descripcion: descripcion, descripcionlarga: descripcionlarga, estatus: estatus, fuerza: fuerza, institucion: institucion, campo: campo, playera: playera, short: short, calcetas: calcetas, file: file, desc3: desc3, nombreColor: nombreColor, credencialColor: credencialColor},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -3328,6 +3429,170 @@ function teamManagementEditSave(id, categoria, descripcion, descripcionlarga, es
 			console.log('Exception:' + exception);
 		}
 	});								 
+}
+
+/*****************************************************************************************************************
+***********************************************Institution Admin**************************************************
+*****************************************************************************************************************/
+var institutionsManagementFilterTimer = null;
+
+function institutionsManagementFilterListDebounced() {
+	if (institutionsManagementFilterTimer) {
+		clearTimeout(institutionsManagementFilterTimer);
+	}
+	institutionsManagementFilterTimer = setTimeout(function () {
+		institutionsManagementReloadList();
+	}, 350);
+}
+
+function institutionsManagementReloadList() {
+	var filterVal = '';
+	var $input = $('#institutionListFilter');
+	if ($input.length) {
+		filterVal = $input.val();
+	}
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Institutions/InstitutionsManagementReloadList.php',
+		data: { institutionListFilter: filterVal },
+		success: function (res) {
+			if (res.status === '1') {
+				var $wrap = $('#institutionsManagementListTables');
+				if ($wrap.length) {
+					$wrap.replaceWith(res.dataInstitutionList);
+				}
+			}
+		},
+		error: function (jqxhr, status, exception) {
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function institutionsManagementShow(){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Institutions/InstitutionsManagement.php',
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status === '1') {
+				$("#body").html(res.dataInstitution);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function institutionManagementShowAdd(){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Institutions/InstitutionsManagementCreate.php',
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				$("#institutionsManagementCreate").css('display', 'block');
+				$("#institutionsManagementList").css('display', 'none');
+				$("#institutionsManagementCreate").html(res.institutionAdd);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function institutionManagementHideAdd(){
+	$("#institutionsManagementCreate").css('display', 'none');
+	$("#institutionsManagementList").css('display', 'block');
+	$("#institutionsManagementCreate").html('');
+}
+
+function institutionManagementCreateSave(descripcion, descripcionlarga, estatus, file, desc5){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Institutions/InstitutionsManagementNewSave.php',
+		data: {descripcion: descripcion, descripcionlarga: descripcionlarga, estatus: estatus, file: file, desc5: desc5},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				alert(res.dataInstitutionAnswer);
+				institutionsManagementShow();
+			}else{
+				alert(res.dataInstitutionAnswer);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function institutionManagementShowEdit(id){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Institutions/InstitutionsManagementEdit.php',
+		data: {institution: id},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				$("#institutionsManagementEdit").css('display', 'block');
+				$("#institutionsManagementList").css('display', 'none');
+				$("#institutionsManagementEdit").html(res.dataInstitutionEdit);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function institutionManagementHideEdit(){
+	$("#institutionsManagementEdit").css('display', 'none');
+	$("#institutionsManagementList").css('display', 'block');
+	$("#institutionsManagementEdit").html('');
+}
+
+function institutionManagementEditSave(id, descripcion, descripcionlarga, estatus, file, desc5){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Institutions/InstitutionsManagementUpdateSave.php',
+		data: {id: id, descripcion: descripcion, descripcionlarga: descripcionlarga, estatus: estatus, file: file, desc5: desc5},
+		success: function (res) {
+			mainLoadingOff()
+			if (res.status === '1') {
+				alert(res.dataInstitutionAnswer);
+				institutionsManagementShow();
+			}else{
+				alert(res.dataInstitutionAnswer);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
 }
 
 function readTeamLogoURL(input, Logo) {

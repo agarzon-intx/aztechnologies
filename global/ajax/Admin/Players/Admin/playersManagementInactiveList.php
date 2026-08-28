@@ -12,6 +12,8 @@ $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">' . $lang['909'] . '</span></th>
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">' . $lang['910'] . '</span></th>
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">' . $lang['912'] . '</span></th>
+									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;"><i class="fas fa-clock" title="' . $lang['537'] . '"></i> ' . $lang['928'] . '</th>
+									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;"><i class="fas fa-clock" title="' . $lang['536'] . '"></i> ' . $lang['538'] . '</th>
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">' . $lang['914'] . '</span></th>
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">' . $lang['922'] . '</span></th>
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;"></span></th>
@@ -42,6 +44,8 @@ $sql22 = "	SELECT distinct Jugador_ID,
 						end SexoT,
 					Sexo,
 					case when FechaValidacionCurp is null then '" . $lang["941"] . "' else '" . $lang["940"] . "' end CurpValida,
+					a.Fecha_Baja,
+					a.Fecha_Validacion,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
 					year(now())-year(a.Fecha_Nacimiento) Edad, 
 					CASE WHEN f.Categoria_ID <> ifnull(d.Categoria_ID,-1) and year(now())-year(a.Fecha_Nacimiento) > f.Edad_Final 
@@ -81,6 +85,8 @@ if ($result2->num_rows > 0) {
 		}
 		$htmlPlayer .= '<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["Edad"] . $row2["strikef"]  . '</span></td>
 						<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["Validado"] . $row2["strikef"]  . '</span></td>
+						<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["Fecha_Baja"] . $row2["strikef"]  . '</span></td>
+						<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["Fecha_Validacion"] . $row2["strikef"]  . '</span></td>
 						<td scope="row" class="align-middle text-center" style="background: ' . $color . '"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["SexoT"] . $row2["strikef"]  . '</span></td>';
 		if($row2["CurpValida"] === $lang["940"]){ 
 			$color = "#00FF00";
@@ -179,6 +185,16 @@ if ($result2->num_rows > 0) {
 								<div style="width: 15%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important; padding-top: 23px;"><span class="text-secondary text-xs font-weight-bold"></span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal"><img onClick="playersManagementAdminShowEdit(' . $row2["Jugador_ID"] . ')" src="./imagenes/edit.png" width="20" height="20" alt=""/></span></div></div>
+								</div>
+							</div>
+							<div class="d-flex px-0 py-0">
+								<div style="width: 50%;text-align: center;padding-top: 0px;">
+									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"><i class="fas fa-clock" title="' . $lang['537'] . '"></i></span></p>
+									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["Fecha_Baja"] . '</span></div></div>
+								</div>
+								<div style="width: 50%;text-align: center;padding-top: 0px;">
+									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"><i class="fas fa-clock" title="' . $lang['536'] . '"></i></span></p>
+									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["Fecha_Validacion"] . '</span></div></div>
 								</div>
 							</div>
 						</td>

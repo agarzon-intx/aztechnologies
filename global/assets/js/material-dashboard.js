@@ -699,8 +699,21 @@ function positionMovingTabOverNavItem(navUl, movingDiv, li) {
 var total = document.querySelectorAll('.nav-pills');
 
 function initNavs(id) {
+  // Require a real id — bare initNavs() used to query "#undefined.nav-pills" and bind nothing.
+  if (!id) {
+    return;
+  }
   total = document.querySelectorAll('#' + id + '.nav-pills');
   total.forEach(function(item, i) {
+    var prevMoving = item.querySelector('.moving-tab');
+    if (prevMoving) {
+      prevMoving.remove();
+    }
+    if (item._azNavClick) {
+      item.removeEventListener('click', item._azNavClick);
+      item._azNavClick = null;
+    }
+
     var moving_div = document.createElement('div');
     var li_active = getActiveRealNavLink(item);
     if (!li_active) {
@@ -744,7 +757,7 @@ function initNavs(id) {
       syncMovingTabToActiveNav(item);
     }, 100);
 
-    item.addEventListener('click', function (ev) {
+    item._azNavClick = function (ev) {
       var a = ev.target.closest && ev.target.closest('a.nav-link');
       if (!a || a.closest('.moving-tab') || !item.contains(a)) {
         return;
@@ -756,7 +769,8 @@ function initNavs(id) {
       window.setTimeout(function () {
         syncMovingTabToActiveNav(item);
       }, 0);
-    });
+    };
+    item.addEventListener('click', item._azNavClick);
   });
 }
 
