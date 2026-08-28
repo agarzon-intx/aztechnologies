@@ -52,6 +52,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $type = $_POST['type'];
 	$foto = "";
     $idf = $_POST['idf'];
+    $idpdf = isset($_POST['idpdf']) ? $_POST['idpdf'] : '';
     $idb = $_POST['idb'];
     $signature = $_POST['signature'];
 	$idfull = '';
@@ -236,6 +237,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$retunData = array('status' => '1', 'message' => 'Success.', 'dataPlayerMessage' => $lang['938']);
 		}
 	}
+
+	$playerIdForPdf = $playerid;
+	require(dirname(__DIR__) . '/player_id_pdf_save.inc.php');
+
 	$Connection->Close();
 	
     
