@@ -127,7 +127,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						return false;
 					}
 				}
-				playersManagementAdminCreatePlayer($('#nombre').val(), $('#apellidop').val(), $('#apellidom').val(), $('#apodo').val(), $('#fechanac').val(), $('#numero').val(), $('#telefono').val(), $('#sexo').val(), $('#correo').val(), $('#curp').val(), $('#comentarios').val(), $('#Validado').val(), $('#Estatus2').val(), $('#equipo').val().split(',')[0], $('#myFotoFileName').val(), $('#myID11FileName').val(), $('#myID12FileName').val(), $('#myFirmaFileName').val(), $('#type').val(), srccat, srcteam);
+				playersManagementAdminCreatePlayer($('#nombre').val(), $('#apellidop').val(), $('#apellidom').val(), $('#apodo').val(), $('#fechanac').val(), $('#numero').val(), $('#telefono').val(), $('#sexo').val(), $('#correo').val(), $('#curp').val(), $('#comentarios').val(), $('#Validado').val(), $('#Estatus2').val(), $('#equipo').val().split(',')[0], $('#myFotoFileName').val(), $('#myID11FileName').val(), $('#myID12FileName').val(), $('#myFirmaFileName').val(), $('#type').val(), srccat, srcteam, $('#myIDPDFFileName').val());
 			}
 
             function playersManagementValidateAllPlayers(cat, srcteam){
@@ -199,7 +199,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						return false;
 					}
 				}
-				playersManagementTeamCreatePlayer($('#nombre').val(), $('#apellidop').val(), $('#apellidom').val(), $('#apodo').val(), $('#fechanac').val(), $('#numero').val(), $('#telefono').val(), $('#sexo').val(), $('#correo').val(), $('#curp').val(), $('#comentarios').val(), $('#Validado').val(), $('#Estatus2').val(), $('#equipo').val().split(',')[0], $('#myFotoFileName').val(), $('#myID11FileName').val(), $('#myID12FileName').val(), $('#myFirmaFileName').val(), $('#type').val(), srcteam);
+				playersManagementTeamCreatePlayer($('#nombre').val(), $('#apellidop').val(), $('#apellidom').val(), $('#apodo').val(), $('#fechanac').val(), $('#numero').val(), $('#telefono').val(), $('#sexo').val(), $('#correo').val(), $('#curp').val(), $('#comentarios').val(), $('#Validado').val(), $('#Estatus2').val(), $('#equipo').val().split(',')[0], $('#myFotoFileName').val(), $('#myID11FileName').val(), $('#myID12FileName').val(), $('#myFirmaFileName').val(), $('#type').val(), srcteam, $('#myIDPDFFileName').val());
 			}
 
 			function limpiar(){
@@ -279,7 +279,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						return false;
 					}
 				}
-				playersManagementAdminEditPlayer(playerid,  $('#nombreE').val(), $('#apellidopE').val(), $('#apellidomE').val(), $('#apodoE').val(), $('#fechanacE').val(), $('#numeroE').val(), $('#telefonoE').val(), $('#sexoE').val(), $('#correoE').val(), $('#curpE').val(), $('#comentariosE').val(), $('#ValidadoE').val(), $('#Estatus2E').val(), $('#equipoE').val().split(',')[0], $('#myFotoFileNameE').val(), $('#myID11FileNameE').val(), $('#myID12FileNameE').val(), $('#myFirmaFileNameE').val(), $('#typeE').val(), srccat, srcteam);
+				playersManagementAdminEditPlayer(playerid,  $('#nombreE').val(), $('#apellidopE').val(), $('#apellidomE').val(), $('#apodoE').val(), $('#fechanacE').val(), $('#numeroE').val(), $('#telefonoE').val(), $('#sexoE').val(), $('#correoE').val(), $('#curpE').val(), $('#comentariosE').val(), $('#ValidadoE').val(), $('#Estatus2E').val(), $('#equipoE').val().split(',')[0], $('#myFotoFileNameE').val(), $('#myID11FileNameE').val(), $('#myID12FileNameE').val(), $('#myFirmaFileNameE').val(), $('#typeE').val(), srccat, srcteam, $('#myIDPDFFileNameE').val());
 			}
 			
 			
@@ -349,7 +349,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						return false;
 					}
 				}
-				playersManagementTeamEditPlayer(playerid,  $('#nombreE').val(), $('#apellidopE').val(), $('#apellidomE').val(), $('#apodoE').val(), $('#fechanacE').val(), $('#numeroE').val(), $('#telefonoE').val(), $('#sexoE').val(), $('#correoE').val(), $('#curpE').val(), $('#comentariosE').val(), $('#ValidadoE').val(), $('#Estatus2E').val(), $('#equipoE').val().split(',')[0], $('#myFotoFileNameE').val(), $('#myID11FileNameE').val(), $('#myID12FileNameE').val(), $('#myFirmaFileNameE').val(), $('#typeE').val(), srcteam);
+				playersManagementTeamEditPlayer(playerid,  $('#nombreE').val(), $('#apellidopE').val(), $('#apellidomE').val(), $('#apodoE').val(), $('#fechanacE').val(), $('#numeroE').val(), $('#telefonoE').val(), $('#sexoE').val(), $('#correoE').val(), $('#curpE').val(), $('#comentariosE').val(), $('#ValidadoE').val(), $('#Estatus2E').val(), $('#equipoE').val().split(',')[0], $('#myFotoFileNameE').val(), $('#myID11FileNameE').val(), $('#myID12FileNameE').val(), $('#myFirmaFileNameE').val(), $('#typeE').val(), srcteam, $('#myIDPDFFileNameE').val());
 			}
 			
 			function playersManagementAdminAddPrintList(){

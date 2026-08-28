@@ -1971,7 +1971,7 @@ function playersManagementTeamCreatePlayer(name, lastname, lastname2, nickname, 
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Players/Team/playersManagementCreateSave.php',
-		data: {name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type},
+		data: {name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type, idpdf: idpdf},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -2020,7 +2020,7 @@ function playersManagementTeamEditPlayer(playerid, name, lastname, lastname2, ni
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Players/Team/playersManagementEditSave.php',
-		data: {playerid: playerid, name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type},
+		data: {playerid: playerid, name: name, lastname: lastname, lastname2: lastname2, nickname: nickname, birthdate: birthdate, playernumber: playernumber, phone: phone, sex: sex, email: email, id: id, comments: comments, valid: valid, status: status, team: team, picture: picture, idf: idf, idb: idb, signature: signature, type: type, idpdf: idpdf},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
