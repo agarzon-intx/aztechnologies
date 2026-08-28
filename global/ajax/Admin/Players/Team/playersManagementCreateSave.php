@@ -53,6 +53,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $type = $_POST['type'];
 	$foto = "";
     $idf = $_POST['idf'];
+    $idpdf = isset($_POST['idpdf']) ? $_POST['idpdf'] : '';
     $idb = $_POST['idb'];
     $signature = $_POST['signature'];
 	$idfull = '';
