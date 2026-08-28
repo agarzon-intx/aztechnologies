@@ -2122,6 +2122,74 @@ function readURLE(input, fotoE) {
 	}
 }
 
+function readIDPDFURL(input, identificacion) {
+	var fd = new FormData();
+	var files = $('#myIDPDF')[0].files;
+	fd.append('myIDPDF',files[0]);
+	$("#previewMyIDPDF").html('');
+	$("#previewMyIDPDF").html('<img src="imagenes/loader.gif" alt="Uploading...." style="width: 150;"/>');
+	$.ajax({
+		type: 'POST',
+		enctype: 'multipart/form-data',
+		dataType: 'json',
+		url: 'objects/UploadIDPDF.php',
+		data: fd,
+		contentType: false,
+		processData: false,
+		success: function (data) {
+			$('#previewMyIDPDF').html(data.alert);
+			if(data.status === '1'){
+				$('#myIDPDFFileName').val(data.action);
+			}else{
+				$('#myIDPDFFileName').val('');
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+	if (input.files && input.files[0]) {
+		$('#' + identificacion).attr('src', URL.createObjectURL(input.files[0]));
+		$('#' + identificacion).show();
+	}
+}
+
+function readIDPDFURLE(input, identificacion) {
+	var fd = new FormData();
+	var files = $('#myIDPDFE')[0].files;
+	fd.append('myIDPDF',files[0]);
+	$("#previewMyIDPDFE").html('');
+	$("#previewMyIDPDFE").html('<img src="imagenes/loader.gif" alt="Uploading...." style="width: 150;"/>');
+	$.ajax({
+		type: 'POST',
+		enctype: 'multipart/form-data',
+		dataType: 'json',
+		url: 'objects/UploadIDPDF.php',
+		data: fd,
+		contentType: false,
+		processData: false,
+		success: function (data) {
+			$('#previewMyIDPDFE').html(data.alert);
+			if(data.status === '1'){
+				$('#myIDPDFFileNameE').val(data.action);
+			}else{
+				$('#myIDPDFFileNameE').val('');
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+	if (input.files && input.files[0]) {
+		$('#' + identificacion).attr('src', URL.createObjectURL(input.files[0]));
+		$('#' + identificacion).show();
+	}
+}
+
 function readIDURL11(input, identificacion) {
 	var fd = new FormData();
 	var files = $('#myID11')[0].files;

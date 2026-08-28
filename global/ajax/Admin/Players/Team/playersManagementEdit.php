@@ -393,6 +393,7 @@ $htmlPlayer .= '													</select>
 								</div>
 							</div>
 							<div class="col-xl-4" style="text-align: center;">
+								<div ' . $idImageStyle . '>
 								<h4>' . $lang['948'] . '</h4>
 								<div class="row" style="width: 100%;" >
 									<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
@@ -465,6 +466,35 @@ $htmlPlayer .= '													</select>
 													</span>
 												</div>
 											</div>
+										</div>
+									</div>
+								</div>
+								</div>
+								<div ' . $idPdfStyle . '>
+									<h4>' . $lang['539'] . '</h4>
+									<div class="row">
+										<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
+											<span style="text-align: center; ">
+												<div style="width: 100%; height: 320px; background-color: #BFBFBF; margin: auto;">
+													<iframe id="identificacionPDFE" src="' . ($idPdfExists ? 'Form/fetch_pdf.php?Jugador_ID=' . $player . '&tmp=' . $fecha->getTimestamp() : '') . '" title="' . $lang['539'] . '" style="width: 100%; height: 320px; border: 0; ' . ($idPdfExists ? '' : 'display: none;') . '"></iframe>
+												</div>
+											</span>
+										</div>
+									</div>
+									<div class="row">
+										<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12" style="width: 100%;">
+											<span style="text-align: left; ">
+												<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myIDPDFE\'), \'click\');" id="subiridentificacionpdfE">' . $lang['933-1'] . '</button>
+												<form>
+													<div style="text-align: center;">
+														<div>
+															<input style="display: none; visibility: hidden;" type="file" accept="application/pdf" name="myIDPDFE" id="myIDPDFE" onchange="readIDPDFURLE(this, \'identificacionPDFE\');">
+															<input type="hidden" name="myIDPDFFileNameE" id="myIDPDFFileNameE" value="">
+														</div>
+														<div id=\'previewMyIDPDFE\' style="display: inline-block; vertical-align:middle;"></div>
+													</div>
+												</form>
+											</span>
 										</div>
 									</div>
 								</div>
