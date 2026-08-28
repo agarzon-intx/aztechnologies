@@ -57,6 +57,7 @@ $team = SanitizeInteger($_POST['team']);
 $picture = $_POST['picture'];
 $type = $_POST['type'];
 $idf = $_POST['idf'];
+$idpdf = isset($_POST['idpdf']) ? $_POST['idpdf'] : '';
 $idb = $_POST['idb'];
 $signature = $_POST['signature'];
 $idfull = '';
@@ -254,6 +255,10 @@ if ($result === false) {
 		}
 	}
 }
+
+$playerIdForPdf = $playerid;
+require(dirname(__DIR__) . '/player_id_pdf_save.inc.php');
+
 $Connection->Close();
 
 $Config->Close();

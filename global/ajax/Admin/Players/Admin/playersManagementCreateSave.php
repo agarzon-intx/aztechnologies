@@ -53,6 +53,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $type = $_POST['type'];
 	$foto = "";
     $idf = $_POST['idf'];
+    $idpdf = isset($_POST['idpdf']) ? $_POST['idpdf'] : '';
     $idb = $_POST['idb'];
     $signature = $_POST['signature'];
 	$idfull = '';
@@ -286,6 +287,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     				$retunData = array('status' => '1', 'message' => 'Success.', 'dataPlayerMessage' => $lang['916'], 'sql0' => mb_convert_encoding($sql0, 'UTF-8', 'UTF-8'));
     		}		
     	}
+
+		$playerIdForPdf = '';
+		$newPlayer = $Config->query("SELECT MAX(Jugador_ID) Jugador_ID FROM $schema.Jugadores WHERE Curp like '$id' and Equipo_ID = $team");
+		if ($newPlayer && $newPlayerRow = $newPlayer->fetch_assoc()) {
+			$playerIdForPdf = $newPlayerRow["Jugador_ID"];
+		}
+		require(dirname(__DIR__) . '/player_id_pdf_save.inc.php');
+
 		$Connection->Close();
 
 	}
