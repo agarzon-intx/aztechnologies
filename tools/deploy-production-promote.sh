@@ -148,17 +148,17 @@ ftp_delete() {
 batch_file="$(mktemp "${TMPDIR:-/tmp}/az-production-batch.XXXXXX")"
 batch_out="$(mktemp "${TMPDIR:-/tmp}/az-production-out.XXXXXX")"
 trap 'rm -f "$batch_file" "$batch_out" /tmp/az-promote-files.txt' EXIT
-for rel in "${upload_files[@]}"; do
-	printf 'UPLOAD\t%s\n' "$rel" >> "$batch_file"
-done
-for rel in "${delete_files[@]}"; do
-	printf 'DELETE\t%s\n' "$rel" >> "$batch_file"
-done
-
-if [[ ! -s "$batch_file" ]]; then
+if [[ ${#upload_files[@]} -eq 0 && ${#delete_files[@]} -eq 0 ]]; then
 	echo "Nothing to promote."
 	exit 0
 fi
+
+for rel in ${upload_files[@]+"${upload_files[@]}"}; do
+	printf 'UPLOAD\t%s\n' "$rel" >> "$batch_file"
+done
+for rel in ${delete_files[@]+"${delete_files[@]}"}; do
+	printf 'DELETE\t%s\n' "$rel" >> "$batch_file"
+done
 
 batch_status=0
 python3 "$REPO/tools/deploy-production-sftp.py" batch --repo "$REPO" --batch-file "$batch_file" | tee "$batch_out" || batch_status=1
