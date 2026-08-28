@@ -91,6 +91,26 @@ class Configuration
     }
 
     /**
+     * Whether {schema}.Jugadores has a column (older DBs may not be migrated yet).
+     */
+    public function jugadoresHasColumn(string $columnName): bool
+    {
+        $conn = $this->connect();
+        if (!$conn) {
+            return false;
+        }
+        $schema = $this->getSchema();
+        if ($schema === '' || $columnName === '') {
+            return false;
+        }
+        $schemaEsc = $conn->real_escape_string($schema);
+        $colEsc = $conn->real_escape_string($columnName);
+        $sql = "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{$schemaEsc}' AND TABLE_NAME = 'Jugadores' AND COLUMN_NAME = '{$colEsc}' LIMIT 1";
+        $r = @$conn->query($sql);
+        return $r instanceof mysqli_result && $r->num_rows > 0;
+    }
+
+    /**
      * Internal: column check using an existing mysqli connection.
      */
     private function schemaHasConfigurationColumn(mysqli $conn, string $columnName): bool

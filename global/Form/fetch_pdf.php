@@ -1,7 +1,4 @@
 <?php
-header("content-type:application/pdf");
-
-header("content-type:application/pdf");
 $__APP_SITE_PATHS_START__ = __DIR__;
 $__app_here = __DIR__;
 for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
@@ -20,18 +17,32 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
 
-$schema = $Config->getSchema();
-$sessionstat = $fgmembersite->CheckLogin($Config,'fetchPdf.php');
-$curp=$_GET['curp'];
+	$schema = $Config->getSchema();
+	$sessionstat = $fgmembersite->CheckLogin($Config,'fetchPdf.php');
 
-$select_curp = "select Documento from $schema.Curp where CURP = '$curp'";
-$pdf_decoded = "";
-$result=$Config->query($select_curp);
-if ($result->num_rows > 0) {
-	while($row2 = $result->fetch_assoc()) {
-		$pdf_decoded = base64_decode($row2["Documento"]);
-	}	
-}
-$Config->close();
-echo $pdf_decoded;
+	$jugador = SanitizeInteger($_GET['Jugador_ID']);
+	$pdf_content = '';
+
+	if ($jugador !== '' && $Config->jugadoresHasColumn('IdentificacionPDF')) {
+		$Config->connect();
+		$select_pdf = "select IdentificacionPDF from $schema.Jugadores where Jugador_ID = $jugador and OCTET_LENGTH(IdentificacionPDF) > 100";
+		$result = $Config->query($select_pdf);
+		if ($result && $result->num_rows > 0) {
+			while($row = $result->fetch_assoc()) {
+				$pdf_content = $row["IdentificacionPDF"];
+			}
+		}
+		$Config->close();
+	}
+
+	if ($pdf_content === '' || $pdf_content === null) {
+		http_response_code(404);
+		exit;
+	}
+
+	header("Content-Type: application/pdf");
+	header("Content-Disposition: inline; filename=\"player-" . $jugador . ".pdf\"");
+	header("Content-Length: " . strlen($pdf_content));
+	header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+	echo $pdf_content;
 ?>
