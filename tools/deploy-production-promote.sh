@@ -33,7 +33,7 @@ python3 << 'PY' > /tmp/az-promote-files.txt
 import os, json, hashlib
 REPO = os.environ['REPO']
 STATE = os.path.join(REPO, '.local', 'promote-state.json')
-SITES = ['elite','huskies','lidep','nuestrodeporte','vollidep','voleibalmetepec','aztflag','demo','candlesStore']
+SITES = ['elite','huskies','lidep','nuestrodeporte','vollidep','voleibalmetepec','voleyMVP','aztflag','demo','candlesStore']
 JUNCTIONS = {'ajax','assets','config','css','Form','include','javascript','languages','objects'}
 
 def should_deploy(rel):

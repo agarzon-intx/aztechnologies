@@ -30,7 +30,7 @@ $plink = 'C:\Program Files\PuTTY\plink.exe'
 if (-not (Test-Path $pscp)) { throw "Install PuTTY or set path to pscp.exe: $pscp" }
 if (-not (Test-Path $plink)) { throw "Install PuTTY or set path to plink.exe: $plink" }
 
-$sites = @('elite', 'huskies', 'lidep', 'nuestrodeporte', 'vollidep', 'voleibalmetepec')
+$sites = @('elite', 'huskies', 'lidep', 'nuestrodeporte', 'vollidep', 'voleibalmetepec', 'voleyMVP')
 
 $ref = if ($args[0]) { $args[0] } else { 'HEAD' }
 $tarName = 'aztechnologies-Development-deploy.tgz'

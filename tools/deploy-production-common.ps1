@@ -23,7 +23,7 @@ function Get-AzProductionDeployConfig {
 		Password       = $pw
 		FtpRoot        = $ftpRoot
 		ProductionBase = $productionBase
-		Sites          = @('elite', 'huskies', 'lidep', 'nuestrodeporte', 'vollidep', 'voleibalmetepec')
+		Sites          = @('elite', 'huskies', 'lidep', 'nuestrodeporte', 'vollidep', 'voleibalmetepec', 'voleyMVP')
 		# Repo paths never deployed
 		ExcludePattern = '\\\.git\\|\\\.local\\|\\\.cursor\\|\\tools\\|\\logs\\|\\tmp\\|\.swp$|php_imagick\.dll$'
 	}

@@ -44,7 +44,7 @@ nohup bash -c '
 		--exclude="/tmp/" \
 		--exclude="/imagenes/" \
 		--exclude="/ini/" \
-		global elite huskies lidep nuestrodeporte vollidep voleibalmetepec aztflag demo tools \
+		global elite huskies lidep nuestrodeporte vollidep voleibalmetepec voleyMVP aztflag demo tools \
 		| while IFS= read -r -d "" _path; do
 			schedule
 		done

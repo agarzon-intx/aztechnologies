@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__DIR__) . '/global/include/flyer_facebook_publish.php';
 
-$sites = array('elite', 'lidep', 'huskies', 'nuestrodeporte', 'vollidep', 'voleibalmetepec');
+$sites = array('elite', 'lidep', 'huskies', 'nuestrodeporte', 'vollidep', 'voleibalmetepec', 'voleyMVP');
 $repo = dirname(__DIR__);
 
 foreach ($sites as $site) {

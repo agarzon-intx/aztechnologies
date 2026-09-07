@@ -1,0 +1,4378 @@
+<?php
+	require_once dirname(__DIR__) . '/site_paths.php';
+   	set_time_limit(300);
+	require("alphapdf.php");
+	require("membersite_config.php");
+	$Config = new Configuration();
+	$schema = $Config->getSchema();
+	$sessionstat = $fgmembersite->CheckLogin($Config,'cedulas.php');
+	$Config->connect();
+
+	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+	$folder = substr(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])),1,strlen(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])))-5);
+
+	$torneo = $_COOKIE[$Config->getAlias() . 'season'];
+	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
+	$jornada = htmlspecialchars($_GET['Jornada_ID']);
+	
+	$server = $fgmembersite->getSitename();
+
+	$Config->LoadLogo();
+	$Config->LoadFlags();
+	$Config->LoadRegionalSettings();
+	
+	$pdf = new AlphaPDF('L','mm','Letter');
+	
+	$sql0 = "select dc.Categoria_DESC, b.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, b.Fecha, day(b.Fecha) Dia, 
+					ELT(DATE_FORMAT(b.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre')  Mes, year(b.Fecha) Anio, a.Campo_ID, 
+					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(b.Fecha, '" . $Config->DateFormat5 . "') Fecha_String, DATE_FORMAT(a.Horario, '%I:%i %p') Horario
+			from $schema.Juegos a
+				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
+				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Calendario_ID in (select Calendario_ID from $schema.Jornada where Jornada_ID = $jornada)
+				join $schema.Campos e on d.Campo_ID = e.Campo_ID
+				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
+				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
+			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada
+			order by dc.Categoria_Orden asc, a.Juego_ID asc";
+	$result1 = $Config->query($sql0);
+	if ($result1->num_rows > 0) {
+		// output data of each row
+		while($row1 = $result1->fetch_assoc()) {
+			$localid = utf8_decode($row1["Local_ID"]);
+			$visitanteid = utf8_decode($row1["Visitante_ID"]);
+			$x = 0;
+			$y = 0;
+			$col = 0;
+			$rowc = 0;
+		
+			$pdf->AddPage();
+			$pdf->SetAutoPageBreak(false,1);
+			$pdf->SetMargins(4, 4, 4, 4);	
+		
+		    $pdf->SetFont('Helvetica' , '' , 12);
+			$pdf->SetTextColor(0, 0, 0);
+			$pdf->SetXY(5,5);
+			$pdf->Cell(110, 5, $lang['10600'], 1, 1 , 'L' , false);
+			
+			$pdf->SetXY(115,5);
+			$pdf->SetFont('Helvetica' , 'B' , 12);
+			$pdf->SetTextColor(0, 0, 255);
+			$pdf->Cell(62 , 5, utf8_decode($row1["Fecha_String"]) . '  ' . utf8_decode($row1["Horario"]) , 1, 1 , 'L' , false);
+
+			/*Torneo y Categoria */
+			$pdf->SetFont('Helvetica' , '' , 12);
+			$pdf->SetTextColor(0, 0, 0);
+			$pdf->SetXY(5,10);
+			$pdf->Cell(60, 5, $row1["Torneo_Desc"], 1, 1 , 'L' , false);			
+			$pdf->SetXY(65,10);
+			$pdf->Cell(50, 5, $row1["Categoria_DESC"], 1, 1 , 'L' , false);
+
+			/*Titulo LMVM*/
+			$pdf->SetXY(177,5);
+			$pdf->SetFont('Helvetica' , 'B' , 11);
+			$pdf->Cell(98.2, 16, $Config->liga, 1, 1 , 'C' , false);
+
+			/*LOGO*/
+			$pdf->SetXY(97,2);
+			$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',176+((35 - (35 * ($Config->logowidth / 110)))/2),5.5+((20 - (20 * ($Config->logoheight / 110)))/2),(20 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)), 'PNG');
+
+			$pdf->SetXY(190,2);
+			$pdf->Image($server . '/imagenes/fmvb.PNG' ,258, 5.5, 13, 0 ,'PNG');
+
+			/*Titulo Equipos */
+			$pdf->SetXY(115,10);
+			$pdf->SetFont('Helvetica' , '' , 7);
+			$pdf->SetTextColor(0, 0, 0);
+			$pdf->Cell(62, 3, $lang['10603'] , 35, 0 , 'C' , false);
+			$pdf->SetFont('Helvetica' , 'B' , 7);
+			$pdf->SetXY(115,10);
+			$pdf->Cell(30, 3, 'A' , 35, 0 , 'C' , false);
+			$pdf->SetXY(145,10);
+			$pdf->Cell(30, 3, 'B' , 35, 0 , 'C' , false);
+		    
+		    /*Equipos */
+		    $pdf->SetXY(115,10);
+            $pdf->SetFont('Helvetica' , '' , 13);
+            $pdf->SetTextColor(0, 0, 255);
+	    	$pdf->Cell(62, 11, '' , 1, 1 , 'C' , false);
+	    	$pdf->SetXY(115,13);
+	    	$pdf->MultiCell(30, 4, utf8_decode($row1["Local"]), 0 , 'C' , false);
+	    	$pdf->SetXY(145,13);
+	    	$pdf->MultiCell(30, 4, utf8_decode($row1["Visitante"]), 0 , 'C' , false);
+		
+		    /*Cancha y Juego */
+           	$pdf->SetFont('Helvetica' , 'B' , 11);
+			$pdf->SetTextColor(0, 0, 0);
+			$pdf->SetXY(5,15);
+			$pdf->Cell(60, 6, $lang['10517'] . ' ' . $row1["Campo_DESC"], 1, 1 , 'L' , false);			
+			$pdf->SetXY(65,15);
+			$pdf->Cell(50, 6,  $lang['986'] . ' ' . utf8_decode($row1["Jornada_DescCorta"]) . '', 1, 0 , 'C' , false);
+			$y = .5;
+			/*Empieza Cabecera antes de los Set's*/
+			$pdf->SetFont('Times' , 'B' , 8);
+		    $pdf->SetXY(5,$y+21);
+		    $pdf->Cell(11 , 6,'', 1, 1 , 'L' , false);
+		    
+		    $pdf->SetFont('Times' , 'B' , 6);
+		    $pdf->SetXY(16,$y+19);
+		    $pdf->Cell(11 , 6, $lang['9999'], 0, 0 , 'L' , false);
+		    $pdf->SetXY(16,$y+21);
+		    $pdf->Cell(11 , 6, $lang['10136'], 1, 1 , 'L' , false);
+		    
+		    /*Colocacion del equipo dentro de la cancha 1er set*/
+		    $pdf->SetFont('Times' , 'B' , 9);
+		    $pdf->SetXY(27,$y+21);
+		    $pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    
+		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
+		    $pdf->SetXY(63.8,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'S' , 1, 0 , 'L' , false);
+	    	$pdf->SetXY(63.8,$y+24);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'R' , 1, 0 , 'L' , false);
+	    
+	    	/*Titulo Puntos Local 1er set */
+	    	$pdf->SetXY(66.8,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 8);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);
+			
+			$pdf->SetXY(82.8,$y+21);
+            $pdf->SetFont('Times' , 'B' , 9);
+    		$pdf->Cell(33.8, 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+		 
+		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
+		    $pdf->SetXY(116.6,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'S' , 1, 0 , 'L' , false);
+	    	$pdf->SetXY(116.6,$y+24);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'R' , 1, 0 , 'L' , false);
+	    	
+	        /*Titulo Termina */
+	        $pdf->SetFont('Times' , 'B' , 6);
+		    $pdf->SetXY(119.6,$y+19);
+		    $pdf->Cell(10 , 6, $lang['989'], 0, 0 , 'L' , false);
+		    $pdf->SetXY(119.6,$y+21);
+		    $pdf->Cell(10 , 6, $lang['10136'], 1, 1 , 'L' , false);
+	    
+	    
+	    	/*Titulo Puntos Visitante 1er set*/
+	    	$pdf->SetXY(129.6,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 8);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);
+	    	
+	    	/*Titulo Inicia 2do. Set*/
+	    	$pdf->SetFont('Times' , 'B' , 6);
+		    $pdf->SetXY(145.6,$y+19);
+		    $pdf->Cell(11 , 6, $lang['9999'], 0, 0 , 'L' , false);
+		    $pdf->SetXY(145.6,$y+21);
+		    $pdf->Cell(11 , 6, $lang['10136'], 1, 1 , 'L' , false);
+	    	
+	    	
+	        /*Datos de acomodo para el 2do. Set*/
+	        $pdf->SetXY(156.6,$y+21);
+            $pdf->SetFont('Times' , 'B' , 8);
+			$pdf->Cell(39.8 , 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+			
+		 
+		    /*Dato de R=Recibe, S= Al servicio Visitante 2do set*/
+		    $pdf->SetXY(193.4,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'S' , 1, 0 , 'L' , false);
+	    	$pdf->SetXY(193.4,$y+24);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'R' , 1, 0 , 'L' , false);
+	    	
+	    
+	    	/*Titulo Puntos Visitante 2dr set*/
+	    	$pdf->SetXY(196.4,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 8);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);
+	    	
+	        /*Colocacion del equipo dentro de la cancha 2do set*/
+		    $pdf->SetFont('Times' , 'B' , 9);
+		    $pdf->SetXY(212.4,$y+21);
+		    $pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    
+	        /*Dato de R=Recibe, S= Al servicio Local 2do set*/
+		    $pdf->SetXY(246.2,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'S' , 1, 0 , 'L' , false);
+	    	$pdf->SetXY(246.2,$y+24);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'R' , 1, 0 , 'L' , false);
+	    	
+	    	
+	    	/*Titulo Termina */
+	        $pdf->SetFont('Times' , 'B' , 6);
+		    $pdf->SetXY(249.2,$y+19);
+		    $pdf->Cell(10 , 6, $lang['989'], 0, 0 , 'L' , false);
+		    $pdf->SetXY(249.2,$y+21);
+		    $pdf->Cell(10 , 6, $lang['10136'], 1, 1 , 'L' , false);
+		     
+		    /*Titulo Puntos Visitante 2do set*/
+	    	$pdf->SetXY(259.2,$y+21);
+            $pdf->SetFont('Helvetica' , 'B' , 8);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);
+
+			$pages = 0;
+			
+			$y = $y -5;
+
+			/*Empieza Cabecera antes de los Set's*/
+			$pdf->SetFont('Times' , 'B' , 7);
+			$y = $y + 4;
+			$pdf->SetXY($x+5,$y+28);
+			$pdf->Cell(11 , 5,''  , 1, 1 , 'C' , false);
+			$pdf->SetXY($x+5,$y+28);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10500']) . utf8_decode($lang['10500-1']), 0 , 'C' , false);
+			
+			$pdf->SetFont('Times' , 'B' , 7);
+		    $pdf->SetXY($x+16,$y+28);
+			$pdf->Cell(4 , 45, '', 1, 1 , 'C' , false);
+			$pdf->RotatedText($x+18.8,$y+51,$lang['10507-1'] . ' 1',90);
+			$pdf->SetXY($x+20,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10501'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10502'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10503'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10504'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10505'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10506'], 1, 0, 'C' , false);
+
+		    /*1ra fila 1set Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+5,$y+33);
+			$pdf->Cell(11 , 5,'', 1, 1 , 'C' , false);
+			$pdf->SetXY($x+5,$y+33);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-1']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+33);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*2da fila 1set local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+5,$y+38);
+			$pdf->Cell(3 , 15,'', 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->RotatedText($x+7,$y+50,$lang['10508-4'],90);
+			$pdf->SetXY($x+8,$y+38);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(8, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+38);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+		
+			/*3ra fila 1set cambio de jugador Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+8,$y+43);
+			$pdf->Cell(8 , 10,'', 1, 1 , 'C' , false);
+			$pdf->SetXY($x+7,$y+45.5);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(10, 2.5, utf8_decode($lang['10508-3']), 0 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*4a fila 1set cambio de jugador Local*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*5a fila 1set cambio de jugador*/
+			$y = $y - 5;
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+5,$y+53);
+			$pdf->Cell(3 , 20,'', 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->RotatedText($x+7,$y+69.5,$lang['10508-5'],90);
+			$pdf->SetXY($x+8,$y+53);
+			$pdf->Cell(4 , 5,$lang['10509'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+12,$y+53);
+			$pdf->Cell(4 , 5,$lang['10513'], 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			
+            /*6a fila 1set cambio de jugador*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+8,$y+53);
+			$pdf->Cell(4 , 5,$lang['10510'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+12,$y+53);
+			$pdf->Cell(4 , 5,$lang['10514'], 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			/*7a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+8,$y+53);
+			$pdf->Cell(4 , 5,$lang['10511'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+12,$y+53);
+			$pdf->Cell(4 , 5,$lang['10515'], 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+		    /*8a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+8,$y+53);
+			$pdf->Cell(4 , 5,$lang['10512'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+12,$y+53);
+			$pdf->Cell(4 , 5,$lang['10516'], 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		    
+		    /* Puntos Equipo Local 1er. set*/
+		    //echo $x;
+		    $y = .5;
+		    $x = $x - 1.2;
+		    $pdf->SetFont('Times' , '' , 6);
+            $pdf->SetXY($x+68,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10509'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10521'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10532'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10543'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10510'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10522'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10533'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10544'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10511'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10523'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10534'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10545'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10512'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10524'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10535'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10546'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10513'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10525'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10536'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10547'], 0, 0 , 'C' , false);
+			
+            $pdf->SetXY($x+68,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10514'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10526'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10537'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10548'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10515'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10527'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10538'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10549'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10516'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10528'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10539'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10550'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10518'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10529'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10540'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10551'], 0, 0 , 'C' , false);
+			
+	    	$pdf->SetXY($x+68,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10519'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10530'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10541'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10552'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10520'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10531'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10542'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10553'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+63.3);
+			$pdf->Cell(16 ,4.4, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+68,$y+67.7);
+			$pdf->Cell(16 ,4.3, $lang['10137'], 1, 1 , 'C' , false);
+			
+		    /*Se pone el aparatado del equipo Visitante*/
+		    $y = $y - 1;
+		    $x = $x + 64;
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10501'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10502'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10503'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10504'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10505'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10506'], 1, 0, 'C' , false);
+
+		    /*1ra fila 1set Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+33);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*2da fila 1set local*/
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+38);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+		
+			/*3ra fila 1set cambio de jugador Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*4a fila 1set cambio de jugador Local*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*5a fila 1set cambio de jugador*/
+			$y = $y - 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			
+            /*6a fila 1set cambio de jugador*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			/*7a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+		    /*8a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		    
+		    /* Puntos Equipo Local 1er. set*/
+		    //echo $x;
+		    $y = .5;
+		    $x = $x - 1.2;
+		    $pdf->SetFont('Times' , '' , 6);
+            $pdf->SetXY($x+68,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10509'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10521'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10532'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10543'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10510'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10522'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10533'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10544'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10511'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10523'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10534'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10545'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10512'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10524'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10535'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10546'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10513'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10525'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10536'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10547'], 0, 0 , 'C' , false);
+			
+            $pdf->SetXY($x+68,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10514'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10526'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10537'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10548'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10515'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10527'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10538'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10549'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10516'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10528'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10539'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10550'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10518'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10529'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10540'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10551'], 0, 0 , 'C' , false);
+			
+	    	$pdf->SetXY($x+68,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10519'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10530'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10541'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10552'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10520'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10531'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10542'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10553'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+63.3);
+			$pdf->Cell(16 ,4.4, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+68,$y+67.7);
+			$pdf->Cell(16 ,4.3, $lang['10137'], 1, 1 , 'C' , false);
+
+            /* Inicia Datos del Equipo Visitante 2do Set Titulos*/
+          	$pdf->SetFont('Times' , 'B' , 7);
+			$y = $y - 1;
+			$x = $x + 68;
+			$pdf->SetXY($x+16,$y+28);
+			$pdf->Cell(4 , 45, '', 1, 1 , 'C' , false);
+			$pdf->RotatedText($x+18.8,$y+51,$lang['10507-1'] . ' 2',90);
+			$pdf->SetXY($x+20,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10501'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10502'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10503'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10504'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10505'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10506'], 1, 0, 'C' , false);
+
+		    /*1ra fila 1set Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+33);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*2da fila 1set local*/
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+38);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+		
+			/*3ra fila 1set cambio de jugador Local*/
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*4a fila 1set cambio de jugador Local*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*5a fila 1set cambio de jugador*/
+			$y = $y - 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+            /*6a fila 1set cambio de jugador*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			/*7a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+		    /*8a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		    
+		    /* Puntos Equipo Local 1er. set*/
+		    //echo $x;
+		    $y = .5;
+		    $x = $x - 1.2;
+		    $pdf->SetFont('Times' , '' , 6);
+            $pdf->SetXY($x+68,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10509'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10521'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10532'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10543'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10510'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10522'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10533'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10544'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10511'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10523'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10534'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10545'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10512'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10524'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10535'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10546'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10513'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10525'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10536'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10547'], 0, 0 , 'C' , false);
+			
+            $pdf->SetXY($x+68,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10514'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10526'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10537'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10548'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10515'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10527'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10538'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10549'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10516'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10528'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10539'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10550'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10518'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10529'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10540'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10551'], 0, 0 , 'C' , false);
+			
+	    	$pdf->SetXY($x+68,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10519'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10530'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10541'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10552'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10520'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10531'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10542'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10553'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+63.3);
+			$pdf->Cell(16 ,4.4, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+68,$y+67.7);
+			$pdf->Cell(16 ,4.3, $lang['10137'], 1, 1 , 'C' , false);
+	
+            /*Cabecera acomodoo en cancha del equipo Local 2do Set EMA 09.11.2022*/
+            /*1ra. Fila Equipo Local 2do. Set*/
+            $y = $y - 1;
+		    $x = $x + 64;
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10501'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10502'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10503'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10504'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10505'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10506'], 1, 0, 'C' , false);
+
+		    /*1ra fila 1set Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+33);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*2da fila 1set local*/
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+38);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+		
+			/*3ra fila 1set cambio de jugador Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*4a fila 1set cambio de jugador Local*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*5a fila 1set cambio de jugador*/
+			$y = $y - 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			
+            /*6a fila 1set cambio de jugador*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			/*7a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10515'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+		    /*8a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10512'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10516'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		    
+		    /* Puntos Equipo Local 1er. set*/
+		    //echo $x;
+		    $y = .5;
+		    $x = $x - 1.2;
+		    $pdf->SetFont('Times' , '' , 6);
+            $pdf->SetXY($x+68,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10509'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10521'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10532'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10543'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10510'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10522'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10533'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10544'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10511'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10523'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10534'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10545'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10512'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10524'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10535'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10546'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10513'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10525'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10536'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10547'], 0, 0 , 'C' , false);
+			
+            $pdf->SetXY($x+68,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10514'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10526'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10537'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10548'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10515'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10527'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10538'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10549'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10516'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10528'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10539'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10550'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10518'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10529'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10540'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10551'], 0, 0 , 'C' , false);
+			
+	    	$pdf->SetXY($x+68,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10519'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10530'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10541'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+56.7);
+			$pdf->Cell(4 , 3.3,$lang['10552'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10520'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10531'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10542'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+60);
+			$pdf->Cell(4 , 3.3,$lang['10553'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+63.3);
+			$pdf->Cell(16 ,4.4, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+68,$y+67.7);
+			$pdf->Cell(16 ,4.3, $lang['10137'], 1, 1 , 'C' , false);
+			
+			
+            /*Termina cuadro de equipo cancha Equipo Loca 2sdo. set EMA 09.11.2022*/		
+		
+            /*Empieza linea de encabezado del 3er. Set */
+            /*Empieza Cabecera antes del 3er. Set*/
+		    $y = $y + .5;
+        	$pdf->SetFont('Times' , 'B' , 8);
+		    $pdf->SetXY(5,$y+72);
+		    $pdf->Cell(11 , 6,'', 1, 1 , 'L' , false);
+		    
+		    $pdf->SetFont('Times' , 'B' , 6);
+		    $pdf->SetXY(16,$y+70);
+		    $pdf->Cell(11 , 6, $lang['9999'], 0, 0 , 'L' , false);
+		    $pdf->SetXY(16,$y+72);
+		    $pdf->Cell(11 , 6, $lang['10136'], 1, 1 , 'L' , false);
+		    
+		    /*Colocacion del equipo dentro de la cancha 1er set*/
+		    $pdf->SetFont('Times' , 'B' , 9);
+		    $pdf->SetXY(27,$y+72);
+		    $pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    
+		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
+		    $pdf->SetXY(63.8,$y+75);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'S' , 1, 0 , 'L' , false);
+	    	$pdf->SetXY(63.8,$y+72);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'R' , 1, 0 , 'L' , false);
+	    
+	    	/*Titulo Puntos Local 1er set */
+	    	$pdf->SetXY(66.8,$y+72);
+            $pdf->SetFont('Helvetica' , 'B' , 8);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);
+			
+			$pdf->SetXY(82.8,$y+72);
+            $pdf->SetFont('Times' , 'B' , 9);
+    		$pdf->Cell(33.8, 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+		 
+		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
+		    $pdf->SetXY(116.6,$y+75);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'S' , 1, 0 , 'L' , false);
+	    	$pdf->SetXY(116.6,$y+72);
+            $pdf->SetFont('Helvetica' , 'B' , 6);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(3, 3, 'R' , 1, 0 , 'L' , false);
+	    	
+	        /*Titulo Termina */
+	        $pdf->SetFont('Times' , 'B' , 6);
+		    $pdf->SetXY(119.6,$y+70);
+		    $pdf->Cell(10 , 6, $lang['989'], 0, 0 , 'L' , false);
+		    $pdf->SetXY(119.6,$y+72);
+		    $pdf->Cell(10 , 6, $lang['10136'], 1, 1 , 'L' , false);
+	    
+	    
+	    	/*Titulo Puntos Visitante 1er set*/
+	    	$pdf->SetXY(129.6,$y+72);
+            $pdf->SetFont('Helvetica' , 'B' , 8);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);
+	 
+            /*Titulo Inicia 2do. Set*/
+	    	$pdf->SetFont('Times' , 'B' , 4.5);
+		    $pdf->SetXY(145.3,$y+70);
+		    $pdf->Cell(11 , 6, $lang['10554'], 0, 0 , 'L' , false);
+		    $pdf->SetXY(145.6,$y+72);
+		    $pdf->Cell(12 , 6, $lang['10136'], 1, 1 , 'L' , false);
+
+            /*Titulo Puntos Visitante 1er set*/
+	    	$pdf->SetXY(157.6,$y+72);
+            $pdf->SetFont('Helvetica' , 'B' , 9);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(8, 6, $lang['10137'] , 1, 0 , 'C' , false);
+
+		    
+            /*Datos del punt al cambio*/
+	        $pdf->SetXY(165.6,$y+72);
+            $pdf->SetFont('Times' , 'B' , 8);
+			$pdf->Cell(4 , 6, $lang['10136'], 1, 1 , 'L' , false); 	
+					    
+            /*Datos del punt al cambio*/
+	        $pdf->SetXY(169.6,$y+72);
+            $pdf->SetFont('Times' , 'B' , 8);
+			$pdf->Cell(26.8 , 6, $lang['10136'], 1, 1 , 'L' , false); 	 
+			
+             /*Titulo Puntos Visitante 2dr set*/
+	    	$pdf->SetXY(196.4,$y+72);
+            $pdf->SetFont('Helvetica' , 'B' , 8);
+            $pdf->SetTextColor(0, 0, 0);
+	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);		
+
+	        /*Empieza arreglo de jugadores en cancha */
+	        /*1ra fila 3er. 1set*/
+	        $x = 0;
+	        $y = 51;
+		    /*Empieza Cabecera antes de los Set's*/
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+5,$y+28);
+			$pdf->Cell(11 , 5,''  , 1, 1 , 'C' , false);
+			$pdf->SetXY($x+5,$y+28);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10500']) . utf8_decode($lang['10500-1']), 0 , 'C' , false);
+			
+			
+			$pdf->SetXY($x+16,$y+28);
+			$pdf->Cell(4 , 40, '', 1, 1 , 'C' , false);
+			$pdf->RotatedText($x+18.8,$y+51,$lang['10507-1'] . ' 3',90);
+			$pdf->SetXY($x+20,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10501'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10502'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10503'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10504'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10505'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10506'], 1, 0, 'C' , false);
+
+		    /*1ra fila 1set Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+5,$y+33);
+			$pdf->Cell(11 , 5,'', 1, 1 , 'C' , false);
+			$pdf->SetXY($x+5,$y+33);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-1']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+		    
+		    $pdf->SetXY($x+20,$y+33);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*2da fila 1set local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+5,$y+38);
+			$pdf->Cell(3 , 15,'', 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->RotatedText($x+7,$y+50,$lang['10508-4'],90);
+			$pdf->SetXY($x+8,$y+38);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(8, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+38);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+		
+			/*3ra fila 1set cambio de jugador Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+8,$y+43);
+			$pdf->Cell(8 , 10,'', 1, 1 , 'C' , false);
+			$pdf->SetXY($x+7,$y+45.5);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(10, 2.5, utf8_decode($lang['10508-3']), 0 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*4a fila 1set cambio de jugador Local*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*5a fila 1set cambio de jugador*/
+			$y = $y - 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+5,$y+53);
+			$pdf->Cell(3 , 15,'', 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->RotatedText($x+7,$y+67,$lang['10508-5'],90);
+			
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+8,$y+53);
+			$pdf->Cell(4 , 5,$lang['10509'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+12,$y+53);
+			$pdf->Cell(4 , 5,$lang['10512'], 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			
+            /*6a fila 1set cambio de jugador*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+8,$y+53);
+			$pdf->Cell(4 , 5,$lang['10510'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+12,$y+53);
+			$pdf->Cell(4 , 5,$lang['10513'], 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			/*7a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+8,$y+53);
+			$pdf->Cell(4 , 5,$lang['10511'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+12,$y+53);
+			$pdf->Cell(4 , 5,$lang['10514'], 1, 1 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		    
+		    /* Puntos Equipo Local 1er. set*/
+		    //echo $x;
+		    $y = 1;
+		    $x = $x - 1.2;
+		    $pdf->SetFont('Times' , '' , 6);
+            $pdf->SetXY($x+68,$y+78);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+78);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+78);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+78);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+81.3);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+82.9);
+			$pdf->Cell(4 , 3.3,'1', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+82.9);
+			$pdf->Cell(4 , 3.3,'5', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+81.3);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+84.6);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+84.6);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+84.6);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+84.6);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+87.9);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+89.5);
+			$pdf->Cell(4 , 3.3,'2', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+89.5);
+			$pdf->Cell(4 , 3.3,'6', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+87.9);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+            $pdf->SetXY($x+68,$y+94.5);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+94.5);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+94.5);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+94.5);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+97.8);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+96.2);
+			$pdf->Cell(4 , 3.3,'3', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+96.2);
+			$pdf->Cell(4 , 3.3,'7', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+97.8);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+101.1);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+101.1);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+101.1);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+101.1);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+104.4);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+102.8);
+			$pdf->Cell(4 , 3.3,'4', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+102.8);
+			$pdf->Cell(4 , 3.3,'8', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+104.4);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+	    	$pdf->SetXY($x+68,$y+107.7);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+107.7);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+107.7);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+107.7);
+			$pdf->Cell(4 , 3.3,'', 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+109.3);
+			$pdf->Cell(16 ,4.4, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+68,$y+113.7);
+			$pdf->Cell(16 ,4.3, $lang['10137'], 1, 1 , 'C' , false);
+			
+		    /*Se pone el aparatado del equipo Visitante*/
+		    $y = 51;
+		    $x = $x + 64;
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10501'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10502'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10503'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10504'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10505'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10506'], 1, 0, 'C' , false);
+
+		    /*1ra fila 1set Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+33);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*2da fila 1set local*/
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+38);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+		
+			/*3ra fila 1set cambio de jugador Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*4a fila 1set cambio de jugador Local*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*5a fila 1set cambio de jugador*/
+			$y = $y - 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			
+            /*6a fila 1set cambio de jugador*/
+		    $y = $y + 5;
+		    $pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			/*7a fila 1set cambio de jugador 1er. set*/
+		    $y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    $pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+		    $pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+            $pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+            $pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		    
+		    /* Puntos Equipo Local 1er. set*/
+		    //echo $x;
+		    $x = $x - 1.2;
+		    $pdf->SetFont('Times' , '' , 6);
+            		$pdf->SetXY($x+68,$y+18);
+			$pdf->Cell(4 , 3.3,$lang['10509'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+18);
+			$pdf->Cell(4 , 3.3,$lang['10519'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+18);
+			$pdf->Cell(4 , 3.3,$lang['10528'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+18);
+			$pdf->Cell(4 , 3.3,$lang['10537'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+21.3);
+			$pdf->Cell(4 , 3.3,$lang['10510'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+21.3);
+			$pdf->Cell(4 , 3.3,$lang['10520'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+21.3);
+			$pdf->Cell(4 , 3.3,$lang['10529'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+21.3);
+			$pdf->Cell(4 , 3.3,$lang['10538'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+24.6);
+			$pdf->Cell(4 , 3.3,$lang['10511'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+24.6);
+			$pdf->Cell(4 , 3.3,$lang['10521'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+24.6);
+			$pdf->Cell(4 , 3.3,$lang['10530'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+24.6);
+			$pdf->Cell(4 , 3.3,$lang['10539'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+27.9);
+			$pdf->Cell(4 , 3.3,$lang['10512'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+27.9);
+			$pdf->Cell(4 , 3.3,$lang['10522'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+27.9);
+			$pdf->Cell(4 , 3.3,$lang['10531'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+27.9);
+			$pdf->Cell(4 , 3.3,$lang['10540'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+31.2);
+			$pdf->Cell(4 , 3.3,$lang['10513'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+31.2);
+			$pdf->Cell(4 , 3.3,$lang['10523'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+31.2);
+			$pdf->Cell(4 , 3.3,$lang['10532'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+31.2);
+			$pdf->Cell(4 , 3.3,$lang['10541'], 0, 0 , 'C' , false);
+			
+            		$pdf->SetXY($x+68,$y+34.5);
+			$pdf->Cell(4 , 3.3,$lang['10514'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+34.5);
+			$pdf->Cell(4 , 3.3,$lang['10524'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+34.5);
+			$pdf->Cell(4 , 3.3,$lang['10533'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+34.5);
+			$pdf->Cell(4 , 3.3,$lang['10542'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+37.8);
+			$pdf->Cell(4 , 3.3,$lang['10515'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+37.8);
+			$pdf->Cell(4 , 3.3,$lang['10525'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+37.8);
+			$pdf->Cell(4 , 3.3,$lang['10534'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+37.8);
+			$pdf->Cell(4 , 3.3,$lang['10543'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+41.1);
+			$pdf->Cell(4 , 3.3,$lang['10516'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+41.1);
+			$pdf->Cell(4 , 3.3,$lang['10526'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+41.1);
+			$pdf->Cell(4 , 3.3,$lang['10535'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+41.1);
+			$pdf->Cell(4 , 3.3,$lang['10544'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+44.4);
+			$pdf->Cell(4 , 3.3,$lang['10518'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+44.4);
+			$pdf->Cell(4 , 3.3,$lang['10527'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+44.4);
+			$pdf->Cell(4 , 3.3,$lang['10536'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+44.4);
+			$pdf->Cell(4 , 3.3,$lang['10545'], 0, 0 , 'C' , false);
+			
+			$y = $y +  1.6;			
+			$pdf->SetXY($x+68,$y+47.7);
+			$pdf->Cell(16 ,4.4, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+68,$y+52.1);
+			$pdf->Cell(16 ,4.3, $lang['10137'], 1, 1 , 'C' , false);
+
+            /* Inicia Datos del Equipo Visitante 2do Set Titulos*/
+          	$pdf->SetFont('Times' , 'B' , 7);
+			$y = $y - 11.6;
+			$x = $x + 68;
+			$pdf->SetXY($x+16,$y+28);
+			$pdf->Cell(4 , 40, '', 1, 1 , 'C' , false);
+			$pdf->RotatedText($x+18.8,$y+53,$lang['10601'],90);
+			$pdf->SetXY($x+20,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10501'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10502'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10503'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10504'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10505'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+28);
+			$pdf->Cell(7.8, 5, $lang['10506'], 1, 0, 'C' , false);
+
+		    /*1ra fila 1set Local*/
+		    $pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+33);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+33);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*2da fila 1set local*/
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+38);
+			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+38);
+			$pdf->Cell(7.8, 5, $lang['10136'], 1, 0, 'C' , false);
+		
+			/*3ra fila 1set cambio de jugador Local*/
+		    $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*4a fila 1set cambio de jugador Local*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+20,$y+43);
+			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+27.8,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.6,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+43.4,$y+43);
+		    $pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+51.2,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+59,$y+43);
+			$pdf->Cell(7.8, 5, $lang['10137'], 1, 0, 'C' , false);
+			
+			/*5a fila 1set cambio de jugador*/
+			$y = $y - 5;
+		    	$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+		    	$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+		    	$pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0, 'R' , false);
+            		$pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10509'], 0, 0 , 'R' , false);
+            		$pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10512'], 0, 0, 'R' , false);
+            		$pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+            		/*6a fila 1set cambio de jugador*/
+		    	$y = $y + 5;
+		    	$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+		
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+			
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+40.3,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10510'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10513'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			/*7a fila 1set cambio de jugador 1er. set*/
+			$y = $y + 5;
+			$pdf->SetFont('Times' , 'B' , 5);
+			$pdf->SetXY($x+20.7,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+20,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+24.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+23.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			$pdf->SetXY($x+28.6,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+27.8,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+32.5,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+31.7,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			$pdf->SetXY($x+36.4,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+35.6,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+40.3,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+39.5,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+44.2,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+43.4,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+48.1,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+47.3,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			$pdf->SetXY($x+52.0,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+51.2,$y+53);
+			$pdf->Cell(3.9 , 5, $lang['10136'], 1, 1 , 'R' , false);
+		
+			$pdf->SetXY($x+55.9,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+55.1,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			$pdf->SetXY($x+59.8,$y+51.5);
+			$pdf->Cell(3.9 , 5, $lang['10511'], 0, 0 , 'R' , false);
+			$pdf->SetXY($x+59,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 1 , 'R' , false);
+
+			$pdf->SetXY($x+63.7,$y+51.5);
+			$pdf->Cell(3.9, 5, $lang['10514'], 0, 0, 'R' , false);
+			$pdf->SetXY($x+62.9,$y+53);
+			$pdf->Cell(3.9, 5, $lang['10136'], 1, 0, 'R' , false);
+
+			/* Puntos Equipo Local 1er. set*/
+			//echo $x;
+			$x = $x - 1.2;
+			$y = 52;
+			$pdf->SetFont('Times' , '' , 6);
+			$pdf->SetXY($x+68,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10509'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10519'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10528'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+27);
+			$pdf->Cell(4 , 3.3,$lang['10537'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10510'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10520'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10529'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+30.3);
+			$pdf->Cell(4 , 3.3,$lang['10538'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10511'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10521'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10530'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+33.6);
+			$pdf->Cell(4 , 3.3,$lang['10539'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10512'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10522'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10531'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+36.9);
+			$pdf->Cell(4 , 3.3,$lang['10540'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10513'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10523'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10532'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+40.2);
+			$pdf->Cell(4 , 3.3,$lang['10541'], 0, 0 , 'C' , false);
+			
+            		$pdf->SetXY($x+68,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10514'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10524'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10533'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+43.5);
+			$pdf->Cell(4 , 3.3,$lang['10542'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10515'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10525'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10534'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+46.8);
+			$pdf->Cell(4 , 3.3,$lang['10543'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10516'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10526'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10535'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+50.1);
+			$pdf->Cell(4 , 3.3,$lang['10544'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10518'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+72,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10527'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+76,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10536'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+80,$y+53.4);
+			$pdf->Cell(4 , 3.3,$lang['10545'], 0, 0 , 'C' , false);
+			
+			$pdf->SetXY($x+68,$y+58.3);
+			$pdf->Cell(16 ,4.4, $lang['10137'], 1, 1 , 'C' , false);
+			$pdf->SetXY($x+68,$y+62.7);
+			$pdf->Cell(16 ,4.3, $lang['10137'], 1, 1 , 'C' , false);
+			
+			/*Linea que indica el Set*/	
+			/*Termina Arreglo 3er. set*/
+	
+			/*Empieza apartado de Sanciones*/
+			$y = 1.5;
+			$x = 0;
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+5,$y+118);
+			$pdf->Cell(14.8 , 6, $lang['10556'], 1, 1 , 'L' , false);
+			
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+20,$y+117);
+			$pdf->Cell(15 , 6, $lang['10559'], 0, 0 , 'C' , false);
+			$pdf->SetXY($x+19.8,$y+118);
+			$pdf->Cell(24 , 6, '', 1, 1 , 'R', false);
+			$pdf->SetXY($x+20,$y+119.5);
+			$pdf->Cell(15 , 6, $lang['10559-1'], 0, 0 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+20,$y+118);
+			$pdf->Cell(20 , 6, $lang['10587'], 0, 1 , 'R' , false);
+
+			$pdf->SetXY($x+20,$y+118);
+			$pdf->Cell(24 , 6, $lang['10588'], 0, 1 , 'R' , false);
+	
+			/*1ra. Fila Amonestaciones*/
+			$y = $y - 1;
+			$pdf->SetXY($x+5,$y+125);
+			$pdf->Cell(3.70, 5, $lang['10557'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+125);
+			$pdf->Cell(3.70, 5, $lang['10558'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+125);
+			$pdf->Cell(3.70, 5, $lang['10583'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+125);
+			$pdf->Cell(3.70, 5, $lang['10584'], 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+125);
+			$pdf->Cell(8, 5, $lang['10569-1'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+125);
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->Cell(8, 5, $lang['10507'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+125);
+			$pdf->Cell(8, 5, $lang['10585'], 1, 0, 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 8);
+			
+			/*2da. Fila Amonestaciones*/
+		   	$pdf->SetXY($x+5,$y+130);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+130);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+130);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+130);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+130);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+130);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+130);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			
+			/*3ra. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+135);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+135);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+135);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+135);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+135);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+135);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+135);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+		    
+			/*4a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+140);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+140);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+140);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+140);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+140);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+140);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+140);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*5a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+145);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+145);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+145);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+145);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+145);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+145);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+145);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*6a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+150);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+150);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+150);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+150);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+150);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+150);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+150);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*7a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+155);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+155);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+155);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+155);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+155);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+155);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+155);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*8a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+160);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+160);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+160);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+160);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+160);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+160);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+160);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*9a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+165);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+165);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+165);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+165);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+165);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+165);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+165);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*10a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+170);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+170);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+170);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+170);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+170);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+170);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+170);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*11a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+175);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+175);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+175);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+175);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+175);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+175);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+175);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+
+			/*12a. Fila Amonestaciones*/
+			$pdf->SetXY($x+5,$y+180);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+8.70,$y+180);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+12.4,$y+180);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+16.1,$y+180);
+			$pdf->Cell(3.70, 5, '', 1, 0, 'C' , false);
+			
+			$x = $x - 0.0;
+			$pdf->SetXY($x+19.8,$y+180);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+27.8,$y+180);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+35.8,$y+180);
+			$pdf->Cell(8, 5, '', 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+5,$y+185);
+			$pdf->Cell(38.8, 15, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetXY($x+5,$y+185);
+			$pdf->SetFont('Times' , '' , 5);
+			$pdf->MultiCell(38.8, 3,  $lang['10602'], 0 , 'L' , false);
+			
+
+			/*OBSERVACIONES*/
+			$y = $y +1;
+			$x = $x + 0.4;
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+43.9,$y+118);
+			$pdf->Cell(107 , 6, $lang['10560'], 1, 1 , 'L' , false);
+			
+			/*OBSERVACIONES 1a fila*/
+			$pdf->SetXY($x+43.9,$y+124);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*OBSERVACIONES 2a fila*/
+			$pdf->SetXY($x+43.9,$y+129);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*OBSERVACIONES 3a fila*/
+			$pdf->SetXY($x+43.9,$y+134);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*OBSERVACIONES 4a fila*/
+			$pdf->SetXY($x+43.9,$y+139);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+
+			/*OBSERVACIONES 5a fila*/
+			$pdf->SetXY($x+43.9,$y+144);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*RESULTADOS*/
+			$x = $x + 0.3;
+			$pdf->SetXY($x+151,$y+118);
+			$pdf->Cell(60.7 , 6, $lang['10561'], 1, 1 , 'C' , false);
+			
+			/*RESULTADOS 1a fila*/
+			$pdf->SetXY($x+151,$y+124);
+			$pdf->Cell(60.7 , 10, $lang['10136'], 1, 1 , 'C' , false);
+			
+			$y = $y + 1;
+			
+			/*A*/
+			$pdf->SetFont('Times' , 'B' , 4);
+			$pdf->SetXY($x+151,$y+122.5);
+			$pdf->Cell(30.35 , 3, $lang['10587'], 0, 1 , 'R' , false);
+			$pdf->SetXY($x+181.35,$y+123);
+			$pdf->Cell(30.35 , 10, '', 1, 1 , 'C' , false);
+			
+			/*B*/
+			$pdf->SetXY($x+181.35,$y+122.5);
+			$pdf->Cell(30.35 , 3, $lang['10588'], 0, 1 , 'L' , false);
+			$pdf->SetXY($x+181.35,$y+123);
+			$pdf->Cell(30.35 , 10, '', 1, 1 , 'C' , false);
+
+			/*Equipos */
+			$x = $x + 0;
+			$pdf->SetFont('Helvetica' , '' , 10);
+			$pdf->SetTextColor(0, 0, 0);
+			
+			$pdf->SetXY($x+151,$y+125.5);
+			$pdf->MultiCell(30.35, 3, utf8_decode($row1["Local"]), 0 , 'L' , false);
+			
+			$pdf->SetXY($x+181.35,$y+125.5);
+			$pdf->MultiCell(30.35, 3, utf8_decode($row1["Visitante"]), 0 , 'R' , false);
+			
+			/*RESULTADOS 1a*/
+			$x = $x + 0.0;
+			$y = $y - 1;
+
+			$pdf->SetFont('Times' , 'B' , 9);
+			
+			/*T*/
+			$pdf->SetXY($x+151,$y+134);
+			$pdf->Cell(4 , 5, $lang['10589'], 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+155,$y+134);
+			$pdf->Cell(4 , 5, $lang['10590'], 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+159,$y+134);
+			$pdf->Cell(6 , 5, $lang['10591'], 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+165,$y+134);
+			$pdf->Cell(8 , 5, $lang['10592'], 1, 1 , 'C' , false);
+
+			 /*SET*/
+			$pdf->SetXY($x+173,$y+134);
+			$pdf->Cell(16.7 , 5, $lang['10507'], 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+189.7,$y+134);
+			$pdf->Cell(8 , 5, $lang['10592'], 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+197.7,$y+134);
+			$pdf->Cell(6 , 5, $lang['10591'], 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+203.7,$y+134);
+			$pdf->Cell(4 , 5, $lang['10590'], 1, 1 , 'C' , false);
+
+			/*T*/
+			$pdf->SetXY($x+207.7,$y+134);
+			$pdf->Cell(4 , 5, $lang['10589'], 1, 1 , 'C' , false);
+
+			/*RESULTADOS 1a*/
+			$x = $x + 0.0;
+			$y = $y + 5;
+
+			/*T*/
+			$pdf->SetXY($x+151,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+155,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+159,$y+134);
+			$pdf->Cell(6, 10, '', 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+165,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+
+			 /*SET*/
+			$pdf->SetXY($x+173,$y+134);
+			$pdf->Cell(16.7, 10, $lang['10509'] .' ' . $lang['10593'], 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+189.7,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+197.7,$y+134);
+			$pdf->Cell(6 , 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+203.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+
+			/*T*/
+			$pdf->SetXY($x+207.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+			
+			/*RESULTADOS 2a*/
+			$x = $x + 0.0;
+			$y = $y + 10;
+
+			/*T*/
+			$pdf->SetXY($x+151,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+155,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+159,$y+134);
+			$pdf->Cell(6, 10, '', 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+165,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+
+			 /*SET*/
+			$pdf->SetXY($x+173,$y+134);
+			$pdf->Cell(16.7, 10, $lang['10510'] .' ' . $lang['10593'], 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+189.7,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+197.7,$y+134);
+			$pdf->Cell(6 , 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+203.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+
+			/*T*/
+			$pdf->SetXY($x+207.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+			
+			/*RESULTADOS 3a*/
+			$x = $x + 0.0;
+			$y = $y + 10;
+
+			/*T*/
+			$pdf->SetXY($x+151,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+155,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+159,$y+134);
+			$pdf->Cell(6, 10, '', 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+165,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+
+			 /*SET*/
+			$pdf->SetXY($x+173,$y+134);
+			$pdf->Cell(16.7, 10, $lang['10511'] .' ' . $lang['10593'], 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+189.7,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+197.7,$y+134);
+			$pdf->Cell(6 , 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+203.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+
+			/*T*/
+			$pdf->SetXY($x+207.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+			
+			/*RESULTADOS 4a*/
+			$x = $x + 0.0;
+			$y = $y + 10;
+			
+			/*T*/
+			$pdf->SetXY($x+151,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+155,$y+134);
+			$pdf->Cell(4, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+159,$y+134);
+			$pdf->Cell(6, 10, '', 1, 1 , 'C' , false);
+
+			/*P*/
+			$pdf->SetXY($x+165,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+			
+			/*SET*/
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+173,$y+134);
+			$pdf->Cell(16.7 , 3, $lang['10594'], 0, 0 , 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+173,$y+134);
+			$pdf->Cell(16.7 , 10, $lang['10593'], 1, 1 , 'C' , false);
+
+			 /*P*/
+			$pdf->SetXY($x+189.7,$y+134);
+			$pdf->Cell(8, 10, '', 1, 1 , 'C' , false);
+
+			/*G*/
+			$pdf->SetXY($x+197.7,$y+134);
+			$pdf->Cell(6 , 10, '', 1, 1 , 'C' , false);
+
+			/*S*/
+			$pdf->SetXY($x+203.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+
+			/*T*/
+			$pdf->SetXY($x+207.7,$y+134);
+			$pdf->Cell(4 , 10, '', 1, 1 , 'C' , false);
+			
+			
+			/*RESULTADOS 5a*/
+			$x = $x + 0.0;
+			$y = $y + 10;
+
+			/*Hora InicioT*/
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+151,$y+134);
+			$pdf->Cell(20.2 , 10, $lang['10136'], 1, 1 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+151,$y+134);
+			$pdf->Cell(20.2 , 3, $lang['10595'], 0, 0 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+151,$y+135);
+			$pdf->Cell(20.2 , 14, $lang['10598'], 0, 0 , 'R' , false);
+
+
+			/*SET*/
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+171.2,$y+134);
+			$pdf->Cell(20.3 , 3, $lang['10596'], 0, 0 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+171.2,$y+135);
+			$pdf->Cell(20.3 , 14, $lang['10598'], 0, 0 , 'R' , false);
+
+			$pdf->SetXY($x+171.2,$y+134);
+			$pdf->Cell(20.3 , 10, $lang['10136'], 1, 1 , 'C' , false);
+
+			/*P*/
+			$pdf->SetXY($x+191.5,$y+134);
+			$pdf->Cell(20.2 , 10, $lang['10136'], 1, 1 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+191.5,$y+134);
+			$pdf->Cell(20.2 , 3, utf8_decode($lang['10597']), 0, 0 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+191.5,$y+135);
+			$pdf->Cell(20.2 , 14, $lang['10598'], 0, 0 , 'R' , false);
+
+			/*RESULTADOS 6a*/
+			$x = $x + 0.0;
+			$y = $y + 10;
+			$pdf->SetXY($x+151,$y+134);
+		    $pdf->Cell(60.7 , 5, $lang['10599'], 0, 0 , 'L' , false);
+		    $pdf->SetXY($x+151,$y+134);
+		    $pdf->Cell(60.7 , 10, '', 1, 1 , 'L' , false);
+		    
+		     $pdf->SetFont('Times' , 'B' , 12);
+		    $pdf->SetXY($x+201,$y+134);
+		    $pdf->Cell(6 , 10,  $lang['10510'] .':' , 0, 0 , 'C' , false);
+			
+			/*APROBACION*/
+			$x = $x - 0.3;
+			$y = $y - 56;
+			
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+43.9,$y+150);
+			$pdf->Cell(107, 5, $lang['10572'], 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+43.9,$y+150);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			/*APROBACION 1a*/
+			
+			$pdf->SetXY($x+43.9,$y+155);
+			$pdf->Cell(15, 5, $lang['10573'] , 1, 0, 'L' , false);
+			
+			$pdf->SetXY($x+59,$y+155);
+			$pdf->Cell(50, 5, $lang['422'] , 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+109,$y+155);
+			$pdf->Cell(15, 5, $lang['10574'] , 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+124,$y+155);
+			$pdf->Cell(26.9, 5, $lang['9994-1'] , 1, 0, 'C' , false);
+			
+			
+			
+			/*OBSERVACIONES 2a*/
+			$pdf->SetXY($x+43.9,$y+160);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+43.9,$y+160);
+			$pdf->Cell(15, 5, $lang['10576'], 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+59,$y+160);
+			$pdf->Cell(50, 5, $lang['10136'] , 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+109,$y+160);
+			$pdf->Cell(15, 5, $lang['10136'] , 1, 0, 'C' , false);
+			
+			/*OBSERVACIONES 3a*/
+			$pdf->SetXY($x+43.9,$y+165);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+43.9,$y+165);
+			$pdf->Cell(15, 5, $lang['10577'], 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+59,$y+165);
+			$pdf->Cell(50, 5, $lang['10136'] , 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+109,$y+165);
+			$pdf->Cell(15, 5, $lang['10136'] , 1, 0, 'C' , false);
+			
+		    /*OBSERVACIONES 4a*/
+			$pdf->SetXY($x+43.9,$y+170);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			
+			 $pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+43.9,$y+170);
+			$pdf->Cell(15, 5, $lang['10578'], 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+59,$y+170);
+			$pdf->Cell(50, 5, $lang['10136'] , 1, 0, 'C' , false);
+			
+			$pdf->SetXY($x+109,$y+170);
+			$pdf->Cell(15, 5, $lang['10136'] , 1, 0, 'C' , false);
+			
+			/*OBSERVACIONES 5a*/
+			$pdf->SetXY($x+43.9,$y+175);
+			$pdf->Cell(107, 5, $lang['10136'], 1, 0, 'C' , false);
+			$pdf->SetFont('Times' , 'B' , 7);
+			$pdf->SetXY($x+43.9,$y+175);
+			$pdf->Cell(15, 5, $lang['10579'], 1, 0, 'C' , false);
+
+			$pdf->SetXY($x+59,$y+175);
+			$pdf->Cell(50, 5, $lang['10136'] , 1, 0, 'C' , false);
+
+			$pdf->SetXY($x+109,$y+175);
+			$pdf->Cell(15, 5, $lang['10136'] , 1, 0, 'C' , false);
+			
+			/*OBSERVACIONES 6a*/
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+43.9,$y+180);
+			$pdf->Cell(48, 5, $lang['10509'], 1, 0, 'R' , false);
+
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+91.9,$y+180);
+			$pdf->Cell(11, 10, '', 1, 0, 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+102.9,$y+180);
+			$pdf->Cell(48, 5, $lang['10510'], 1, 0, 'L' , false);
+			
+			/*OBSERVACIONES 6a*/
+			
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+43.9,$y+185);
+			$pdf->Cell(48, 5, $lang['10511'], 1, 0, 'R' , false);
+			
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+91.9,$y+182);
+			$pdf->MultiCell(11, 3, $lang['10580-1'], 0, 'C' , false);
+			
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+102.9,$y+185);
+			$pdf->Cell(48, 5, $lang['10512'], 1, 0, 'L' , false);
+			
+			
+			/*OBSERVACIONES*/
+			$pdf->SetXY($x+43.9,$y+190);
+			$pdf->Cell(107, 10, $lang['10136'], 1, 0, 'C' , false);
+			
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+91.9,$y+190);
+			$pdf->MultiCell(11, 5, $lang['10582'], 1 , 'C' , false);   
+			
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+43.9,$y+190);
+			$pdf->Cell(48, 10, $lang['10587'], 0, 0, 'R' , false);
+			
+			$pdf->SetXY($x+102.9,$y+190);
+			$pdf->Cell(48, 10, $lang['10588'], 0, 0, 'L' , false);
+			
+			/*Termina Amonestaciones*/
+			
+			/*Directivos*/
+			$x = 1.9;
+			$y = $y - 10;;
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+211,$y+154);
+			$pdf->Cell(62.3 , 5, $lang['10563'], 1, 1 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+211,$y+159);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 1 , 'C' , false);
+
+			/* LETRA E */    
+			$pdf->SetFont('Times' , '' , 9);
+			$pdf->SetXY($x+236,$y+159);
+			$pdf->Cell(12.3 , 5 , $lang['10568'], 1, 1 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+248.3,$y+159);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 1 , 'C' , false);
+
+			/* LETRA AE */    
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+211,$y+164);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 1 , 'C' , false);
+
+
+			$pdf->SetFont('Times' , '' , 9);
+			$pdf->SetXY($x+236,$y+164);
+			$pdf->Cell(12.3 , 5 , $lang['10569'], 1, 1 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+248.3,$y+164);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 1 , 'C' , false);
+
+			/* LETRA PF */    
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+211,$y+169);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 0 , 'C' , false);
+
+			$pdf->SetFont('Times' , '' , 9);
+			$pdf->SetXY($x+236,$y+169);
+			$pdf->Cell(12.3 , 5 , $lang['10570'], 1, 0 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+248.3,$y+169);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 0 , 'C' , false);
+
+			/* LETRA M */    
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+211,$y+174);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 0 , 'C' , false);
+
+
+			$pdf->SetFont('Times' , '' , 9);
+			$pdf->SetXY($x+236,$y+174);
+			$pdf->Cell(12.3 , 5 , $lang['10571'], 1, 0 , 'C' , false);
+
+			$pdf->SetFont('Times' , 'B' , 8);
+			$pdf->SetXY($x+248.3,$y+174);
+			$pdf->Cell(25 , 5, $lang['10136'], 1, 0 , 'C' , false);	
+
+			/*Titulo de firmas*/
+			$pdf->SetFont('Times' , 'B' , 9);
+			$pdf->SetXY($x+211,$y+179);
+			$pdf->Cell(62.3 , 5, $lang['9994'], 1, 0 , 'C' , false);
+
+			/*1ra. Firma Capitam*/
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+211,$y+184);
+			$pdf->Cell(31.2 , 8, $lang['10136'], 1, 1 , 'L' , false);
+
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+211,$y+182);
+			$pdf->Cell(31.2 , 8 , $lang['10564'], 0, 0 , 'L' , false);
+
+			/*2da. Firma Capitam*/
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+242.2,$y+184);
+			$pdf->Cell(31.1 , 8, $lang['10136'], 1, 1 , 'L' , false);
+
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+242.2,$y+182);
+			$pdf->Cell(31.1 , 8 , $lang['10564'], 0, 0 , 'L' , false);
+
+			/* Entrenador */
+			$pdf->SetFont('Times' , 'B' , 6);
+			$pdf->SetXY($x+211,$y+192);
+			$pdf->Cell(31.2 , 7, $lang['10136'], 1, 1 , 'L' , false);
+
+			$pdf->SetFont('Times' , '' , 6);
+			$pdf->SetXY($x+211,$y+190);
+			$pdf->Cell(31.2 , 7 , $lang['10565'], 0, 0 , 'L' , false);
+
+			/*2da. Firma Capitam*/
+			$pdf->SetFont('Times' , '' , 6);
+			$pdf->SetXY($x+242.2,$y+192);
+			$pdf->Cell(31.1 , 7, $lang['10136'], 1, 1 , 'L' , false);
+
+			$pdf->SetFont('Times' , '' , 6);
+			$pdf->SetXY($x+242.2,$y+190);
+			$pdf->Cell(31.1 , 7 , $lang['10565'], 0, 0 , 'L' , false);
+
+			$y = 1.5;
+			/*Equipo Local y visitante*/
+			/*Titulo Equipos */
+			$pdf->SetXY(213,73);
+			$pdf->SetFont('Helvetica' , '' , 8);
+			$pdf->SetTextColor(0, 0, 0);
+			$pdf->Cell(60, 4, $lang['10603'] , 35, 0 , 'C' , false);
+			$pdf->SetFont('Helvetica' , 'B' , 8);
+			$pdf->SetXY(210,73);
+			$pdf->Cell(30, 4, 'A' , 35, 0 , 'C' , false);
+			$pdf->SetXY(243,73);
+			$pdf->Cell(30, 4, 'B' , 35, 0 , 'C' , false);
+
+			/*Equipos */
+			$x = $x +0;
+			$y = $y - 0.5;
+			$pdf->SetXY($x+211,$y+72);
+			$pdf->SetFont('Helvetica' , '' , 10);
+			$pdf->SetTextColor(0, 0, 0);
+			$pdf->Cell(62.3, 11, '' , 1, 1 , 'C' , false);
+			$pdf->SetXY($x+210.7,$y+76);
+			$pdf->MultiCell(31, 3, utf8_decode($row1["Local"]), 0 , 'L' , false);
+			$pdf->SetXY($x+242.3,$y+76);
+			$pdf->MultiCell(31, 3, utf8_decode($row1["Visitante"]), 0 , 'R' , false);
+
+			$countRow = 0;
+			$y = $y - 2;
+			while($countRow < 15) {
+				$pdf->SetFillColor(255, 255, 255);
+				$pdf->SetFont('Times' , 'B' , 7);
+				$pdf->SetXY($x+211,$y+85);
+				$pdf->Cell(4 , 4, $lang['10136'], 1, 1 , 'C' , 0);
+				$pdf->SetXY($x+215,$y+85);
+				//Numero L
+			
+				$pdf->Cell(5 , 4, '', 1, 1 , 'C' , 1);
+				$pdf->SetXY($x+220,$y+85);
+				
+				//Apodo L
+				$pdf->SetFillColor(255, 255, 255);
+				$pdf->Cell(22.2, 4, utf8_decode(''), 1, 0, 'L' , false);
+				$pdf->SetXY($x+242.2,$y+85);
+				$pdf->Cell(4, 4, $lang['10136'], 1, 0, 'L' , false);
+			
+				/*Visitante*/
+				
+				$pdf->SetXY($x+246.2,$y+85);
+				$pdf->Cell(5 , 4, '', 1, 1 , 'C' , 0);
+				
+				$pdf->SetXY($x+251.2,$y+85);
+				$pdf->Cell(22.1, 4, '', 1, 0, 'L' , false);
+			
+				$y = $y + 4;
+				$countRow = $countRow +1;
+				
+			}
+			
+			$y = $y - 60;
+			$pdf->SetFont('Times' , 'B' , 18);
+			$pdf->SetXY(10,202);
+			
+			$sqlL = "select * from (
+									SELECT Jugador_ID,
+										Clave,
+										Nombre,
+										Apellido_P,
+										Apellido_M,
+										Apodo,
+										CONCAT(Apellido_P,' ',SUBSTRING(Nombre,1,1),'.') AS Jugador,
+										date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
+										YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
+										case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
+											 when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 35  and YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 50 then 2
+											 when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
+										end EdadGrupo,
+										Curp,
+										Numero,
+										Estatus,
+										a.Equipo_ID,
+										Comentarios,
+										Telefono,
+										correo,
+										Sexo,
+										Validado,
+										FechaAlta
+									FROM Jugadores a
+									where Estatus = 'A' and Validado = 1 and Equipo_ID = $localid
+									union
+									SELECT Jugador_ID,
+										Clave,
+										Nombre,
+										Apellido_P,
+										Apellido_M,
+										Apodo,
+										CONCAT(Apellido_P,' ',SUBSTRING(Nombre,1,1),'.') AS Jugador,
+										date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
+										YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
+										case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
+											 when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 35  and YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 50 then 2
+											 when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
+										end EdadGrupo,
+										Curp,
+										Numero,
+										Estatus,
+										a.Equipo_ID,
+										Comentarios,
+										Telefono,
+										correo,
+										case when Sexo = 0 then '" . $lang["942"] . "'
+											when Sexo = 1 then '" . $lang["943"] . "'
+											end SexoT,
+										Validado,
+										FechaAlta
+									FROM Jugadores a
+									where Estatus = 'A' and Validado = 0 and Equipo_ID = $localid and FechaAlta >= DATE_ADD(CURDATE(), interval -15 day)) a
+					order by                         
+						EdadGrupo asc, convert(Numero,unsigned) asc
+					limit 15";
+			$resultL = $Config->query($sqlL);
+			//Lista Local
+			$tmpy = 0;
+			if ($resultL->num_rows > 0) {
+				// output data of each row
+				while($rowL = $resultL->fetch_assoc()) {
+					$colorR = 0;
+					$colorG = 0;
+					$colorB = 0;
+					$date = DateTime::createFromFormat("d/m/Y", $rowL["Fecha_Nacimiento"]);
+					$birthDate = explode("/", $date->format("m/d/Y"));
+					//get age from date or birthdate
+					$age = date("Y") - $birthDate[2];
+					$Edad = $age;
+					if($Edad >= 35){
+						if($Edad >= 50){
+							$colorR = 241;
+							$colorG = 240;
+							$colorB = 94;
+						}else{
+							$colorR = 75;
+							$colorG = 225;
+							$colorB = 218;
+						}
+					}else{
+						$colorR = 249;
+						$colorG = 86;
+						$colorB = 147;
+					}
+					/*Color de la columna Número Jugador*/
+					$pdf->SetFillColor(255, 255, 255);
+					$pdf->SetFont('Times' , 'B' , 7);
+					$pdf->SetXY($x+215,$y+85);
+					//$pdf->SetFillColor($colorR ,$colorG, $colorB);
+					$pdf->Cell(5 , 4, '' . utf8_decode($rowL["Numero"]) . '', 0, 1 , 'C' , 0);
+					
+					/*Datos del Apodo del Jugador Local*/
+					$pdf->SetXY($x+220,$y+85);
+					$pdf->SetFillColor(255, 255, 255);
+					$pdf->Cell(22, 4, utf8_decode('' . $rowL["Jugador"] . ''), 0, 0, 'L' , 0);
+					$y= $y+4;
+					$tmpy = $tmpy + 4;
+				}
+			}
+
+
+			$sql = "select * from (
+						SELECT Jugador_ID,
+							Clave,
+							Nombre,
+							Apellido_P,
+							Apellido_M,
+							Apodo,
+							CONCAT(Apellido_P,' ',SUBSTRING(Nombre,1,1),'.') AS Jugador,
+							date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
+							YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
+							case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
+							when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 35  and YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 50 then 2
+							when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
+							end EdadGrupo,
+							Curp,
+							Numero,
+							Estatus,
+							a.Equipo_ID,
+							Comentarios,
+							Telefono,
+							correo,
+							Sexo,
+							Validado,
+							FechaAlta
+						FROM Jugadores a
+						where Estatus = 'A' and Validado = 1 and Equipo_ID = $visitanteid
+						union
+						SELECT Jugador_ID,
+							Clave,
+							Nombre,
+							Apellido_P,
+							Apellido_M,
+							Apodo,
+							CONCAT(Apellido_P,' ',SUBSTRING(Nombre,1,1),'.') AS Jugador,
+							date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
+							YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
+							case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
+							when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 35  and YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 50 then 2
+							when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
+							end EdadGrupo,
+							Curp,
+							Numero,
+							Estatus,
+							a.Equipo_ID,
+							Comentarios,
+							Telefono,
+							correo,
+							case when Sexo = 0 then '" . $lang["942"] . "'
+							when Sexo = 1 then '" . $lang["943"] . "'
+							end SexoT,
+							Validado,
+							FechaAlta
+						FROM Jugadores a
+						where Estatus = 'A' and Validado = 0 and Equipo_ID = $visitanteid and FechaAlta >= DATE_ADD(CURDATE(), interval -15 day)) a
+					order by EdadGrupo asc, convert(Numero,unsigned) asc
+					limit 35";
+			$resultV = $Config->query($sql);
+			$pages = 0;
+			$x = $x + 31;
+			$y = $y - $tmpy;
+
+			if ($resultV->num_rows > 0) {
+				// output data of each row
+				while($rowV = $resultV->fetch_assoc()) {
+					$colorR = 0;
+					$colorG = 0;
+					$colorB = 0;
+					$date = DateTime::createFromFormat("d/m/Y", $rowV["Fecha_Nacimiento"]);
+					$birthDate = explode("/", $date->format("m/d/Y"));
+					//get age from date or birthdate
+					$age = date("Y") - $birthDate[2];
+					$Edad = $age;
+					if($Edad >= 35){
+						if($Edad >= 50){
+							$colorR = 241;
+							$colorG = 240;
+							$colorB = 94;
+						}else{
+							$colorR = 75;
+							$colorG = 225;
+							$colorB = 218;
+						}
+					}else{
+						$colorR = 249;
+						$colorG = 86;
+						$colorB = 147;
+					}
+					/*Color de la columna Número Jugador*/
+					$pdf->SetFillColor(255, 255, 255);
+					$pdf->SetFont('Times' , 'B' , 7);
+					$pdf->SetXY($x+215,$y+85);
+					//$pdf->SetFillColor($colorR ,$colorG, $colorB);
+					$pdf->Cell(5 , 4, '' . utf8_decode($rowV["Numero"]) . '', 0, 1 , 'C' , 0);
+
+					/*Datos del Apodo del Jugador Local*/
+					$pdf->SetXY($x+220,$y+85);
+					$pdf->SetFillColor(255, 255, 255);
+				    $pdf->Cell(22, 4, utf8_decode('' . $rowV["Jugador"] . ''), 0, 0, 'L' , 0);
+					
+					$y= $y+4;
+				}
+			}
+			$x = 1.9;
+			$y = 47;
+			try{
+				$pdf->SetAlpha(1);
+				$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x-1.9+5,$y+152,50, 15, 'PNG');
+			}catch(Exception $e){
+				echo $e;
+			}
+			$y = 5;
+			try{
+				$pdf->SetAlpha(0.05);
+				$pdf->Image($server . '/imagenes/voleibolFondo.png',$x+35,$y+0,200, 200, 'PNG');
+			}catch(Exception $e){
+				echo $e;
+			}
+			try{
+				$pdf->SetAlpha(1);
+				$pdf->Image($server . '/imagenes/wos.png',$x+212,$y+185,60, 24, 'PNG');
+			}catch(Exception $e){
+				echo $e;
+			}
+			$pdf->SetXY($x+257.3,$y+22.5);
+			$pdf->Cell(16.0, 36.3, '', 1, 0, 'C' , false);
+			$pdf->SetXY($x+194.5,$y+74);
+			$pdf->Cell(16.0, 31.3, '', 1, 0, 'C' , false);
+		} 
+	}	
+
+	$Config->close();
+
+	$pdf->Output();
+?>
