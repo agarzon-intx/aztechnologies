@@ -66,6 +66,10 @@ class Configuration
     public $playerIDPDF = 0;
     public $playerSignature = 0;
     public $credencialBack = 0;
+    /** 1 when pdf/Credencial.png (or legacy jpg) is stored on disk. */
+    public $credencialFrontImage = 0;
+    /** 1 when pdf/CredencialDetras.png (or legacy jpg) is stored on disk. */
+    public $credencialBackImage = 0;
     
 	public $MAILSMTPDebug = 0;
 	public $MAILSMTPAuth = 'true';
@@ -179,6 +183,89 @@ class Configuration
     }
 
     /**
+     * Whether a front credential background image is stored.
+     */
+    public function credencialFrontImageStored(): bool
+    {
+        if (!$this->configurationHasColumn('credencialFrontImage')) {
+            return false;
+        }
+        $result = $this->query("SELECT credencialFrontImage FROM " . $this->config["schema"] . ".Configuration WHERE id = 0");
+        if (!$result) {
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        return $row !== null && (int) $row["credencialFrontImage"] === 1;
+    }
+
+    /**
+     * Whether a back credential background image is stored.
+     */
+    public function credencialBackImageStored(): bool
+    {
+        if (!$this->configurationHasColumn('credencialBackImage')) {
+            return false;
+        }
+        $result = $this->query("SELECT credencialBackImage FROM " . $this->config["schema"] . ".Configuration WHERE id = 0");
+        if (!$result) {
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        return $row !== null && (int) $row["credencialBackImage"] === 1;
+    }
+
+    /**
+     * Detect credential image files under the site path and persist 0/1 flags.
+     * Safe no-op when columns are missing or path/admin DB is unavailable.
+     */
+    public function syncCredencialImageFlags(): bool
+    {
+        if (!$this->configurationHasColumn('credencialFrontImage')
+            || !$this->configurationHasColumn('credencialBackImage')) {
+            return false;
+        }
+        $basePath = rtrim((string) $this->getPath(), '/\\');
+        if ($basePath === '' || !is_dir($basePath)) {
+            return false;
+        }
+        $existsRel = function (string $rel) use ($basePath): bool {
+            $rel = ltrim(str_replace('\\', '/', $rel), '/');
+            $full = $basePath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+            if (is_readable($full) && is_file($full) && filesize($full) > 0) {
+                return true;
+            }
+            if (preg_match('/\.png$/i', $rel)) {
+                $base = preg_replace('/\.png$/i', '', $rel);
+                foreach (array('jpeg', 'jpg', 'JPEG', 'JPG', 'gif', 'GIF') as $ext) {
+                    $try = $base . '.' . $ext;
+                    $fullTry = $basePath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $try);
+                    if (is_readable($fullTry) && is_file($fullTry) && filesize($fullTry) > 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+        $front = $existsRel('pdf/Credencial.png') ? 1 : 0;
+        $back = $existsRel('pdf/CredencialDetras.png') ? 1 : 0;
+        $schema = $this->getSchema();
+        if ($schema === '') {
+            return false;
+        }
+        $conn = $this->connectAdmin();
+        if (!$conn) {
+            return false;
+        }
+        $schemaEsc = $conn->real_escape_string($schema);
+        $ok = @$conn->query(
+            "UPDATE `{$schemaEsc}`.`Configuration` SET credencialFrontImage = {$front}, credencialBackImage = {$back} WHERE id = 0"
+        );
+        $this->credencialFrontImage = $front;
+        $this->credencialBackImage = $back;
+        return $ok !== false;
+    }
+
+    /**
      * Load Config Flags
      *
      */
@@ -200,6 +287,12 @@ class Configuration
         $selCredencialBack = $this->schemaHasConfigurationColumn($conn, 'credencialBack')
             ? 'credencialBack'
             : '0 AS credencialBack';
+        $selCredencialFrontImage = $this->schemaHasConfigurationColumn($conn, 'credencialFrontImage')
+            ? 'credencialFrontImage'
+            : '0 AS credencialFrontImage';
+        $selCredencialBackImage = $this->schemaHasConfigurationColumn($conn, 'credencialBackImage')
+            ? 'credencialBackImage'
+            : '0 AS credencialBackImage';
 
         $query = "SELECT  case when MarcadorArbitro = 1 then '' else 'hidden' end MarcadorArbitro,
                           case when MarcadorFecha = 1 then '' else 'hidden' end MarcadorFecha,
@@ -219,7 +312,9 @@ class Configuration
 			  " . $selTarjetaCambios . ", VollByeWeekSets, VollByeWeekPoints, VollByeWeekSetPoints, Apodo, BuscaCurp, MultiJugador,
 			  " . $selPlayerIDPDF . ",
 			  " . $selPlayerSignature . ",
-			  " . $selCredencialBack . "
+			  " . $selCredencialBack . ",
+			  " . $selCredencialFrontImage . ",
+			  " . $selCredencialBackImage . "
 		  FROM " . $this->config["schema"] . ".Configuration";
         $result = $this->query($query);
         if (!$result){
@@ -260,6 +355,8 @@ class Configuration
             $this->playerIDPDF = $row2["playerIDPDF"];
             $this->playerSignature = $row2["playerSignature"];
             $this->credencialBack = $row2["credencialBack"];
+            $this->credencialFrontImage = $row2["credencialFrontImage"];
+            $this->credencialBackImage = $row2["credencialBackImage"];
        }
        return $this->template;
     }

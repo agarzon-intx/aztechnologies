@@ -7,6 +7,8 @@
 	$pack = $targetsFn();
 	$rows = $pack['rows'];
 	$siteRoot = rtrim((string) $Config->getPath(), '/\\');
+	// Keep Configuration.credencialFrontImage / credencialBackImage in sync with disk.
+	$Config->syncCredencialImageFlags();
 	$configImgPreviewRel = function ($rel) use ($siteRoot) {
 		$rel = ltrim(str_replace('\\', '/', (string) $rel), '/');
 		if ($siteRoot === '' || is_readable($siteRoot . '/' . $rel)) {

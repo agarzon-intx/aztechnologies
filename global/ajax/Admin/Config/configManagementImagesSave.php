@@ -218,6 +218,9 @@
 		exit;
 	}
 
+	// Persist 0/1 flags for credential front/back image presence.
+	$Config->syncCredencialImageFlags();
+
 	$msg = $lang['441'];
 	if (count($errors) > 0) {
 		$msg .= ' (' . implode('; ', $errors) . ')';
@@ -228,5 +231,7 @@
 		'dataConfigAnswer' => $msg,
 		'saved' => $saved,
 		'cleared' => $cleared,
+		'credencialFrontImage' => (int) $Config->credencialFrontImage,
+		'credencialBackImage' => (int) $Config->credencialBackImage,
 	);
 	echo json_encode($retunData);
