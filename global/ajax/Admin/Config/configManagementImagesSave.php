@@ -146,9 +146,26 @@
 	};
 
 	$saved = 0;
+	$cleared = 0;
 	$errors = array();
 
 	foreach ($allowed as $field => $rel) {
+		$clearKey = $field . '_clear';
+		$wantClear = isset($_POST[$clearKey]) && (string) $_POST[$clearKey] === '1';
+		$hasUpload = isset($_FILES[$field]) && is_array($_FILES[$field])
+			&& (int) $_FILES[$field]['error'] !== UPLOAD_ERR_NO_FILE;
+
+		// Explicit "no image": remove destination (and legacy variants) unless a new file is uploaded.
+		if ($wantClear && !$hasUpload) {
+			$dest = $basePath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+			if (is_file($dest)) {
+				@unlink($dest);
+			}
+			$removeLegacyVariants($dest);
+			$cleared++;
+			continue;
+		}
+
 		if (!isset($_FILES[$field]) || !is_array($_FILES[$field])) {
 			continue;
 		}

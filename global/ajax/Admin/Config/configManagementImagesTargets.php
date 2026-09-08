@@ -11,6 +11,7 @@ return function () {
 		'cfg_fondo_flyer_s' => 'pdf/FondoFlyerS.png',
 		'cfg_fondo_flyer' => 'pdf/FondoFlyer.png',
 		'cfg_credencial' => 'pdf/Credencial.png',
+		'cfg_credencial_detras' => 'pdf/CredencialDetras.png',
 		'cfg_calendar' => 'pdf/calendar.png',
 		'cfg_clock' => 'pdf/clock.png',
 		'cfg_pointer' => 'pdf/pointer.png',
@@ -28,7 +29,20 @@ return function () {
 	);
 	$rows[] = array('post' => 'cfg_fondo_flyer_s', 'rel' => 'pdf/FondoFlyerS.png', 'accept' => $acceptPng, 'lang' => '452-11');
 	$rows[] = array('post' => 'cfg_fondo_flyer', 'rel' => 'pdf/FondoFlyer.png', 'accept' => $acceptPng, 'lang' => '452-12');
-	$rows[] = array('post' => 'cfg_credencial', 'rel' => 'pdf/Credencial.png', 'accept' => $acceptPng, 'lang' => '452-13');
+	$rows[] = array(
+		'post' => 'cfg_credencial',
+		'rel' => 'pdf/Credencial.png',
+		'accept' => $acceptPng,
+		'lang' => '452-13',
+		'clearable' => true,
+	);
+	$rows[] = array(
+		'post' => 'cfg_credencial_detras',
+		'rel' => 'pdf/CredencialDetras.png',
+		'accept' => $acceptPng,
+		'lang' => '452-13-1',
+		'clearable' => true,
+	);
 	$rows[] = array('post' => 'cfg_calendar', 'rel' => 'pdf/calendar.png', 'accept' => $acceptPng, 'lang' => '452-14');
 	$rows[] = array('post' => 'cfg_clock', 'rel' => 'pdf/clock.png', 'accept' => $acceptPng, 'lang' => '452-15');
 	$rows[] = array('post' => 'cfg_pointer', 'rel' => 'pdf/pointer.png', 'accept' => $acceptPng, 'lang' => '452-16');

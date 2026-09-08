@@ -23,9 +23,18 @@
 		}
 		return $rel;
 	};
+	$configImgExists = function ($rel) use ($siteRoot, $configImgPreviewRel) {
+		if ($siteRoot === '') {
+			return false;
+		}
+		$previewRel = $configImgPreviewRel($rel);
+		return is_readable($siteRoot . '/' . ltrim(str_replace('\\', '/', (string) $previewRel), '/'));
+	};
 
 	$htmlConfig .= '<div class="container-fluid py-2" id="configImagesRoot" data-sport="' . $sport . '">
 						<div class="row g-3">';
+
+	$noImageLabel = htmlspecialchars(isset($lang['452-18']) ? $lang['452-18'] : 'No image', ENT_QUOTES, 'UTF-8');
 
 	foreach ($rows as $r) {
 		$post = $r['post'];
@@ -35,8 +44,15 @@
 		$label = ($langKey !== '' && isset($lang[$langKey]))
 			? htmlspecialchars($lang[$langKey], ENT_QUOTES, 'UTF-8')
 			: htmlspecialchars($rel, ENT_QUOTES, 'UTF-8');
+		$clearable = !empty($r['clearable']);
+		$exists = $configImgExists($rel);
 		$previewRel = $configImgPreviewRel($rel);
 		$previewUrl = htmlspecialchars($previewRel, ENT_QUOTES, 'UTF-8') . '?tmp=' . $ts;
+		$imgStyle = $exists ? '' : 'display: none;';
+		$clearChecked = ($clearable && !$exists) ? ' checked' : '';
+		$fileDisabled = ($clearable && !$exists) ? ' disabled' : '';
+		$postEsc = htmlspecialchars($post, ENT_QUOTES, 'UTF-8');
+
 		$htmlConfig .= '
 			<div class="col-12 col-md-6 col-xl-4">
 				<div class="card h-100">
@@ -44,10 +60,18 @@
 						<label class="form-label text-sm mb-1">' . $label . '</label>
 						<div class="d-flex align-items-start gap-2">
 							<div style="min-width: 96px; min-height: 72px; background-color: #e9ecef; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-								<img class="cfg-img-preview" data-post="' . htmlspecialchars($post, ENT_QUOTES, 'UTF-8') . '" src="' . $previewUrl . '" alt="" style="max-width:120px; max-height:90px; object-fit:contain;" onerror="this.style.display=\'none\'"/>
+								<img class="cfg-img-preview" data-post="' . $postEsc . '" src="' . ($exists ? $previewUrl : '') . '" alt="" style="max-width:120px; max-height:90px; object-fit:contain; ' . $imgStyle . '" onerror="this.style.display=\'none\'"/>
 							</div>
 							<div class="flex-grow-1">
-								<input type="file" class="form-control form-control-sm cfg-img-file" name="' . htmlspecialchars($post, ENT_QUOTES, 'UTF-8') . '" id="' . htmlspecialchars($post, ENT_QUOTES, 'UTF-8') . '" accept="' . $accept . '"/>
+								<input type="file" class="form-control form-control-sm cfg-img-file" name="' . $postEsc . '" id="' . $postEsc . '" accept="' . $accept . '"' . $fileDisabled . '/>';
+		if ($clearable) {
+			$htmlConfig .= '
+								<div class="form-check mt-2 mb-0">
+									<input class="form-check-input cfg-img-clear" type="checkbox" name="' . $postEsc . '_clear" id="' . $postEsc . '_clear" data-post="' . $postEsc . '"' . $clearChecked . '>
+									<label class="form-check-label" for="' . $postEsc . '_clear">' . $noImageLabel . '</label>
+								</div>';
+		}
+		$htmlConfig .= '
 							</div>
 						</div>
 					</div>
@@ -78,6 +102,8 @@
 							if (!input || !input.files || !input.files[0]) { return; }
 							var post = input.name;
 							var img = document.querySelector("img.cfg-img-preview[data-post=\"" + post + "\"]");
+							var clear = document.getElementById(post + "_clear");
+							if (clear) { clear.checked = false; }
 							if (!img) { return; }
 							var reader = new FileReader();
 							reader.onload = function (e) { img.src = e.target.result; img.style.display = ""; };
@@ -86,12 +112,32 @@
 						document.querySelectorAll("#configimages .cfg-img-file").forEach(function (inp) {
 							inp.addEventListener("change", function () { readURLConfigImage(inp); });
 						});
+						document.querySelectorAll("#configimages .cfg-img-clear").forEach(function (cb) {
+							cb.addEventListener("change", function () {
+								var post = cb.getAttribute("data-post");
+								var inp = post ? document.getElementById(post) : null;
+								var img = post ? document.querySelector("img.cfg-img-preview[data-post=\"" + post + "\"]") : null;
+								if (cb.checked) {
+									if (inp) { inp.value = ""; inp.disabled = true; }
+									if (img) { img.removeAttribute("src"); img.style.display = "none"; }
+								} else {
+									if (inp) { inp.disabled = false; }
+								}
+							});
+						});
 						function validateConfigImages() {
 							var fd = new FormData();
 							var any = false;
 							document.querySelectorAll("#configimages .cfg-img-file").forEach(function (inp) {
+								if (inp.disabled) { return; }
 								if (inp.files && inp.files.length > 0) {
 									fd.append(inp.name, inp.files[0]);
+									any = true;
+								}
+							});
+							document.querySelectorAll("#configimages .cfg-img-clear").forEach(function (cb) {
+								if (cb.checked) {
+									fd.append(cb.name, "1");
 									any = true;
 								}
 							});
@@ -115,13 +161,19 @@
 											var t = Math.floor(Date.now() / 1000);
 											document.querySelectorAll("#configimages .cfg-img-preview").forEach(function (im) {
 												var post = im.getAttribute("data-post");
+												var clear = post ? document.getElementById(post + "_clear") : null;
 												var inp = post ? document.getElementById(post) : null;
-												var u = im.getAttribute("src");
+												if (clear && clear.checked) {
+													im.removeAttribute("src");
+													im.style.display = "none";
+													return;
+												}
 												if (inp && inp.files && inp.files.length > 0) {
 													return;
 												}
+												var u = im.getAttribute("src");
 												if (u && u.indexOf("?") > -1) { im.src = u.split("?")[0] + "?tmp=" + t; }
-												else if (u) { im.src = u + (u.indexOf("?") > -1 ? "" : ("?tmp=" + t)); }
+												else if (u) { im.src = u + "?tmp=" + t; }
 												im.style.display = "";
 											});
 											document.querySelectorAll("#configimages .cfg-img-file").forEach(function (inp) { inp.value = ""; });
