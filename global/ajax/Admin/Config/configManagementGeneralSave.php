@@ -67,13 +67,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$Connection = $Config->connectAdmin();
 	$result = $Connection->query($sql);
 
-	// playerIDPDF and playerSignature are not part of ConfigGeneralUpdate, so they are
-	// persisted separately and only where the column already exists in the schema.
+	// Extra flags not part of ConfigGeneralUpdate — update only when columns exist.
 	if ($Config->configurationHasColumn('playerIDPDF')) {
 		$Connection->query("UPDATE $schema.Configuration SET playerIDPDF = $playerIDPDF WHERE id = 0;");
 	}
 	if ($Config->configurationHasColumn('playerSignature')) {
 		$Connection->query("UPDATE $schema.Configuration SET playerSignature = $playerSignature WHERE id = 0;");
+	}
+	if ($Config->configurationHasColumn('credencialBack')) {
+		$Connection->query("UPDATE $schema.Configuration SET credencialBack = $credencialBack WHERE id = 0;");
 	}
 
 	$sql1 = "Select @out as 'count'";

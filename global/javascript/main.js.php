@@ -2563,7 +2563,7 @@ function configManagementAlertSave(Alert){
 }
 
 function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, JuegoCedulas, MarcadorArbitro, MarcadorFecha, MarcadorDiaDefault, JornadaCedulas, columnid, ByeWeekPoints, ByeWeekPointsGoals, juegoSemanal, tressets, 
-                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints, playerIDPDF, playerSignature){
+                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints, playerIDPDF, playerSignature, credencialBack){
 	//console.log('configManagementAlertSave');
 	mainLoadingOn();
 	$.ajax({
@@ -2573,7 +2573,7 @@ function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, Ju
 		data: {EmpatesPenales: EmpatesPenales, JugadorJugado: JugadorJugado, JuegoCedulas: JuegoCedulas, MarcadorArbitro: MarcadorArbitro, MarcadorFecha: MarcadorFecha, 
 		JornadaCedulas: JornadaCedulas, columnid: columnid, MarcadorDiaDefault: MarcadorDiaDefault, lenguaje: lenguaje, ByeWeekPoints: ByeWeekPoints, ByeWeekPointsGoals: ByeWeekPointsGoals, 
 		juegoSemanal: juegoSemanal, tressets: tressets, perfilJugador:perfilJugador,jugadoresApellidos1: jugadoresApellidos1,juegosXNombre: juegosxnombre, coachjuegos: coachjuegos, coachjuegosdiainicial: coachjuegosdiainicial, 
-		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints, playerIDPDF: playerIDPDF, playerSignature: playerSignature},
+		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints, playerIDPDF: playerIDPDF, playerSignature: playerSignature, credencialBack: credencialBack},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {

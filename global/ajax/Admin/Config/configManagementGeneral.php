@@ -340,6 +340,10 @@
 										<input class="form-check-input" type="checkbox" name="playerSignature" id="playerSignature" ' . $playerSignatureCHK . '>
 										<label class="custom-control-label" for="playerSignature">' . $lang['539-1'] . '</label>
 									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="credencialBack" id="credencialBack" ' . $credencialBackCHK . '>
+										<label class="custom-control-label" for="credencialBack">' . $lang['539-2'] . '</label>
+									</div>
 								</div>
 								<div class="row">
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">

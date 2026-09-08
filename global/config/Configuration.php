@@ -65,6 +65,7 @@ class Configuration
     public $MultiJugador = 0;
     public $playerIDPDF = 0;
     public $playerSignature = 0;
+    public $credencialBack = 0;
     
 	public $MAILSMTPDebug = 0;
 	public $MAILSMTPAuth = 'true';
@@ -161,6 +162,23 @@ class Configuration
     }
 
     /**
+     * Whether credential PDFs should also print the back side.
+     * Safe on schemas where the column has not been added yet (defaults off).
+     */
+    public function credencialBackEnabled(): bool
+    {
+        if (!$this->configurationHasColumn('credencialBack')) {
+            return false;
+        }
+        $result = $this->query("SELECT credencialBack FROM " . $this->config["schema"] . ".Configuration WHERE id = 0");
+        if (!$result) {
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        return $row !== null && (int) $row["credencialBack"] === 1;
+    }
+
+    /**
      * Load Config Flags
      *
      */
@@ -179,6 +197,9 @@ class Configuration
         $selPlayerSignature = $this->schemaHasConfigurationColumn($conn, 'playerSignature')
             ? 'playerSignature'
             : '0 AS playerSignature';
+        $selCredencialBack = $this->schemaHasConfigurationColumn($conn, 'credencialBack')
+            ? 'credencialBack'
+            : '0 AS credencialBack';
 
         $query = "SELECT  case when MarcadorArbitro = 1 then '' else 'hidden' end MarcadorArbitro,
                           case when MarcadorFecha = 1 then '' else 'hidden' end MarcadorFecha,
@@ -197,7 +218,8 @@ class Configuration
 			  CoachJuegos, CoachJuegosDiaInicial, CoachJuegosDiaFinal, CoachJuegosHoraFinal,
 			  " . $selTarjetaCambios . ", VollByeWeekSets, VollByeWeekPoints, VollByeWeekSetPoints, Apodo, BuscaCurp, MultiJugador,
 			  " . $selPlayerIDPDF . ",
-			  " . $selPlayerSignature . "
+			  " . $selPlayerSignature . ",
+			  " . $selCredencialBack . "
 		  FROM " . $this->config["schema"] . ".Configuration";
         $result = $this->query($query);
         if (!$result){
@@ -237,6 +259,7 @@ class Configuration
             $this->MultiJugador = $row2["MultiJugador"];
             $this->playerIDPDF = $row2["playerIDPDF"];
             $this->playerSignature = $row2["playerSignature"];
+            $this->credencialBack = $row2["credencialBack"];
        }
        return $this->template;
     }
