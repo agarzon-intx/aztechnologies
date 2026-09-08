@@ -37,6 +37,11 @@ ALTER TABLE `aztechn1_voleibolmetepec`.`Jugadores`
   ADD COLUMN `Fecha_Alta` DATETIME NULL,
   ADD COLUMN `Fecha_Baja` DATETIME NULL;
 
+ALTER TABLE `aztechn1_voleymvp`.`Jugadores`
+  ADD COLUMN `Fecha_Validacion` DATETIME NULL,
+  ADD COLUMN `Fecha_Alta` DATETIME NULL,
+  ADD COLUMN `Fecha_Baja` DATETIME NULL;
+
 ALTER TABLE `aztechn1_aztflag`.`Jugadores`
   ADD COLUMN `Fecha_Validacion` DATETIME NULL,
   ADD COLUMN `Fecha_Alta` DATETIME NULL,

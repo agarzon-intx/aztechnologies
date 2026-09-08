@@ -38,6 +38,11 @@ ALTER TABLE `aztechn1_voleibolmetepec`.`Configuration`
 ALTER TABLE `aztechn1_voleibolmetepec`.`Jugadores`
   ADD COLUMN `IdentificacionPDF` longblob DEFAULT NULL;
 
+ALTER TABLE `aztechn1_voleymvp`.`Configuration`
+  ADD COLUMN `playerIDPDF` int(11) NOT NULL DEFAULT '0';
+ALTER TABLE `aztechn1_voleymvp`.`Jugadores`
+  ADD COLUMN `IdentificacionPDF` longblob DEFAULT NULL;
+
 ALTER TABLE `aztechn1_aztflag`.`Configuration`
   ADD COLUMN `playerIDPDF` int(11) NOT NULL DEFAULT '0';
 ALTER TABLE `aztechn1_aztflag`.`Jugadores`

@@ -30,6 +30,10 @@ ALTER TABLE `aztechn1_voleibolmetepec`.`Equipos`
   ADD COLUMN `Nombre_Color` VARCHAR(45) NULL,
   ADD COLUMN `Credencial_Color` VARCHAR(45) NULL;
 
+ALTER TABLE `aztechn1_voleymvp`.`Equipos`
+  ADD COLUMN `Nombre_Color` VARCHAR(45) NULL,
+  ADD COLUMN `Credencial_Color` VARCHAR(45) NULL;
+
 ALTER TABLE `aztechn1_aztflag`.`Equipos`
   ADD COLUMN `Nombre_Color` VARCHAR(45) NULL,
   ADD COLUMN `Credencial_Color` VARCHAR(45) NULL;

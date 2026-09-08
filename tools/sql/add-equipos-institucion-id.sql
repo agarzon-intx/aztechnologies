@@ -23,5 +23,8 @@ ALTER TABLE `aztechn1_vollidep`.`Equipos`
 ALTER TABLE `aztechn1_voleibolmetepec`.`Equipos`
   ADD COLUMN `Institucion_ID` bigint(20) NOT NULL DEFAULT 0;
 
+ALTER TABLE `aztechn1_voleymvp`.`Equipos`
+  ADD COLUMN `Institucion_ID` bigint(20) NOT NULL DEFAULT 0;
+
 ALTER TABLE `aztechn1_aztflag`.`Equipos`
   ADD COLUMN `Institucion_ID` bigint(20) NOT NULL DEFAULT 0;
