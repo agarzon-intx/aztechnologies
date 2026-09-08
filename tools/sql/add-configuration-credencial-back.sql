@@ -1,19 +1,29 @@
--- Add Configuration.credencialBack (INT, default 0 = disabled).
--- Idempotent across schemas.
+-- Adds Configuration.credencialBack on all site schemas (0 = off / default).
+-- Run with a database user that has ALTER privileges.
 
-SET @db := DATABASE();
+ALTER TABLE `aztechn1_demomina`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
 
-SET @exists := (
-	SELECT COUNT(*) FROM information_schema.COLUMNS
-	WHERE TABLE_SCHEMA = @db AND TABLE_NAME = 'Configuration' AND COLUMN_NAME = 'credencialBack'
-);
+ALTER TABLE `aztechn1_elite`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
 
-SET @sql := IF(
-	@exists = 0,
-	'ALTER TABLE `Configuration` ADD COLUMN `credencialBack` INT NOT NULL DEFAULT 0 AFTER `playerSignature`',
-	'SELECT ''credencialBack already exists'' AS info'
-);
+ALTER TABLE `aztechn1_huskies`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
 
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+ALTER TABLE `aztechn1_lidep`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
+
+ALTER TABLE `aztechn1_nuestrodeporte`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
+
+ALTER TABLE `aztechn1_vollidep`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
+
+ALTER TABLE `aztechn1_voleibolmetepec`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
+
+ALTER TABLE `aztechn1_voleymvp`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
+
+ALTER TABLE `aztechn1_aztflag`.`Configuration`
+  ADD COLUMN `credencialBack` int(11) NOT NULL DEFAULT '0';
