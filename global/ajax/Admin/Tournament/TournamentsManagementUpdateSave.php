@@ -122,7 +122,7 @@ $schema = $Config->getSchema();
 	$Connection = $Config->connectAdmin();
 	$result = $Connection->query($sql1);
 
-	$siteRoot = defined('APP_SITE_ROOT') ? rtrim((string) APP_SITE_ROOT, '/\\') : dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'voleibalmetepec';
+	$siteRoot = defined('APP_SITE_ROOT') ? rtrim((string) APP_SITE_ROOT, '/\\') : dirname($_SERVER['SCRIPT_FILENAME'] ?? __FILE__, 4);
 	$imagenesDir = $siteRoot . DIRECTORY_SEPARATOR . 'imagenes';
 	if (is_dir($imagenesDir)) {
 		$salida = tournamentsManagementCopyRenameTourImages($imagenesDir, (int) $prevTourID, (int) $newTourID);
