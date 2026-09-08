@@ -25,6 +25,7 @@
 	$pdf->SetAutoPageBreak(false);
 
 	$Config->LoadLogo();
+	$Config->LoadFlags();
 	$Config->connect();
 
 	$sql = "SELECT 	Jugador_ID, 
@@ -82,6 +83,9 @@
 				$Edad = $age;
 
 				$pdf->SetAlpha(1);
+				if ($Config->credencialFrontImage == 1) {
+					az_pdf_image_file($pdf, $siteRoot, 'pdf/Credencial.png', $x+0, $y+0, 108, 70);
+				}
 				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+10, $y+15, 26, 35);
 				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $row['Logo'] . '.png',$x+15.5,$y+45,15, 15);
 
@@ -124,7 +128,10 @@
 	 * Back side: CredencialDetras.png in each occupied slot.
 	 * Columns are mirrored so duplex (long-edge) lines up with the fronts.
 	 */
-	$drawBackPage = function ($pagePlayers) use ($pdf, $siteRoot) {
+	$drawBackPage = function ($pagePlayers) use ($pdf, $Config, $siteRoot) {
+		if ($Config->credencialBack != 1) {
+			return;
+		}
 		$n = count($pagePlayers);
 		for ($i = 0; $i < $n; $i++) {
 			$col = $i % 2;
@@ -133,7 +140,9 @@
 			$y = $rowc * 70;
 			try {
 				$pdf->SetAlpha(1);
-				az_pdf_image_file($pdf, $siteRoot, 'pdf/CredencialDetras.png', $x, $y, 108, 70);
+				if ($Config->credencialBackImage == 1) {
+					az_pdf_image_file($pdf, $siteRoot, 'pdf/CredencialDetras.png', $x, $y, 108, 70);
+				}
 			} catch (Exception $ae) {
 			}
 		}
@@ -145,8 +154,10 @@
 		foreach ($pages as $pagePlayers) {
 			$pdf->AddPage();
 			$drawFrontPage($pagePlayers);
-			$pdf->AddPage();
-			$drawBackPage($pagePlayers);
+			if ($Config->credencialBack == 1) {
+				$pdf->AddPage();
+				$drawBackPage($pagePlayers);
+			}
 		}
 	} else {
 		$pdf->AddPage();
