@@ -2,6 +2,7 @@
 	$__selTarjetaCambiosCfg = $Config->configurationHasColumn('TarjetaCambios') ? 'TarjetaCambios' : '0 AS TarjetaCambios';
 	$__selPlayerIDPDFCfg = $Config->configurationHasColumn('playerIDPDF') ? 'playerIDPDF' : '0 AS playerIDPDF';
 	$__selPlayerSignatureCfg = $Config->configurationHasColumn('playerSignature') ? 'playerSignature' : '0 AS playerSignature';
+	$__selCredencialBackCfg = $Config->configurationHasColumn('credencialBack') ? 'credencialBack' : '0 AS credencialBack';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -41,11 +42,13 @@
 			    VollByeWeekPoints,
 			    VollByeWeekSetPoints,
 			    " . $__selPlayerIDPDFCfg . ",
-			    " . $__selPlayerSignatureCfg . "
+			    " . $__selPlayerSignatureCfg . ",
+			    " . $__selCredencialBackCfg . "
 			FROM $schema.Configuration
 			where id = 0;";
 	$playerIDPDFCHK = '';
 	$playerSignatureCHK = '';
+	$credencialBackCHK = '';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
@@ -163,6 +166,8 @@
 				if($playerIDPDF == '1') $playerIDPDFCHK = 'checked';
 				$playerSignature = $row2["playerSignature"];
 				if($playerSignature == '1') $playerSignatureCHK = 'checked';
+				$credencialBack = $row2["credencialBack"];
+				if($credencialBack == '1') $credencialBackCHK = 'checked';
 				
 			    $VollByeWeekSets = $row2["VollByeWeekSets"];
 			    $VollByeWeekPoints = $row2["VollByeWeekPoints"];

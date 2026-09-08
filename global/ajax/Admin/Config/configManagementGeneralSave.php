@@ -55,6 +55,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$VBByeWeeSetkPoints = SanitizeInteger($_POST["VBByeWeekSetPoints"]);
 	$playerIDPDF = (isset($_POST["playerIDPDF"]) && SanitizeInteger($_POST["playerIDPDF"]) == 1) ? 1 : 0;
 	$playerSignature = (isset($_POST["playerSignature"]) && SanitizeInteger($_POST["playerSignature"]) == 1) ? 1 : 0;
+	$credencialBack = (isset($_POST["credencialBack"]) && SanitizeInteger($_POST["credencialBack"]) == 1) ? 1 : 0;
 	
 	//echo $perfilJugadoresA;
 		

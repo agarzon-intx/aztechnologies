@@ -210,7 +210,7 @@
 		$saved++;
 	}
 
-	if ($saved === 0) {
+	if ($saved === 0 && $cleared === 0) {
 		$retunData['dataConfigAnswer'] = count($errors) > 0
 			? implode('; ', $errors)
 			: $lang['452-8'];
@@ -227,5 +227,6 @@
 		'message' => 'Success.',
 		'dataConfigAnswer' => $msg,
 		'saved' => $saved,
+		'cleared' => $cleared,
 	);
 	echo json_encode($retunData);

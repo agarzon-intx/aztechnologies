@@ -297,10 +297,12 @@
 	$lang['452-11'] = 'Flyer Background (vs)';
 	$lang['452-12'] = 'Flyer Background';
 	$lang['452-13'] = 'Background ID';
+	$lang['452-13-1'] = 'Background ID Back';
 	$lang['452-14'] = 'Calendar (Flyer)';
 	$lang['452-15'] = 'Clock (Flyer)';
 	$lang['452-16'] = 'Pointer (Flyer)';
 	$lang['452-17'] = 'Background Scores';
+	$lang['452-18'] = 'No image';
 	$lang['454'] = 'Coup/League';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penalties (Tie)';
@@ -391,6 +393,7 @@
 	$lang['538'] = 'Validation';
 	$lang['539'] = 'Player Doc PDF';
 	$lang['539-1'] = 'Player Signature';
+	$lang['539-2'] = 'Credential Back';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';

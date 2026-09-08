@@ -297,10 +297,12 @@
 	$lang['452-11'] = 'Fondo Flyer (vs)';
 	$lang['452-12'] = 'Fondo Flyer';
 	$lang['452-13'] = 'Fondo Credencial';
+	$lang['452-13-1'] = 'Fondo Credencial Detras';
 	$lang['452-14'] = 'Calendario (Flyer)';
 	$lang['452-15'] = 'Reloj (Flyer)';
 	$lang['452-16'] = 'Puntero (Flyer)';
 	$lang['452-17'] = 'Fondo Marcadores';
+	$lang['452-18'] = 'Sin imagen';
 	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penales (Empate)';
@@ -391,6 +393,7 @@
 	$lang['538'] = 'Validación';
 	$lang['539'] = 'Jugador Doc PDF';
 	$lang['539-1'] = 'Jugador Firma';
+	$lang['539-2'] = 'Credencial Reverso';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';
