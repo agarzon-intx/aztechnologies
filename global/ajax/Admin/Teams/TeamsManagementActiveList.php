@@ -10,19 +10,22 @@ $sql2Teams = "	SELECT a.*, concat(a.Torneo_ID,'-', a.Equipo_ID) newLogo, c.Campo
 			order by Equipo_DESC asc;";
 
 $htmlTeams .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
-					<div class="row">
-						<div class="col-4 col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6" >
+					<div class="row mb-2 align-items-center">
+						<div class="col-auto">
 							<button type="button" class="btn btn-primary" onClick="teamManagementShowAdd(' . $Category . ');" >' . $lang['0013'] . '</button>
+						</div>
+						<div class="col-auto">
+							<label class="mb-0 text-secondary text-xs font-weight-bold d-inline-flex align-items-center gap-1">
+								<input type="checkbox" class="teamsManagementSelectAll" data-scope="active" id="teamsManagementSelectAllActive" title="' . htmlspecialchars($lang['378-2'], ENT_QUOTES, 'UTF-8') . '"/>
+								' . $lang['378-2'] . '
+							</label>
 						</div>
 					</div>
 					<div class="card">
 						<div class="table-responsive">
 							<table class=" table align-items-center mb-0" style="border-color: #136aeb;">
 								<thead class="">
-									<th scope="col" class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 56px !important;white-space: normal;padding: 0.75rem 0.5rem;">
-										<input type="checkbox" class="teamsManagementSelectAll" data-scope="active" id="teamsManagementSelectAllActive" title="' . htmlspecialchars($lang['378-2'], ENT_QUOTES, 'UTF-8') . '"/>
-										<span class="d-block">' . $lang['378-2'] . '</span>
-									</th>
+									<th scope="col" class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 40px !important;white-space: normal;padding: 0.75rem 0.5rem;">&nbsp;</th>
 									<th ' . $Config->ShowIDColumn . ' scope="col" class="text-left text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.5rem;">' . $lang['515'] . '</span></th>
 									<th scope="col" class="text-left text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.5rem;">' . $lang['516'] . '</span></th>
 									<th scope="col" class="text-left text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.5rem;">' . $lang['517'] . '</span></th>
