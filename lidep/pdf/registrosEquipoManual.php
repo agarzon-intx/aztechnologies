@@ -29,6 +29,12 @@
 	$Config->connect();
 	$_SESSION[$Config->getAlias() . 'printList'];
 
+	// 5mm page margin: each credential slot is 5mm narrower and 2.5mm shorter than 108×70.
+	$cardW = 103.0;
+	$cardH = 67.5;
+	$marginX = 5.0;
+	$marginY = 5.0;
+
 	$sql = "SELECT  Jugador_ID, 
 	                Clave, Nombre, 
 	                Apellido_P, 
@@ -72,9 +78,9 @@
 	/**
 	 * Draw one Letter page of credentials (2 cols × 4 rows) — front side.
 	 */
-	$drawFrontPage = function ($pagePlayers) use ($pdf, $Config, $schema, $siteRoot) {
-		$x = 0;
-		$y = 0;
+	$drawFrontPage = function ($pagePlayers) use ($pdf, $Config, $schema, $siteRoot, $cardW, $cardH, $marginX, $marginY) {
+		$x = $marginX;
+		$y = $marginY;
 		$col = 0;
 		$rowc = 0;
 		foreach ($pagePlayers as $row) {
@@ -86,7 +92,7 @@
 
 				$pdf->SetAlpha(1);
 				if ($Config->credencialFrontImage == 1) {
-					az_pdf_image_file($pdf, $siteRoot, 'pdf/Credencial.png', $x+0, $y+0, 108, 70);
+					az_pdf_image_file($pdf, $siteRoot, 'pdf/Credencial.png', $x+0, $y+0, $cardW, $cardH);
 				}
 				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+10, $y+15, 26, 35);
 				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $row['Logo'] . '.png',$x+15.5,$y+45,15, 15);
@@ -108,17 +114,17 @@
 				$pdf->Cell(65 , 5, az_utf8_decode($row["FechaAlta"]), 0, 0 , 'L' , false);
 
 				if ($col == 1) {
-					$x = 0;
+					$x = $marginX;
 					$col = 0;
 					if ($rowc == 3) {
-						$y = 0;
+						$y = $marginY;
 						$rowc = 0;
 					} else {
-						$y = $y + 70;
+						$y = $y + $cardH;
 						$rowc = $rowc + 1;
 					}
 				} else {
-					$x = $x + 108;
+					$x = $x + $cardW;
 					$col = $col + 1;
 				}
 			} catch (Exception $ae) {
@@ -130,7 +136,7 @@
 	 * Back side: CredencialDetras.png in each occupied slot.
 	 * Columns are mirrored so duplex (long-edge) lines up with the fronts.
 	 */
-	$drawBackPage = function ($pagePlayers) use ($pdf, $Config, $siteRoot) {
+	$drawBackPage = function ($pagePlayers) use ($pdf, $Config, $siteRoot, $cardW, $cardH, $marginX, $marginY) {
 		if ($Config->credencialBack != 1) {
 			return;
 		}
@@ -138,12 +144,12 @@
 		for ($i = 0; $i < $n; $i++) {
 			$col = $i % 2;
 			$rowc = (int) floor($i / 2);
-			$x = ($col === 0) ? 108 : 0;
-			$y = $rowc * 70;
+			$x = ($col === 0) ? ($marginX + $cardW) : $marginX;
+			$y = $marginY + ($rowc * $cardH);
 			try {
 				$pdf->SetAlpha(1);
 				if ($Config->credencialBackImage == 1) {
-					az_pdf_image_file($pdf, $siteRoot, 'pdf/CredencialDetras.png', $x, $y, 108, 70);
+					az_pdf_image_file($pdf, $siteRoot, 'pdf/CredencialDetras.png', $x, $y, $cardW, $cardH);
 				}
 			} catch (Exception $ae) {
 			}
