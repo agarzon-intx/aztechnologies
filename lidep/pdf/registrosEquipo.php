@@ -111,7 +111,7 @@
 				$pdf->SetXY($x+40,$y+46);
 				$pdf->Cell(65 , 5, $row["FechaAlta"], 0, 0 , 'L' , false);
 				// Keep QR inside the card (cardH is 67.5; y+85 was for taller nuestrodeporte cards).
-				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+2, $y+10, 20, 20);
+				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+10, $y+10, 20, 20);
 				if ($col == 1) {
 					$x = $marginX;
 					$col = 0;
