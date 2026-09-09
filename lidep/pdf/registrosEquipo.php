@@ -76,7 +76,7 @@
 	/**
 	 * Draw one Letter page of credentials (2 cols × 4 rows) — front side.
 	 */
-	$drawFrontPage = function ($pagePlayers) use ($pdf, $Config, $schema, $siteRoot, $cardW, $cardH, $marginX, $marginY) {
+	$drawFrontPage = function ($pagePlayers) use ($pdf, $Config, $schema, $siteRoot, $cardW, $cardH, $marginX, $marginY, $fgmembersite) {
 		$x = $marginX;
 		$y = $marginY;
 		$col = 0;
@@ -110,8 +110,8 @@
 				$pdf->Cell(65 , 5, '' . az_utf8_decode(substr($row["Curp"],0,11)) . 'XXXXXXX', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+46);
 				$pdf->Cell(65 , 5, $row["FechaAlta"], 0, 0 , 'L' , false);
-				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+2, $y+85, 20, 20));
-
+				// Keep QR inside the card (cardH is 67.5; y+85 was for taller nuestrodeporte cards).
+				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+2, $y+$cardH-22, 20, 20);
 				if ($col == 1) {
 					$x = $marginX;
 					$col = 0;
