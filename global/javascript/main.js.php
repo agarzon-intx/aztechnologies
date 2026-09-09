@@ -3334,12 +3334,13 @@ function teamManagementMoveSelected(scope) {
 	}
 	window._teamsManagementMoveIds = ids;
 	window._teamsManagementMoveScope = scope || 'active';
+	var currentCategory = $('#playersManagementAdminSelectedCategory').val() || '';
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Teams/TeamsManagementMoveCategories.php',
-		data: { teamIds: ids.join(',') },
+		data: { teamIds: ids.join(','), currentCategory: currentCategory },
 		success: function (res) {
 			mainLoadingOff();
 			if (res.status !== '1' || !res.dataMoveCategories) {

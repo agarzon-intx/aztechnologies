@@ -27,6 +27,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$Season = (int) $_COOKIE[$Config->getAlias() . 'season'];
 	$teamIdsRaw = isset($_POST['teamIds']) ? (string) $_POST['teamIds'] : '';
+	$currentCategory = isset($_POST['currentCategory']) ? SanitizeInteger($_POST['currentCategory']) : 0;
 	$teamCount = 0;
 	foreach (explode(',', $teamIdsRaw) as $part) {
 		if ((int) trim($part) > 0) {
@@ -54,8 +55,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$sql = "SELECT Categoria_ID, Categoria_Desc
 			FROM $schema.Categorias
-			WHERE Torneo_ID = $Season
-			ORDER BY Categoria_Orden ASC, Categoria_Desc ASC";
+			WHERE Torneo_ID = $Season";
+	if ($currentCategory > 0) {
+		$sql .= " AND Categoria_ID <> $currentCategory";
+	}
+	$sql .= " ORDER BY Categoria_Orden ASC, Categoria_Desc ASC";
 	$result = $Config->query($sql);
 	if ($result && $result->num_rows > 0) {
 		while ($row = $result->fetch_assoc()) {
