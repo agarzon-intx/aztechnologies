@@ -84,6 +84,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		'status' => '1',
 		'message' => 'Success.',
 		'dataMoveCategories' => $html,
+		'pickCategoryMessage' => isset($lang['522-4']) ? $lang['522-4'] : 'Select a category',
 	);
 	echo json_encode($retunData);
 ?>

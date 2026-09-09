@@ -3332,8 +3332,103 @@ function teamManagementMoveSelected(scope) {
 	if (!ids.length) {
 		return;
 	}
-	// Placeholder until move destination UI is wired.
-	console.log('teamManagementMoveSelected', scope, ids);
+	window._teamsManagementMoveIds = ids;
+	window._teamsManagementMoveScope = scope || 'active';
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Teams/TeamsManagementMoveCategories.php',
+		data: { teamIds: ids.join(',') },
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status !== '1' || !res.dataMoveCategories) {
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({ icon: 'error', title: MSG_AJAX_GENERIC });
+				} else {
+					alert(MSG_AJAX_GENERIC);
+				}
+				return;
+			}
+			window._teamsManagementMoveIds = ids;
+			window._teamsManagementMovePickMsg = res.pickCategoryMessage || '';
+			$('#teamsManagementMoveModal').remove();
+			$('body').append(res.dataMoveCategories);
+			var modalEl = document.getElementById('teamsManagementMoveModal');
+			if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+				var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+				modal.show();
+				$(modalEl).on('hidden.bs.modal', function () {
+					$(modalEl).remove();
+				});
+			} else {
+				$('#teamsManagementMoveModal').css('display', 'block');
+			}
+		},
+		error: function () {
+			mainLoadingOff();
+			if (typeof Swal !== 'undefined') {
+				Swal.fire({ icon: 'error', title: MSG_AJAX_GENERIC });
+			} else {
+				alert(MSG_AJAX_GENERIC);
+			}
+		}
+	});
+}
+
+function teamManagementMoveConfirm() {
+	var ids = window._teamsManagementMoveIds || [];
+	var categoryId = $('input[name="teamsManagementMoveCategory"]:checked').val();
+	if (!ids.length) {
+		return;
+	}
+	if (!categoryId) {
+		var msgPick = window._teamsManagementMovePickMsg || 'Select a category';
+		if (typeof Swal !== 'undefined') {
+			Swal.fire({ icon: 'info', title: msgPick });
+		} else {
+			alert(msgPick);
+		}
+		return;
+	}
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Teams/TeamsManagementMoveSave.php',
+		data: { teamIds: ids.join(','), categoryId: categoryId },
+		success: function (res) {
+			mainLoadingOff();
+			var modalEl = document.getElementById('teamsManagementMoveModal');
+			if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+				var modal = bootstrap.Modal.getInstance(modalEl);
+				if (modal) { modal.hide(); }
+			} else {
+				$('#teamsManagementMoveModal').remove();
+			}
+			if (res.status === '1') {
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({ icon: 'success', title: res.dataMoveAnswer || '' });
+				}
+				window._teamsManagementMoveIds = [];
+				teamsManagementReloadList();
+			} else {
+				if (typeof Swal !== 'undefined') {
+					Swal.fire({ icon: 'error', title: res.dataMoveAnswer || MSG_AJAX_GENERIC });
+				} else {
+					alert(res.dataMoveAnswer || MSG_AJAX_GENERIC);
+				}
+			}
+		},
+		error: function () {
+			mainLoadingOff();
+			if (typeof Swal !== 'undefined') {
+				Swal.fire({ icon: 'error', title: MSG_AJAX_GENERIC });
+			} else {
+				alert(MSG_AJAX_GENERIC);
+			}
+		}
+	});
 }
 
 $(document).on('change', '.teamsManagementSelectAll', function () {
