@@ -156,19 +156,20 @@ if (!function_exists('az_pdf_site_root')) {
 				return null;
 			}
 		}
-		if (!function_exists('imagecreate') || !function_exists('imagepng')) {
-			return null;
-		}
-		ob_start();
-		$qrcode = new QRcode(az_utf8_encode((string) $qrMsg), 'L');
-		$qrcode->disableBorder();
-		$qrcode->displayPNG(200);
-		$png = ob_get_clean();
-		if ($png === false || $png === '' || strncmp($png, "\x89PNG", 4) !== 0) {
+		if (!function_exists('imagecreatetruecolor') || !function_exists('imagepng')) {
 			return null;
 		}
 		$path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'az-qr-' . $key . '.png';
-		if (file_put_contents($path, $png) === false) {
+		// Write to a file — displayPNG() calls header() when $filename is null, which
+		// corrupts output (and our PNG) when a PDF is already being streamed.
+		try {
+			$qrcode = new QRcode(az_utf8_encode((string) $qrMsg), 'L');
+			$qrcode->disableBorder();
+			$qrcode->displayPNG(200, array(255, 255, 255), array(0, 0, 0), $path, 0);
+		} catch (Throwable $e) {
+			return null;
+		}
+		if (!is_readable($path) || filesize($path) < 32) {
 			return null;
 		}
 		$cache[$key] = $path;
@@ -185,7 +186,6 @@ if (!function_exists('az_pdf_site_root')) {
 		if ($path === null) {
 			return false;
 		}
-		// Opaque white pad so the QR stays visible on dark credential backgrounds.
 		if (method_exists($pdf, 'SetFillColor') && method_exists($pdf, 'Rect')) {
 			$pdf->SetFillColor(255, 255, 255);
 			$pdf->Rect($x - 0.5, $y - 0.5, $w + 1, $h + 1, 'F');
