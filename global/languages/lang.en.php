@@ -375,6 +375,7 @@
 	$lang['520-1'] = 'Name 3';
 	$lang['521'] = 'Field';
 	$lang['522'] = 'Team Saved';
+	$lang['522-1'] = 'Move';
 	$lang['523'] = 'Active';
 	$lang['524'] = 'Upload logo 150 X 150';
 	$lang['525'] = 'Upload logo 580 X 580';

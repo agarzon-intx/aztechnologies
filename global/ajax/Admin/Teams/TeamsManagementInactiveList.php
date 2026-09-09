@@ -15,6 +15,9 @@ $htmlTeams .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 							<button type="button" class="btn btn-primary" onClick="teamManagementShowAdd(' . $Category . ');" >' . $lang['0013'] . '</button>
 						</div>
 						<div class="col-auto">
+							<button type="button" class="btn btn-secondary teamsManagementMoveBtn" data-scope="inactive" disabled onClick="teamManagementMoveSelected(\'inactive\');">' . $lang['522-1'] . '</button>
+						</div>
+						<div class="col-auto">
 							<label class="mb-0 text-secondary text-xs font-weight-bold d-inline-flex align-items-center gap-1">
 								<input type="checkbox" class="teamsManagementSelectAll" data-scope="inactive" id="teamsManagementSelectAllInactive" title="' . htmlspecialchars($lang['378-2'], ENT_QUOTES, 'UTF-8') . '"/>
 								' . $lang['378-2'] . '
@@ -67,8 +70,9 @@ $htmlTeams .= '</div>';
 
 $htmlTeams .= '<div class="d-block d-sm-block d-md-none d-lg-none d-xl-none">
 					<div class="row g-2 mb-2">
-						<div class="col-12 d-flex align-items-center gap-2">
+						<div class="col-12 d-flex align-items-center gap-2 flex-wrap">
 							<button type="button" class="btn btn-primary" onClick="teamManagementShowAdd(' . $Category . ');" >' . $lang['0013'] . '</button>
+							<button type="button" class="btn btn-secondary teamsManagementMoveBtn" data-scope="inactive" disabled onClick="teamManagementMoveSelected(\'inactive\');">' . $lang['522-1'] . '</button>
 							<label class="mb-0 text-secondary text-xs font-weight-bold d-inline-flex align-items-center gap-1">
 								<input type="checkbox" class="teamsManagementSelectAll" data-scope="inactive" id="teamsManagementSelectAllInactiveMobile" title="' . htmlspecialchars($lang['378-2'], ENT_QUOTES, 'UTF-8') . '"/>
 								' . $lang['378-2'] . '

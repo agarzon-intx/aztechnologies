@@ -3319,6 +3319,21 @@ function teamsManagementSyncSelectAll(scope) {
 		}
 	});
 	$('.teamsManagementSelectAll[data-scope="' + scope + '"]').prop('checked', total > 0 && checked === total);
+	teamsManagementSyncMoveButton(scope);
+}
+
+function teamsManagementSyncMoveButton(scope) {
+	var hasSelection = teamsManagementSelectedIds(scope).length > 0;
+	$('.teamsManagementMoveBtn[data-scope="' + scope + '"]').prop('disabled', !hasSelection);
+}
+
+function teamManagementMoveSelected(scope) {
+	var ids = teamsManagementSelectedIds(scope);
+	if (!ids.length) {
+		return;
+	}
+	// Placeholder until move destination UI is wired.
+	console.log('teamManagementMoveSelected', scope, ids);
 }
 
 $(document).on('change', '.teamsManagementSelectAll', function () {
@@ -3326,6 +3341,7 @@ $(document).on('change', '.teamsManagementSelectAll', function () {
 	var checked = $(this).prop('checked');
 	$('.teamsManagementSelect[data-scope="' + scope + '"]').prop('checked', checked);
 	$('.teamsManagementSelectAll[data-scope="' + scope + '"]').prop('checked', checked);
+	teamsManagementSyncMoveButton(scope);
 });
 
 $(document).on('change', '.teamsManagementSelect', function () {
