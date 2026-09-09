@@ -90,7 +90,7 @@
 
 				$pdf->SetAlpha(1);
 				if ($Config->credencialFrontImage == 1) {
-					//az_pdf_image_file($pdf, $siteRoot, 'pdf/Credencial.png', $x+0, $y+0, $cardW, $cardH);
+					az_pdf_image_file($pdf, $siteRoot, 'pdf/Credencial.png', $x+0, $y+0, $cardW, $cardH);
 				}
 				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+10, $y+15, 26, 35);
 				az_pdf_image_file($pdf, $siteRoot, 'imagenes/' . $row['Logo'] . '.png',$x+15.5,$y+45,15, 15);
@@ -112,7 +112,7 @@
 				$pdf->Cell(65 , 5, $row["FechaAlta"], 0, 0 , 'L' , false);
 				// Top-right of card (clear of photo/text); drawn last with white pad in helper.
 				$pdf->SetAlpha(1);
-				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+40, $x+40, 20, 20);
+				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+40, $y+40, 20, 20);
 				if ($col == 1) {
 					$x = $marginX;
 					$col = 0;
