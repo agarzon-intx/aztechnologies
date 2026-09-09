@@ -375,6 +375,7 @@
 	$lang['520-1'] = 'Nombre 3';
 	$lang['521'] = 'Campo';
 	$lang['522'] = 'Equipo Guardado';
+	$lang['522-1'] = 'Mover';
 	$lang['523'] = 'Activo';
 	$lang['524'] = 'Subir logo 150 X 150';
 	$lang['525'] = 'Subir logo 580 X 580';
