@@ -376,6 +376,9 @@
 	$lang['521'] = 'Campo';
 	$lang['522'] = 'Equipo Guardado';
 	$lang['522-1'] = 'Mover';
+	$lang['522-2'] = 'Mover a categoría';
+	$lang['522-3'] = 'Equipos movidos';
+	$lang['522-4'] = 'Selecciona una categoría';
 	$lang['523'] = 'Activo';
 	$lang['524'] = 'Subir logo 150 X 150';
 	$lang['525'] = 'Subir logo 580 X 580';
