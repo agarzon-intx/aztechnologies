@@ -3285,6 +3285,59 @@ function fieldManagementEditSave(id, descripcion, lat, long, zoom, google){
 *****************************************************************************************************************/
 var teamsManagementFilterTimer = null;
 
+function teamsManagementSelectedIds(scope) {
+	var ids = [];
+	var seen = {};
+	var selector = '.teamsManagementSelect';
+	if (scope) {
+		selector += '[data-scope="' + scope + '"]';
+	}
+	$(selector).filter(':checked').each(function () {
+		var id = String($(this).val() || '');
+		if (id !== '' && !seen[id]) {
+			seen[id] = true;
+			ids.push(id);
+		}
+	});
+	return ids;
+}
+
+function teamsManagementSyncSelectAll(scope) {
+	var $boxes = $('.teamsManagementSelect[data-scope="' + scope + '"]');
+	var unique = {};
+	var total = 0;
+	var checked = 0;
+	$boxes.each(function () {
+		var id = String($(this).val() || '');
+		if (id === '' || unique[id]) {
+			return;
+		}
+		unique[id] = true;
+		total++;
+		if ($('.teamsManagementSelect[data-scope="' + scope + '"][value="' + id + '"]').first().prop('checked')) {
+			checked++;
+		}
+	});
+	$('.teamsManagementSelectAll[data-scope="' + scope + '"]').prop('checked', total > 0 && checked === total);
+}
+
+$(document).on('change', '.teamsManagementSelectAll', function () {
+	var scope = $(this).attr('data-scope') || 'active';
+	var checked = $(this).prop('checked');
+	$('.teamsManagementSelect[data-scope="' + scope + '"]').prop('checked', checked);
+	$('.teamsManagementSelectAll[data-scope="' + scope + '"]').prop('checked', checked);
+});
+
+$(document).on('change', '.teamsManagementSelect', function () {
+	var scope = $(this).attr('data-scope') || 'active';
+	var id = String($(this).val() || '');
+	var checked = $(this).prop('checked');
+	if (id !== '') {
+		$('.teamsManagementSelect[data-scope="' + scope + '"][value="' + id + '"]').prop('checked', checked);
+	}
+	teamsManagementSyncSelectAll(scope);
+});
+
 function teamsManagementFilterListDebounced() {
 	if (teamsManagementFilterTimer) {
 		clearTimeout(teamsManagementFilterTimer);
