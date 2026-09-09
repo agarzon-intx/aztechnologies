@@ -181,7 +181,7 @@ if (!function_exists('az_pdf_site_root')) {
 		if (is_object($fgmembersite) && method_exists($fgmembersite, 'getSitename')) {
 			$site = rtrim((string) $fgmembersite->getSitename(), '/');
 		}
-		$msg = $site . '/ajax/QR.php?Jugador_ID=' . (int) $jugadorId;
+		$msg = $site . '/QR.php?Jugador_ID=' . (int) $jugadorId;
 		$path = az_pdf_qrcode_path($msg);
 		if ($path === null) {
 			return false;
