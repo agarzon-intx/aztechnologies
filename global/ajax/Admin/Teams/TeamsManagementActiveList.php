@@ -17,18 +17,15 @@ $htmlTeams .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 						<div class="col-auto">
 							<button type="button" class="btn btn-secondary teamsManagementMoveBtn" data-scope="active" disabled onClick="teamManagementMoveSelected(\'active\');">' . $lang['522-1'] . '</button>
 						</div>
-						<div class="col-auto">
-							<label class="mb-0 text-secondary text-xs font-weight-bold d-inline-flex align-items-center gap-1">
-								<input type="checkbox" class="teamsManagementSelectAll" data-scope="active" id="teamsManagementSelectAllActive" title="' . htmlspecialchars($lang['378-2'], ENT_QUOTES, 'UTF-8') . '"/>
-								' . $lang['378-2'] . '
-							</label>
-						</div>
 					</div>
 					<div class="card">
 						<div class="table-responsive">
 							<table class=" table align-items-center mb-0" style="border-color: #136aeb;">
 								<thead class="">
-									<th scope="col" class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 40px !important;white-space: normal;padding: 0.75rem 0.5rem;">&nbsp;</th>
+									<th scope="col" class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 56px !important;white-space: normal;padding: 0.75rem 0.5rem;">
+										<span class="d-block">' . $lang['378-2'] . '</span>
+										<input type="checkbox" class="teamsManagementSelectAll" data-scope="active" id="teamsManagementSelectAllActive" title="' . htmlspecialchars($lang['378-2'], ENT_QUOTES, 'UTF-8') . '"/>
+									</th>
 									<th ' . $Config->ShowIDColumn . ' scope="col" class="text-left text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.5rem;">' . $lang['515'] . '</span></th>
 									<th scope="col" class="text-left text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.5rem;">' . $lang['516'] . '</span></th>
 									<th scope="col" class="text-left text-uppercase text-secondary text-xs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.5rem;">' . $lang['517'] . '</span></th>
@@ -73,9 +70,9 @@ $htmlTeams .= '<div class="d-block d-sm-block d-md-none d-lg-none d-xl-none">
 						<div class="col-12 d-flex align-items-center gap-2 flex-wrap">
 							<button type="button" class="btn btn-primary" onClick="teamManagementShowAdd(' . $Category . ');" >' . $lang['0013'] . '</button>
 							<button type="button" class="btn btn-secondary teamsManagementMoveBtn" data-scope="active" disabled onClick="teamManagementMoveSelected(\'active\');">' . $lang['522-1'] . '</button>
-							<label class="mb-0 text-secondary text-xs font-weight-bold d-inline-flex align-items-center gap-1">
+							<label class="mb-0 text-secondary text-xs font-weight-bold text-center" style="line-height: 1.1;">
+								<span class="d-block">' . $lang['378-2'] . '</span>
 								<input type="checkbox" class="teamsManagementSelectAll" data-scope="active" id="teamsManagementSelectAllActiveMobile" title="' . htmlspecialchars($lang['378-2'], ENT_QUOTES, 'UTF-8') . '"/>
-								' . $lang['378-2'] . '
 							</label>
 						</div>
 					</div>
