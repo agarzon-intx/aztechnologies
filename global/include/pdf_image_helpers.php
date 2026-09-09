@@ -139,12 +139,24 @@ if (!function_exists('az_pdf_site_root')) {
 			return $cache[$key];
 		}
 		$cache[$key] = null;
-		$qrcodeClass = __DIR__ . DIRECTORY_SEPARATOR . 'qrcode' . DIRECTORY_SEPARATOR . 'qrcode.class.php';
-		if (!is_readable($qrcodeClass)) {
-			return null;
-		}
-		require_once $qrcodeClass;
 		if (!class_exists('QRcode', false)) {
+			$candidates = array(
+				__DIR__ . DIRECTORY_SEPARATOR . 'qrcode' . DIRECTORY_SEPARATOR . 'qrcode.class.php',
+				dirname(__DIR__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'qrcode' . DIRECTORY_SEPARATOR . 'qrcode.class.php',
+			);
+			$loaded = false;
+			foreach ($candidates as $qrcodeClass) {
+				if (is_readable($qrcodeClass)) {
+					require_once $qrcodeClass;
+					$loaded = true;
+					break;
+				}
+			}
+			if (!$loaded || !class_exists('QRcode', false)) {
+				return null;
+			}
+		}
+		if (!function_exists('imagecreate') || !function_exists('imagepng')) {
 			return null;
 		}
 		ob_start();
@@ -152,7 +164,7 @@ if (!function_exists('az_pdf_site_root')) {
 		$qrcode->disableBorder();
 		$qrcode->displayPNG(200);
 		$png = ob_get_clean();
-		if ($png === false || $png === '') {
+		if ($png === false || $png === '' || strncmp($png, "\x89PNG", 4) !== 0) {
 			return null;
 		}
 		$path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'az-qr-' . $key . '.png';
@@ -164,8 +176,24 @@ if (!function_exists('az_pdf_site_root')) {
 	}
 
 	function az_pdf_qrcode($pdf, $fgmembersite, $jugadorId, $x, $y, $w, $h) {
-		$msg = rtrim((string) $fgmembersite->getSitename(), '/') . '/ajax/QR.php?Jugador_ID=' . (int) $jugadorId;
-		return az_pdf_image($pdf, az_pdf_qrcode_path($msg), $x, $y, $w, $h);
+		$site = '';
+		if (is_object($fgmembersite) && method_exists($fgmembersite, 'getSitename')) {
+			$site = rtrim((string) $fgmembersite->getSitename(), '/');
+		}
+		$msg = $site . '/ajax/QR.php?Jugador_ID=' . (int) $jugadorId;
+		$path = az_pdf_qrcode_path($msg);
+		if ($path === null) {
+			return false;
+		}
+		// Opaque white pad so the QR stays visible on dark credential backgrounds.
+		if (method_exists($pdf, 'SetFillColor') && method_exists($pdf, 'Rect')) {
+			$pdf->SetFillColor(255, 255, 255);
+			$pdf->Rect($x - 0.5, $y - 0.5, $w + 1, $h + 1, 'F');
+		}
+		if (method_exists($pdf, 'SetAlpha')) {
+			$pdf->SetAlpha(1);
+		}
+		return az_pdf_image($pdf, $path, $x, $y, $w, $h);
 	}
 
 }
