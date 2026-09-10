@@ -111,6 +111,7 @@
   	$lang['101-11'] = 'Categoría %1: pediste %2 jornada(s) pero solo hay %3 en el calendario. Crea jornadas o baja el número.';
   	$lang['101-12'] = 'Calendario generado: %1 juego(s) creados, %2 omitidos (la jornada ya tenía juegos).';
   	$lang['101-13'] = 'No se crearon juegos. Revisa jornadas y juegos existentes.';
+  	$lang['101-14'] = 'Selecciona un torneo primero. La generación de calendario solo usa el torneo actual.';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

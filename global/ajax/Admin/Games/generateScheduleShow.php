@@ -29,7 +29,43 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
 	$retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
-	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season']);
+
+	$Season = 0;
+	if (isset($_COOKIE[$Config->getAlias() . 'season']) && $_COOKIE[$Config->getAlias() . 'season'] !== '') {
+		$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season']);
+	}
+	if ($Season <= 0) {
+		$resActual = $Config->query("SELECT Torneo_ID FROM $schema.Torneos WHERE Actual = 'S' ORDER BY Torneo_ID DESC LIMIT 1");
+		if ($resActual && $resActual->num_rows > 0) {
+			$rowActual = $resActual->fetch_assoc();
+			$Season = (int) $rowActual['Torneo_ID'];
+		}
+	}
+
+	$tournamentName = '';
+	if ($Season > 0) {
+		$resTorneo = $Config->query("SELECT Torneo_Desc FROM $schema.Torneos WHERE Torneo_ID = $Season LIMIT 1");
+		if ($resTorneo && $resTorneo->num_rows > 0) {
+			$rowTorneo = $resTorneo->fetch_assoc();
+			$tournamentName = $rowTorneo['Torneo_Desc'];
+		} else {
+			$Season = 0;
+		}
+	}
+
+	if ($Season <= 0) {
+		$html = '<div id="generateSchedule" class="tabla active" style="display: block;padding-top: 10px;">
+			<div class="alert alert-warning">' . htmlspecialchars($lang['101-14'], ENT_QUOTES, 'UTF-8') . '</div>
+		</div>';
+		$retunData = array(
+			'status' => '1',
+			'message' => '',
+			'dataGenerateSchedule' => $html,
+		);
+		header('Content-Type: application/json');
+		echo json_encode($retunData);
+		exit();
+	}
 
 	$categories = array();
 	$sqlCat = "SELECT DISTINCT c.Categoria_ID, c.Categoria_Desc, c.Categoria_Orden, c.Calendario_ID
@@ -110,10 +146,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 	}
 
-	$html = '<div id="generateSchedule" class="tabla active" style="display: block;padding-top: 10px;">
+	$html = '<div id="generateSchedule" class="tabla active" style="display: block;padding-top: 10px;" data-tournament-id="' . (int) $Season . '">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
 			<div style="float: left;width: 100%;padding-top: 8px;padding-bottom: 8px;">
 				<legend style="font-size: 25px; font-weight: bold; border-bottom: 0px">' . htmlspecialchars($lang['101-1'], ENT_QUOTES, 'UTF-8') . '</legend>
+				<div class="text-muted">' . htmlspecialchars($lang['105'], ENT_QUOTES, 'UTF-8') . ': <strong>' . htmlspecialchars($tournamentName, ENT_QUOTES, 'UTF-8') . '</strong></div>
 			</div>';
 
 	if (count($categories) === 0) {
@@ -193,7 +230,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		$html .= '</div>
 			<div class="mt-4 mb-2" style="clear: both;">
-				<button type="button" class="btn btn-primary" id="gsGenerateBtn" onClick="generateScheduleRun();">' . htmlspecialchars($lang['826'], ENT_QUOTES, 'UTF-8') . '</button>
+				<button type="button" class="btn btn-primary" id="gsGenerateBtn" data-msg-weeks="' . htmlspecialchars($lang['101-8'], ENT_QUOTES, 'UTF-8') . '" onClick="generateScheduleRun();">' . htmlspecialchars($lang['826'], ENT_QUOTES, 'UTF-8') . '</button>
 			</div>';
 	}
 

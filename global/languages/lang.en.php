@@ -111,6 +111,7 @@
   	$lang['101-11'] = 'Category %1: requested %2 week(s) but only %3 exist in the calendar. Create weeks first or lower the number.';
   	$lang['101-12'] = 'Schedule generated: %1 game(s) created, %2 skipped (week already had games).';
   	$lang['101-13'] = 'No games were created. Check weeks and existing games.';
+  	$lang['101-14'] = 'Select a tournament (season) first. Schedule generation only uses the current tournament.';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

@@ -4401,7 +4401,8 @@ function generateScheduleRun(){
 		weeks[catId] = val;
 	});
 	if (missing || Object.keys(weeks).length === 0) {
-		alert(typeof MSG_GS_WEEKS !== 'undefined' ? MSG_GS_WEEKS : 'Enter weeks for each category.');
+		var msgWeeks = $('#gsGenerateBtn').data('msg-weeks') || 'Enter weeks for each category.';
+		alert(msgWeeks);
 		return;
 	}
 	mainLoadingOn();

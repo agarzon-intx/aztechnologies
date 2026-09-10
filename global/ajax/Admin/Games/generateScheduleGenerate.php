@@ -29,7 +29,31 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
 	$retunData = array('status' => '0', 'message' => $lang['js0002']);
-	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season']);
+
+	$Season = 0;
+	if (isset($_COOKIE[$Config->getAlias() . 'season']) && $_COOKIE[$Config->getAlias() . 'season'] !== '') {
+		$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season']);
+	}
+	if ($Season <= 0) {
+		$resActual = $Config->query("SELECT Torneo_ID FROM $schema.Torneos WHERE Actual = 'S' ORDER BY Torneo_ID DESC LIMIT 1");
+		if ($resActual && $resActual->num_rows > 0) {
+			$rowActual = $resActual->fetch_assoc();
+			$Season = (int) $rowActual['Torneo_ID'];
+		}
+	}
+	if ($Season > 0) {
+		$resTorneo = $Config->query("SELECT Torneo_ID FROM $schema.Torneos WHERE Torneo_ID = $Season LIMIT 1");
+		if (!$resTorneo || $resTorneo->num_rows === 0) {
+			$Season = 0;
+		}
+	}
+	if ($Season <= 0) {
+		$retunData = array('status' => '0', 'message' => $lang['101-14']);
+		header('Content-Type: application/json');
+		echo json_encode($retunData);
+		exit();
+	}
+
 	$username = $_SESSION[$Config->getAlias() . 'username'];
 
 	/**
