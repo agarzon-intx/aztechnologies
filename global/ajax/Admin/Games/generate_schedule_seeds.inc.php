@@ -45,32 +45,49 @@ if (!function_exists('az_generate_schedule_ensure_seed_table')) {
 				KEY `idx_gs_seeds_created` (`CreatedAt`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
-		$connAdmin = null;
+		// Prefer checking existence first — app users often cannot CREATE.
 		try {
-			$connAdmin = $Config->connectAdmin();
-		} catch (Throwable $e) {
-			$connAdmin = null;
-		}
-		if ($connAdmin) {
-			$ok = $connAdmin->query($sql);
-			if ($ok === false) {
-				az_generate_schedule_seed_log('ensure table (admin) failed: ' . $connAdmin->error);
-			} else {
-				return true;
+			$conn = $Config->connect();
+			if ($conn) {
+				$check = $conn->query("SHOW TABLES FROM `$schema` LIKE '$table'");
+				if ($check && $check->num_rows > 0) {
+					return true;
+				}
 			}
+		} catch (Throwable $e) {
+			az_generate_schedule_seed_log('SHOW TABLES failed: ' . $e->getMessage());
 		}
 
-		$conn = $Config->connect();
-		if (!$conn) {
-			az_generate_schedule_seed_log('ensure table: no connection');
-			return false;
+		try {
+			$connAdmin = $Config->connectAdmin();
+			if ($connAdmin) {
+				$check = @$connAdmin->query("SHOW TABLES FROM `$schema` LIKE '$table'");
+				if ($check && $check->num_rows > 0) {
+					return true;
+				}
+				$ok = @$connAdmin->query($sql);
+				if ($ok !== false) {
+					return true;
+				}
+				az_generate_schedule_seed_log('ensure table (admin) failed: ' . $connAdmin->error);
+			}
+		} catch (Throwable $e) {
+			az_generate_schedule_seed_log('ensure table (admin) exception: ' . $e->getMessage());
 		}
-		$ok = $conn->query($sql);
-		if ($ok === false) {
-			az_generate_schedule_seed_log('ensure table failed: ' . $conn->error);
-			return false;
+
+		try {
+			$conn = $Config->connect();
+			if ($conn) {
+				$ok = @$conn->query($sql);
+				if ($ok !== false) {
+					return true;
+				}
+				az_generate_schedule_seed_log('ensure table failed: ' . $conn->error);
+			}
+		} catch (Throwable $e) {
+			az_generate_schedule_seed_log('ensure table exception: ' . $e->getMessage());
 		}
-		return true;
+		return false;
 	}
 }
 
