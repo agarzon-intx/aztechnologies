@@ -38,7 +38,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 */
 	if(isset($_COOKIE[$Config->getAlias() . $BVname])) {
 	    //echo '123--- ' . $_COOKIE[$Config->getAlias() . '' . $BVname];
-		$retunData = array('status' => '1', 'salt' => $fgmembersite->GetSaltFromUsernamePublic($username, $_COOKIE[$Config->getAlias() . '' . $BVname]));
+		$salt = $fgmembersite->GetSaltFromUsernamePublic($username, $_COOKIE[$Config->getAlias() . '' . $BVname]);
+		// Do not advance login UI when salt lookup failed (false) or browser is untrusted.
+		if ($salt === false || $salt === null || $salt === '' || $salt === 'BVrequired') {
+			$retunData = array('status' => '0', 'salt' => ($salt === 'BVrequired' ? 'BVrequired' : 'unavailable'));
+		} else {
+			$retunData = array('status' => '1', 'salt' => $salt);
+		}
 	} else {
 		$retunData = array('status' => '0', 'salt' => 'BVrequired');
 	}

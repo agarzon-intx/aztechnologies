@@ -165,6 +165,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						function submitLoginForm() {
 							if(document.getElementById(\'password\').value.length === 0 || $(\'#username\').val().length  === 0){
 								$(\'#errorLoginL\').html(\'' . $lang['js0001'] . '\');
+							}else if(typeof salt !== \'string\' || salt.length === 0){
+								$(\'#errorLoginL\').html(\'' . $lang['js0002'] . '\');
+								document.getElementById(\'getSalt\').style.display = \'block\';
+								document.getElementById(\'login\').style.display = \'none\';
 							}else{
 								login($(\'#username\').val(), CryptoJS.PBKDF2(document.getElementById(\'password\').value, salt, { keySize: 160/32, iterations: 1000 }).toString(),\'' . $CSRFtoken . '\');
 							}
