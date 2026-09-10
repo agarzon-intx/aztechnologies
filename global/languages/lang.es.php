@@ -113,6 +113,7 @@
   	$lang['101-13'] = 'No se crearon juegos. Revisa jornadas y juegos existentes.';
   	$lang['101-14'] = 'Selecciona un torneo primero. La generación de calendario solo usa el torneo actual.';
   	$lang['101-15'] = 'Ranking';
+  	$lang['101-16'] = 'Ranking de categoría';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

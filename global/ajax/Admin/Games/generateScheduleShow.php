@@ -237,32 +237,42 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						<small class="text-muted">' . htmlspecialchars($weeksHint, ENT_QUOTES, 'UTF-8') . '</small>
 					</div>
 				</div>
-				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-4']) ? $lang['101-4'] : 'Seeds'), ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-16']) ? $lang['101-16'] : 'Category ranking'), ENT_QUOTES, 'UTF-8') . '</strong></div>
 				<div class="table-responsive">
 					<table class="table table-sm table-striped align-middle mb-0">
 						<thead>
 							<tr>
 								<th style="width: 70px;">#</th>
-								<th>' . htmlspecialchars((string) (isset($lang['113-2']) ? $lang['113-2'] : 'Institutions'), ENT_QUOTES, 'UTF-8') . '</th>
-								<th style="width: 100px;">' . htmlspecialchars((string) (isset($lang['101-5']) ? $lang['101-5'] : 'Teams'), ENT_QUOTES, 'UTF-8') . '</th>
-								<th>' . htmlspecialchars((string) (isset($lang['112']) ? $lang['112'] : 'Teams'), ENT_QUOTES, 'UTF-8') . '</th>
+								<th>' . htmlspecialchars((string) (isset($lang['112']) ? $lang['112'] : 'Equipo'), ENT_QUOTES, 'UTF-8') . '</th>
 							</tr>
 						</thead>
 						<tbody>';
 
-			if (count($cat['seeds']) === 0) {
-				$html .= '<tr><td colspan="4">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
+			$catTeams = array();
+			foreach ($cat['seeds'] as $seed) {
+				foreach ($seed['teams'] as $t) {
+					$catTeams[] = array(
+						'seed' => (int) $seed['seed'],
+						'Equipo_DESC' => (string) $t['Equipo_DESC'],
+					);
+				}
+			}
+			usort($catTeams, function ($a, $b) {
+				if ($a['seed'] !== $b['seed']) {
+					return $a['seed'] - $b['seed'];
+				}
+				return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
+			});
+
+			if (count($catTeams) === 0) {
+				$html .= '<tr><td colspan="2">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
 			} else {
-				foreach ($cat['seeds'] as $seed) {
-					$teamNames = array();
-					foreach ($seed['teams'] as $t) {
-						$teamNames[] = htmlspecialchars((string) $t['Equipo_DESC'], ENT_QUOTES, 'UTF-8');
-					}
+				$catRank = 0;
+				foreach ($catTeams as $t) {
+					$catRank++;
 					$html .= '<tr>
-							<td>' . (int) $seed['seed'] . '</td>
-							<td>' . htmlspecialchars((string) $seed['Institucion_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
-							<td>' . (int) $seed['TeamCount'] . '</td>
-							<td>' . implode(', ', $teamNames) . '</td>
+							<td>' . $catRank . '</td>
+							<td>' . htmlspecialchars((string) $t['Equipo_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
 						</tr>';
 				}
 			}
