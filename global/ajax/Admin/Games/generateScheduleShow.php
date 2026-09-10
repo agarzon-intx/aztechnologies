@@ -192,43 +192,25 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			<script>initNavs("generateScheduleNavTabs");</script>
 			<div class="tabla-content" style="padding-top: 12px;">';
 
-		// First tab: single ranking list for all teams (all categories).
+		// First tab: tournament-wide institution ranking (position + name).
 		$html .= '<div id="gsRankingAll" class="tabla active" style="display: block; height: auto;">
 			<div class="table-responsive">
 				<table class="table table-sm table-striped align-middle mb-0">
 					<thead>
 						<tr>
 							<th style="width: 70px;">#</th>
-							<th>' . htmlspecialchars((string) (isset($lang['112']) ? $lang['112'] : 'Team'), ENT_QUOTES, 'UTF-8') . '</th>
+							<th>' . htmlspecialchars((string) (isset($lang['113-2']) ? $lang['113-2'] : 'Institution'), ENT_QUOTES, 'UTF-8') . '</th>
 						</tr>
 					</thead>
 					<tbody>';
 
-		$rankingRows = array();
-		foreach ($categories as $cat) {
-			foreach ($cat['seeds'] as $seed) {
-				foreach ($seed['teams'] as $t) {
-					$rankingRows[] = array(
-						'rank' => (int) $seed['seed'],
-						'Equipo_DESC' => (string) $t['Equipo_DESC'],
-					);
-				}
-			}
-		}
-		usort($rankingRows, function ($a, $b) {
-			if ($a['rank'] !== $b['rank']) {
-				return $a['rank'] - $b['rank'];
-			}
-			return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
-		});
-
-		if (count($rankingRows) === 0) {
+		if (count($institutionSeeds) === 0) {
 			$html .= '<tr><td colspan="2">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
 		} else {
-			foreach ($rankingRows as $row) {
+			foreach ($institutionSeeds as $seed) {
 				$html .= '<tr>
-						<td>' . (int) $row['rank'] . '</td>
-						<td>' . htmlspecialchars((string) $row['Equipo_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
+						<td>' . (int) $seed['rank'] . '</td>
+						<td>' . htmlspecialchars((string) $seed['Institucion_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
 					</tr>';
 			}
 		}
