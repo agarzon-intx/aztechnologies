@@ -132,38 +132,7 @@ if (!function_exists('az_generate_schedule_db_write_conn')) {
 			if ($conn) {
 				return $conn;
 			}
-			// Diagnose silently-failed admin connect (no passwords logged).
-			$hasUser = false;
-			$hasSchema = false;
-			$server = '';
-			try {
-				$ref = new ReflectionClass($Config);
-				if ($ref->hasProperty('config')) {
-					$prop = $ref->getProperty('config');
-					$prop->setAccessible(true);
-					$cfg = $prop->getValue($Config);
-					if (is_array($cfg)) {
-						$hasUser = (isset($cfg['usernamea']) && $cfg['usernamea'] !== '');
-						$hasSchema = (isset($cfg['schemaa']) && $cfg['schemaa'] !== '');
-						$server = (string) ($cfg['servername'] ?? '');
-						$user = (string) ($cfg['usernamea'] ?? '');
-						$pass = (string) ($cfg['passworda'] ?? '');
-						$db = (string) ($cfg['schemaa'] ?? '');
-						if ($server !== '' && $user !== '' && $db !== '') {
-							$probe = @new mysqli($server, $user, $pass, $db);
-							if ($probe instanceof mysqli) {
-								$err = $probe->connect_error ? $probe->connect_error : 'connected_ok_but_connectAdmin_null';
-								$probe->close();
-								az_generate_schedule_seed_log('connectAdmin null; probe user=' . $user . ' server=' . $server . ' err=' . $err);
-								return null;
-							}
-						}
-					}
-				}
-			} catch (Throwable $e2) {
-				az_generate_schedule_seed_log('connectAdmin null; probe exception: ' . $e2->getMessage());
-			}
-			az_generate_schedule_seed_log('connectAdmin returned null; hasUser=' . ($hasUser ? '1' : '0') . ' hasSchema=' . ($hasSchema ? '1' : '0') . ' server=' . $server);
+			az_generate_schedule_seed_log('connectAdmin returned null (check *adm user privileges on schema from app host)');
 		} catch (Throwable $e) {
 			az_generate_schedule_seed_log('connectAdmin failed: ' . $e->getMessage());
 		}

@@ -1,5 +1,9 @@
 -- Physical seed ranking table for Generate Schedule (session-scoped).
 -- Replaces MySQL TEMPORARY TABLE so ranks can be re-read later for the same PHP session.
+--
+-- Run as cPanel account owner in phpMyAdmin.
+-- After CREATE, assign each site's *adm user to that database (cPanel → MySQL Databases)
+-- or run the GRANTs below. App writes use usernamea from each site's ini/config.ini.
 
 CREATE TABLE IF NOT EXISTS `aztechn1_demomina`.`GenerateScheduleSeeds` (
   `Session_ID` varchar(128) NOT NULL,
@@ -127,20 +131,25 @@ CREATE TABLE IF NOT EXISTS `aztechn1_aztflag`.`GenerateScheduleSeeds` (
   KEY `idx_gs_seeds_created` (`CreatedAt`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- App write user needs DML on the new table (cPanel often does not auto-grant on tables
--- created by the account owner). Adjust user names if a site uses a different *adm user.
--- Run as cPanel / account owner in phpMyAdmin:
+-- ---------------------------------------------------------------------------
+-- Privileges (required for seed persistence)
+-- Creating the table as account owner does NOT grant app *adm users access.
+-- Production error seen: Access denied for user 'aztechn1_lidepadm'@'162.241.219.113'
+-- to database 'aztechn1_lidep'
+--
+-- Preferred: cPanel → MySQL® Databases → Add User To Database
+--   aztechn1_lidepadm → aztechn1_lidep (ALL PRIVILEGES)
+-- Same pattern for each site's adm user / schema below.
+--
+-- Or run as owner (host may be '%', 'localhost', or '162.241.219.113'):
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_demomina`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_elite`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_huskies`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_lidep`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_nuestrodeporte`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_vollidep`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_voleibolmetepec`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_voleymvp`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_aztflag`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
-
--- Prefer granting to each site's own *adm user if different from lidepadm, e.g.:
--- GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_lidep`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'localhost';
--- FLUSH PRIVILEGES;
+GRANT ALL PRIVILEGES ON `aztechn1_lidep`.* TO 'aztechn1_lidepadm'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_elite`.* TO 'aztechn1_lidepadm'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_huskies`.* TO 'aztechn1_lidepadm'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_vollidep`.* TO 'aztechn1_lidepadm'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_demomina`.* TO 'aztechn1_nuedepadm'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_nuestrodeporte`.* TO 'aztechn1_nuedepadm'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_voleibolmetepec`.* TO 'aztechn1_lmvmadm'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_voleymvp`.* TO 'aztechn1_voleymvpadmin'@'%';
+GRANT ALL PRIVILEGES ON `aztechn1_aztflag`.* TO 'aztechn1_aztflagadm'@'%';
+FLUSH PRIVILEGES;
