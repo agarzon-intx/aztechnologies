@@ -98,6 +98,7 @@
 	//Index Menu
   	$lang['100'] = 'Juegos';
   	$lang['101'] = 'Marcadores';
+  	$lang['101-1'] = 'Generar calendario';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

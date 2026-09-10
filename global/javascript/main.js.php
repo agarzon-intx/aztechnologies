@@ -4365,6 +4365,26 @@ function loadWeeksAdmin(type){
 	});
 }
 
+function generateScheduleShow(){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Games/generateScheduleShow.php',
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status === '1') {
+				$("#body").html(res.dataGenerateSchedule);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
 function loadWeekAdmin(Week, team, type){
     //console.log('loadWeekAdmin week = ' + Week);
 	mainLoadingOn();

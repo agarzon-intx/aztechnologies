@@ -98,6 +98,7 @@
 	//Index Menu
   	$lang['100'] = 'Games';
   	$lang['101'] = 'Scores';
+  	$lang['101-1'] = 'Generate Schedule';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';
