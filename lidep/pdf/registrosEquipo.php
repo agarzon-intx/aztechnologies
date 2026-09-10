@@ -111,7 +111,7 @@
 				$pdf->SetXY($x+40,$y+46);
 				$pdf->Cell(65 , 5, $row["FechaAlta"], 0, 0 , 'L' , false);
 				// Top-right of card (clear of photo/text); drawn last with white pad in helper.
-				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+82, $y+46, 16.5, 17.5);
+				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+82, $y+46, 16, 17.5);
 				if ($col == 1) {
 					$x = $marginX;
 					$col = 0;
