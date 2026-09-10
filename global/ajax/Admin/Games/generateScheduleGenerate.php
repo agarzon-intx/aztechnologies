@@ -27,6 +27,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$sessionstat = $fgmembersite->CheckLogin('generateScheduleGenerate.php');
 
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+	require_once __DIR__ . DIRECTORY_SEPARATOR . 'generate_schedule_seeds.inc.php';
 
 	$retunData = array('status' => '0', 'message' => $lang['js0002']);
 
@@ -118,6 +119,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit();
 	}
 
+	$institutionSeeds = az_generate_schedule_institution_seeds($Config, $schema, $Season);
+
 	$created = 0;
 	$skipped = 0;
 	$errors = array();
@@ -128,39 +131,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			continue;
 		}
 
-		// Seeded team order: institutions by team count DESC, Institucion_DESC ASC; teams by Equipo_DESC.
-		$teamIds = array();
-		$sqlSeeds = "SELECT IFNULL(e.Institucion_ID, 0) AS Institucion_ID,
-					IFNULL(NULLIF(TRIM(i.Institucion_DESC), ''), CONCAT('#', IFNULL(e.Institucion_ID, 0))) AS Institucion_DESC,
-					COUNT(e.Equipo_ID) AS TeamCount
-				FROM $schema.Equipos e
-					LEFT JOIN $schema.Instituciones i
-						ON i.Institucion_ID = e.Institucion_ID
-						AND i.Torneo_ID = e.Torneo_ID
-				WHERE e.Torneo_ID = $Season
-					AND e.Fuerza = $catId
-					AND IFNULL(e.Activo, 0) = 1
-				GROUP BY IFNULL(e.Institucion_ID, 0), Institucion_DESC
-				ORDER BY TeamCount DESC, Institucion_DESC ASC";
-		$resSeeds = $Config->query($sqlSeeds);
-		if ($resSeeds && $resSeeds->num_rows > 0) {
-			while ($seed = $resSeeds->fetch_assoc()) {
-				$instId = (int) $seed['Institucion_ID'];
-				$sqlTeams = "SELECT e.Equipo_ID
-						FROM $schema.Equipos e
-						WHERE e.Torneo_ID = $Season
-							AND e.Fuerza = $catId
-							AND IFNULL(e.Activo, 0) = 1
-							AND IFNULL(e.Institucion_ID, 0) = $instId
-						ORDER BY e.Equipo_DESC ASC";
-				$resTeams = $Config->query($sqlTeams);
-				if ($resTeams && $resTeams->num_rows > 0) {
-					while ($t = $resTeams->fetch_assoc()) {
-						$teamIds[] = (int) $t['Equipo_ID'];
-					}
-				}
-			}
-		}
+		// Tournament-wide institution seeds, then teams in this category (Fuerza).
+		$teamIds = az_generate_schedule_seeded_team_ids_for_category($Config, $schema, $Season, $catId, $institutionSeeds);
 
 		if (count($teamIds) < 2) {
 			$errors[] = str_replace('%1', (string) $catId, $lang['101-10']);

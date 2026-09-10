@@ -101,7 +101,7 @@
   	$lang['101-1'] = 'Generar calendario';
   	$lang['101-2'] = 'El calendario tiene %1 jornada(s). Confirma o cambia el número a usar.';
   	$lang['101-3'] = 'No hay jornadas para esta categoría. Indica cuántas jornadas programar.';
-  	$lang['101-4'] = 'Semillas (por cantidad de equipos de la institución)';
+  	$lang['101-4'] = 'Semillas (torneo completo por cantidad de equipos de la institución)';
   	$lang['101-5'] = 'Equipos';
   	$lang['101-6'] = 'No hay categorías con equipos activos en este torneo.';
   	$lang['101-7'] = 'No hay instituciones/equipos en esta categoría.';

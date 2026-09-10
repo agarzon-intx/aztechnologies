@@ -101,7 +101,7 @@
   	$lang['101-1'] = 'Generate Schedule';
   	$lang['101-2'] = 'Calendar has %1 week(s). Confirm or change the number to use.';
   	$lang['101-3'] = 'No weeks found for this category. Enter how many weeks to schedule.';
-  	$lang['101-4'] = 'Seeds (by institution team count)';
+  	$lang['101-4'] = 'Seeds (tournament-wide by institution team count)';
   	$lang['101-5'] = 'Teams';
   	$lang['101-6'] = 'No categories with active teams were found for this season.';
   	$lang['101-7'] = 'No institutions/teams found in this category.';

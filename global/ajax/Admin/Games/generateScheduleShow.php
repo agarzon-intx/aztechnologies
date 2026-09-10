@@ -27,6 +27,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$sessionstat = $fgmembersite->CheckLogin('generateScheduleShow.php');
 
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+	require_once __DIR__ . DIRECTORY_SEPARATOR . 'generate_schedule_seeds.inc.php';
 
 	$retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 
@@ -67,6 +68,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit();
 	}
 
+	$institutionSeeds = az_generate_schedule_institution_seeds($Config, $schema, $Season);
+
 	$categories = array();
 	$sqlCat = "SELECT DISTINCT c.Categoria_ID, c.Categoria_Desc, c.Categoria_Orden, c.Calendario_ID
 			FROM $schema.Categorias c
@@ -95,46 +98,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 
 			$seeds = array();
-			$sqlSeeds = "SELECT IFNULL(e.Institucion_ID, 0) AS Institucion_ID,
-						IFNULL(NULLIF(TRIM(i.Institucion_DESC), ''), CONCAT('#', IFNULL(e.Institucion_ID, 0))) AS Institucion_DESC,
-						COUNT(e.Equipo_ID) AS TeamCount
-					FROM $schema.Equipos e
-						LEFT JOIN $schema.Instituciones i
-							ON i.Institucion_ID = e.Institucion_ID
-							AND i.Torneo_ID = e.Torneo_ID
-					WHERE e.Torneo_ID = $Season
-						AND e.Fuerza = $catId
-						AND IFNULL(e.Activo, 0) = 1
-					GROUP BY IFNULL(e.Institucion_ID, 0), Institucion_DESC
-					ORDER BY TeamCount DESC, Institucion_DESC ASC";
-			$resSeeds = $Config->query($sqlSeeds);
-			$seedNum = 0;
-			if ($resSeeds && $resSeeds->num_rows > 0) {
-				while ($seed = $resSeeds->fetch_assoc()) {
-					$seedNum++;
-					$instId = (int) $seed['Institucion_ID'];
-					$teams = array();
-					$sqlTeams = "SELECT e.Equipo_ID, e.Equipo_DESC
-							FROM $schema.Equipos e
-							WHERE e.Torneo_ID = $Season
-								AND e.Fuerza = $catId
-								AND IFNULL(e.Activo, 0) = 1
-								AND IFNULL(e.Institucion_ID, 0) = $instId
-							ORDER BY e.Equipo_DESC ASC";
-					$resTeams = $Config->query($sqlTeams);
-					if ($resTeams && $resTeams->num_rows > 0) {
-						while ($t = $resTeams->fetch_assoc()) {
-							$teams[] = $t;
-						}
-					}
-					$seeds[] = array(
-						'seed' => $seedNum,
-						'Institucion_ID' => $instId,
-						'Institucion_DESC' => $seed['Institucion_DESC'],
-						'TeamCount' => (int) $seed['TeamCount'],
-						'teams' => $teams,
-					);
+			foreach ($institutionSeeds as $seed) {
+				$teams = az_generate_schedule_teams_for_seed_category($Config, $schema, $Season, $catId, $seed);
+				if (count($teams) === 0) {
+					continue;
 				}
+				$seeds[] = array(
+					'seed' => (int) $seed['seed'],
+					'Institucion_ID' => (int) $seed['Institucion_ID'],
+					'Institucion_DESC' => $seed['Institucion_DESC'],
+					'TeamCount' => count($teams),
+					'teams' => $teams,
+				);
 			}
 
 			$categories[] = array(
