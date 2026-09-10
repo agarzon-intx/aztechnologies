@@ -112,7 +112,7 @@
   	$lang['101-12'] = 'Calendario generado: %1 juego(s) creados, %2 omitidos (la jornada ya tenía juegos).';
   	$lang['101-13'] = 'No se crearon juegos. Revisa jornadas y juegos existentes.';
   	$lang['101-14'] = 'Selecciona un torneo primero. La generación de calendario solo usa el torneo actual.';
-  	$lang['101-15'] = 'Ranking (por semilla, luego nombre de equipo)';
+  	$lang['101-15'] = 'Ranking';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

@@ -112,7 +112,7 @@
   	$lang['101-12'] = 'Schedule generated: %1 game(s) created, %2 skipped (week already had games).';
   	$lang['101-13'] = 'No games were created. Check weeks and existing games.';
   	$lang['101-14'] = 'Select a tournament (season) first. Schedule generation only uses the current tournament.';
-  	$lang['101-15'] = 'Ranking (by seed, then team name)';
+  	$lang['101-15'] = 'Ranking';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

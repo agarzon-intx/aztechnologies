@@ -169,15 +169,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if (count($categories) === 0) {
 		$html .= '<div class="alert alert-warning">' . htmlspecialchars((string) (isset($lang['101-6']) ? $lang['101-6'] : 'No categories'), ENT_QUOTES, 'UTF-8') . '</div>';
 	} else {
+		$rankingLabel = (string) (isset($lang['101-15']) ? $lang['101-15'] : 'Ranking');
 		$html .= '<div class="nav-wrapper position-relative end-0">
-				<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important; flex-wrap: wrap;" id="generateScheduleNavTabs">';
+				<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important; flex-wrap: wrap;" id="generateScheduleNavTabs">
+				<li class="nav-item" id="gsRankingAllli">
+					<a class="nav-link mb-0 px-2 py-1 active" data-bs-toggle="tab" style="cursor: pointer;" callval="#gsRankingAll" role="tab" aria-controls="gsRankingAllli" aria-selected="true">'
+						. htmlspecialchars($rankingLabel, ENT_QUOTES, 'UTF-8') .
+					'</a>
+				</li>';
 
-		foreach ($categories as $idx => $cat) {
-			$active = ($idx === 0) ? ' active' : '';
-			$selected = ($idx === 0) ? 'true' : 'false';
+		foreach ($categories as $cat) {
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
 			$html .= '<li class="nav-item" id="' . $panelId . 'li">
-					<a class="nav-link mb-0 px-2 py-1' . $active . '" data-bs-toggle="tab" style="cursor: pointer;" callval="#' . $panelId . '" role="tab" aria-controls="' . $panelId . 'li" aria-selected="' . $selected . '">'
+					<a class="nav-link mb-0 px-2 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#' . $panelId . '" role="tab" aria-controls="' . $panelId . 'li" aria-selected="false">'
 						. htmlspecialchars((string) $cat['Categoria_Desc'], ENT_QUOTES, 'UTF-8') .
 					'</a>
 				</li>';
@@ -188,10 +192,58 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			<script>initNavs("generateScheduleNavTabs");</script>
 			<div class="tabla-content" style="padding-top: 12px;">';
 
-		foreach ($categories as $idx => $cat) {
+		// First tab: ranking summary for all categories.
+		$html .= '<div id="gsRankingAll" class="tabla active" style="display: block; height: auto;">';
+		$anyRankingRows = false;
+		foreach ($categories as $cat) {
+			$rankingRows = array();
+			foreach ($cat['seeds'] as $seed) {
+				foreach ($seed['teams'] as $t) {
+					$rankingRows[] = array(
+						'rank' => (int) $seed['seed'],
+						'Equipo_DESC' => (string) $t['Equipo_DESC'],
+					);
+				}
+			}
+			usort($rankingRows, function ($a, $b) {
+				if ($a['rank'] !== $b['rank']) {
+					return $a['rank'] - $b['rank'];
+				}
+				return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
+			});
+			if (count($rankingRows) === 0) {
+				continue;
+			}
+			$anyRankingRows = true;
+			$html .= '<div class="mb-4">
+				<div class="mb-2"><strong>' . htmlspecialchars((string) $cat['Categoria_Desc'], ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<div class="table-responsive">
+					<table class="table table-sm table-striped align-middle mb-0">
+						<thead>
+							<tr>
+								<th style="width: 70px;">#</th>
+								<th>' . htmlspecialchars((string) (isset($lang['112']) ? $lang['112'] : 'Team'), ENT_QUOTES, 'UTF-8') . '</th>
+							</tr>
+						</thead>
+						<tbody>';
+			foreach ($rankingRows as $row) {
+				$html .= '<tr>
+						<td>' . (int) $row['rank'] . '</td>
+						<td>' . htmlspecialchars((string) $row['Equipo_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
+					</tr>';
+			}
+			$html .= '</tbody>
+					</table>
+				</div>
+			</div>';
+		}
+		if (!$anyRankingRows) {
+			$html .= '<div class="alert alert-warning">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</div>';
+		}
+		$html .= '</div>';
+
+		foreach ($categories as $cat) {
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
-			$display = ($idx === 0) ? 'block' : 'none';
-			$activeClass = ($idx === 0) ? ' active' : '';
 			$weeks = (int) $cat['weekCount'];
 			$weeksValue = ($weeks > 0) ? (string) $weeks : '';
 			$weeksHint = ($weeks > 0)
@@ -199,7 +251,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				: (string) (isset($lang['101-3']) ? $lang['101-3'] : 'Enter weeks.');
 			$weeksHint = str_replace('%1', (string) $weeks, $weeksHint);
 
-			$html .= '<div id="' . $panelId . '" class="tabla' . $activeClass . '" style="display: ' . $display . '; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '">
+			$html .= '<div id="' . $panelId . '" class="tabla" style="display: none; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '">
 				<div class="row align-items-end mb-3">
 					<div class="col-12 col-md-6 col-lg-4">
 						<label class="form-label" for="gsWeeks_' . (int) $cat['Categoria_ID'] . '">' . htmlspecialchars((string) (isset($lang['108']) ? $lang['108'] : 'Weeks'), ENT_QUOTES, 'UTF-8') . '</label>
@@ -233,49 +285,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							<td>' . htmlspecialchars((string) $seed['Institucion_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
 							<td>' . (int) $seed['TeamCount'] . '</td>
 							<td>' . implode(', ', $teamNames) . '</td>
-						</tr>';
-				}
-			}
-
-			$html .= '</tbody>
-					</table>
-				</div>
-
-				<div class="mt-4 mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-15']) ? $lang['101-15'] : 'Ranking'), ENT_QUOTES, 'UTF-8') . '</strong></div>
-				<div class="table-responsive">
-					<table class="table table-sm table-striped align-middle mb-0">
-						<thead>
-							<tr>
-								<th style="width: 70px;">#</th>
-								<th>' . htmlspecialchars((string) (isset($lang['112']) ? $lang['112'] : 'Team'), ENT_QUOTES, 'UTF-8') . '</th>
-							</tr>
-						</thead>
-						<tbody>';
-
-			$rankingRows = array();
-			foreach ($cat['seeds'] as $seed) {
-				foreach ($seed['teams'] as $t) {
-					$rankingRows[] = array(
-						'rank' => (int) $seed['seed'],
-						'Equipo_DESC' => (string) $t['Equipo_DESC'],
-					);
-				}
-			}
-			// Keep seed order, then team name A→Z within the same seed.
-			usort($rankingRows, function ($a, $b) {
-				if ($a['rank'] !== $b['rank']) {
-					return $a['rank'] - $b['rank'];
-				}
-				return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
-			});
-
-			if (count($rankingRows) === 0) {
-				$html .= '<tr><td colspan="2">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
-			} else {
-				foreach ($rankingRows as $row) {
-					$html .= '<tr>
-							<td>' . (int) $row['rank'] . '</td>
-							<td>' . htmlspecialchars((string) $row['Equipo_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
 						</tr>';
 				}
 			}
