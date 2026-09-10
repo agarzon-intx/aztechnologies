@@ -126,3 +126,21 @@ CREATE TABLE IF NOT EXISTS `aztechn1_aztflag`.`GenerateScheduleSeeds` (
   KEY `idx_gs_seeds_session` (`Session_ID`),
   KEY `idx_gs_seeds_created` (`CreatedAt`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- App write user needs DML on the new table (cPanel often does not auto-grant on tables
+-- created by the account owner). Adjust user names if a site uses a different *adm user.
+-- Run as cPanel / account owner in phpMyAdmin:
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_demomina`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_elite`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_huskies`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_lidep`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_nuestrodeporte`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_vollidep`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_voleibolmetepec`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_voleymvp`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_aztflag`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'%';
+
+-- Prefer granting to each site's own *adm user if different from lidepadm, e.g.:
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON `aztechn1_lidep`.`GenerateScheduleSeeds` TO 'aztechn1_lidepadm'@'localhost';
+-- FLUSH PRIVILEGES;

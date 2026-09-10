@@ -123,7 +123,8 @@ if (!function_exists('az_generate_schedule_fetch_rank_rows')) {
 
 if (!function_exists('az_generate_schedule_db_write_conn')) {
 	/**
-	 * Prefer admin connection for INSERT/DELETE on GenerateScheduleSeeds.
+	 * Admin connection only for INSERT/DELETE on GenerateScheduleSeeds.
+	 * Do not fall back to the read-only user (DELETE/INSERT will fail and throw).
 	 */
 	function az_generate_schedule_db_write_conn($Config) {
 		try {
@@ -131,15 +132,11 @@ if (!function_exists('az_generate_schedule_db_write_conn')) {
 			if ($conn) {
 				return $conn;
 			}
+			az_generate_schedule_seed_log('connectAdmin returned null');
 		} catch (Throwable $e) {
 			az_generate_schedule_seed_log('connectAdmin failed: ' . $e->getMessage());
 		}
-		try {
-			return $Config->connect();
-		} catch (Throwable $e) {
-			az_generate_schedule_seed_log('connect failed: ' . $e->getMessage());
-			return null;
-		}
+		return null;
 	}
 }
 
