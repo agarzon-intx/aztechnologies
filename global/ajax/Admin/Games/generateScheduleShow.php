@@ -104,7 +104,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					continue;
 				}
 				$seeds[] = array(
-					'seed' => (int) $seed['seed'],
+					'seed' => (int) $seed['rank'],
 					'Institucion_ID' => (int) $seed['Institucion_ID'],
 					'Institucion_DESC' => $seed['Institucion_DESC'],
 					'TeamCount' => count($teams),

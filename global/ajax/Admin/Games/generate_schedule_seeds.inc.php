@@ -116,18 +116,13 @@ if (!function_exists('az_generate_schedule_teams_for_seed_category')) {
 if (!function_exists('az_generate_schedule_seeded_team_ids_for_category')) {
 	/**
 	 * Reads seed order from tmp_gs_institution_seeds, then teams by Fuerza.
+	 * Expects az_generate_schedule_institution_seeds() (or build_seed_tmp) already called.
 	 */
 	function az_generate_schedule_seeded_team_ids_for_category($Config, $schema, $Season, $catId, $institutionSeeds = null) {
 		$Season = (int) $Season;
 		$catId = (int) $catId;
 		$teamIds = array();
 		$tmp = az_generate_schedule_seed_tmp_name();
-
-		// Ensure TMP exists (e.g. generate endpoint may call this directly).
-		$check = $Config->query("SELECT 1 FROM `$tmp` LIMIT 1");
-		if ($check === false || $check === null) {
-			az_generate_schedule_build_seed_tmp($Config, $schema, $Season);
-		}
 
 		$sql = "SELECT e.Equipo_ID
 				FROM `$tmp` t
@@ -141,6 +136,10 @@ if (!function_exists('az_generate_schedule_seeded_team_ids_for_category')) {
 						)
 				ORDER BY t.`rank` ASC, e.Equipo_DESC ASC";
 		$res = $Config->query($sql);
+		if ($res === false || $res === null) {
+			az_generate_schedule_build_seed_tmp($Config, $schema, $Season);
+			$res = $Config->query($sql);
+		}
 		if ($res && $res->num_rows > 0) {
 			while ($t = $res->fetch_assoc()) {
 				$teamIds[] = (int) $t['Equipo_ID'];
@@ -148,7 +147,6 @@ if (!function_exists('az_generate_schedule_seeded_team_ids_for_category')) {
 			return $teamIds;
 		}
 
-		// Fallback to PHP seed list if TMP read failed.
 		if (is_array($institutionSeeds)) {
 			foreach ($institutionSeeds as $seed) {
 				$teams = az_generate_schedule_teams_for_seed_category($Config, $schema, $Season, $catId, $seed);
