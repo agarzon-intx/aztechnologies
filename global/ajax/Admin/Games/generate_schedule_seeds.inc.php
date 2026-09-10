@@ -1,14 +1,36 @@
 <?php
 /**
- * Tournament-wide institution seeds, then teams filtered by category (Fuerza).
+ * Tournament-wide institution seeds in a TEMPORARY TABLE (tmp_gs_institution_seeds),
+ * then teams filtered by category (Fuerza).
  * When Institucion_ID = 0, each team is its own seed (keyed by Equipo_ID).
  */
 
-if (!function_exists('az_generate_schedule_institution_seeds')) {
-	function az_generate_schedule_institution_seeds($Config, $schema, $Season) {
+if (!function_exists('az_generate_schedule_seed_tmp_name')) {
+	function az_generate_schedule_seed_tmp_name() {
+		return 'tmp_gs_institution_seeds';
+	}
+}
+
+if (!function_exists('az_generate_schedule_build_seed_tmp')) {
+	/**
+	 * Builds session TEMPORARY TABLE with rank + institution seed rows for the tournament.
+	 * Safe to call again in the same request (drops/recreates).
+	 */
+	function az_generate_schedule_build_seed_tmp($Config, $schema, $Season) {
 		$Season = (int) $Season;
-		$seeds = array();
-		$sql = "SELECT CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_ID ELSE e.Institucion_ID END AS Institucion_ID,
+		$tmp = az_generate_schedule_seed_tmp_name();
+
+		$Config->query("DROP TEMPORARY TABLE IF EXISTS `$tmp`");
+		$Config->query('SET @gs_rank := 0');
+
+		$sql = "CREATE TEMPORARY TABLE `$tmp` AS
+			SELECT @gs_rank := @gs_rank + 1 AS `rank`,
+				src.Institucion_ID,
+				src.Institucion_DESC,
+				src.TeamCount,
+				src.RealInstitucion_ID
+			FROM (
+				SELECT CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_ID ELSE e.Institucion_ID END AS Institucion_ID,
 					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE i.Institucion_DESC END AS Institucion_DESC,
 					COUNT(e.Equipo_ID) AS TeamCount,
 					MAX(IFNULL(e.Institucion_ID, 0)) AS RealInstitucion_ID
@@ -20,14 +42,30 @@ if (!function_exists('az_generate_schedule_institution_seeds')) {
 					AND IFNULL(e.Activo, 0) = 1
 				GROUP BY CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_ID ELSE e.Institucion_ID END,
 					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE i.Institucion_DESC END
-				ORDER BY TeamCount DESC, Institucion_DESC ASC";
-		$res = $Config->query($sql);
-		$seedNum = 0;
+				ORDER BY TeamCount DESC, Institucion_DESC ASC
+			) src";
+
+		$ok = $Config->query($sql);
+		return ($ok !== false && $ok !== null);
+	}
+}
+
+if (!function_exists('az_generate_schedule_institution_seeds')) {
+	function az_generate_schedule_institution_seeds($Config, $schema, $Season) {
+		$seeds = array();
+		if (!az_generate_schedule_build_seed_tmp($Config, $schema, $Season)) {
+			return $seeds;
+		}
+
+		$tmp = az_generate_schedule_seed_tmp_name();
+		$res = $Config->query("SELECT `rank`, Institucion_ID, Institucion_DESC, TeamCount, RealInstitucion_ID
+				FROM `$tmp`
+				ORDER BY `rank` ASC");
 		if ($res && $res->num_rows > 0) {
 			while ($row = $res->fetch_assoc()) {
-				$seedNum++;
 				$seeds[] = array(
-					'seed' => $seedNum,
+					'seed' => (int) $row['rank'],
+					'rank' => (int) $row['rank'],
 					'Institucion_ID' => (int) $row['Institucion_ID'],
 					'Institucion_DESC' => $row['Institucion_DESC'],
 					'TeamCount' => (int) $row['TeamCount'],
@@ -76,12 +114,47 @@ if (!function_exists('az_generate_schedule_teams_for_seed_category')) {
 }
 
 if (!function_exists('az_generate_schedule_seeded_team_ids_for_category')) {
-	function az_generate_schedule_seeded_team_ids_for_category($Config, $schema, $Season, $catId, $institutionSeeds) {
+	/**
+	 * Reads seed order from tmp_gs_institution_seeds, then teams by Fuerza.
+	 */
+	function az_generate_schedule_seeded_team_ids_for_category($Config, $schema, $Season, $catId, $institutionSeeds = null) {
+		$Season = (int) $Season;
+		$catId = (int) $catId;
 		$teamIds = array();
-		foreach ($institutionSeeds as $seed) {
-			$teams = az_generate_schedule_teams_for_seed_category($Config, $schema, $Season, $catId, $seed);
-			foreach ($teams as $t) {
+		$tmp = az_generate_schedule_seed_tmp_name();
+
+		// Ensure TMP exists (e.g. generate endpoint may call this directly).
+		$check = $Config->query("SELECT 1 FROM `$tmp` LIMIT 1");
+		if ($check === false || $check === null) {
+			az_generate_schedule_build_seed_tmp($Config, $schema, $Season);
+		}
+
+		$sql = "SELECT e.Equipo_ID
+				FROM `$tmp` t
+					INNER JOIN $schema.Equipos e
+						ON e.Torneo_ID = $Season
+						AND e.Fuerza = $catId
+						AND IFNULL(e.Activo, 0) = 1
+						AND (
+							(IFNULL(t.RealInstitucion_ID, 0) = 0 AND e.Equipo_ID = t.Institucion_ID)
+							OR (IFNULL(t.RealInstitucion_ID, 0) <> 0 AND e.Institucion_ID = t.Institucion_ID)
+						)
+				ORDER BY t.`rank` ASC, e.Equipo_DESC ASC";
+		$res = $Config->query($sql);
+		if ($res && $res->num_rows > 0) {
+			while ($t = $res->fetch_assoc()) {
 				$teamIds[] = (int) $t['Equipo_ID'];
+			}
+			return $teamIds;
+		}
+
+		// Fallback to PHP seed list if TMP read failed.
+		if (is_array($institutionSeeds)) {
+			foreach ($institutionSeeds as $seed) {
+				$teams = az_generate_schedule_teams_for_seed_category($Config, $schema, $Season, $catId, $seed);
+				foreach ($teams as $t) {
+					$teamIds[] = (int) $t['Equipo_ID'];
+				}
 			}
 		}
 		return $teamIds;
