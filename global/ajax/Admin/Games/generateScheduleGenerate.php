@@ -119,6 +119,35 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit();
 	}
 
+	// Categories that share Calendario_ID must use the same weeks count.
+	$calByCat = array();
+	$weeksByCal = array();
+	$catIdsList = implode(',', array_map('intval', array_keys($weeksByCategory)));
+	if ($catIdsList !== '') {
+		$resCal = $Config->query("SELECT Categoria_ID, Calendario_ID
+				FROM $schema.Categorias
+				WHERE Torneo_ID = $Season
+					AND Categoria_ID IN ($catIdsList)");
+		if ($resCal && $resCal->num_rows > 0) {
+			while ($row = $resCal->fetch_assoc()) {
+				$cid = (int) $row['Categoria_ID'];
+				$calId = (int) $row['Calendario_ID'];
+				$calByCat[$cid] = $calId;
+				if ($calId > 0 && isset($weeksByCategory[$cid])) {
+					if (!isset($weeksByCal[$calId]) || (int) $weeksByCategory[$cid] > (int) $weeksByCal[$calId]) {
+						$weeksByCal[$calId] = (int) $weeksByCategory[$cid];
+					}
+				}
+			}
+		}
+		foreach ($weeksByCategory as $cid => $w) {
+			$calId = isset($calByCat[$cid]) ? (int) $calByCat[$cid] : 0;
+			if ($calId > 0 && isset($weeksByCal[$calId])) {
+				$weeksByCategory[$cid] = (int) $weeksByCal[$calId];
+			}
+		}
+	}
+
 	$institutionSeeds = az_generate_schedule_institution_seeds($Config, $schema, $Season);
 
 	$created = 0;
@@ -139,20 +168,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			continue;
 		}
 
-		// Existing weeks for this category calendar, ordered.
+		// Existing weeks for this category's calendar, ordered.
 		$jornadas = array();
-		$sqlJ = "SELECT j.Jornada_ID, j.Fecha_Inicio, j.Fecha
-				FROM $schema.Jornada j
-					INNER JOIN $schema.Categorias c
-						ON c.Calendario_ID = j.Calendario_ID
-						AND c.Categoria_ID = $catId
-						AND c.Torneo_ID = $Season
-				WHERE j.Torneo_ID = $Season
-				ORDER BY j.Jornada_Orden ASC, j.Jornada_ID ASC";
-		$resJ = $Config->query($sqlJ);
-		if ($resJ && $resJ->num_rows > 0) {
-			while ($j = $resJ->fetch_assoc()) {
-				$jornadas[] = $j;
+		$calId = isset($calByCat[$catId]) ? (int) $calByCat[$catId] : 0;
+		if ($calId <= 0) {
+			$resCalOne = $Config->query("SELECT Calendario_ID FROM $schema.Categorias WHERE Torneo_ID = $Season AND Categoria_ID = $catId LIMIT 1");
+			if ($resCalOne && $resCalOne->num_rows > 0) {
+				$rowCal = $resCalOne->fetch_assoc();
+				$calId = (int) $rowCal['Calendario_ID'];
+			}
+		}
+		if ($calId > 0) {
+			$sqlJ = "SELECT j.Jornada_ID, j.Fecha_Inicio, j.Fecha
+					FROM $schema.Jornada j
+					WHERE j.Torneo_ID = $Season
+						AND j.Calendario_ID = $calId
+					ORDER BY j.Jornada_Orden ASC, j.Jornada_ID ASC";
+			$resJ = $Config->query($sqlJ);
+			if ($resJ && $resJ->num_rows > 0) {
+				while ($j = $resJ->fetch_assoc()) {
+					$jornadas[] = $j;
+				}
 			}
 		}
 
