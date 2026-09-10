@@ -121,6 +121,28 @@ if (!function_exists('az_generate_schedule_fetch_rank_rows')) {
 	}
 }
 
+if (!function_exists('az_generate_schedule_db_write_conn')) {
+	/**
+	 * Prefer admin connection for INSERT/DELETE on GenerateScheduleSeeds.
+	 */
+	function az_generate_schedule_db_write_conn($Config) {
+		try {
+			$conn = $Config->connectAdmin();
+			if ($conn) {
+				return $conn;
+			}
+		} catch (Throwable $e) {
+			az_generate_schedule_seed_log('connectAdmin failed: ' . $e->getMessage());
+		}
+		try {
+			return $Config->connect();
+		} catch (Throwable $e) {
+			az_generate_schedule_seed_log('connect failed: ' . $e->getMessage());
+			return null;
+		}
+	}
+}
+
 if (!function_exists('az_generate_schedule_build_seed_table')) {
 	/**
 	 * Rebuilds GenerateScheduleSeeds rows for the current PHP session + tournament.
@@ -133,13 +155,14 @@ if (!function_exists('az_generate_schedule_build_seed_table')) {
 			return false;
 		}
 		if (!az_generate_schedule_ensure_seed_table($Config, $schema)) {
+			az_generate_schedule_seed_log('build: GenerateScheduleSeeds table missing (run tools/sql/create-generate-schedule-seeds.sql)');
 			return false;
 		}
 
 		$table = az_generate_schedule_seed_table_name();
-		$conn = $Config->connect();
+		$conn = az_generate_schedule_db_write_conn($Config);
 		if (!$conn) {
-			az_generate_schedule_seed_log('build: connect() failed');
+			az_generate_schedule_seed_log('build: no write connection');
 			return false;
 		}
 
