@@ -240,6 +240,49 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$html .= '</tbody>
 					</table>
 				</div>
+
+				<div class="mt-4 mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-15']) ? $lang['101-15'] : 'Ranking'), ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<div class="table-responsive">
+					<table class="table table-sm table-striped align-middle mb-0">
+						<thead>
+							<tr>
+								<th style="width: 70px;">#</th>
+								<th>' . htmlspecialchars((string) (isset($lang['112']) ? $lang['112'] : 'Team'), ENT_QUOTES, 'UTF-8') . '</th>
+							</tr>
+						</thead>
+						<tbody>';
+
+			$rankingRows = array();
+			foreach ($cat['seeds'] as $seed) {
+				foreach ($seed['teams'] as $t) {
+					$rankingRows[] = array(
+						'rank' => (int) $seed['seed'],
+						'Equipo_DESC' => (string) $t['Equipo_DESC'],
+					);
+				}
+			}
+			// Keep seed order, then team name A→Z within the same seed.
+			usort($rankingRows, function ($a, $b) {
+				if ($a['rank'] !== $b['rank']) {
+					return $a['rank'] - $b['rank'];
+				}
+				return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
+			});
+
+			if (count($rankingRows) === 0) {
+				$html .= '<tr><td colspan="2">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
+			} else {
+				foreach ($rankingRows as $row) {
+					$html .= '<tr>
+							<td>' . (int) $row['rank'] . '</td>
+							<td>' . htmlspecialchars((string) $row['Equipo_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
+						</tr>';
+				}
+			}
+
+			$html .= '</tbody>
+					</table>
+				</div>
 			</div>';
 		}
 
