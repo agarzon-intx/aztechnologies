@@ -124,12 +124,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$html = '<div id="generateSchedule" class="tabla active" style="display: block;padding-top: 10px;" data-tournament-id="' . (int) $Season . '">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
 			<div style="float: left;width: 100%;padding-top: 8px;padding-bottom: 8px;">
-				<legend style="font-size: 25px; font-weight: bold; border-bottom: 0px">' . htmlspecialchars($lang['101-1'], ENT_QUOTES, 'UTF-8') . '</legend>
-				<div class="text-muted">' . htmlspecialchars($lang['105'], ENT_QUOTES, 'UTF-8') . ': <strong>' . htmlspecialchars($tournamentName, ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<legend style="font-size: 25px; font-weight: bold; border-bottom: 0px">' . htmlspecialchars((string) $lang['101-1'], ENT_QUOTES, 'UTF-8') . '</legend>
+				<div class="text-muted">' . htmlspecialchars((string) $lang['105'], ENT_QUOTES, 'UTF-8') . ': <strong>' . htmlspecialchars((string) $tournamentName, ENT_QUOTES, 'UTF-8') . '</strong></div>
 			</div>';
 
 	if (count($categories) === 0) {
-		$html .= '<div class="alert alert-warning">' . htmlspecialchars($lang['101-6'], ENT_QUOTES, 'UTF-8') . '</div>';
+		$html .= '<div class="alert alert-warning">' . htmlspecialchars((string) $lang['101-6'], ENT_QUOTES, 'UTF-8') . '</div>';
 	} else {
 		$html .= '<div class="nav-wrapper position-relative end-0">
 				<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important; flex-wrap: wrap;" id="generateScheduleNavTabs">';
@@ -140,7 +140,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
 			$html .= '<li class="nav-item" id="' . $panelId . 'li">
 					<a class="nav-link mb-0 px-2 py-1' . $active . '" data-bs-toggle="tab" style="cursor: pointer;" callval="#' . $panelId . '" role="tab" aria-controls="' . $panelId . 'li" aria-selected="' . $selected . '">'
-						. htmlspecialchars($cat['Categoria_Desc'], ENT_QUOTES, 'UTF-8') .
+						. htmlspecialchars((string) $cat['Categoria_Desc'], ENT_QUOTES, 'UTF-8') .
 					'</a>
 				</li>';
 		}
@@ -156,41 +156,41 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$activeClass = ($idx === 0) ? ' active' : '';
 			$weeks = (int) $cat['weekCount'];
 			$weeksValue = ($weeks > 0) ? (string) $weeks : '';
-			$weeksHint = ($weeks > 0) ? $lang['101-2'] : $lang['101-3'];
+			$weeksHint = ($weeks > 0) ? (string) $lang['101-2'] : (string) $lang['101-3'];
 			$weeksHint = str_replace('%1', (string) $weeks, $weeksHint);
 
 			$html .= '<div id="' . $panelId . '" class="tabla' . $activeClass . '" style="display: ' . $display . '; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '">
 				<div class="row align-items-end mb-3">
 					<div class="col-12 col-md-6 col-lg-4">
-						<label class="form-label" for="gsWeeks_' . (int) $cat['Categoria_ID'] . '">' . htmlspecialchars($lang['108'], ENT_QUOTES, 'UTF-8') . '</label>
+						<label class="form-label" for="gsWeeks_' . (int) $cat['Categoria_ID'] . '">' . htmlspecialchars((string) $lang['108'], ENT_QUOTES, 'UTF-8') . '</label>
 						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_' . (int) $cat['Categoria_ID'] . '" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-default-weeks="' . $weeks . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" />
 						<small class="text-muted">' . htmlspecialchars($weeksHint, ENT_QUOTES, 'UTF-8') . '</small>
 					</div>
 				</div>
-				<div class="mb-2"><strong>' . htmlspecialchars($lang['101-4'], ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<div class="mb-2"><strong>' . htmlspecialchars((string) $lang['101-4'], ENT_QUOTES, 'UTF-8') . '</strong></div>
 				<div class="table-responsive">
 					<table class="table table-sm table-striped align-middle mb-0">
 						<thead>
 							<tr>
 								<th style="width: 70px;">#</th>
-								<th>' . htmlspecialchars($lang['113-2'], ENT_QUOTES, 'UTF-8') . '</th>
-								<th style="width: 100px;">' . htmlspecialchars($lang['101-5'], ENT_QUOTES, 'UTF-8') . '</th>
-								<th>' . htmlspecialchars($lang['112'], ENT_QUOTES, 'UTF-8') . '</th>
+								<th>' . htmlspecialchars((string) $lang['113-2'], ENT_QUOTES, 'UTF-8') . '</th>
+								<th style="width: 100px;">' . htmlspecialchars((string) $lang['101-5'], ENT_QUOTES, 'UTF-8') . '</th>
+								<th>' . htmlspecialchars((string) $lang['112'], ENT_QUOTES, 'UTF-8') . '</th>
 							</tr>
 						</thead>
 						<tbody>';
 
 			if (count($cat['seeds']) === 0) {
-				$html .= '<tr><td colspan="4">' . htmlspecialchars($lang['101-7'], ENT_QUOTES, 'UTF-8') . '</td></tr>';
+				$html .= '<tr><td colspan="4">' . htmlspecialchars((string) $lang['101-7'], ENT_QUOTES, 'UTF-8') . '</td></tr>';
 			} else {
 				foreach ($cat['seeds'] as $seed) {
 					$teamNames = array();
 					foreach ($seed['teams'] as $t) {
-						$teamNames[] = htmlspecialchars($t['Equipo_DESC'], ENT_QUOTES, 'UTF-8');
+						$teamNames[] = htmlspecialchars((string) $t['Equipo_DESC'], ENT_QUOTES, 'UTF-8');
 					}
 					$html .= '<tr>
 							<td>' . (int) $seed['seed'] . '</td>
-							<td>' . htmlspecialchars($seed['Institucion_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
+							<td>' . htmlspecialchars((string) $seed['Institucion_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
 							<td>' . (int) $seed['TeamCount'] . '</td>
 							<td>' . implode(', ', $teamNames) . '</td>
 						</tr>';
@@ -205,7 +205,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		$html .= '</div>
 			<div class="mt-4 mb-2" style="clear: both;">
-				<button type="button" class="btn btn-primary" id="gsGenerateBtn" data-msg-weeks="' . htmlspecialchars($lang['101-8'], ENT_QUOTES, 'UTF-8') . '" onClick="generateScheduleRun();">' . htmlspecialchars($lang['826'], ENT_QUOTES, 'UTF-8') . '</button>
+				<button type="button" class="btn btn-primary" id="gsGenerateBtn" data-msg-weeks="' . htmlspecialchars((string) $lang['101-8'], ENT_QUOTES, 'UTF-8') . '" onClick="generateScheduleRun();">' . htmlspecialchars((string) $lang['826'], ENT_QUOTES, 'UTF-8') . '</button>
 			</div>';
 	}
 
@@ -218,7 +218,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		'dataGenerateSchedule' => $html,
 	);
 
-	header('Content-Type: application/json');
-	echo json_encode($retunData);
+	header('Content-Type: application/json; charset=utf-8');
+	$flags = JSON_UNESCAPED_UNICODE;
+	if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+		$flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+	}
+	$json = json_encode($retunData, $flags);
+	if ($json === false) {
+		echo '{"status":"0","message":"JSON encode failed","dataGenerateSchedule":""}';
+	} else {
+		echo $json;
+	}
 	exit();
 ?>

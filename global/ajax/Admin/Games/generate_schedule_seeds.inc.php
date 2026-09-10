@@ -19,19 +19,37 @@ if (!function_exists('az_generate_schedule_build_seed_tmp')) {
 	function az_generate_schedule_build_seed_tmp($Config, $schema, $Season) {
 		$Season = (int) $Season;
 		$tmp = az_generate_schedule_seed_tmp_name();
+		$conn = $Config->connect();
+		if (!$conn) {
+			return false;
+		}
 
-		$Config->query("DROP TEMPORARY TABLE IF EXISTS `$tmp`");
-		$Config->query('SET @gs_rank := 0');
+		// Use the same live connection so TEMPORARY TABLE + @vars stay in-session.
+		$conn->query("DROP TEMPORARY TABLE IF EXISTS `$tmp`");
+		$conn->query('SET @gs_rank := 0');
 
-		$sql = "CREATE TEMPORARY TABLE `$tmp` AS
-			SELECT @gs_rank := @gs_rank + 1 AS `rank`,
+		// Create empty table first (avoids CREATE…AS + user-var quirks on some MySQL modes).
+		$create = "CREATE TEMPORARY TABLE `$tmp` (
+				`rank` INT NOT NULL,
+				Institucion_ID BIGINT NOT NULL,
+				Institucion_DESC VARCHAR(255) NULL,
+				TeamCount INT NOT NULL,
+				RealInstitucion_ID BIGINT NOT NULL,
+				PRIMARY KEY (`rank`)
+			)";
+		if ($conn->query($create) === false) {
+			return false;
+		}
+
+		$insert = "INSERT INTO `$tmp` (`rank`, Institucion_ID, Institucion_DESC, TeamCount, RealInstitucion_ID)
+			SELECT @gs_rank := @gs_rank + 1,
 				src.Institucion_ID,
 				src.Institucion_DESC,
 				src.TeamCount,
 				src.RealInstitucion_ID
 			FROM (
 				SELECT CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_ID ELSE e.Institucion_ID END AS Institucion_ID,
-					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE i.Institucion_DESC END AS Institucion_DESC,
+					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE IFNULL(i.Institucion_DESC, '') END AS Institucion_DESC,
 					COUNT(e.Equipo_ID) AS TeamCount,
 					MAX(IFNULL(e.Institucion_ID, 0)) AS RealInstitucion_ID
 				FROM $schema.Equipos e
@@ -41,12 +59,14 @@ if (!function_exists('az_generate_schedule_build_seed_tmp')) {
 				WHERE e.Torneo_ID = $Season
 					AND IFNULL(e.Activo, 0) = 1
 				GROUP BY CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_ID ELSE e.Institucion_ID END,
-					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE i.Institucion_DESC END
-				ORDER BY TeamCount DESC, Institucion_DESC ASC
+					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE IFNULL(i.Institucion_DESC, '') END
+				ORDER BY COUNT(e.Equipo_ID) DESC, Institucion_DESC ASC
 			) src";
 
-		$ok = $Config->query($sql);
-		return ($ok !== false && $ok !== null);
+		if ($conn->query($insert) === false) {
+			return false;
+		}
+		return true;
 	}
 }
 
@@ -58,7 +78,11 @@ if (!function_exists('az_generate_schedule_institution_seeds')) {
 		}
 
 		$tmp = az_generate_schedule_seed_tmp_name();
-		$res = $Config->query("SELECT `rank`, Institucion_ID, Institucion_DESC, TeamCount, RealInstitucion_ID
+		$conn = $Config->connect();
+		if (!$conn) {
+			return $seeds;
+		}
+		$res = $conn->query("SELECT `rank`, Institucion_ID, Institucion_DESC, TeamCount, RealInstitucion_ID
 				FROM `$tmp`
 				ORDER BY `rank` ASC");
 		if ($res && $res->num_rows > 0) {
@@ -67,7 +91,7 @@ if (!function_exists('az_generate_schedule_institution_seeds')) {
 					'seed' => (int) $row['rank'],
 					'rank' => (int) $row['rank'],
 					'Institucion_ID' => (int) $row['Institucion_ID'],
-					'Institucion_DESC' => $row['Institucion_DESC'],
+					'Institucion_DESC' => (string) $row['Institucion_DESC'],
 					'TeamCount' => (int) $row['TeamCount'],
 					'RealInstitucion_ID' => (int) $row['RealInstitucion_ID'],
 					'IsSoloTeam' => ((int) $row['RealInstitucion_ID'] === 0),
@@ -106,7 +130,10 @@ if (!function_exists('az_generate_schedule_teams_for_seed_category')) {
 		$res = $Config->query($sql);
 		if ($res && $res->num_rows > 0) {
 			while ($t = $res->fetch_assoc()) {
-				$teams[] = $t;
+				$teams[] = array(
+					'Equipo_ID' => (int) $t['Equipo_ID'],
+					'Equipo_DESC' => (string) $t['Equipo_DESC'],
+				);
 			}
 		}
 		return $teams;
@@ -123,6 +150,7 @@ if (!function_exists('az_generate_schedule_seeded_team_ids_for_category')) {
 		$catId = (int) $catId;
 		$teamIds = array();
 		$tmp = az_generate_schedule_seed_tmp_name();
+		$conn = $Config->connect();
 
 		$sql = "SELECT e.Equipo_ID
 				FROM `$tmp` t
@@ -135,10 +163,12 @@ if (!function_exists('az_generate_schedule_seeded_team_ids_for_category')) {
 							OR (IFNULL(t.RealInstitucion_ID, 0) <> 0 AND e.Institucion_ID = t.Institucion_ID)
 						)
 				ORDER BY t.`rank` ASC, e.Equipo_DESC ASC";
-		$res = $Config->query($sql);
+
+		$res = ($conn) ? $conn->query($sql) : false;
 		if ($res === false || $res === null) {
 			az_generate_schedule_build_seed_tmp($Config, $schema, $Season);
-			$res = $Config->query($sql);
+			$conn = $Config->connect();
+			$res = ($conn) ? $conn->query($sql) : false;
 		}
 		if ($res && $res->num_rows > 0) {
 			while ($t = $res->fetch_assoc()) {
