@@ -118,21 +118,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			WHERE c.Torneo_ID = $Season
 			ORDER BY c.Categoria_Orden ASC, c.Categoria_Desc ASC";
 	$resCat = $Config->query($sqlCat);
+	$weekCountByCalendar = array();
 	if ($resCat && $resCat->num_rows > 0) {
 		while ($row = $resCat->fetch_assoc()) {
 			$catId = (int) $row['Categoria_ID'];
+			$calId = (int) $row['Calendario_ID'];
 			$weekCount = 0;
-			$sqlWeeks = "SELECT COUNT(*) AS cnt
-					FROM $schema.Jornada j
-						INNER JOIN $schema.Categorias c
-							ON c.Calendario_ID = j.Calendario_ID
-							AND c.Categoria_ID = $catId
-							AND c.Torneo_ID = $Season
-					WHERE j.Torneo_ID = $Season";
-			$resWeeks = $Config->query($sqlWeeks);
-			if ($resWeeks && $resWeeks->num_rows > 0) {
-				$w = $resWeeks->fetch_assoc();
-				$weekCount = (int) $w['cnt'];
+			if ($calId > 0) {
+				if (!isset($weekCountByCalendar[$calId])) {
+					$sqlWeeks = "SELECT COUNT(*) AS cnt
+							FROM $schema.Jornada j
+							WHERE j.Torneo_ID = $Season
+								AND j.Calendario_ID = $calId";
+					$resWeeks = $Config->query($sqlWeeks);
+					$cnt = 0;
+					if ($resWeeks && $resWeeks->num_rows > 0) {
+						$w = $resWeeks->fetch_assoc();
+						$cnt = (int) $w['cnt'];
+					}
+					$weekCountByCalendar[$calId] = $cnt;
+				}
+				$weekCount = (int) $weekCountByCalendar[$calId];
 			}
 
 			$seeds = array();
@@ -153,6 +159,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$categories[] = array(
 				'Categoria_ID' => $catId,
 				'Categoria_Desc' => (string) $row['Categoria_Desc'],
+				'Calendario_ID' => $calId,
 				'weekCount' => $weekCount,
 				'seeds' => $seeds,
 			);
@@ -222,18 +229,23 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		foreach ($categories as $cat) {
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
+			$calId = (int) $cat['Calendario_ID'];
 			$weeks = (int) $cat['weekCount'];
 			$weeksValue = ($weeks > 0) ? (string) $weeks : '';
 			$weeksHint = ($weeks > 0)
 				? (string) (isset($lang['101-2']) ? $lang['101-2'] : 'Calendar has %1 week(s).')
 				: (string) (isset($lang['101-3']) ? $lang['101-3'] : 'Enter weeks.');
 			$weeksHint = str_replace('%1', (string) $weeks, $weeksHint);
+			if ($calId > 0) {
+				$shareHint = (string) (isset($lang['101-17']) ? $lang['101-17'] : 'Shared with other categories on this calendar.');
+				$weeksHint .= ' ' . $shareHint;
+			}
 
-			$html .= '<div id="' . $panelId . '" class="tabla" style="display: none; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '">
+			$html .= '<div id="' . $panelId . '" class="tabla" style="display: none; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . $calId . '">
 				<div class="row align-items-end mb-3">
 					<div class="col-12 col-md-6 col-lg-4">
 						<label class="form-label" for="gsWeeks_' . (int) $cat['Categoria_ID'] . '">' . htmlspecialchars((string) (isset($lang['108']) ? $lang['108'] : 'Weeks'), ENT_QUOTES, 'UTF-8') . '</label>
-						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_' . (int) $cat['Categoria_ID'] . '" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-default-weeks="' . $weeks . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" />
+						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_' . (int) $cat['Categoria_ID'] . '" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . $calId . '" data-default-weeks="' . $weeks . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" oninput="generateScheduleSyncWeeks(this);" />
 						<small class="text-muted">' . htmlspecialchars($weeksHint, ENT_QUOTES, 'UTF-8') . '</small>
 					</div>
 				</div>

@@ -114,6 +114,7 @@
   	$lang['101-14'] = 'Selecciona un torneo primero. La generación de calendario solo usa el torneo actual.';
   	$lang['101-15'] = 'Ranking';
   	$lang['101-16'] = 'Ranking de categoría';
+  	$lang['101-17'] = 'Compartido con otras categorías de este calendario.';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

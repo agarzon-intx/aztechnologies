@@ -114,6 +114,7 @@
   	$lang['101-14'] = 'Select a tournament (season) first. Schedule generation only uses the current tournament.';
   	$lang['101-15'] = 'Ranking';
   	$lang['101-16'] = 'Category ranking';
+  	$lang['101-17'] = 'Shared with other categories on this calendar.';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';
