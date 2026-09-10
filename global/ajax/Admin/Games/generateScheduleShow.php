@@ -29,13 +29,175 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
 	$retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
+	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season']);
+
+	$categories = array();
+	$sqlCat = "SELECT DISTINCT c.Categoria_ID, c.Categoria_Desc, c.Categoria_Orden, c.Calendario_ID
+			FROM $schema.Categorias c
+				INNER JOIN $schema.Equipos e
+					ON e.Fuerza = c.Categoria_ID
+					AND e.Torneo_ID = c.Torneo_ID
+					AND IFNULL(e.Activo, 0) = 1
+			WHERE c.Torneo_ID = $Season
+			ORDER BY c.Categoria_Orden ASC, c.Categoria_Desc ASC";
+	$resCat = $Config->query($sqlCat);
+	if ($resCat && $resCat->num_rows > 0) {
+		while ($row = $resCat->fetch_assoc()) {
+			$catId = (int) $row['Categoria_ID'];
+			$weekCount = 0;
+			$sqlWeeks = "SELECT COUNT(*) AS cnt
+					FROM $schema.Jornada j
+						INNER JOIN $schema.Categorias c
+							ON c.Calendario_ID = j.Calendario_ID
+							AND c.Categoria_ID = $catId
+							AND c.Torneo_ID = $Season
+					WHERE j.Torneo_ID = $Season";
+			$resWeeks = $Config->query($sqlWeeks);
+			if ($resWeeks && $resWeeks->num_rows > 0) {
+				$w = $resWeeks->fetch_assoc();
+				$weekCount = (int) $w['cnt'];
+			}
+
+			$seeds = array();
+			$sqlSeeds = "SELECT IFNULL(e.Institucion_ID, 0) AS Institucion_ID,
+						IFNULL(NULLIF(TRIM(i.Institucion_DESC), ''), CONCAT('#', IFNULL(e.Institucion_ID, 0))) AS Institucion_DESC,
+						COUNT(e.Equipo_ID) AS TeamCount
+					FROM $schema.Equipos e
+						LEFT JOIN $schema.Instituciones i
+							ON i.Institucion_ID = e.Institucion_ID
+							AND i.Torneo_ID = e.Torneo_ID
+					WHERE e.Torneo_ID = $Season
+						AND e.Fuerza = $catId
+						AND IFNULL(e.Activo, 0) = 1
+					GROUP BY IFNULL(e.Institucion_ID, 0), Institucion_DESC
+					ORDER BY TeamCount DESC, Institucion_DESC ASC";
+			$resSeeds = $Config->query($sqlSeeds);
+			$seedNum = 0;
+			if ($resSeeds && $resSeeds->num_rows > 0) {
+				while ($seed = $resSeeds->fetch_assoc()) {
+					$seedNum++;
+					$instId = (int) $seed['Institucion_ID'];
+					$teams = array();
+					$sqlTeams = "SELECT e.Equipo_ID, e.Equipo_DESC
+							FROM $schema.Equipos e
+							WHERE e.Torneo_ID = $Season
+								AND e.Fuerza = $catId
+								AND IFNULL(e.Activo, 0) = 1
+								AND IFNULL(e.Institucion_ID, 0) = $instId
+							ORDER BY e.Equipo_DESC ASC";
+					$resTeams = $Config->query($sqlTeams);
+					if ($resTeams && $resTeams->num_rows > 0) {
+						while ($t = $resTeams->fetch_assoc()) {
+							$teams[] = $t;
+						}
+					}
+					$seeds[] = array(
+						'seed' => $seedNum,
+						'Institucion_ID' => $instId,
+						'Institucion_DESC' => $seed['Institucion_DESC'],
+						'TeamCount' => (int) $seed['TeamCount'],
+						'teams' => $teams,
+					);
+				}
+			}
+
+			$categories[] = array(
+				'Categoria_ID' => $catId,
+				'Categoria_Desc' => $row['Categoria_Desc'],
+				'weekCount' => $weekCount,
+				'seeds' => $seeds,
+			);
+		}
+	}
 
 	$html = '<div id="generateSchedule" class="tabla active" style="display: block;padding-top: 10px;">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
-			<div style="float: left;height: 35;width: 100%;padding-top: 8px;">
-				<legend style="font-size: 25px; font-weight: bold; border-bottom: 0px">' . $lang['101-1'] . '</legend>
+			<div style="float: left;width: 100%;padding-top: 8px;padding-bottom: 8px;">
+				<legend style="font-size: 25px; font-weight: bold; border-bottom: 0px">' . htmlspecialchars($lang['101-1'], ENT_QUOTES, 'UTF-8') . '</legend>
+			</div>';
+
+	if (count($categories) === 0) {
+		$html .= '<div class="alert alert-warning">' . htmlspecialchars($lang['101-6'], ENT_QUOTES, 'UTF-8') . '</div>';
+	} else {
+		$html .= '<div class="nav-wrapper position-relative end-0">
+				<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important; flex-wrap: wrap;" id="generateScheduleNavTabs">';
+
+		foreach ($categories as $idx => $cat) {
+			$active = ($idx === 0) ? ' active' : '';
+			$selected = ($idx === 0) ? 'true' : 'false';
+			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
+			$html .= '<li class="nav-item" id="' . $panelId . 'li">
+					<a class="nav-link mb-0 px-2 py-1' . $active . '" data-bs-toggle="tab" style="cursor: pointer;" callval="#' . $panelId . '" role="tab" aria-controls="' . $panelId . 'li" aria-selected="' . $selected . '">'
+						. htmlspecialchars($cat['Categoria_Desc'], ENT_QUOTES, 'UTF-8') .
+					'</a>
+				</li>';
+		}
+
+		$html .= '</ul>
 			</div>
-		</div>
+			<script>initNavs("generateScheduleNavTabs");</script>
+			<div class="tabla-content" style="padding-top: 12px;">';
+
+		foreach ($categories as $idx => $cat) {
+			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
+			$display = ($idx === 0) ? 'block' : 'none';
+			$activeClass = ($idx === 0) ? ' active' : '';
+			$weeks = (int) $cat['weekCount'];
+			$weeksValue = ($weeks > 0) ? (string) $weeks : '';
+			$weeksHint = ($weeks > 0) ? $lang['101-2'] : $lang['101-3'];
+			$weeksHint = str_replace('%1', (string) $weeks, $weeksHint);
+
+			$html .= '<div id="' . $panelId . '" class="tabla' . $activeClass . '" style="display: ' . $display . '; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '">
+				<div class="row align-items-end mb-3">
+					<div class="col-12 col-md-6 col-lg-4">
+						<label class="form-label" for="gsWeeks_' . (int) $cat['Categoria_ID'] . '">' . htmlspecialchars($lang['108'], ENT_QUOTES, 'UTF-8') . '</label>
+						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_' . (int) $cat['Categoria_ID'] . '" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-default-weeks="' . $weeks . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" />
+						<small class="text-muted">' . htmlspecialchars($weeksHint, ENT_QUOTES, 'UTF-8') . '</small>
+					</div>
+				</div>
+				<div class="mb-2"><strong>' . htmlspecialchars($lang['101-4'], ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<div class="table-responsive">
+					<table class="table table-sm table-striped align-middle mb-0">
+						<thead>
+							<tr>
+								<th style="width: 70px;">#</th>
+								<th>' . htmlspecialchars($lang['113-2'], ENT_QUOTES, 'UTF-8') . '</th>
+								<th style="width: 100px;">' . htmlspecialchars($lang['101-5'], ENT_QUOTES, 'UTF-8') . '</th>
+								<th>' . htmlspecialchars($lang['112'], ENT_QUOTES, 'UTF-8') . '</th>
+							</tr>
+						</thead>
+						<tbody>';
+
+			if (count($cat['seeds']) === 0) {
+				$html .= '<tr><td colspan="4">' . htmlspecialchars($lang['101-7'], ENT_QUOTES, 'UTF-8') . '</td></tr>';
+			} else {
+				foreach ($cat['seeds'] as $seed) {
+					$teamNames = array();
+					foreach ($seed['teams'] as $t) {
+						$teamNames[] = htmlspecialchars($t['Equipo_DESC'], ENT_QUOTES, 'UTF-8');
+					}
+					$html .= '<tr>
+							<td>' . (int) $seed['seed'] . '</td>
+							<td>' . htmlspecialchars($seed['Institucion_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
+							<td>' . (int) $seed['TeamCount'] . '</td>
+							<td>' . implode(', ', $teamNames) . '</td>
+						</tr>';
+				}
+			}
+
+			$html .= '</tbody>
+					</table>
+				</div>
+			</div>';
+		}
+
+		$html .= '</div>
+			<div class="mt-4 mb-2" style="clear: both;">
+				<button type="button" class="btn btn-primary" id="gsGenerateBtn" onClick="generateScheduleRun();">' . htmlspecialchars($lang['826'], ENT_QUOTES, 'UTF-8') . '</button>
+			</div>';
+	}
+
+	$html .= '</div>
 	</div>';
 
 	$retunData = array(

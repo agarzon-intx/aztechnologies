@@ -4385,6 +4385,46 @@ function generateScheduleShow(){
 	});
 }
 
+function generateScheduleRun(){
+	var weeks = {};
+	var missing = false;
+	$('.gs-weeks-input').each(function(){
+		var catId = $(this).data('category-id');
+		var val = parseInt($(this).val(), 10);
+		if (!catId) {
+			return;
+		}
+		if (!val || val < 1) {
+			missing = true;
+			return;
+		}
+		weeks[catId] = val;
+	});
+	if (missing || Object.keys(weeks).length === 0) {
+		alert(typeof MSG_GS_WEEKS !== 'undefined' ? MSG_GS_WEEKS : 'Enter weeks for each category.');
+		return;
+	}
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Games/generateScheduleGenerate.php',
+		data: {weeks: weeks},
+		success: function (res) {
+			mainLoadingOff();
+			alert(res.message || MSG_AJAX_GENERIC);
+			if (res.status === '1') {
+				generateScheduleShow();
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
 function loadWeekAdmin(Week, team, type){
     //console.log('loadWeekAdmin week = ' + Week);
 	mainLoadingOn();
