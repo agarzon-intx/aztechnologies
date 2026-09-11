@@ -289,7 +289,35 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$institutionSeeds = az_generate_schedule_institution_seeds($Config, $schema, $Season);
 
 	$teamOrderByCategory = array();
-	if (isset($_POST['teamOrder']) && is_array($_POST['teamOrder'])) {
+	$orderRaw = '';
+	if (isset($_POST['teamOrderJson']) && is_string($_POST['teamOrderJson']) && $_POST['teamOrderJson'] !== '') {
+		$orderRaw = $_POST['teamOrderJson'];
+	} elseif (isset($_POST['teamOrder']) && is_string($_POST['teamOrder']) && $_POST['teamOrder'] !== '') {
+		$orderRaw = $_POST['teamOrder'];
+	}
+	if ($orderRaw !== '') {
+		$decodedOrder = json_decode($orderRaw, true);
+		if (is_array($decodedOrder)) {
+			foreach ($decodedOrder as $catIdRaw => $ids) {
+				$cid = SanitizeInteger($catIdRaw);
+				if ($cid <= 0 || !is_array($ids)) {
+					continue;
+				}
+				$ordered = array();
+				$seen = array();
+				foreach ($ids as $idRaw) {
+					$tid = SanitizeInteger($idRaw);
+					if ($tid > 0 && !isset($seen[$tid])) {
+						$seen[$tid] = true;
+						$ordered[] = $tid;
+					}
+				}
+				if (count($ordered) > 0) {
+					$teamOrderByCategory[$cid] = $ordered;
+				}
+			}
+		}
+	} elseif (isset($_POST['teamOrder']) && is_array($_POST['teamOrder'])) {
 		foreach ($_POST['teamOrder'] as $catIdRaw => $ids) {
 			$cid = SanitizeInteger($catIdRaw);
 			if ($cid <= 0 || !is_array($ids)) {
@@ -309,6 +337,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 		}
 	}
+	// Remember last UI order so each category keeps its own seed list across preview/confirm.
+	$_SESSION[$Config->getAlias() . 'gsTeamOrder'] = $teamOrderByCategory;
 
 	$teamNameCache = array();
 	$resolveTeamName = function ($teamId) use ($Config, $schema, $Season, &$teamNameCache) {
@@ -338,7 +368,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 
 		$teamIds = array();
-		if (isset($teamOrderByCategory[$catId]) && count($teamOrderByCategory[$catId]) >= 2) {
+		$usedCustomOrder = false;
+		if (isset($teamOrderByCategory[$catId]) && count($teamOrderByCategory[$catId]) > 0) {
 			$allowed = array();
 			$sqlTeams = "SELECT Equipo_ID FROM $schema.Equipos
 					WHERE Torneo_ID = $Season
@@ -356,8 +387,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					unset($allowed[$tid]);
 				}
 			}
+			// Keep UI seed order first; append any active team missing from the posted list.
 			foreach (array_keys($allowed) as $tid) {
 				$teamIds[] = (int) $tid;
+			}
+			if (count($teamIds) >= 2) {
+				$usedCustomOrder = true;
+			} else {
+				$teamIds = array();
 			}
 		}
 		if (count($teamIds) < 2) {
@@ -368,6 +405,21 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$errors[] = str_replace('%1', (string) (isset($catNames[$catId]) ? $catNames[$catId] : $catId), $lang['101-10']);
 			continue;
 		}
+
+		// Seed map for this category only (#1 = first in UI order).
+		$seedRankByTeam = array();
+		foreach ($teamIds as $idx => $tid) {
+			$seedRankByTeam[(int) $tid] = $idx + 1;
+		}
+		$formatSeedName = function ($teamId) use ($resolveTeamName, $seedRankByTeam) {
+			$teamId = (int) $teamId;
+			$name = $resolveTeamName($teamId);
+			$rank = isset($seedRankByTeam[$teamId]) ? (int) $seedRankByTeam[$teamId] : 0;
+			if ($rank > 0) {
+				return '#' . $rank . ' ' . $name;
+			}
+			return $name;
+		};
 
 		$jornadas = array();
 		$willCreateWeeks = false;
@@ -478,8 +530,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$games[] = array(
 					'homeId' => $home,
 					'awayId' => $away,
-					'homeName' => $resolveTeamName($home),
-					'awayName' => $resolveTeamName($away),
+					'homeName' => $formatSeedName($home),
+					'awayName' => $formatSeedName($away),
 					'isBye' => false,
 				);
 				if (!$skip) {
@@ -492,8 +544,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$games[] = array(
 					'homeId' => $home,
 					'awayId' => $away,
-					'homeName' => ($home > 0) ? $resolveTeamName($home) : '',
-					'awayName' => ($away > 0) ? $resolveTeamName($away) : '',
+					'homeName' => ($home > 0) ? $formatSeedName($home) : '',
+					'awayName' => ($away > 0) ? $formatSeedName($away) : '',
 					'isBye' => true,
 				);
 			}
@@ -512,10 +564,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			);
 		}
 
+		$seedOrderLabels = array();
+		foreach ($teamIds as $tid) {
+			$seedOrderLabels[] = $formatSeedName((int) $tid);
+		}
+
 		$planCategories[] = array(
 			'Categoria_ID' => $catId,
 			'Categoria_Desc' => $catLabel,
 			'teamIds' => $teamIds,
+			'seedOrder' => $seedOrderLabels,
+			'usedCustomOrder' => $usedCustomOrder,
 			'willCreateWeeks' => $willCreateWeeks,
 			'weeks' => $weekPlans,
 		);

@@ -4399,19 +4399,19 @@ function generateScheduleRenumberSeeds($tbody){
 function generateScheduleCollectTeamOrder(){
 	var teamOrder = {};
 	$('tbody.gs-cat-seed-tbody').each(function(){
-		var catId = parseInt($(this).data('category-id'), 10);
+		var catId = parseInt($(this).attr('data-category-id') || $(this).data('category-id'), 10);
 		if (!catId) {
 			return;
 		}
 		var ids = [];
 		$(this).find('tr.gs-seed-row').each(function(){
-			var id = parseInt($(this).data('equipo-id'), 10);
+			var id = parseInt($(this).attr('data-equipo-id') || $(this).data('equipo-id'), 10);
 			if (id > 0) {
 				ids.push(id);
 			}
 		});
 		if (ids.length) {
-			teamOrder[catId] = ids;
+			teamOrder[String(catId)] = ids;
 		}
 	});
 	return teamOrder;
@@ -4484,7 +4484,12 @@ function generateScheduleRun(){
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Games/generateScheduleGenerate.php',
-		data: {action: 'preview', weeks: weeks, teamOrder: teamOrder, startDates: startDates},
+		data: {
+			action: 'preview',
+			weeks: weeks,
+			startDates: startDates,
+			teamOrderJson: JSON.stringify(teamOrder)
+		},
 		success: function (res) {
 			mainLoadingOff();
 			if (res.status === '1' && res.dataGenerateSchedulePreview) {
