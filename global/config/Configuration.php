@@ -66,6 +66,8 @@ class Configuration
     public $playerIDPDF = 0;
     public $playerSignature = 0;
     public $credencialBack = 0;
+    /** 1 = show Generate Schedule in admin Games menu. */
+    public $showGenerateSchedule = 1;
     /** 1 when pdf/Credencial.png (or legacy jpg) is stored on disk. */
     public $credencialFrontImage = 0;
     /** 1 when pdf/CredencialDetras.png (or legacy jpg) is stored on disk. */
@@ -287,6 +289,10 @@ class Configuration
         $selCredencialBack = $this->schemaHasConfigurationColumn($conn, 'credencialBack')
             ? 'credencialBack'
             : '0 AS credencialBack';
+        // Default visible if column not migrated yet (matches previous always-on menu).
+        $selShowGenerateSchedule = $this->schemaHasConfigurationColumn($conn, 'showGenerateSchedule')
+            ? 'showGenerateSchedule'
+            : '1 AS showGenerateSchedule';
         $selCredencialFrontImage = $this->schemaHasConfigurationColumn($conn, 'credencialFrontImage')
             ? 'credencialFrontImage'
             : '0 AS credencialFrontImage';
@@ -313,6 +319,7 @@ class Configuration
 			  " . $selPlayerIDPDF . ",
 			  " . $selPlayerSignature . ",
 			  " . $selCredencialBack . ",
+			  " . $selShowGenerateSchedule . ",
 			  " . $selCredencialFrontImage . ",
 			  " . $selCredencialBackImage . "
 		  FROM " . $this->config["schema"] . ".Configuration";
@@ -355,6 +362,7 @@ class Configuration
             $this->playerIDPDF = $row2["playerIDPDF"];
             $this->playerSignature = $row2["playerSignature"];
             $this->credencialBack = $row2["credencialBack"];
+            $this->showGenerateSchedule = $row2["showGenerateSchedule"];
             $this->credencialFrontImage = $row2["credencialFrontImage"];
             $this->credencialBackImage = $row2["credencialBackImage"];
        }

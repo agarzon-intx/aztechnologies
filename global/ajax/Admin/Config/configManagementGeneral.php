@@ -3,6 +3,7 @@
 	$__selPlayerIDPDFCfg = $Config->configurationHasColumn('playerIDPDF') ? 'playerIDPDF' : '0 AS playerIDPDF';
 	$__selPlayerSignatureCfg = $Config->configurationHasColumn('playerSignature') ? 'playerSignature' : '0 AS playerSignature';
 	$__selCredencialBackCfg = $Config->configurationHasColumn('credencialBack') ? 'credencialBack' : '0 AS credencialBack';
+	$__selShowGenerateScheduleCfg = $Config->configurationHasColumn('showGenerateSchedule') ? 'showGenerateSchedule' : '1 AS showGenerateSchedule';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -43,12 +44,14 @@
 			    VollByeWeekSetPoints,
 			    " . $__selPlayerIDPDFCfg . ",
 			    " . $__selPlayerSignatureCfg . ",
-			    " . $__selCredencialBackCfg . "
+			    " . $__selCredencialBackCfg . ",
+			    " . $__selShowGenerateScheduleCfg . "
 			FROM $schema.Configuration
 			where id = 0;";
 	$playerIDPDFCHK = '';
 	$playerSignatureCHK = '';
 	$credencialBackCHK = '';
+	$showGenerateScheduleCHK = 'checked';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
@@ -168,6 +171,9 @@
 				if($playerSignature == '1') $playerSignatureCHK = 'checked';
 				$credencialBack = $row2["credencialBack"];
 				if($credencialBack == '1') $credencialBackCHK = 'checked';
+				$showGenerateSchedule = $row2["showGenerateSchedule"];
+				$showGenerateScheduleCHK = '';
+				if($showGenerateSchedule == '1') $showGenerateScheduleCHK = 'checked';
 				
 			    $VollByeWeekSets = $row2["VollByeWeekSets"];
 			    $VollByeWeekPoints = $row2["VollByeWeekPoints"];
@@ -343,6 +349,10 @@
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="credencialBack" id="credencialBack" ' . $credencialBackCHK . '>
 										<label class="custom-control-label" for="credencialBack">' . $lang['539-2'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="showGenerateSchedule" id="showGenerateSchedule" ' . $showGenerateScheduleCHK . '>
+										<label class="custom-control-label" for="showGenerateSchedule">' . $lang['101-18'] . '</label>
 									</div>
 								</div>
 								<div class="row">

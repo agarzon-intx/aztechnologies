@@ -56,6 +56,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$playerIDPDF = (isset($_POST["playerIDPDF"]) && SanitizeInteger($_POST["playerIDPDF"]) == 1) ? 1 : 0;
 	$playerSignature = (isset($_POST["playerSignature"]) && SanitizeInteger($_POST["playerSignature"]) == 1) ? 1 : 0;
 	$credencialBack = (isset($_POST["credencialBack"]) && SanitizeInteger($_POST["credencialBack"]) == 1) ? 1 : 0;
+	$showGenerateSchedule = (isset($_POST["showGenerateSchedule"]) && SanitizeInteger($_POST["showGenerateSchedule"]) == 1) ? 1 : 0;
 	
 	//echo $perfilJugadoresA;
 		
@@ -76,6 +77,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	if ($Config->configurationHasColumn('credencialBack')) {
 		$Connection->query("UPDATE $schema.Configuration SET credencialBack = $credencialBack WHERE id = 0;");
+	}
+	if ($Config->configurationHasColumn('showGenerateSchedule')) {
+		$Connection->query("UPDATE $schema.Configuration SET showGenerateSchedule = $showGenerateSchedule WHERE id = 0;");
 	}
 
 	$sql1 = "Select @out as 'count'";
