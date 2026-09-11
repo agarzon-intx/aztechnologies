@@ -710,6 +710,134 @@ if (!function_exists('az_rr_repair_consecutive')) {
 	}
 }
 
+if (!function_exists('az_rr_flip_round')) {
+	/** Flip home/away for every game and bye slot in a round. */
+	function az_rr_flip_round(array $round) {
+		$games = array();
+		foreach (az_rr_round_games($round) as $pair) {
+			$games[] = array((int) $pair[1], (int) $pair[0]);
+		}
+		$byeGame = az_rr_round_bye_game($round);
+		if ($byeGame !== null) {
+			$byeGame = array((int) $byeGame[1], (int) $byeGame[0]);
+		}
+		return array(
+			'games' => $games,
+			'byeGame' => $byeGame,
+		);
+	}
+}
+
+if (!function_exists('az_rr_pair_key')) {
+	function az_rr_pair_key($a, $b) {
+		$a = (int) $a;
+		$b = (int) $b;
+		if ($a <= 0 || $b <= 0) {
+			return 'bye:' . max($a, $b);
+		}
+		return ($a < $b) ? ($a . '-' . $b) : ($b . '-' . $a);
+	}
+}
+
+if (!function_exists('az_rr_enforce_cycle_alternation')) {
+	/**
+	 * After cycle N, the same matchup must use opposite local/away from cycle N-1
+	 * whenever that does not break the max consecutive H/A rule.
+	 */
+	function az_rr_enforce_cycle_alternation(array $rounds, $cycleLen, $maxConsec = 2) {
+		$cycleLen = (int) $cycleLen;
+		$n = count($rounds);
+		if ($cycleLen < 1 || $n <= $cycleLen) {
+			return $rounds;
+		}
+		$maxConsec = (int) $maxConsec;
+
+		// Rebuild history week by week; when in cycle>=1, prefer flip vs previous cycle.
+		$history = array();
+		$byeHistory = array();
+		$openSeq = array();
+		for ($w = 0; $w < $n; $w++) {
+			$games = az_rr_round_games($rounds[$w]);
+			$byeGame = az_rr_round_bye_game($rounds[$w]);
+
+			if ($w >= $cycleLen) {
+				$prev = $rounds[$w - $cycleLen];
+				$prevGames = az_rr_round_games($prev);
+				$prevBye = az_rr_round_bye_game($prev);
+				$prevOrient = array();
+				foreach ($prevGames as $pair) {
+					$prevOrient[az_rr_pair_key($pair[0], $pair[1])] = array((int) $pair[0], (int) $pair[1]);
+				}
+				if ($prevBye !== null) {
+					$prevOrient[az_rr_pair_key($prevBye[0], $prevBye[1])] = array((int) $prevBye[0], (int) $prevBye[1]);
+				}
+
+				for ($g = 0, $gc = count($games); $g < $gc; $g++) {
+					$key = az_rr_pair_key($games[$g][0], $games[$g][1]);
+					if (!isset($prevOrient[$key])) {
+						continue;
+					}
+					$prevHome = $prevOrient[$key][0];
+					$prevAway = $prevOrient[$key][1];
+					$curHome = (int) $games[$g][0];
+					$curAway = (int) $games[$g][1];
+					// Same orientation as previous cycle — try to flip.
+					if ($curHome === $prevHome && $curAway === $prevAway) {
+						$flipHome = $curAway;
+						$flipAway = $curHome;
+						if (az_rr_streak_ok($history, $flipHome, 'H', $maxConsec)
+							&& az_rr_streak_ok($history, $flipAway, 'A', $maxConsec)) {
+							$games[$g] = array($flipHome, $flipAway);
+						}
+					}
+				}
+
+				if ($byeGame !== null) {
+					$key = az_rr_pair_key($byeGame[0], $byeGame[1]);
+					if (isset($prevOrient[$key])) {
+						$prevHome = $prevOrient[$key][0];
+						$prevAway = $prevOrient[$key][1];
+						if ((int) $byeGame[0] === $prevHome && (int) $byeGame[1] === $prevAway) {
+							$flip = array((int) $byeGame[1], (int) $byeGame[0]);
+							$bt = ((int) $flip[0] > 0) ? (int) $flip[0] : (int) $flip[1];
+							$teamSide = ((int) $flip[0] > 0) ? 'H' : 'A';
+							$openSide = ((int) $flip[0] === 0) ? 'H' : 'A';
+							if ($bt > 0
+								&& az_rr_streak_ok($history, $bt, $teamSide, $maxConsec)
+								&& az_rr_streak_ok($byeHistory, $bt, $teamSide, $maxConsec)
+								&& az_rr_open_side_ok($openSeq, $openSide, $maxConsec)) {
+								$byeGame = $flip;
+							}
+						}
+					}
+				}
+			}
+
+			$rounds[$w] = array(
+				'games' => $games,
+				'byeGame' => $byeGame,
+			);
+			foreach ($games as $pair) {
+				az_rr_apply_pair_history($history, $pair[0], $pair[1]);
+			}
+			if ($byeGame !== null) {
+				az_rr_apply_pair_history($history, $byeGame[0], $byeGame[1]);
+				$bt = ((int) $byeGame[0] > 0) ? (int) $byeGame[0] : (int) $byeGame[1];
+				$teamSide = ((int) $byeGame[0] > 0) ? 'H' : 'A';
+				$openSide = ((int) $byeGame[0] === 0) ? 'H' : 'A';
+				if ($bt > 0) {
+					if (!isset($byeHistory[$bt])) {
+						$byeHistory[$bt] = array();
+					}
+					$byeHistory[$bt][] = $teamSide;
+					$openSeq[] = $openSide;
+				}
+			}
+		}
+		return $rounds;
+	}
+}
+
 if (!function_exists('az_rr_balanced_rounds')) {
 	/**
 	 * Full single RR with home/away assignment (max 2 consecutive H/A by default).
@@ -726,9 +854,9 @@ if (!function_exists('az_rr_balanced_rounds')) {
 
 if (!function_exists('az_rr_expand_weeks')) {
 	/**
-	 * Expand RR pairings to $weeksRequested by repeating the unordered circle pattern,
-	 * then assigning home/away (and bye sides) with a hard max-consecutive constraint.
-	 * Does not blindly flip cycles — that was causing 3+ consecutive H/A.
+	 * Expand RR to $weeksRequested.
+	 * Cycle 0: assign H/A. Later cycles: same opponents with flipped local/away
+	 * (double-RR style), then repair streaks and re-assert cycle alternation.
 	 */
 	function az_rr_expand_weeks(array $rrRounds, $weeksRequested, $maxConsec = 2) {
 		$weeksRequested = (int) $weeksRequested;
@@ -740,11 +868,34 @@ if (!function_exists('az_rr_expand_weeks')) {
 			$unordered[] = az_rr_round_as_unordered($round);
 		}
 		$nBase = count($unordered);
-		$series = array();
-		for ($w = 0; $w < $weeksRequested; $w++) {
-			$series[] = $unordered[$w % $nBase];
+		$base = az_rr_assign_home_away($unordered, $maxConsec);
+		if (count($base) === 0) {
+			return array();
 		}
-		return az_rr_assign_home_away($series, $maxConsec);
+
+		$schedule = array();
+		$cycle = 0;
+		while (count($schedule) < $weeksRequested) {
+			foreach ($base as $round) {
+				$use = (($cycle % 2) === 1) ? az_rr_flip_round($round) : $round;
+				$schedule[] = array(
+					'games' => az_rr_round_games($use),
+					'byeGame' => az_rr_round_bye_game($use),
+				);
+				if (count($schedule) >= $weeksRequested) {
+					break;
+				}
+			}
+			$cycle++;
+		}
+
+		$schedule = az_rr_repair_consecutive($schedule, $maxConsec);
+		$schedule = az_rr_enforce_cycle_alternation($schedule, $nBase, $maxConsec);
+		// Repair once more in case alternation created a streak issue; then
+		// re-assert alternation for any matchups still same as prior cycle.
+		$schedule = az_rr_repair_consecutive($schedule, $maxConsec);
+		$schedule = az_rr_enforce_cycle_alternation($schedule, $nBase, $maxConsec);
+		return $schedule;
 	}
 }
 
