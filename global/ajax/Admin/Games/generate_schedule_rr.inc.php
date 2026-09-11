@@ -406,6 +406,9 @@ if (!function_exists('az_gs_extend_jornadas')) {
 		$need = $weeksRequested - $have;
 		$last = $existing[$have - 1];
 		$lastFecha = isset($last['Fecha']) ? (string) $last['Fecha'] : '';
+		if ($lastFecha === '' && isset($last['Fecha_Inicio'])) {
+			$lastFecha = (string) $last['Fecha_Inicio'];
+		}
 		$lastOrden = isset($last['Jornada_Orden']) ? (int) $last['Jornada_Orden'] : $have;
 		if ($lastFecha === '') {
 			return $existing;

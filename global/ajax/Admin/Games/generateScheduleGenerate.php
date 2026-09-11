@@ -396,12 +396,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$jornadas = az_gs_simulate_jornadas($startDate, $weeksRequested, $calId);
 			$willCreateWeeks = true;
 		} elseif (count($jornadas) < $weeksRequested) {
-			$errors[] = str_replace(
-				array('%1', '%2', '%3'),
-				array($catLabel, (string) $weeksRequested, (string) count($jornadas)),
-				$lang['101-11']
-			);
-			continue;
+			$beforeExtend = count($jornadas);
+			$jornadas = az_gs_extend_jornadas($jornadas, $weeksRequested, $calId);
+			if (count($jornadas) < $weeksRequested) {
+				$errors[] = str_replace(
+					array('%1', '%2', '%3'),
+					array($catLabel, (string) $weeksRequested, (string) $beforeExtend),
+					isset($lang['101-11']) ? $lang['101-11'] : 'Not enough weeks to extend.'
+				);
+				continue;
+			}
+			$willCreateWeeks = true;
 		}
 
 		$rr = az_rr_balanced_rounds($teamIds, 2);
@@ -451,8 +456,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 			}
 
+			$round = isset($scheduleRounds[$wi]) ? $scheduleRounds[$wi] : array('games' => array(), 'bye' => null);
+			$roundGames = az_rr_round_games($round);
+			$byeId = az_rr_round_bye($round);
 			$games = array();
-			foreach ($scheduleRounds[$wi] as $pair) {
+			foreach ($roundGames as $pair) {
 				$home = (int) $pair[0];
 				$away = (int) $pair[1];
 				$games[] = array(
@@ -477,6 +485,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				'createWeek' => $createWeek,
 				'skip' => $skip,
 				'games' => $games,
+				'byeId' => $byeId,
+				'byeName' => ($byeId !== null) ? $resolveTeamName($byeId) : '',
 			);
 		}
 
@@ -511,10 +521,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$awayLbl = isset($lang['364']) ? $lang['364'] : 'Away';
 	$skipLbl = isset($lang['101-27']) ? $lang['101-27'] : 'Skipped (games already exist)';
 	$newWeekLbl = isset($lang['101-36']) ? $lang['101-36'] : 'New week (will be created)';
+	$byeLbl = isset($lang['101-39']) ? $lang['101-39'] : 'BYE';
 	$confirmLbl = isset($lang['101-28']) ? $lang['101-28'] : 'Confirm & save';
 	$backLbl = isset($lang['0001']) ? $lang['0001'] : 'Cancel';
 	$noteLbl = isset($lang['101-29']) ? $lang['101-29'] : 'Balanced round-robin (max 2 consecutive home or away).';
-	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Confirm will create missing weeks, then the matches.';
+	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Confirm will create any missing weeks, then the matches.';
 
 	$html = '<div id="generateSchedulePreview" class="tabla active" style="display: block;padding-top: 10px;">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
@@ -581,6 +592,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						<td>' . htmlspecialchars((string) $game['homeName'], ENT_QUOTES, 'UTF-8') . '</td>
 						<td class="text-center">vs</td>
 						<td>' . htmlspecialchars((string) $game['awayName'], ENT_QUOTES, 'UTF-8') . '</td>
+					</tr>';
+			}
+			if (!empty($week['byeId']) || (isset($week['byeName']) && $week['byeName'] !== '')) {
+				$byeTeam = isset($week['byeName']) ? (string) $week['byeName'] : '';
+				$html .= '<tr class="table-secondary">
+						<td>' . htmlspecialchars($byeTeam, ENT_QUOTES, 'UTF-8') . '</td>
+						<td class="text-center">—</td>
+						<td><em>' . htmlspecialchars($byeLbl, ENT_QUOTES, 'UTF-8') . '</em></td>
 					</tr>';
 			}
 			$html .= '</tbody>

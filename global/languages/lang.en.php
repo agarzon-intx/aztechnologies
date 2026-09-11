@@ -99,7 +99,7 @@
   	$lang['100'] = 'Games';
   	$lang['101'] = 'Scores';
   	$lang['101-1'] = 'Generate Schedule';
-  	$lang['101-2'] = 'Calendar has %1 week(s). Confirm or change the number to use.';
+  	$lang['101-2'] = 'Calendar has %1 week(s). Request more to create extra weeks automatically.';
   	$lang['101-3'] = 'No weeks found for this category. Enter how many weeks to schedule.';
   	$lang['101-4'] = 'Seeds (tournament-wide by institution team count)';
   	$lang['101-5'] = 'Teams';
@@ -108,7 +108,7 @@
   	$lang['101-8'] = 'Enter the number of weeks for at least one category.';
   	$lang['101-9'] = 'Category %1: weeks must be at least 1.';
   	$lang['101-10'] = 'Category %1: need at least 2 teams to generate a schedule.';
-  	$lang['101-11'] = 'Category %1: requested %2 week(s) but only %3 exist in the calendar. Create weeks first or lower the number.';
+  	$lang['101-11'] = 'Category %1: could not extend calendar to %2 week(s) (only %3 found). Check week dates.';
   	$lang['101-12'] = 'Schedule generated: %1 game(s) created, %2 skipped (week already had games).';
   	$lang['101-13'] = 'No games were created. Check weeks and existing games.';
   	$lang['101-14'] = 'Select a tournament (season) first. Schedule generation only uses the current tournament.';
@@ -134,9 +134,9 @@
   	$lang['101-34'] = 'Failed to create week';
   	$lang['101-35'] = 'Weeks created: %1.';
   	$lang['101-36'] = 'New week (will be created)';
-  	$lang['101-37'] = 'Confirm will create missing weeks, then the matches.';
+  	$lang['101-37'] = 'Confirm will create any missing weeks, then the matches.';
   	$lang['101-38'] = 'Enter the start week date for calendars without weeks.';
-  	$lang['102'] = 'Users';
+  	$lang['101-39'] = 'BYE';  	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';
   	$lang['105'] = 'Seasons';

@@ -99,7 +99,7 @@
   	$lang['100'] = 'Juegos';
   	$lang['101'] = 'Marcadores';
   	$lang['101-1'] = 'Generar calendario';
-  	$lang['101-2'] = 'El calendario tiene %1 jornada(s). Confirma o cambia el número a usar.';
+  	$lang['101-2'] = 'El calendario tiene %1 jornada(s). Si pides más, se crearán automáticamente.';
   	$lang['101-3'] = 'No hay jornadas para esta categoría. Indica cuántas jornadas programar.';
   	$lang['101-4'] = 'Semillas (torneo completo por cantidad de equipos de la institución)';
   	$lang['101-5'] = 'Equipos';
@@ -108,7 +108,7 @@
   	$lang['101-8'] = 'Indica el número de jornadas en al menos una categoría.';
   	$lang['101-9'] = 'Categoría %1: las jornadas deben ser al menos 1.';
   	$lang['101-10'] = 'Categoría %1: se necesitan al menos 2 equipos para generar el calendario.';
-  	$lang['101-11'] = 'Categoría %1: pediste %2 jornada(s) pero solo hay %3 en el calendario. Crea jornadas o baja el número.';
+  	$lang['101-11'] = 'Categoría %1: no se pudo extender el calendario a %2 jornada(s) (solo hay %3). Revisa las fechas.';
   	$lang['101-12'] = 'Calendario generado: %1 juego(s) creados, %2 omitidos (la jornada ya tenía juegos).';
   	$lang['101-13'] = 'No se crearon juegos. Revisa jornadas y juegos existentes.';
   	$lang['101-14'] = 'Selecciona un torneo primero. La generación de calendario solo usa el torneo actual.';
@@ -136,6 +136,7 @@
   	$lang['101-36'] = 'Jornada nueva (se creará)';
   	$lang['101-37'] = 'Al confirmar se crearán las jornadas faltantes y luego los partidos.';
   	$lang['101-38'] = 'Indica la fecha inicial en los calendarios sin jornadas.';
+  	$lang['101-39'] = 'DESCANSO';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';
