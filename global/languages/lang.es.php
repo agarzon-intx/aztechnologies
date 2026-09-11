@@ -122,6 +122,11 @@
   	$lang['101-22'] = 'Ranking y categorías';
   	$lang['101-23'] = 'Usa las flechas para cambiar el orden de semillas.';
   	$lang['101-24'] = 'Orden';
+  	$lang['101-25'] = 'Vista previa del calendario';
+  	$lang['101-26'] = 'La vista previa expiró. Genera de nuevo.';
+  	$lang['101-27'] = 'Omitida (ya hay juegos)';
+  	$lang['101-28'] = 'Confirmar y guardar';
+  	$lang['101-29'] = 'Round-robin balanceado (máx. 2 locales o visitas consecutivas).';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

@@ -282,7 +282,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 		}
 		if ($calId > 0) {
-			$sqlJ = "SELECT j.Jornada_ID, j.Jornada_DESC, j.Fecha_Inicio, j.Fecha, j.Jornada_Orden
+			$sqlJ = "SELECT j.Jornada_ID, j.Jornada_Desc, j.Fecha_Inicio, j.Fecha, j.Jornada_Orden
 					FROM $schema.Jornada j
 					WHERE j.Torneo_ID = $Season
 						AND j.Calendario_ID = $calId
@@ -323,8 +323,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			if ($fecha === null || $fecha === '') {
 				$fecha = date('Y-m-d');
 			}
-			$jornadaDesc = isset($jornadas[$wi]['Jornada_DESC']) ? (string) $jornadas[$wi]['Jornada_DESC'] : ('#' . ($wi + 1));
-
+			$jornadaDesc = '';
+			if (isset($jornadas[$wi]['Jornada_Desc']) && $jornadas[$wi]['Jornada_Desc'] !== '') {
+				$jornadaDesc = (string) $jornadas[$wi]['Jornada_Desc'];
+			} elseif (isset($jornadas[$wi]['Jornada_DESC']) && $jornadas[$wi]['Jornada_DESC'] !== '') {
+				$jornadaDesc = (string) $jornadas[$wi]['Jornada_DESC'];
+			} else {
+				$jornadaDesc = '#' . ($wi + 1);
+			}
 			$skip = false;
 			$sqlExist = "SELECT COUNT(*) AS cnt
 					FROM $schema.Juegos j

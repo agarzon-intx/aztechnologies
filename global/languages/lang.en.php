@@ -122,6 +122,11 @@
   	$lang['101-22'] = 'Ranking & categories';
   	$lang['101-23'] = 'Use arrows to change seed order.';
   	$lang['101-24'] = 'Order';
+  	$lang['101-25'] = 'Schedule preview';
+  	$lang['101-26'] = 'Preview expired. Generate again.';
+  	$lang['101-27'] = 'Skipped (games already exist)';
+  	$lang['101-28'] = 'Confirm & save';
+  	$lang['101-29'] = 'Balanced round-robin (max 2 consecutive home or away).';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

@@ -4468,7 +4468,30 @@ function generateScheduleRun(){
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Games/generateScheduleGenerate.php',
-		data: {weeks: weeks, teamOrder: teamOrder},
+		data: {action: 'preview', weeks: weeks, teamOrder: teamOrder},
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status === '1' && res.dataGenerateSchedulePreview) {
+				$("#body").html(res.dataGenerateSchedulePreview);
+			} else {
+				alert(res.message || MSG_AJAX_GENERIC);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function generateScheduleConfirm(){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Games/generateScheduleGenerate.php',
+		data: {action: 'confirm'},
 		success: function (res) {
 			mainLoadingOff();
 			alert(res.message || MSG_AJAX_GENERIC);
