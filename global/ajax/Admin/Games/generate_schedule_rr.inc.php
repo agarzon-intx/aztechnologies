@@ -95,6 +95,25 @@ if (!function_exists('az_rr_orientation_score')) {
 	}
 }
 
+if (!function_exists('az_rr_apply_pair_history')) {
+	function az_rr_apply_pair_history(array &$history, $home, $away) {
+		$home = (int) $home;
+		$away = (int) $away;
+		if ($home > 0) {
+			if (!isset($history[$home])) {
+				$history[$home] = array();
+			}
+			$history[$home][] = 'H';
+		}
+		if ($away > 0) {
+			if (!isset($history[$away])) {
+				$history[$away] = array();
+			}
+			$history[$away][] = 'A';
+		}
+	}
+}
+
 if (!function_exists('az_rr_round_as_unordered')) {
 	/**
 	 * Strip orientations so assign can choose local/away freely.
@@ -102,7 +121,13 @@ if (!function_exists('az_rr_round_as_unordered')) {
 	 */
 	function az_rr_round_as_unordered($round) {
 		$games = array();
-		foreach (az_rr_round_games($round) as $pair) {
+		$rawGames = array();
+		if (is_array($round) && isset($round['games']) && is_array($round['games'])) {
+			$rawGames = $round['games'];
+		} elseif (is_array($round) && isset($round[0]) && is_array($round[0])) {
+			$rawGames = $round;
+		}
+		foreach ($rawGames as $pair) {
 			if (!is_array($pair) || count($pair) < 2) {
 				continue;
 			}
@@ -112,7 +137,18 @@ if (!function_exists('az_rr_round_as_unordered')) {
 				$games[] = array($a, $b);
 			}
 		}
-		$bye = az_rr_round_bye($round);
+		$bye = null;
+		if (is_array($round) && isset($round['byeGame']) && is_array($round['byeGame']) && count($round['byeGame']) >= 2) {
+			$h = (int) $round['byeGame'][0];
+			$a = (int) $round['byeGame'][1];
+			if ($h > 0 && $a === 0) {
+				$bye = $h;
+			} elseif ($h === 0 && $a > 0) {
+				$bye = $a;
+			}
+		} elseif (is_array($round) && array_key_exists('bye', $round) && $round['bye'] !== null && $round['bye'] !== '') {
+			$bye = (int) $round['bye'];
+		}
 		return array(
 			'games' => $games,
 			'bye' => $bye,
@@ -293,26 +329,6 @@ if (!function_exists('az_rr_assign_home_away')) {
 			}
 			return false;
 		};
-
-		// az_rr_apply_pair_history must exist before search; defined below in file — ensure order.
-		if (!function_exists('az_rr_apply_pair_history')) {
-			function az_rr_apply_pair_history(array &$history, $home, $away) {
-				$home = (int) $home;
-				$away = (int) $away;
-				if ($home > 0) {
-					if (!isset($history[$home])) {
-						$history[$home] = array();
-					}
-					$history[$home][] = 'H';
-				}
-				if ($away > 0) {
-					if (!isset($history[$away])) {
-						$history[$away] = array();
-					}
-					$history[$away][] = 'A';
-				}
-			}
-		}
 
 		$ok = $search(0, array(), array());
 		if ($ok && is_array($best)) {
@@ -585,41 +601,25 @@ if (!function_exists('az_rr_balanced_rounds')) {
 
 if (!function_exists('az_rr_expand_weeks')) {
 	/**
-	 * Expand RR rounds to $weeksRequested. Odd cycles flip home/away (double-RR style),
-	 * including bye open slots, then repair consecutive streaks across the full horizon.
+	 * Expand RR pairings to $weeksRequested by repeating the unordered circle pattern,
+	 * then assigning home/away (and bye sides) with a hard max-consecutive constraint.
+	 * Does not blindly flip cycles — that was causing 3+ consecutive H/A.
 	 */
 	function az_rr_expand_weeks(array $rrRounds, $weeksRequested, $maxConsec = 2) {
 		$weeksRequested = (int) $weeksRequested;
 		if ($weeksRequested < 1 || count($rrRounds) === 0) {
 			return array();
 		}
-		$schedule = array();
-		$cycle = 0;
-		while (count($schedule) < $weeksRequested) {
-			foreach ($rrRounds as $round) {
-				$games = az_rr_round_games($round);
-				$byeGame = az_rr_round_bye_game($round);
-				if (($cycle % 2) === 1) {
-					$flipped = array();
-					foreach ($games as $pair) {
-						$flipped[] = array((int) $pair[1], (int) $pair[0]);
-					}
-					$games = $flipped;
-					if ($byeGame !== null) {
-						$byeGame = array((int) $byeGame[1], (int) $byeGame[0]);
-					}
-				}
-				$schedule[] = array(
-					'games' => $games,
-					'byeGame' => $byeGame,
-				);
-				if (count($schedule) >= $weeksRequested) {
-					break;
-				}
-			}
-			$cycle++;
+		$unordered = array();
+		foreach ($rrRounds as $round) {
+			$unordered[] = az_rr_round_as_unordered($round);
 		}
-		return az_rr_repair_consecutive($schedule, $maxConsec);
+		$nBase = count($unordered);
+		$series = array();
+		for ($w = 0; $w < $weeksRequested; $w++) {
+			$series[] = $unordered[$w % $nBase];
+		}
+		return az_rr_assign_home_away($series, $maxConsec);
 	}
 }
 
