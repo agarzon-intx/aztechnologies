@@ -6,21 +6,32 @@
 
 if (!function_exists('az_rr_circle_pairings')) {
 	/**
-	 * Circle-method unordered pairings (one single RR).
+	 * Circle-method RR pairings.
+	 * Initial seating is arranged so round 1 is consecutive seeds:
+	 * 1vs2, 3vs4, 5vs6, ... (bye if odd). Later rounds rotate for a full single RR.
 	 * Returns rounds => array('games' => [[teamA, teamB], ...], 'bye' => teamId|null).
 	 */
 	function az_rr_circle_pairings(array $teamIds) {
-		$teams = array_values($teamIds);
-		$n = count($teams);
-		if ($n < 2) {
+		$ordered = array_values($teamIds);
+		$nOrig = count($ordered);
+		if ($nOrig < 2) {
 			return array();
 		}
-		if ($n % 2 === 1) {
-			$teams[] = null;
-			$n++;
+		if ($nOrig % 2 === 1) {
+			$ordered[] = null;
 		}
-		$rounds = $n - 1;
+		$n = count($ordered);
 		$half = (int) ($n / 2);
+
+		// Seat so circle pairs (i, n-1-i) become (1,2), (3,4), ...
+		// pos[i] = seed 2i+1, pos[n-1-i] = seed 2i+2
+		$teams = array_fill(0, $n, null);
+		for ($i = 0; $i < $half; $i++) {
+			$teams[$i] = $ordered[2 * $i];
+			$teams[$n - 1 - $i] = $ordered[(2 * $i) + 1];
+		}
+
+		$rounds = $n - 1;
 		$result = array();
 		for ($r = 0; $r < $rounds; $r++) {
 			$games = array();
@@ -41,6 +52,7 @@ if (!function_exists('az_rr_circle_pairings')) {
 				'games' => $games,
 				'bye' => $bye,
 			);
+			// Standard circle rotation: keep first fixed, rotate the rest.
 			$fixed = array_shift($teams);
 			$last = array_pop($teams);
 			array_unshift($teams, $last);
