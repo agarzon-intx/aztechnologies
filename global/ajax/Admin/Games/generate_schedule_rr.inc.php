@@ -425,13 +425,14 @@ if (!function_exists('az_rr_assign_home_away_greedy')) {
 		$history = array();
 		$homeCount = array();
 		$byeHistory = array();
+		$openSeq = array();
 		$result = array();
 		foreach ($unorderedRounds as $round) {
 			$u = az_rr_round_as_unordered($round);
 			$pairs = $u['games'];
 			$byeTeam = $u['bye'];
 			$roundGames = array();
-			$roundHist = $history;
+			$roundHist = az_rr_copy_side_history($history);
 			$roundHome = $homeCount;
 			foreach ($pairs as $pair) {
 				$a = (int) $pair[0];
@@ -463,42 +464,38 @@ if (!function_exists('az_rr_assign_home_away_greedy')) {
 			$byeGame = null;
 			if ($byeTeam !== null && (int) $byeTeam > 0) {
 				$bt = (int) $byeTeam;
-				$opts = array();
-				$homeOk = az_rr_streak_ok($roundHist, $bt, 'H', $maxConsec)
-					&& az_rr_streak_ok($byeHistory, $bt, 'H', $maxConsec);
-				$awayOk = az_rr_streak_ok($roundHist, $bt, 'A', $maxConsec)
-					&& az_rr_streak_ok($byeHistory, $bt, 'A', $maxConsec);
-				$lastBye = '';
-				if (isset($byeHistory[$bt]) && count($byeHistory[$bt]) > 0) {
-					$lastBye = $byeHistory[$bt][count($byeHistory[$bt]) - 1];
+				$scored = array();
+				foreach (array(array($bt, 0), array(0, $bt)) as $bg) {
+					$teamSide = ((int) $bg[0] > 0) ? 'H' : 'A';
+					$openSide = ((int) $bg[0] === 0) ? 'H' : 'A';
+					$legal = az_rr_streak_ok($roundHist, $bt, $teamSide, $maxConsec)
+						&& az_rr_streak_ok($byeHistory, $bt, $teamSide, $maxConsec)
+						&& az_rr_open_side_ok($openSeq, $openSide, $maxConsec);
+					$score = $legal ? 0 : 1;
+					$lastOpen = (count($openSeq) > 0) ? $openSeq[count($openSeq) - 1] : '';
+					if ($lastOpen !== '' && $openSide === $lastOpen) {
+						$score += 10;
+					}
+					$scored[] = array($score, $bg, $openSide, $teamSide);
 				}
-				if ($homeOk && $awayOk) {
-					$opts = ($lastBye === 'H')
-						? array(array(0, $bt), array($bt, 0))
-						: array(array($bt, 0), array(0, $bt));
-				} elseif ($homeOk) {
-					$opts[] = array($bt, 0);
-				} elseif ($awayOk) {
-					$opts[] = array(0, $bt);
-				} else {
-					$opts[] = array($bt, 0);
-					$opts[] = array(0, $bt);
-				}
-				$byeGame = $opts[0];
+				usort($scored, function ($x, $y) {
+					if ($x[0] !== $y[0]) {
+						return $x[0] - $y[0];
+					}
+					return 0;
+				});
+				$byeGame = $scored[0][1];
+				$openSide = $scored[0][2];
+				$teamSide = $scored[0][3];
 				az_rr_apply_pair_history($roundHist, $byeGame[0], $byeGame[1]);
 				if ((int) $byeGame[0] > 0) {
 					$roundHome[(int) $byeGame[0]] = (isset($roundHome[(int) $byeGame[0]]) ? (int) $roundHome[(int) $byeGame[0]] : 0) + 1;
-					if (!isset($byeHistory[(int) $byeGame[0]])) {
-						$byeHistory[(int) $byeGame[0]] = array();
-					}
-					$byeHistory[(int) $byeGame[0]][] = 'H';
 				}
-				if ((int) $byeGame[1] > 0) {
-					if (!isset($byeHistory[(int) $byeGame[1]])) {
-						$byeHistory[(int) $byeGame[1]] = array();
-					}
-					$byeHistory[(int) $byeGame[1]][] = 'A';
+				if (!isset($byeHistory[$bt])) {
+					$byeHistory[$bt] = array();
 				}
+				$byeHistory[$bt][] = $teamSide;
+				$openSeq[] = $openSide;
 			}
 			$result[] = array('games' => $roundGames, 'byeGame' => $byeGame);
 			$history = $roundHist;
@@ -619,8 +616,7 @@ if (!function_exists('az_rr_apply_pair_history')) {
 
 if (!function_exists('az_rr_repair_consecutive')) {
 	/**
-	 * Flip individual games when a team would have more than $maxConsec consecutive H or A.
-	 * Bye slots also respect max consecutive bye-side (local/away) assignments.
+	 * Flip games / bye slots when consecutive H/A (or bye-open side) would exceed $maxConsec.
 	 */
 	function az_rr_repair_consecutive(array $rounds, $maxConsec = 2) {
 		$maxConsec = (int) $maxConsec;
@@ -629,6 +625,7 @@ if (!function_exists('az_rr_repair_consecutive')) {
 			$changed = false;
 			$history = array();
 			$byeHistory = array();
+			$openSeq = array();
 			for ($r = 0; $r < $nRounds; $r++) {
 				$games = az_rr_round_games($rounds[$r]);
 				$byeGame = az_rr_round_bye_game($rounds[$r]);
@@ -648,27 +645,26 @@ if (!function_exists('az_rr_repair_consecutive')) {
 				if ($byeGame !== null) {
 					$home = (int) $byeGame[0];
 					$away = (int) $byeGame[1];
-					$homeOk = ($home <= 0) || (
-						az_rr_streak_ok($history, $home, 'H', $maxConsec)
-						&& az_rr_streak_ok($byeHistory, $home, 'H', $maxConsec)
-					);
-					$awayOk = ($away <= 0) || (
-						az_rr_streak_ok($history, $away, 'A', $maxConsec)
-						&& az_rr_streak_ok($byeHistory, $away, 'A', $maxConsec)
-					);
-					if (!($homeOk && $awayOk)) {
-						$flipHome = $away;
-						$flipAway = $home;
-						$flipHomeOk = ($flipHome <= 0) || (
-							az_rr_streak_ok($history, $flipHome, 'H', $maxConsec)
-							&& az_rr_streak_ok($byeHistory, $flipHome, 'H', $maxConsec)
-						);
-						$flipAwayOk = ($flipAway <= 0) || (
-							az_rr_streak_ok($history, $flipAway, 'A', $maxConsec)
-							&& az_rr_streak_ok($byeHistory, $flipAway, 'A', $maxConsec)
-						);
-						if ($flipHomeOk && $flipAwayOk) {
-							$byeGame = array($flipHome, $flipAway);
+					$bt = ($home > 0) ? $home : $away;
+					$teamSide = ($home > 0) ? 'H' : 'A';
+					$openSide = ($home === 0) ? 'H' : 'A';
+					$ok = ($bt > 0)
+						&& az_rr_streak_ok($history, $bt, $teamSide, $maxConsec)
+						&& az_rr_streak_ok($byeHistory, $bt, $teamSide, $maxConsec)
+						&& az_rr_open_side_ok($openSeq, $openSide, $maxConsec);
+					if (!$ok) {
+						$flip = array($away, $home);
+						$fHome = (int) $flip[0];
+						$fAway = (int) $flip[1];
+						$fBt = ($fHome > 0) ? $fHome : $fAway;
+						$fTeamSide = ($fHome > 0) ? 'H' : 'A';
+						$fOpenSide = ($fHome === 0) ? 'H' : 'A';
+						$flipOk = ($fBt > 0)
+							&& az_rr_streak_ok($history, $fBt, $fTeamSide, $maxConsec)
+							&& az_rr_streak_ok($byeHistory, $fBt, $fTeamSide, $maxConsec)
+							&& az_rr_open_side_ok($openSeq, $fOpenSide, $maxConsec);
+						if ($flipOk) {
+							$byeGame = $flip;
 							$changed = true;
 						}
 					}
@@ -682,17 +678,15 @@ if (!function_exists('az_rr_repair_consecutive')) {
 				}
 				if ($byeGame !== null) {
 					az_rr_apply_pair_history($history, $byeGame[0], $byeGame[1]);
-					if ((int) $byeGame[0] > 0) {
-						if (!isset($byeHistory[(int) $byeGame[0]])) {
-							$byeHistory[(int) $byeGame[0]] = array();
+					$bt = ((int) $byeGame[0] > 0) ? (int) $byeGame[0] : (int) $byeGame[1];
+					$teamSide = ((int) $byeGame[0] > 0) ? 'H' : 'A';
+					$openSide = ((int) $byeGame[0] === 0) ? 'H' : 'A';
+					if ($bt > 0) {
+						if (!isset($byeHistory[$bt])) {
+							$byeHistory[$bt] = array();
 						}
-						$byeHistory[(int) $byeGame[0]][] = 'H';
-					}
-					if ((int) $byeGame[1] > 0) {
-						if (!isset($byeHistory[(int) $byeGame[1]])) {
-							$byeHistory[(int) $byeGame[1]] = array();
-						}
-						$byeHistory[(int) $byeGame[1]][] = 'A';
+						$byeHistory[$bt][] = $teamSide;
+						$openSeq[] = $openSide;
 					}
 				}
 			}
