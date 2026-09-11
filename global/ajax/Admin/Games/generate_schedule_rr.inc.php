@@ -201,9 +201,32 @@ if (!function_exists('az_rr_team_streak_at')) {
 	}
 }
 
+if (!function_exists('az_rr_round_games')) {
+	/** Normalize a round to a list of [home,away] pairs. */
+	function az_rr_round_games($round) {
+		if (is_array($round) && isset($round['games']) && is_array($round['games'])) {
+			return $round['games'];
+		}
+		if (is_array($round) && isset($round[0]) && is_array($round[0])) {
+			return $round;
+		}
+		return array();
+	}
+}
+
+if (!function_exists('az_rr_round_bye')) {
+	function az_rr_round_bye($round) {
+		if (is_array($round) && array_key_exists('bye', $round) && $round['bye'] !== null && $round['bye'] !== '') {
+			return (int) $round['bye'];
+		}
+		return null;
+	}
+}
+
 if (!function_exists('az_rr_repair_consecutive')) {
 	/**
 	 * Flip individual games when a team would have more than $maxConsec consecutive H or A.
+	 * Preserves structured rounds with bye.
 	 */
 	function az_rr_repair_consecutive(array $rounds, $maxConsec = 2) {
 		$maxConsec = (int) $maxConsec;
@@ -212,7 +235,8 @@ if (!function_exists('az_rr_repair_consecutive')) {
 			$changed = false;
 			$history = array();
 			for ($r = 0; $r < $nRounds; $r++) {
-				$games = $rounds[$r];
+				$games = az_rr_round_games($rounds[$r]);
+				$bye = az_rr_round_bye($rounds[$r]);
 				for ($g = 0, $gCount = count($games); $g < $gCount; $g++) {
 					$home = (int) $games[$g][0];
 					$away = (int) $games[$g][1];
@@ -221,13 +245,16 @@ if (!function_exists('az_rr_repair_consecutive')) {
 					if ($homeOk && $awayOk) {
 						continue;
 					}
-					// Try flip if that orientation is legal for both.
 					if (az_rr_streak_ok($history, $away, 'H', $maxConsec) && az_rr_streak_ok($history, $home, 'A', $maxConsec)) {
-						$rounds[$r][$g] = array($away, $home);
+						$games[$g] = array($away, $home);
 						$changed = true;
 					}
 				}
-				foreach ($rounds[$r] as $pair) {
+				$rounds[$r] = array(
+					'games' => $games,
+					'bye' => $bye,
+				);
+				foreach ($games as $pair) {
 					$h = (int) $pair[0];
 					$a = (int) $pair[1];
 					if (!isset($history[$h])) {
@@ -251,6 +278,7 @@ if (!function_exists('az_rr_repair_consecutive')) {
 if (!function_exists('az_rr_balanced_rounds')) {
 	/**
 	 * Full single RR with home/away assignment (max 2 consecutive H/A by default).
+	 * Returns rounds => array('games'=>..., 'bye'=>...).
 	 */
 	function az_rr_balanced_rounds(array $teamIds, $maxConsec = 2) {
 		$pairings = az_rr_circle_pairings($teamIds);
@@ -264,7 +292,7 @@ if (!function_exists('az_rr_balanced_rounds')) {
 if (!function_exists('az_rr_expand_weeks')) {
 	/**
 	 * Expand RR rounds to $weeksRequested. Odd cycles flip home/away (double-RR style),
-	 * then repair consecutive streaks across the full horizon.
+	 * then repair consecutive streaks across the full horizon. Byes are preserved.
 	 */
 	function az_rr_expand_weeks(array $rrRounds, $weeksRequested, $maxConsec = 2) {
 		$weeksRequested = (int) $weeksRequested;
@@ -274,8 +302,9 @@ if (!function_exists('az_rr_expand_weeks')) {
 		$schedule = array();
 		$cycle = 0;
 		while (count($schedule) < $weeksRequested) {
-			foreach ($rrRounds as $roundGames) {
-				$games = $roundGames;
+			foreach ($rrRounds as $round) {
+				$games = az_rr_round_games($round);
+				$bye = az_rr_round_bye($round);
 				if (($cycle % 2) === 1) {
 					$flipped = array();
 					foreach ($games as $pair) {
@@ -283,7 +312,10 @@ if (!function_exists('az_rr_expand_weeks')) {
 					}
 					$games = $flipped;
 				}
-				$schedule[] = $games;
+				$schedule[] = array(
+					'games' => $games,
+					'bye' => $bye,
+				);
 				if (count($schedule) >= $weeksRequested) {
 					break;
 				}
@@ -319,10 +351,15 @@ if (!function_exists('az_gs_week_sun_sat')) {
 if (!function_exists('az_gs_simulate_jornadas')) {
 	/**
 	 * Build N simulated Jornada rows starting at $startDate (weekly).
+	 * @param int $ordenStart first Jornada_Orden value (default 1)
 	 */
-	function az_gs_simulate_jornadas($startDate, $count, $calendarioId = 0) {
+	function az_gs_simulate_jornadas($startDate, $count, $calendarioId = 0, $ordenStart = 1) {
 		$count = (int) $count;
 		$calendarioId = (int) $calendarioId;
+		$ordenStart = (int) $ordenStart;
+		if ($ordenStart < 1) {
+			$ordenStart = 1;
+		}
 		$rows = array();
 		if ($count < 1 || $startDate === '') {
 			return $rows;
@@ -337,7 +374,7 @@ if (!function_exists('az_gs_simulate_jornadas')) {
 				$weekDate->modify('+' . ($i * 7) . ' days');
 			}
 			list($fecha, $inicio, $fin) = az_gs_week_sun_sat($weekDate->format('Y-m-d'));
-			$n = $i + 1;
+			$n = $ordenStart + $i;
 			$rows[] = array(
 				'Jornada_ID' => 0,
 				'Jornada_Desc' => 'Jornada ' . $n,
@@ -351,5 +388,35 @@ if (!function_exists('az_gs_simulate_jornadas')) {
 			);
 		}
 		return $rows;
+	}
+}
+
+if (!function_exists('az_gs_extend_jornadas')) {
+	/**
+	 * Keep existing jornadas and append simulated weeks until $weeksRequested.
+	 * Extra weeks start 7 days after the last existing Fecha.
+	 */
+	function az_gs_extend_jornadas(array $existing, $weeksRequested, $calendarioId = 0) {
+		$weeksRequested = (int) $weeksRequested;
+		$existing = array_values($existing);
+		$have = count($existing);
+		if ($weeksRequested <= $have) {
+			return array_slice($existing, 0, $weeksRequested);
+		}
+		$need = $weeksRequested - $have;
+		$last = $existing[$have - 1];
+		$lastFecha = isset($last['Fecha']) ? (string) $last['Fecha'] : '';
+		$lastOrden = isset($last['Jornada_Orden']) ? (int) $last['Jornada_Orden'] : $have;
+		if ($lastFecha === '') {
+			return $existing;
+		}
+		$next = DateTime::createFromFormat('Y-m-d', $lastFecha);
+		if (!$next) {
+			$next = new DateTime($lastFecha);
+		}
+		$next->modify('+7 days');
+		$calId = $calendarioId ? (int) $calendarioId : (isset($last['Calendario_ID']) ? (int) $last['Calendario_ID'] : 0);
+		$extra = az_gs_simulate_jornadas($next->format('Y-m-d'), $need, $calId, $lastOrden + 1);
+		return array_merge($existing, $extra);
 	}
 }
