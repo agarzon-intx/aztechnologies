@@ -156,9 +156,43 @@ if (!function_exists('az_rr_round_as_unordered')) {
 	}
 }
 
+if (!function_exists('az_rr_copy_side_history')) {
+	/** Deep-copy H/A history maps so DFS branches do not share nested arrays. */
+	function az_rr_copy_side_history(array $history) {
+		$out = array();
+		foreach ($history as $teamId => $seq) {
+			$out[$teamId] = is_array($seq) ? array_values($seq) : array();
+		}
+		return $out;
+	}
+}
+
+if (!function_exists('az_rr_open_side_ok')) {
+	/**
+	 * Would placing the BYE open slot on $side ('H' or 'A') exceed $maxConsec
+	 * consecutive weeks with BYE on that same side?
+	 */
+	function az_rr_open_side_ok(array $openSeq, $side, $maxConsec) {
+		$maxConsec = (int) $maxConsec;
+		if ($maxConsec < 1) {
+			return true;
+		}
+		$run = 0;
+		for ($i = count($openSeq) - 1; $i >= 0; $i--) {
+			if ($openSeq[$i] === $side) {
+				$run++;
+			} else {
+				break;
+			}
+		}
+		return ($run + 1) <= $maxConsec;
+	}
+}
+
 if (!function_exists('az_rr_assign_home_away')) {
 	/**
 	 * Assign home/away with a hard max-consecutive constraint (default 2), including bye slots.
+	 * Also limits consecutive weeks where the BYE open slot is on the same side (local/away).
 	 * Uses DFS over orientations per round. Bye open side is 0 (future team).
 	 * Output: array('games' => [[home,away],...], 'byeGame' => [home,away]|null).
 	 */
@@ -181,7 +215,7 @@ if (!function_exists('az_rr_assign_home_away')) {
 		$calls = 0;
 		$maxCalls = 2000000;
 
-		$search = function ($r, $history, $homeCount, $byeHistory) use (
+		$search = function ($r, $history, $homeCount, $byeHistory, $openSeq) use (
 			&$search,
 			&$stack,
 			&$best,
@@ -205,10 +239,9 @@ if (!function_exists('az_rr_assign_home_away')) {
 			$g = count($pairs);
 			$limit = 1 << $g;
 
-			// Score masks: prefer legal + balanced homes (lower is better). Try best first.
 			$maskScores = array();
 			for ($mask = 0; $mask < $limit; $mask++) {
-				$histTmp = $history;
+				$histTmp = az_rr_copy_side_history($history);
 				$homeTmp = $homeCount;
 				$ok = true;
 				$score = 0;
@@ -250,7 +283,7 @@ if (!function_exists('az_rr_assign_home_away')) {
 
 			foreach ($maskScores as $entry) {
 				$mask = $entry[1];
-				$hist2 = $history;
+				$hist2 = az_rr_copy_side_history($history);
 				$homes2 = $homeCount;
 				$games = array();
 				for ($i = 0; $i < $g; $i++) {
@@ -279,51 +312,69 @@ if (!function_exists('az_rr_assign_home_away')) {
 				if ($byeTeam !== null && (int) $byeTeam > 0) {
 					$bt = (int) $byeTeam;
 					$byeOpts = array();
-					// Overall H/A streak AND bye-only H/A streak (max 2 each).
-					$asHomeOk = az_rr_streak_ok($hist2, $bt, 'H', $maxConsec)
-						&& az_rr_streak_ok($byeHistory, $bt, 'H', $maxConsec);
-					$asAwayOk = az_rr_streak_ok($hist2, $bt, 'A', $maxConsec)
-						&& az_rr_streak_ok($byeHistory, $bt, 'A', $maxConsec);
-					$homes = isset($homes2[$bt]) ? (int) $homes2[$bt] : 0;
-					$ordered = array();
-					if ($asHomeOk && $asAwayOk) {
+					$cands = array(
+						array($bt, 0), // team local, BYE open as away
+						array(0, $bt), // BYE open as local, team away
+					);
+					$scored = array();
+					foreach ($cands as $bg) {
+						$teamSide = ((int) $bg[0] > 0) ? 'H' : 'A';
+						$openSide = ((int) $bg[0] === 0) ? 'H' : 'A';
+						if (!az_rr_streak_ok($hist2, $bt, $teamSide, $maxConsec)) {
+							continue;
+						}
+						if (!az_rr_streak_ok($byeHistory, $bt, $teamSide, $maxConsec)) {
+							continue;
+						}
+						if (!az_rr_open_side_ok($openSeq, $openSide, $maxConsec)) {
+							continue;
+						}
+						$score = 0;
+						// Prefer alternating bye open side and team bye side.
+						$lastOpen = (count($openSeq) > 0) ? $openSeq[count($openSeq) - 1] : '';
+						if ($lastOpen !== '' && $openSide === $lastOpen) {
+							$score += 50;
+						}
 						$lastBye = '';
 						if (isset($byeHistory[$bt]) && count($byeHistory[$bt]) > 0) {
 							$lastBye = $byeHistory[$bt][count($byeHistory[$bt]) - 1];
+						}
+						if ($lastBye !== '' && $teamSide === $lastBye) {
+							$score += 40;
 						}
 						$lastAll = '';
 						if (isset($hist2[$bt]) && count($hist2[$bt]) > 0) {
 							$lastAll = $hist2[$bt][count($hist2[$bt]) - 1];
 						}
-						// Prefer alternating bye side, then overall side.
-						if ($lastBye === 'H') {
-							$ordered = array(array(0, $bt), array($bt, 0));
-						} elseif ($lastBye === 'A') {
-							$ordered = array(array($bt, 0), array(0, $bt));
-						} elseif ($lastAll === 'H') {
-							$ordered = array(array(0, $bt), array($bt, 0));
-						} elseif ($lastAll === 'A') {
-							$ordered = array(array($bt, 0), array(0, $bt));
-						} else {
-							$ordered = ($homes <= 0)
-								? array(array($bt, 0), array(0, $bt))
-								: array(array(0, $bt), array($bt, 0));
+						if ($lastAll !== '' && $teamSide === $lastAll) {
+							$score += 20;
 						}
-					} elseif ($asHomeOk) {
-						$ordered = array(array($bt, 0));
-					} elseif ($asAwayOk) {
-						$ordered = array(array(0, $bt));
+						$homes = isset($homes2[$bt]) ? (int) $homes2[$bt] : 0;
+						if ($teamSide === 'H') {
+							$score += $homes;
+						}
+						$scored[] = array($score, $bg);
 					}
-					if (count($ordered) === 0) {
+					if (count($scored) === 0) {
 						continue;
 					}
-					$byeOpts = $ordered;
+					usort($scored, function ($x, $y) {
+						if ($x[0] === $y[0]) {
+							return 0;
+						}
+						return ($x[0] < $y[0]) ? -1 : 1;
+					});
+					$byeOpts = array();
+					foreach ($scored as $row) {
+						$byeOpts[] = $row[1];
+					}
 				}
 
 				foreach ($byeOpts as $bg) {
-					$hist3 = $hist2;
+					$hist3 = az_rr_copy_side_history($hist2);
 					$homes3 = $homes2;
-					$byeHist3 = $byeHistory;
+					$byeHist3 = az_rr_copy_side_history($byeHistory);
+					$open3 = $openSeq;
 					if ($bg !== null) {
 						az_rr_apply_pair_history($hist3, $bg[0], $bg[1]);
 						if ((int) $bg[0] > 0) {
@@ -332,19 +383,20 @@ if (!function_exists('az_rr_assign_home_away')) {
 								$byeHist3[(int) $bg[0]] = array();
 							}
 							$byeHist3[(int) $bg[0]][] = 'H';
-						}
-						if ((int) $bg[1] > 0) {
+							$open3[] = 'A';
+						} elseif ((int) $bg[1] > 0) {
 							if (!isset($byeHist3[(int) $bg[1]])) {
 								$byeHist3[(int) $bg[1]] = array();
 							}
 							$byeHist3[(int) $bg[1]][] = 'A';
+							$open3[] = 'H';
 						}
 					}
 					$stack[$r] = array(
 						'games' => $games,
 						'byeGame' => $bg,
 					);
-					if ($search($r + 1, $hist3, $homes3, $byeHist3)) {
+					if ($search($r + 1, $hist3, $homes3, $byeHist3, $open3)) {
 						return true;
 					}
 				}
@@ -352,7 +404,7 @@ if (!function_exists('az_rr_assign_home_away')) {
 			return false;
 		};
 
-		$ok = $search(0, array(), array(), array());
+		$ok = $search(0, array(), array(), array(), array());
 		if ($ok && is_array($best)) {
 			$result = array();
 			for ($i = 0; $i < $n; $i++) {
@@ -361,7 +413,6 @@ if (!function_exists('az_rr_assign_home_away')) {
 			return $result;
 		}
 
-		// Fallback: greedy (should be rare) + soft repair.
 		return az_rr_assign_home_away_greedy($roundsIn, $maxConsec);
 	}
 }
