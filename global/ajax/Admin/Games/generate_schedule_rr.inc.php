@@ -7,7 +7,7 @@
 if (!function_exists('az_rr_circle_pairings')) {
 	/**
 	 * Circle-method unordered pairings (one single RR).
-	 * Returns rounds => list of [teamA, teamB] (order not home/away yet).
+	 * Returns rounds => array('games' => [[teamA, teamB], ...], 'bye' => teamId|null).
 	 */
 	function az_rr_circle_pairings(array $teamIds) {
 		$teams = array_values($teamIds);
@@ -24,15 +24,23 @@ if (!function_exists('az_rr_circle_pairings')) {
 		$result = array();
 		for ($r = 0; $r < $rounds; $r++) {
 			$games = array();
+			$bye = null;
 			for ($i = 0; $i < $half; $i++) {
 				$a = $teams[$i];
 				$b = $teams[$n - 1 - $i];
 				if ($a === null || $b === null) {
+					$bye = ($a === null) ? $b : $a;
+					if ($bye !== null) {
+						$bye = (int) $bye;
+					}
 					continue;
 				}
 				$games[] = array((int) $a, (int) $b);
 			}
-			$result[] = $games;
+			$result[] = array(
+				'games' => $games,
+				'bye' => $bye,
+			);
 			$fixed = array_shift($teams);
 			$last = array_pop($teams);
 			array_unshift($teams, $last);
@@ -90,7 +98,7 @@ if (!function_exists('az_rr_orientation_score')) {
 if (!function_exists('az_rr_assign_home_away')) {
 	/**
 	 * Assign home/away for unordered pairings with max consecutive constraint.
-	 * Returns rounds => list of [homeId, awayId].
+	 * Input/output rounds: array('games' => [[home,away],...], 'bye' => id|null).
 	 */
 	function az_rr_assign_home_away(array $unorderedRounds, $maxConsec = 2) {
 		$maxConsec = (int) $maxConsec;
@@ -101,11 +109,20 @@ if (!function_exists('az_rr_assign_home_away')) {
 		$homeCount = array();
 		$result = array();
 
-		foreach ($unorderedRounds as $pairs) {
+		foreach ($unorderedRounds as $round) {
+			$pairs = isset($round['games']) && is_array($round['games']) ? $round['games'] : (is_array($round) && isset($round[0]) ? $round : array());
+			// Support legacy flat round list.
+			if (!isset($round['games']) && is_array($round) && isset($round[0]) && is_array($round[0])) {
+				$pairs = $round;
+			}
+			$bye = isset($round['bye']) ? $round['bye'] : null;
 			$roundGames = array();
 			$roundHist = $history;
 			$roundHome = $homeCount;
 			foreach ($pairs as $pair) {
+				if (!is_array($pair) || count($pair) < 2) {
+					continue;
+				}
 				$a = (int) $pair[0];
 				$b = (int) $pair[1];
 				$scoreAB = az_rr_orientation_score($roundHist, $roundHome, $a, $b, $maxConsec);
@@ -128,12 +145,14 @@ if (!function_exists('az_rr_assign_home_away')) {
 				$roundHist[$away][] = 'A';
 				$roundHome[$home] = (isset($roundHome[$home]) ? (int) $roundHome[$home] : 0) + 1;
 			}
-			$result[] = $roundGames;
+			$result[] = array(
+				'games' => $roundGames,
+				'bye' => ($bye === null || $bye === '') ? null : (int) $bye,
+			);
 			$history = $roundHist;
 			$homeCount = $roundHome;
 		}
 
-		// Repair pass: try flipping games that still violate streak.
 		$result = az_rr_repair_consecutive($result, $maxConsec);
 		return $result;
 	}
