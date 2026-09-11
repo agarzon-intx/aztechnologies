@@ -127,6 +127,15 @@
   	$lang['101-27'] = 'Skipped (games already exist)';
   	$lang['101-28'] = 'Confirm & save';
   	$lang['101-29'] = 'Balanced round-robin (max 2 consecutive home or away).';
+  	$lang['101-30'] = 'No weeks found. Enter the first week date; weeks will be created on confirm.';
+  	$lang['101-31'] = 'Start week';
+  	$lang['101-32'] = 'Enter a start week date.';
+  	$lang['101-33'] = 'Cannot create weeks without a calendar.';
+  	$lang['101-34'] = 'Failed to create week';
+  	$lang['101-35'] = 'Weeks created: %1.';
+  	$lang['101-36'] = 'New week (will be created)';
+  	$lang['101-37'] = 'Confirm will create missing weeks, then the matches.';
+  	$lang['101-38'] = 'Enter the start week date for calendars without weeks.';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

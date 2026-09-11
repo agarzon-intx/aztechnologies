@@ -404,7 +404,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		$html .= '</div>
 			<div class="mt-4 mb-2" style="clear: both;">
-				<button type="button" class="btn btn-primary" id="gsGenerateBtn" data-msg-weeks="' . htmlspecialchars((string) (isset($lang['101-8']) ? $lang['101-8'] : 'Enter weeks'), ENT_QUOTES, 'UTF-8') . '" onClick="generateScheduleRun();">' . htmlspecialchars((string) (isset($lang['826']) ? $lang['826'] : 'Generate'), ENT_QUOTES, 'UTF-8') . '</button>
+				<button type="button" class="btn btn-primary" id="gsGenerateBtn" data-msg-weeks="' . htmlspecialchars((string) (isset($lang['101-8']) ? $lang['101-8'] : 'Enter weeks'), ENT_QUOTES, 'UTF-8') . '" data-msg-start="' . htmlspecialchars((string) (isset($lang['101-38']) ? $lang['101-38'] : 'Enter start week date'), ENT_QUOTES, 'UTF-8') . '" onClick="generateScheduleRun();">' . htmlspecialchars((string) (isset($lang['826']) ? $lang['826'] : 'Generate'), ENT_QUOTES, 'UTF-8') . '</button>
 			</div>';
 	}
 

@@ -510,15 +510,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$homeLbl = isset($lang['363']) ? $lang['363'] : 'Home';
 	$awayLbl = isset($lang['364']) ? $lang['364'] : 'Away';
 	$skipLbl = isset($lang['101-27']) ? $lang['101-27'] : 'Skipped (games already exist)';
+	$newWeekLbl = isset($lang['101-36']) ? $lang['101-36'] : 'New week (will be created)';
 	$confirmLbl = isset($lang['101-28']) ? $lang['101-28'] : 'Confirm & save';
 	$backLbl = isset($lang['0001']) ? $lang['0001'] : 'Cancel';
 	$noteLbl = isset($lang['101-29']) ? $lang['101-29'] : 'Balanced round-robin (max 2 consecutive home or away).';
+	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Confirm will create missing weeks, then the matches.';
 
 	$html = '<div id="generateSchedulePreview" class="tabla active" style="display: block;padding-top: 10px;">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
 			<div style="float: left;width: 100%;padding-top: 8px;padding-bottom: 8px;">
 				<legend style="font-size: 25px; font-weight: bold; border-bottom: 0px">' . htmlspecialchars($previewTitle, ENT_QUOTES, 'UTF-8') . '</legend>
 				<div class="text-muted">' . htmlspecialchars($noteLbl, ENT_QUOTES, 'UTF-8') . '</div>
+				<div class="text-muted">' . htmlspecialchars($createNote, ENT_QUOTES, 'UTF-8') . '</div>
 			</div>';
 
 	if (count($errors) > 0) {
@@ -559,6 +562,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				<div class="mb-1"><strong>' . htmlspecialchars($weekTitle, ENT_QUOTES, 'UTF-8') . '</strong>';
 			if (!empty($week['skip'])) {
 				$html .= ' <span class="badge bg-warning text-dark">' . htmlspecialchars($skipLbl, ENT_QUOTES, 'UTF-8') . '</span>';
+			} elseif (!empty($week['createWeek'])) {
+				$html .= ' <span class="badge bg-info text-dark">' . htmlspecialchars($newWeekLbl, ENT_QUOTES, 'UTF-8') . '</span>';
 			}
 			$html .= '</div>
 				<div class="table-responsive">

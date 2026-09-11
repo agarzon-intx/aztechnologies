@@ -4439,16 +4439,28 @@ function generateScheduleShow(){
 
 function generateScheduleRun(){
 	var weeks = {};
+	var startDates = {};
 	var missing = false;
+	var missingStart = false;
 	$('.gs-weeks-input').each(function(){
 		var val = parseInt($(this).val(), 10);
 		var catIdsRaw = $(this).data('category-ids');
+		var calId = parseInt($(this).data('calendario-id'), 10);
+		var needsStart = String($(this).data('needs-start')) === '1';
 		if (catIdsRaw === undefined || catIdsRaw === null || String(catIdsRaw).trim() === '') {
 			return;
 		}
 		if (!val || val < 1) {
 			missing = true;
 			return;
+		}
+		if (needsStart && calId > 0) {
+			var startVal = $('#gsStart_cal_' + calId).val();
+			if (!startVal) {
+				missingStart = true;
+				return;
+			}
+			startDates[calId] = startVal;
 		}
 		String(catIdsRaw).split(',').forEach(function(part){
 			var catId = parseInt(part, 10);
@@ -4462,13 +4474,17 @@ function generateScheduleRun(){
 		alert(msgWeeks);
 		return;
 	}
+	if (missingStart) {
+		alert($('#gsGenerateBtn').data('msg-start') || 'Enter the start week date for calendars without weeks.');
+		return;
+	}
 	var teamOrder = generateScheduleCollectTeamOrder();
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Games/generateScheduleGenerate.php',
-		data: {action: 'preview', weeks: weeks, teamOrder: teamOrder},
+		data: {action: 'preview', weeks: weeks, teamOrder: teamOrder, startDates: startDates},
 		success: function (res) {
 			mainLoadingOff();
 			if (res.status === '1' && res.dataGenerateSchedulePreview) {

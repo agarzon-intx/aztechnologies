@@ -127,6 +127,15 @@
   	$lang['101-27'] = 'Omitida (ya hay juegos)';
   	$lang['101-28'] = 'Confirmar y guardar';
   	$lang['101-29'] = 'Round-robin balanceado (máx. 2 locales o visitas consecutivas).';
+  	$lang['101-30'] = 'No hay jornadas. Indica la fecha de la primera; se crearán al confirmar.';
+  	$lang['101-31'] = 'Semana inicial';
+  	$lang['101-32'] = 'Indica la fecha de la semana inicial.';
+  	$lang['101-33'] = 'No se pueden crear jornadas sin calendario.';
+  	$lang['101-34'] = 'No se pudo crear la jornada';
+  	$lang['101-35'] = 'Jornadas creadas: %1.';
+  	$lang['101-36'] = 'Jornada nueva (se creará)';
+  	$lang['101-37'] = 'Al confirmar se crearán las jornadas faltantes y luego los partidos.';
+  	$lang['101-38'] = 'Indica la fecha inicial en los calendarios sin jornadas.';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';
