@@ -138,6 +138,7 @@
   	$lang['101-38'] = 'Indica la fecha inicial en los calendarios sin jornadas.';
   	$lang['101-39'] = 'DESCANSO';
   	$lang['101-40'] = 'Orden de semillas usado en esta categoría';
+  	$lang['101-41'] = 'Jornadas a guardar';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

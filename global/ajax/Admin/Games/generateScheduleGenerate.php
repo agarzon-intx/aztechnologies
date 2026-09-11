@@ -70,6 +70,23 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			exit();
 		}
 
+		$confirmWeeks = 0;
+		if (isset($_POST['confirmWeeks'])) {
+			$confirmWeeks = SanitizeInteger($_POST['confirmWeeks']);
+		}
+		$maxWeeksPlanned = isset($plan['weeksPlanned']) ? (int) $plan['weeksPlanned'] : 0;
+		if ($maxWeeksPlanned < 1) {
+			foreach ($plan['categories'] as $catPlan) {
+				$cnt = isset($catPlan['weeks']) && is_array($catPlan['weeks']) ? count($catPlan['weeks']) : 0;
+				if ($cnt > $maxWeeksPlanned) {
+					$maxWeeksPlanned = $cnt;
+				}
+			}
+		}
+		if ($confirmWeeks < 1 || $confirmWeeks > $maxWeeksPlanned) {
+			$confirmWeeks = $maxWeeksPlanned;
+		}
+
 		$created = 0;
 		$skipped = 0;
 		$weeksCreated = 0;
@@ -85,7 +102,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		// Create simulated weeks once per calendar (shared across categories).
 		$createdWeekIdsByKey = array();
 		foreach ($plan['categories'] as $catPlan) {
+			$weekIdx = 0;
 			foreach ($catPlan['weeks'] as $week) {
+				if ($weekIdx >= $confirmWeeks) {
+					break;
+				}
+				$weekIdx++;
 				if (empty($week['createWeek'])) {
 					continue;
 				}
@@ -146,7 +168,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		// Then create games (including bye rows with NULL on the open side).
 		foreach ($plan['categories'] as $catPlan) {
+			$weekIdx = 0;
 			foreach ($catPlan['weeks'] as $week) {
+				if ($weekIdx >= $confirmWeeks) {
+					break;
+				}
+				$weekIdx++;
 				if (!empty($week['skip'])) {
 					$skipN = 0;
 					if (isset($week['games']) && is_array($week['games'])) {
@@ -666,9 +693,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit();
 	}
 
+	$maxWeeksPlanned = 0;
+	foreach ($planCategories as $catPlan) {
+		$cnt = isset($catPlan['weeks']) ? count($catPlan['weeks']) : 0;
+		if ($cnt > $maxWeeksPlanned) {
+			$maxWeeksPlanned = $cnt;
+		}
+	}
+
 	$_SESSION[$previewKey] = array(
 		'season' => $Season,
 		'categories' => $planCategories,
+		'weeksPlanned' => $maxWeeksPlanned,
 		'createdAt' => time(),
 	);
 
@@ -680,6 +716,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$newWeekLbl = isset($lang['101-36']) ? $lang['101-36'] : 'New week (will be created)';
 	$byeLbl = isset($lang['101-39']) ? $lang['101-39'] : 'BYE';
 	$confirmLbl = isset($lang['101-28']) ? $lang['101-28'] : 'Confirm & save';
+	$weeksSaveLbl = isset($lang['101-41']) ? $lang['101-41'] : 'Weeks to save';
 	$backLbl = isset($lang['0001']) ? $lang['0001'] : 'Cancel';
 	$noteLbl = isset($lang['101-29']) ? $lang['101-29'] : 'Balanced round-robin (max 2 consecutive home or away).';
 	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Confirm will create any missing weeks, then the matches.';
@@ -776,6 +813,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$html .= '</div>
 			<div class="mt-4 mb-2" style="clear: both;">
+				<label class="me-2" for="gsConfirmWeeks">' . htmlspecialchars($weeksSaveLbl, ENT_QUOTES, 'UTF-8') . '</label>
+				<select id="gsConfirmWeeks" class="form-select form-select-sm d-inline-block me-3" style="width: auto; min-width: 4.5rem; vertical-align: middle;">';
+	if ($maxWeeksPlanned < 1) {
+		$maxWeeksPlanned = 1;
+	}
+	for ($wOpt = 1; $wOpt <= $maxWeeksPlanned; $wOpt++) {
+		$sel = ($wOpt === $maxWeeksPlanned) ? ' selected' : '';
+		$html .= '<option value="' . $wOpt . '"' . $sel . '>' . $wOpt . '</option>';
+	}
+	$html .= '</select>
 				<button type="button" class="btn btn-primary me-2" onClick="generateScheduleConfirm();">' . htmlspecialchars($confirmLbl, ENT_QUOTES, 'UTF-8') . '</button>
 				<button type="button" class="btn btn-outline-secondary" onClick="generateScheduleShow();">' . htmlspecialchars($backLbl, ENT_QUOTES, 'UTF-8') . '</button>
 			</div>

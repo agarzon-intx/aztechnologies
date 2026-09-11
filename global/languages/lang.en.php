@@ -138,6 +138,7 @@
   	$lang['101-38'] = 'Enter the start week date for calendars without weeks.';
   	$lang['101-39'] = 'BYE';
   	$lang['101-40'] = 'Seed order used for this category';
+  	$lang['101-41'] = 'Weeks to save';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

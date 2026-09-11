@@ -4507,12 +4507,16 @@ function generateScheduleRun(){
 }
 
 function generateScheduleConfirm(){
+	var confirmWeeks = parseInt($('#gsConfirmWeeks').val(), 10);
+	if (!confirmWeeks || confirmWeeks < 1) {
+		confirmWeeks = parseInt($('#gsConfirmWeeks option:last').val(), 10) || 1;
+	}
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Games/generateScheduleGenerate.php',
-		data: {action: 'confirm'},
+		data: {action: 'confirm', confirmWeeks: confirmWeeks},
 		success: function (res) {
 			mainLoadingOff();
 			alert(res.message || MSG_AJAX_GENERIC);
