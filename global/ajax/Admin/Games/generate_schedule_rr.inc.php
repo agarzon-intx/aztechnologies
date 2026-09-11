@@ -202,14 +202,9 @@ if (!function_exists('az_rr_repair_consecutive')) {
 					if ($homeOk && $awayOk) {
 						continue;
 					}
-					// Try flip.
+					// Try flip if that orientation is legal for both.
 					if (az_rr_streak_ok($history, $away, 'H', $maxConsec) && az_rr_streak_ok($history, $home, 'A', $maxConsec)) {
 						$rounds[$r][$g] = array($away, $home);
-						$home = $away;
-						$away = (int) $games[$g][0];
-						// After flip, home/away swapped — re-read.
-						$home = (int) $rounds[$r][$g][0];
-						$away = (int) $rounds[$r][$g][1];
 						$changed = true;
 					}
 				}
