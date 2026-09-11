@@ -120,7 +120,7 @@
   	$lang['101-20'] = 'No calendar';
   	$lang['101-21'] = 'Category';
   	$lang['101-22'] = 'Ranking & categories';
-  	$lang['101-23'] = 'Use arrows to change seed order.';
+  	$lang['101-23'] = 'Use arrows to change seed order. Each category schedule uses that category’s order.';
   	$lang['101-24'] = 'Order';
   	$lang['101-25'] = 'Schedule preview';
   	$lang['101-26'] = 'Preview expired. Generate again.';
@@ -137,6 +137,7 @@
   	$lang['101-37'] = 'Confirm will create any missing weeks, then the matches.';
   	$lang['101-38'] = 'Enter the start week date for calendars without weeks.';
   	$lang['101-39'] = 'BYE';
+  	$lang['101-40'] = 'Seed order used for this category';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

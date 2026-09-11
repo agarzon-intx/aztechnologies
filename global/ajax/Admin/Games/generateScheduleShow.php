@@ -379,6 +379,30 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
 			});
 
+			// Restore last UI seed order for this category (from a previous generate).
+			$savedOrderKey = $Config->getAlias() . 'gsTeamOrder';
+			$catIdNow = (int) $cat['Categoria_ID'];
+			if (isset($_SESSION[$savedOrderKey][$catIdNow]) && is_array($_SESSION[$savedOrderKey][$catIdNow]) && count($catTeams) > 0) {
+				$byId = array();
+				foreach ($catTeams as $t) {
+					$byId[(int) $t['Equipo_ID']] = $t;
+				}
+				$reordered = array();
+				foreach ($_SESSION[$savedOrderKey][$catIdNow] as $tid) {
+					$tid = (int) $tid;
+					if (isset($byId[$tid])) {
+						$reordered[] = $byId[$tid];
+						unset($byId[$tid]);
+					}
+				}
+				foreach ($byId as $t) {
+					$reordered[] = $t;
+				}
+				if (count($reordered) > 0) {
+					$catTeams = $reordered;
+				}
+			}
+
 			if (count($catTeams) === 0) {
 				$html .= '<tr><td colspan="3">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
 			} else {

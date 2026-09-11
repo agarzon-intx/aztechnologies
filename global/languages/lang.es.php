@@ -120,7 +120,7 @@
   	$lang['101-20'] = 'Sin calendario';
   	$lang['101-21'] = 'Categoría';
   	$lang['101-22'] = 'Ranking y categorías';
-  	$lang['101-23'] = 'Usa las flechas para cambiar el orden de semillas.';
+  	$lang['101-23'] = 'Usa las flechas para cambiar el orden de semillas. Cada categoría usa su propio orden al generar.';
   	$lang['101-24'] = 'Orden';
   	$lang['101-25'] = 'Vista previa del calendario';
   	$lang['101-26'] = 'La vista previa expiró. Genera de nuevo.';
@@ -137,6 +137,7 @@
   	$lang['101-37'] = 'Al confirmar se crearán las jornadas faltantes y luego los partidos.';
   	$lang['101-38'] = 'Indica la fecha inicial en los calendarios sin jornadas.';
   	$lang['101-39'] = 'DESCANSO';
+  	$lang['101-40'] = 'Orden de semillas usado en esta categoría';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

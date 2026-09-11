@@ -645,6 +645,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$activeClass = ($idx === 0) ? ' active' : '';
 		$html .= '<div id="' . $panelId . '" class="tabla' . $activeClass . '" style="display: ' . $display . '; height: auto;">';
 
+		if (!empty($catPlan['seedOrder']) && is_array($catPlan['seedOrder'])) {
+			$seedLbl = isset($lang['101-40']) ? $lang['101-40'] : 'Seed order used for this category';
+			$html .= '<div class="mb-2 text-muted"><strong>' . htmlspecialchars($seedLbl, ENT_QUOTES, 'UTF-8') . ':</strong> '
+				. htmlspecialchars(implode(' · ', $catPlan['seedOrder']), ENT_QUOTES, 'UTF-8') . '</div>';
+		}
+
 		foreach ($catPlan['weeks'] as $wIdx => $week) {
 			$weekTitle = (string) $week['jornadaDesc'];
 			if (!empty($week['fecha'])) {
