@@ -67,7 +67,7 @@ class Configuration
     public $playerSignature = 0;
     public $credencialBack = 0;
     /** 1 = show Generate Schedule in admin Games menu. */
-    public $showGenerateSchedule = 1;
+    public $showGenerateSchedule = 0;
     /** 1 when pdf/Credencial.png (or legacy jpg) is stored on disk. */
     public $credencialFrontImage = 0;
     /** 1 when pdf/CredencialDetras.png (or legacy jpg) is stored on disk. */
@@ -289,10 +289,10 @@ class Configuration
         $selCredencialBack = $this->schemaHasConfigurationColumn($conn, 'credencialBack')
             ? 'credencialBack'
             : '0 AS credencialBack';
-        // Default visible if column not migrated yet (matches previous always-on menu).
+        // Default hidden if column not migrated yet.
         $selShowGenerateSchedule = $this->schemaHasConfigurationColumn($conn, 'showGenerateSchedule')
             ? 'showGenerateSchedule'
-            : '1 AS showGenerateSchedule';
+            : '0 AS showGenerateSchedule';
         $selCredencialFrontImage = $this->schemaHasConfigurationColumn($conn, 'credencialFrontImage')
             ? 'credencialFrontImage'
             : '0 AS credencialFrontImage';

@@ -3,7 +3,7 @@
 	$__selPlayerIDPDFCfg = $Config->configurationHasColumn('playerIDPDF') ? 'playerIDPDF' : '0 AS playerIDPDF';
 	$__selPlayerSignatureCfg = $Config->configurationHasColumn('playerSignature') ? 'playerSignature' : '0 AS playerSignature';
 	$__selCredencialBackCfg = $Config->configurationHasColumn('credencialBack') ? 'credencialBack' : '0 AS credencialBack';
-	$__selShowGenerateScheduleCfg = $Config->configurationHasColumn('showGenerateSchedule') ? 'showGenerateSchedule' : '1 AS showGenerateSchedule';
+	$__selShowGenerateScheduleCfg = $Config->configurationHasColumn('showGenerateSchedule') ? 'showGenerateSchedule' : '0 AS showGenerateSchedule';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
