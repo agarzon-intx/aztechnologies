@@ -51,7 +51,7 @@
 	$playerIDPDFCHK = '';
 	$playerSignatureCHK = '';
 	$credencialBackCHK = '';
-	$showGenerateScheduleCHK = 'checked';
+	$showGenerateScheduleCHK = '';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
