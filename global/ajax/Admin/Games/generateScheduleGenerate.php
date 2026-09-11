@@ -233,6 +233,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit();
 	}
 
+	$startDateByCalendar = array();
+	if (isset($_POST['startDates']) && is_array($_POST['startDates'])) {
+		foreach ($_POST['startDates'] as $calRaw => $dateRaw) {
+			$calId = SanitizeInteger($calRaw);
+			$date = preg_replace('/[^0-9\-]/', '', (string) $dateRaw);
+			if ($calId > 0 && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+				$startDateByCalendar[$calId] = $date;
+			}
+		}
+	}
+
 	$calByCat = array();
 	$weeksByCal = array();
 	$catIdsList = implode(',', array_map('intval', array_keys($weeksByCategory)));
@@ -347,6 +358,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 
 		$jornadas = array();
+		$willCreateWeeks = false;
 		$calId = isset($calByCat[$catId]) ? (int) $calByCat[$catId] : 0;
 		if ($calId <= 0) {
 			$resCalOne = $Config->query("SELECT Calendario_ID FROM $schema.Categorias WHERE Torneo_ID = $Season AND Categoria_ID = $catId LIMIT 1");
@@ -356,7 +368,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 		}
 		if ($calId > 0) {
-			$sqlJ = "SELECT j.Jornada_ID, j.Jornada_Desc, j.Fecha_Inicio, j.Fecha, j.Jornada_Orden
+			$sqlJ = "SELECT j.Jornada_ID, j.Jornada_Desc, j.Fecha_Inicio, j.Fecha, j.Fecha_Fin, j.Jornada_Orden
 					FROM $schema.Jornada j
 					WHERE j.Torneo_ID = $Season
 						AND j.Calendario_ID = $calId
@@ -364,13 +376,26 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$resJ = $Config->query($sqlJ);
 			if ($resJ && $resJ->num_rows > 0) {
 				while ($j = $resJ->fetch_assoc()) {
+					$j['createWeek'] = false;
 					$jornadas[] = $j;
 				}
 			}
 		}
 
 		$catLabel = isset($catNames[$catId]) ? $catNames[$catId] : (string) $catId;
-		if (count($jornadas) < $weeksRequested) {
+		if (count($jornadas) === 0) {
+			$startDate = isset($startDateByCalendar[$calId]) ? $startDateByCalendar[$calId] : '';
+			if ($calId <= 0) {
+				$errors[] = $catLabel . ': ' . (isset($lang['101-33']) ? $lang['101-33'] : 'Cannot create weeks without a calendar.');
+				continue;
+			}
+			if ($startDate === '') {
+				$errors[] = $catLabel . ': ' . (isset($lang['101-32']) ? $lang['101-32'] : 'Enter a start week date.');
+				continue;
+			}
+			$jornadas = az_gs_simulate_jornadas($startDate, $weeksRequested, $calId);
+			$willCreateWeeks = true;
+		} elseif (count($jornadas) < $weeksRequested) {
 			$errors[] = str_replace(
 				array('%1', '%2', '%3'),
 				array($catLabel, (string) $weeksRequested, (string) count($jornadas)),
@@ -390,33 +415,39 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$weekPlans = array();
 		for ($wi = 0; $wi < $weeksRequested; $wi++) {
 			$jornadaId = (int) $jornadas[$wi]['Jornada_ID'];
-			$fecha = $jornadas[$wi]['Fecha_Inicio'];
+			$createWeek = !empty($jornadas[$wi]['createWeek']);
+			$fecha = isset($jornadas[$wi]['Fecha']) ? $jornadas[$wi]['Fecha'] : null;
 			if ($fecha === null || $fecha === '') {
-				$fecha = $jornadas[$wi]['Fecha'];
+				$fecha = $jornadas[$wi]['Fecha_Inicio'];
 			}
 			if ($fecha === null || $fecha === '') {
 				$fecha = date('Y-m-d');
 			}
+			$fechaInicio = isset($jornadas[$wi]['Fecha_Inicio']) ? (string) $jornadas[$wi]['Fecha_Inicio'] : (string) $fecha;
+			$fechaFin = isset($jornadas[$wi]['Fecha_Fin']) ? (string) $jornadas[$wi]['Fecha_Fin'] : (string) $fecha;
+			$orden = isset($jornadas[$wi]['Jornada_Orden']) ? (int) $jornadas[$wi]['Jornada_Orden'] : ($wi + 1);
 			$jornadaDesc = '';
 			if (isset($jornadas[$wi]['Jornada_Desc']) && $jornadas[$wi]['Jornada_Desc'] !== '') {
 				$jornadaDesc = (string) $jornadas[$wi]['Jornada_Desc'];
 			} elseif (isset($jornadas[$wi]['Jornada_DESC']) && $jornadas[$wi]['Jornada_DESC'] !== '') {
 				$jornadaDesc = (string) $jornadas[$wi]['Jornada_DESC'];
 			} else {
-				$jornadaDesc = '#' . ($wi + 1);
+				$jornadaDesc = 'Jornada ' . ($wi + 1);
 			}
 			$skip = false;
-			$sqlExist = "SELECT COUNT(*) AS cnt
-					FROM $schema.Juegos j
-					WHERE j.Torneo_ID = $Season
-						AND j.Jornada_ID = $jornadaId
-						AND (j.Local_ID IN ($teamIdList) OR j.Visitante_ID IN ($teamIdList))";
-			$resExist = $Config->query($sqlExist);
-			if ($resExist && $resExist->num_rows > 0) {
-				$rowE = $resExist->fetch_assoc();
-				if ((int) $rowE['cnt'] > 0) {
-					$skip = true;
-					$totalSkipWeeks++;
+			if (!$createWeek && $jornadaId > 0) {
+				$sqlExist = "SELECT COUNT(*) AS cnt
+						FROM $schema.Juegos j
+						WHERE j.Torneo_ID = $Season
+							AND j.Jornada_ID = $jornadaId
+							AND (j.Local_ID IN ($teamIdList) OR j.Visitante_ID IN ($teamIdList))";
+				$resExist = $Config->query($sqlExist);
+				if ($resExist && $resExist->num_rows > 0) {
+					$rowE = $resExist->fetch_assoc();
+					if ((int) $rowE['cnt'] > 0) {
+						$skip = true;
+						$totalSkipWeeks++;
+					}
 				}
 			}
 
@@ -439,6 +470,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				'jornadaId' => $jornadaId,
 				'jornadaDesc' => $jornadaDesc,
 				'fecha' => (string) $fecha,
+				'fechaInicio' => $fechaInicio,
+				'fechaFin' => $fechaFin,
+				'orden' => $orden,
+				'calendarioId' => $calId,
+				'createWeek' => $createWeek,
 				'skip' => $skip,
 				'games' => $games,
 			);
@@ -448,6 +484,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			'Categoria_ID' => $catId,
 			'Categoria_Desc' => $catLabel,
 			'teamIds' => $teamIds,
+			'willCreateWeeks' => $willCreateWeeks,
 			'weeks' => $weekPlans,
 		);
 	}
