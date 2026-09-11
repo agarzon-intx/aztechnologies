@@ -225,13 +225,15 @@ if (!function_exists('az_rr_assign_home_away')) {
 		$best = null;
 		$stack = array();
 		$calls = 0;
-		$maxCalls = 2000000;
+		$maxCalls = 3000000;
+		$requireDoubleOk = true;
 
 		$search = function ($r, $history, $homeCount, $byeHistory, $openSeq) use (
 			&$search,
 			&$stack,
 			&$best,
 			&$calls,
+			&$requireDoubleOk,
 			$roundsIn,
 			$n,
 			$maxConsec,
@@ -242,45 +244,47 @@ if (!function_exists('az_rr_assign_home_away')) {
 				return false;
 			}
 			if ($r >= $n) {
-				// Accept only if a flipped second RR cycle also respects max consecutive.
-				$hist2 = az_rr_copy_side_history($history);
-				$bye2 = az_rr_copy_side_history($byeHistory);
-				$open2 = $openSeq;
-				$secondOk = true;
-				for ($i = 0; $i < $n; $i++) {
-					$flipped = az_rr_flip_round($stack[$i]);
-					foreach (az_rr_round_games($flipped) as $pair) {
-						$h = (int) $pair[0];
-						$a = (int) $pair[1];
-						if (!az_rr_streak_ok($hist2, $h, 'H', $maxConsec)
-							|| !az_rr_streak_ok($hist2, $a, 'A', $maxConsec)) {
-							$secondOk = false;
-							break 2;
+				if ($requireDoubleOk) {
+					// Accept only if a flipped second RR cycle also respects max consecutive.
+					$hist2 = az_rr_copy_side_history($history);
+					$bye2 = az_rr_copy_side_history($byeHistory);
+					$open2 = $openSeq;
+					$secondOk = true;
+					for ($i = 0; $i < $n; $i++) {
+						$flipped = az_rr_flip_round($stack[$i]);
+						foreach (az_rr_round_games($flipped) as $pair) {
+							$h = (int) $pair[0];
+							$a = (int) $pair[1];
+							if (!az_rr_streak_ok($hist2, $h, 'H', $maxConsec)
+								|| !az_rr_streak_ok($hist2, $a, 'A', $maxConsec)) {
+								$secondOk = false;
+								break 2;
+							}
+							az_rr_apply_pair_history($hist2, $h, $a);
 						}
-						az_rr_apply_pair_history($hist2, $h, $a);
+						$bg = az_rr_round_bye_game($flipped);
+						if ($bg !== null) {
+							$bt = ((int) $bg[0] > 0) ? (int) $bg[0] : (int) $bg[1];
+							$teamSide = ((int) $bg[0] > 0) ? 'H' : 'A';
+							$openSide = ((int) $bg[0] === 0) ? 'H' : 'A';
+							if ($bt <= 0
+								|| !az_rr_streak_ok($hist2, $bt, $teamSide, $maxConsec)
+								|| !az_rr_streak_ok($bye2, $bt, $teamSide, $maxConsec)
+								|| !az_rr_open_side_ok($open2, $openSide, $maxConsec)) {
+								$secondOk = false;
+								break;
+							}
+							az_rr_apply_pair_history($hist2, $bg[0], $bg[1]);
+							if (!isset($bye2[$bt])) {
+								$bye2[$bt] = array();
+							}
+							$bye2[$bt][] = $teamSide;
+							$open2[] = $openSide;
+						}
 					}
-					$bg = az_rr_round_bye_game($flipped);
-					if ($bg !== null) {
-						$bt = ((int) $bg[0] > 0) ? (int) $bg[0] : (int) $bg[1];
-						$teamSide = ((int) $bg[0] > 0) ? 'H' : 'A';
-						$openSide = ((int) $bg[0] === 0) ? 'H' : 'A';
-						if ($bt <= 0
-							|| !az_rr_streak_ok($hist2, $bt, $teamSide, $maxConsec)
-							|| !az_rr_streak_ok($bye2, $bt, $teamSide, $maxConsec)
-							|| !az_rr_open_side_ok($open2, $openSide, $maxConsec)) {
-							$secondOk = false;
-							break;
-						}
-						az_rr_apply_pair_history($hist2, $bg[0], $bg[1]);
-						if (!isset($bye2[$bt])) {
-							$bye2[$bt] = array();
-						}
-						$bye2[$bt][] = $teamSide;
-						$open2[] = $openSide;
+					if (!$secondOk) {
+						return false;
 					}
-				}
-				if (!$secondOk) {
-					return false;
 				}
 				$best = $stack;
 				return true;
@@ -457,6 +461,14 @@ if (!function_exists('az_rr_assign_home_away')) {
 		};
 
 		$ok = $search(0, array(), array(), array(), array());
+		if (!$ok) {
+			// Fall back: single-cycle legal assignment (second cycle still flipped on expand).
+			$requireDoubleOk = false;
+			$calls = 0;
+			$best = null;
+			$stack = array();
+			$ok = $search(0, array(), array(), array(), array());
+		}
 		if ($ok && is_array($best)) {
 			$result = array();
 			for ($i = 0; $i < $n; $i++) {
