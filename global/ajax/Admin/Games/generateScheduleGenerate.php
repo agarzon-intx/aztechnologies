@@ -30,13 +30,71 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'generate_schedule_seeds.inc.php';
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'generate_schedule_rr.inc.php';
 
+	if (!function_exists('az_gs_preview_cache_dir')) {
+		function az_gs_preview_cache_dir() {
+			$dir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'az_gs_preview';
+			if (!is_dir($dir)) {
+				@mkdir($dir, 0700, true);
+			}
+			return $dir;
+		}
+		function az_gs_preview_cache_file($alias) {
+			$sid = session_id();
+			if ($sid === '') {
+				$sid = 'nosession';
+			}
+			$safeAlias = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $alias);
+			$safeSid = preg_replace('/[^a-zA-Z0-9,-]/', '', $sid);
+			return az_gs_preview_cache_dir() . DIRECTORY_SEPARATOR . $safeAlias . '_' . $safeSid . '.json';
+		}
+		function az_gs_preview_save($alias, array $plan) {
+			$_SESSION[$alias . 'gsPreview'] = $plan;
+			$path = az_gs_preview_cache_file($alias);
+			$json = json_encode($plan);
+			if ($json !== false) {
+				@file_put_contents($path, $json, LOCK_EX);
+			}
+			// Flush session before large JSON response so confirm can read it.
+			if (session_status() === PHP_SESSION_ACTIVE) {
+				@session_write_close();
+			}
+			return true;
+		}
+		function az_gs_preview_load($alias) {
+			$key = $alias . 'gsPreview';
+			if (isset($_SESSION[$key]) && is_array($_SESSION[$key]) && !empty($_SESSION[$key]['categories'])) {
+				return $_SESSION[$key];
+			}
+			$path = az_gs_preview_cache_file($alias);
+			if (is_readable($path)) {
+				$raw = @file_get_contents($path);
+				if (is_string($raw) && $raw !== '') {
+					$decoded = json_decode($raw, true);
+					if (is_array($decoded) && !empty($decoded['categories'])) {
+						$_SESSION[$key] = $decoded;
+						return $decoded;
+					}
+				}
+			}
+			return null;
+		}
+		function az_gs_preview_clear($alias) {
+			unset($_SESSION[$alias . 'gsPreview']);
+			$path = az_gs_preview_cache_file($alias);
+			if (is_file($path)) {
+				@unlink($path);
+			}
+		}
+	}
+
 	$retunData = array('status' => '0', 'message' => $lang['js0002']);
 	$action = isset($_POST['action']) ? (string) $_POST['action'] : 'preview';
-	$previewKey = $Config->getAlias() . 'gsPreview';
+	$alias = $Config->getAlias();
+	$previewKey = $alias . 'gsPreview';
 
 	$Season = 0;
-	if (isset($_COOKIE[$Config->getAlias() . 'season']) && $_COOKIE[$Config->getAlias() . 'season'] !== '') {
-		$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season']);
+	if (isset($_COOKIE[$alias . 'season']) && $_COOKIE[$alias . 'season'] !== '') {
+		$Season = SanitizeInteger($_COOKIE[$alias . 'season']);
 	}
 	if ($Season <= 0) {
 		$resActual = $Config->query("SELECT Torneo_ID FROM $schema.Torneos WHERE Actual = 'S' ORDER BY Torneo_ID DESC LIMIT 1");
@@ -58,12 +116,22 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit();
 	}
 
-	$username = $_SESSION[$Config->getAlias() . 'username'];
+	$username = isset($_SESSION[$alias . 'username']) ? $_SESSION[$alias . 'username'] : '';
 
-	// ---------- CONFIRM: save preview stored in session ----------
+	// ---------- CONFIRM: save preview stored in session / cache ----------
 	if ($action === 'confirm') {
-		$plan = isset($_SESSION[$previewKey]) ? $_SESSION[$previewKey] : null;
-		if (!is_array($plan) || (int) ($plan['season'] ?? 0) !== $Season || empty($plan['categories']) || !is_array($plan['categories'])) {
+		$plan = az_gs_preview_load($alias);
+		if (!is_array($plan) || empty($plan['categories']) || !is_array($plan['categories'])) {
+			$retunData = array('status' => '0', 'message' => (isset($lang['101-26']) ? $lang['101-26'] : 'Preview expired. Generate again.'));
+			header('Content-Type: application/json');
+			echo json_encode($retunData);
+			exit();
+		}
+		// Trust the season from the preview plan (cookie can drift between generate and confirm).
+		$planSeason = isset($plan['season']) ? (int) $plan['season'] : 0;
+		if ($planSeason > 0) {
+			$Season = $planSeason;
+		} elseif ($Season <= 0) {
 			$retunData = array('status' => '0', 'message' => (isset($lang['101-26']) ? $lang['101-26'] : 'Preview expired. Generate again.'));
 			header('Content-Type: application/json');
 			echo json_encode($retunData);
@@ -287,7 +355,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 		}
 		$Connection->Close();
-		unset($_SESSION[$previewKey]);
+		az_gs_preview_clear($alias);
 
 		if ($created > 0 && count($errors) === 0) {
 			$msg = str_replace(
@@ -438,7 +506,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 	}
 	// Remember last UI order so each category keeps its own seed list across preview/confirm.
-	$_SESSION[$Config->getAlias() . 'gsTeamOrder'] = $teamOrderByCategory;
+	$_SESSION[$alias . 'gsTeamOrder'] = $teamOrderByCategory;
 
 	$teamNameCache = array();
 	$resolveTeamName = function ($teamId) use ($Config, $schema, $Season, &$teamNameCache) {
@@ -701,12 +769,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 	}
 
-	$_SESSION[$previewKey] = array(
+	$planPayload = array(
 		'season' => $Season,
 		'categories' => $planCategories,
 		'weeksPlanned' => $maxWeeksPlanned,
 		'createdAt' => time(),
 	);
+	az_gs_preview_save($alias, $planPayload);
 
 	// Build preview HTML
 	$previewTitle = isset($lang['101-25']) ? $lang['101-25'] : 'Schedule preview';
