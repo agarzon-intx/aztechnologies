@@ -212,13 +212,15 @@ $schema = $Config->getSchema();
     											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">scoreboard</i> </span>
     											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101'] . ' <b class="caret"></b></span>
     										</a>
-    									</li>
-    									<li class="nav-item ">
+    									</li>';
+    			if ((int) $Config->showGenerateSchedule === 1) {
+    				$htmlMenu .= '<li class="nav-item ">
     										<a class="nav-link text-white " aria-expanded="false" onClick="generateScheduleShow(); toggleSidenav();">
     											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">calendar_month</i> </span>
     											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101-1'] . ' <b class="caret"></b></span>
     										</a>
     									</li>';
+    			}
     			$htmlMenu .= '      </ul>
     							</div>';
     			$htmlMenu .= '</li>';
