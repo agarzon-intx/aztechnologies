@@ -150,6 +150,29 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$institutionSeeds = az_generate_schedule_institution_seeds($Config, $schema, $Season);
 
+	// Optional per-category team order from the UI (after manual reordering).
+	$teamOrderByCategory = array();
+	if (isset($_POST['teamOrder']) && is_array($_POST['teamOrder'])) {
+		foreach ($_POST['teamOrder'] as $catIdRaw => $ids) {
+			$cid = SanitizeInteger($catIdRaw);
+			if ($cid <= 0 || !is_array($ids)) {
+				continue;
+			}
+			$ordered = array();
+			$seen = array();
+			foreach ($ids as $idRaw) {
+				$tid = SanitizeInteger($idRaw);
+				if ($tid > 0 && !isset($seen[$tid])) {
+					$seen[$tid] = true;
+					$ordered[] = $tid;
+				}
+			}
+			if (count($ordered) > 0) {
+				$teamOrderByCategory[$cid] = $ordered;
+			}
+		}
+	}
+
 	$created = 0;
 	$skipped = 0;
 	$errors = array();
@@ -160,8 +183,34 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			continue;
 		}
 
-		// Tournament-wide institution seeds, then teams in this category (Fuerza).
-		$teamIds = az_generate_schedule_seeded_team_ids_for_category($Config, $schema, $Season, $catId, $institutionSeeds);
+		// Prefer UI order when provided; otherwise tournament-wide institution seeds.
+		$teamIds = array();
+		if (isset($teamOrderByCategory[$catId]) && count($teamOrderByCategory[$catId]) >= 2) {
+			$allowed = array();
+			$sqlTeams = "SELECT Equipo_ID FROM $schema.Equipos
+					WHERE Torneo_ID = $Season
+						AND Fuerza = $catId
+						AND IFNULL(Activo, 0) = 1";
+			$resTeams = $Config->query($sqlTeams);
+			if ($resTeams && $resTeams->num_rows > 0) {
+				while ($tr = $resTeams->fetch_assoc()) {
+					$allowed[(int) $tr['Equipo_ID']] = true;
+				}
+			}
+			foreach ($teamOrderByCategory[$catId] as $tid) {
+				if (isset($allowed[$tid])) {
+					$teamIds[] = $tid;
+					unset($allowed[$tid]);
+				}
+			}
+			// Append any active teams missing from the posted order (stable fallback).
+			foreach (array_keys($allowed) as $tid) {
+				$teamIds[] = (int) $tid;
+			}
+		}
+		if (count($teamIds) < 2) {
+			$teamIds = az_generate_schedule_seeded_team_ids_for_category($Config, $schema, $Season, $catId, $institutionSeeds);
+		}
 
 		if (count($teamIds) < 2) {
 			$errors[] = str_replace('%1', (string) $catId, $lang['101-10']);

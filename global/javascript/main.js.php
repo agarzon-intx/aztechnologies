@@ -4365,6 +4365,58 @@ function loadWeeksAdmin(type){
 	});
 }
 
+function generateScheduleMoveSeed(btn, dir){
+	var row = $(btn).closest('tr.gs-seed-row');
+	if (!row.length) {
+		return;
+	}
+	dir = parseInt(dir, 10) || 0;
+	if (dir < 0) {
+		var prev = row.prev('tr.gs-seed-row');
+		if (prev.length) {
+			row.insertBefore(prev);
+		}
+	} else if (dir > 0) {
+		var next = row.next('tr.gs-seed-row');
+		if (next.length) {
+			row.insertAfter(next);
+		}
+	}
+	generateScheduleRenumberSeeds(row.closest('tbody.gs-cat-seed-tbody'));
+}
+
+function generateScheduleRenumberSeeds($tbody){
+	if (!$tbody || !$tbody.length) {
+		return;
+	}
+	var n = 0;
+	$tbody.find('tr.gs-seed-row').each(function(){
+		n++;
+		$(this).find('.gs-seed-rank').text(n);
+	});
+}
+
+function generateScheduleCollectTeamOrder(){
+	var teamOrder = {};
+	$('tbody.gs-cat-seed-tbody').each(function(){
+		var catId = parseInt($(this).data('category-id'), 10);
+		if (!catId) {
+			return;
+		}
+		var ids = [];
+		$(this).find('tr.gs-seed-row').each(function(){
+			var id = parseInt($(this).data('equipo-id'), 10);
+			if (id > 0) {
+				ids.push(id);
+			}
+		});
+		if (ids.length) {
+			teamOrder[catId] = ids;
+		}
+	});
+	return teamOrder;
+}
+
 function generateScheduleShow(){
 	mainLoadingOn();
 	$.ajax({
@@ -4410,12 +4462,13 @@ function generateScheduleRun(){
 		alert(msgWeeks);
 		return;
 	}
+	var teamOrder = generateScheduleCollectTeamOrder();
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Games/generateScheduleGenerate.php',
-		data: {weeks: weeks},
+		data: {weeks: weeks, teamOrder: teamOrder},
 		success: function (res) {
 			mainLoadingOff();
 			alert(res.message || MSG_AJAX_GENERIC);

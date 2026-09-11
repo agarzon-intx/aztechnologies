@@ -338,22 +338,26 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		foreach ($categories as $cat) {
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
 			$html .= '<div id="' . $panelId . '" class="tabla" style="display: none; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . (int) $cat['Calendario_ID'] . '">
-				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-16']) ? $lang['101-16'] : 'Category ranking'), ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-16']) ? $lang['101-16'] : 'Category ranking'), ENT_QUOTES, 'UTF-8') . '</strong>
+					<small class="text-muted ms-2">' . htmlspecialchars((string) (isset($lang['101-23']) ? $lang['101-23'] : 'Use arrows to change seed order.'), ENT_QUOTES, 'UTF-8') . '</small>
+				</div>
 				<div class="table-responsive">
 					<table class="table table-sm table-striped align-middle mb-0">
 						<thead>
 							<tr>
 								<th style="width: 70px;">#</th>
 								<th>' . htmlspecialchars((string) (isset($lang['112']) ? $lang['112'] : 'Equipo'), ENT_QUOTES, 'UTF-8') . '</th>
+								<th style="width: 90px;" class="text-center">' . htmlspecialchars((string) (isset($lang['101-24']) ? $lang['101-24'] : 'Order'), ENT_QUOTES, 'UTF-8') . '</th>
 							</tr>
 						</thead>
-						<tbody>';
+						<tbody class="gs-cat-seed-tbody" data-category-id="' . (int) $cat['Categoria_ID'] . '">';
 
 			$catTeams = array();
 			foreach ($cat['seeds'] as $seed) {
 				foreach ($seed['teams'] as $t) {
 					$catTeams[] = array(
 						'seed' => (int) $seed['seed'],
+						'Equipo_ID' => (int) $t['Equipo_ID'],
 						'Equipo_DESC' => (string) $t['Equipo_DESC'],
 					);
 				}
@@ -366,14 +370,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			});
 
 			if (count($catTeams) === 0) {
-				$html .= '<tr><td colspan="2">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
+				$html .= '<tr><td colspan="3">' . htmlspecialchars((string) (isset($lang['101-7']) ? $lang['101-7'] : 'No teams'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
 			} else {
 				$catRank = 0;
 				foreach ($catTeams as $t) {
 					$catRank++;
-					$html .= '<tr>
-							<td>' . $catRank . '</td>
+					$html .= '<tr class="gs-seed-row" data-equipo-id="' . (int) $t['Equipo_ID'] . '">
+							<td class="gs-seed-rank">' . $catRank . '</td>
 							<td>' . htmlspecialchars((string) $t['Equipo_DESC'], ENT_QUOTES, 'UTF-8') . '</td>
+							<td class="text-center text-nowrap">
+								<button type="button" class="btn btn-sm btn-outline-secondary px-2 py-0" title="Up" onClick="generateScheduleMoveSeed(this, -1);">&#9650;</button>
+								<button type="button" class="btn btn-sm btn-outline-secondary px-2 py-0" title="Down" onClick="generateScheduleMoveSeed(this, 1);">&#9660;</button>
+							</td>
 						</tr>';
 				}
 			}

@@ -120,6 +120,8 @@
   	$lang['101-20'] = 'Sin calendario';
   	$lang['101-21'] = 'Categoría';
   	$lang['101-22'] = 'Ranking y categorías';
+  	$lang['101-23'] = 'Usa las flechas para cambiar el orden de semillas.';
+  	$lang['101-24'] = 'Orden';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';
