@@ -4365,25 +4365,6 @@ function loadWeeksAdmin(type){
 	});
 }
 
-function generateScheduleSyncWeeks(el){
-	if (!el) {
-		return;
-	}
-	var calId = $(el).data('calendario-id');
-	if (!calId) {
-		return;
-	}
-	var val = $(el).val();
-	$('.gs-weeks-input').each(function(){
-		if (this === el) {
-			return;
-		}
-		if (String($(this).data('calendario-id')) === String(calId)) {
-			$(this).val(val);
-		}
-	});
-}
-
 function generateScheduleShow(){
 	mainLoadingOn();
 	$.ajax({
@@ -4407,21 +4388,22 @@ function generateScheduleShow(){
 function generateScheduleRun(){
 	var weeks = {};
 	var missing = false;
-	// Keep calendar-shared inputs aligned before collect.
 	$('.gs-weeks-input').each(function(){
-		generateScheduleSyncWeeks(this);
-	});
-	$('.gs-weeks-input').each(function(){
-		var catId = $(this).data('category-id');
 		var val = parseInt($(this).val(), 10);
-		if (!catId) {
+		var catIdsRaw = $(this).data('category-ids');
+		if (catIdsRaw === undefined || catIdsRaw === null || String(catIdsRaw).trim() === '') {
 			return;
 		}
 		if (!val || val < 1) {
 			missing = true;
 			return;
 		}
-		weeks[catId] = val;
+		String(catIdsRaw).split(',').forEach(function(part){
+			var catId = parseInt(part, 10);
+			if (catId > 0) {
+				weeks[catId] = val;
+			}
+		});
 	});
 	if (missing || Object.keys(weeks).length === 0) {
 		var msgWeeks = $('#gsGenerateBtn').data('msg-weeks') || 'Enter weeks for each category.';

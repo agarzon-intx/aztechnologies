@@ -116,6 +116,10 @@
   	$lang['101-16'] = 'Category ranking';
   	$lang['101-17'] = 'Shared with other categories on this calendar.';
   	$lang['101-18'] = 'Show Generate Schedule menu';
+  	$lang['101-19'] = 'Categories on this calendar';
+  	$lang['101-20'] = 'No calendar';
+  	$lang['101-21'] = 'Category';
+  	$lang['101-22'] = 'Ranking & categories';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

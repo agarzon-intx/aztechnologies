@@ -116,6 +116,10 @@
   	$lang['101-16'] = 'Ranking de categoría';
   	$lang['101-17'] = 'Compartido con otras categorías de este calendario.';
   	$lang['101-18'] = 'Mostrar menú Generar calendario';
+  	$lang['101-19'] = 'Categorías de este calendario';
+  	$lang['101-20'] = 'Sin calendario';
+  	$lang['101-21'] = 'Categoría';
+  	$lang['101-22'] = 'Ranking y categorías';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

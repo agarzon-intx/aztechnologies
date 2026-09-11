@@ -119,6 +119,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			ORDER BY c.Categoria_Orden ASC, c.Categoria_Desc ASC";
 	$resCat = $Config->query($sqlCat);
 	$weekCountByCalendar = array();
+	$calendarNames = array();
+	$resCalNames = $Config->query("SELECT Calendario_ID, Calendario_DESC FROM $schema.Calendario");
+	if ($resCalNames && $resCalNames->num_rows > 0) {
+		while ($cn = $resCalNames->fetch_assoc()) {
+			$calendarNames[(int) $cn['Calendario_ID']] = (string) $cn['Calendario_DESC'];
+		}
+	}
 	if ($resCat && $resCat->num_rows > 0) {
 		while ($row = $resCat->fetch_assoc()) {
 			$catId = (int) $row['Categoria_ID'];
@@ -166,6 +173,29 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 	}
 
+	// Group categories by calendar for the Calendars section.
+	$calendars = array();
+	foreach ($categories as $cat) {
+		$calId = (int) $cat['Calendario_ID'];
+		if (!isset($calendars[$calId])) {
+			$calName = '';
+			if ($calId > 0 && isset($calendarNames[$calId]) && $calendarNames[$calId] !== '') {
+				$calName = $calendarNames[$calId];
+			} elseif ($calId > 0) {
+				$calName = (string) (isset($lang['62']) ? $lang['62'] : 'Calendar') . ' #' . $calId;
+			} else {
+				$calName = (string) (isset($lang['101-20']) ? $lang['101-20'] : 'No calendar');
+			}
+			$calendars[$calId] = array(
+				'Calendario_ID' => $calId,
+				'Calendario_DESC' => $calName,
+				'weekCount' => (int) $cat['weekCount'],
+				'categories' => array(),
+			);
+		}
+		$calendars[$calId]['categories'][] = $cat;
+	}
+
 	$html = '<div id="generateSchedule" class="tabla active" style="display: block;padding-top: 10px;" data-tournament-id="' . (int) $Season . '">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
 			<div style="float: left;width: 100%;padding-top: 8px;padding-bottom: 8px;">
@@ -176,8 +206,86 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if (count($categories) === 0) {
 		$html .= '<div class="alert alert-warning">' . htmlspecialchars((string) (isset($lang['101-6']) ? $lang['101-6'] : 'No categories'), ENT_QUOTES, 'UTF-8') . '</div>';
 	} else {
+		// --- Calendars section (weeks per calendar) ---
+		$calendarsLabel = (string) (isset($lang['133']) ? $lang['133'] : 'Calendars');
+		$html .= '<div class="mb-2 mt-2"><strong>' . htmlspecialchars($calendarsLabel, ENT_QUOTES, 'UTF-8') . '</strong></div>
+			<div class="nav-wrapper position-relative end-0">
+				<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #e8f5e9; flex-direction: unset !important; flex-wrap: wrap;" id="generateScheduleCalendarNavTabs">';
+
+		$calIdx = 0;
+		foreach ($calendars as $cal) {
+			$calId = (int) $cal['Calendario_ID'];
+			$panelId = 'gsCal' . $calId;
+			$active = ($calIdx === 0) ? ' active' : '';
+			$selected = ($calIdx === 0) ? 'true' : 'false';
+			$html .= '<li class="nav-item" id="' . $panelId . 'li">
+					<a class="nav-link mb-0 px-2 py-1' . $active . '" data-bs-toggle="tab" style="cursor: pointer;" callval="#' . $panelId . '" role="tab" aria-controls="' . $panelId . 'li" aria-selected="' . $selected . '">'
+						. htmlspecialchars((string) $cal['Calendario_DESC'], ENT_QUOTES, 'UTF-8') .
+					'</a>
+				</li>';
+			$calIdx++;
+		}
+
+		$html .= '</ul>
+			</div>
+			<script>initNavs("generateScheduleCalendarNavTabs");</script>
+			<div class="tabla-content" style="padding-top: 12px; padding-bottom: 16px;">';
+
+		$calIdx = 0;
+		foreach ($calendars as $cal) {
+			$calId = (int) $cal['Calendario_ID'];
+			$panelId = 'gsCal' . $calId;
+			$display = ($calIdx === 0) ? 'block' : 'none';
+			$activeClass = ($calIdx === 0) ? ' active' : '';
+			$weeks = (int) $cal['weekCount'];
+			$weeksValue = ($weeks > 0) ? (string) $weeks : '';
+			$weeksHint = ($weeks > 0)
+				? (string) (isset($lang['101-2']) ? $lang['101-2'] : 'Calendar has %1 week(s).')
+				: (string) (isset($lang['101-3']) ? $lang['101-3'] : 'Enter weeks.');
+			$weeksHint = str_replace('%1', (string) $weeks, $weeksHint);
+			$catIds = array();
+			foreach ($cal['categories'] as $c) {
+				$catIds[] = (int) $c['Categoria_ID'];
+			}
+			$catIdsAttr = implode(',', $catIds);
+
+			$html .= '<div id="' . $panelId . '" class="tabla' . $activeClass . '" style="display: ' . $display . '; height: auto;" data-calendario-id="' . $calId . '">
+				<div class="row align-items-end mb-3">
+					<div class="col-12 col-md-6 col-lg-4">
+						<label class="form-label" for="gsWeeks_cal_' . $calId . '">' . htmlspecialchars((string) (isset($lang['108']) ? $lang['108'] : 'Weeks'), ENT_QUOTES, 'UTF-8') . '</label>
+						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_cal_' . $calId . '" data-calendario-id="' . $calId . '" data-category-ids="' . htmlspecialchars($catIdsAttr, ENT_QUOTES, 'UTF-8') . '" data-default-weeks="' . $weeks . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" />
+						<small class="text-muted">' . htmlspecialchars($weeksHint, ENT_QUOTES, 'UTF-8') . '</small>
+					</div>
+				</div>
+				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-19']) ? $lang['101-19'] : 'Categories on this calendar'), ENT_QUOTES, 'UTF-8') . '</strong></div>
+				<div class="table-responsive">
+					<table class="table table-sm table-striped align-middle mb-0">
+						<thead>
+							<tr>
+								<th>' . htmlspecialchars((string) (isset($lang['101-21']) ? $lang['101-21'] : 'Category'), ENT_QUOTES, 'UTF-8') . '</th>
+							</tr>
+						</thead>
+						<tbody>';
+			if (count($cal['categories']) === 0) {
+				$html .= '<tr><td>' . htmlspecialchars((string) (isset($lang['101-6']) ? $lang['101-6'] : 'No categories'), ENT_QUOTES, 'UTF-8') . '</td></tr>';
+			} else {
+				foreach ($cal['categories'] as $c) {
+					$html .= '<tr><td>' . htmlspecialchars((string) $c['Categoria_Desc'], ENT_QUOTES, 'UTF-8') . '</td></tr>';
+				}
+			}
+			$html .= '</tbody>
+					</table>
+				</div>
+			</div>';
+			$calIdx++;
+		}
+
+		$html .= '</div>';
+
+		// --- Ranking + category tabs ---
 		$rankingLabel = (string) (isset($lang['101-15']) ? $lang['101-15'] : 'Ranking');
-		$html .= '<div class="nav-wrapper position-relative end-0">
+		$html .= '<div class="mb-2 mt-3"><strong>' . htmlspecialchars((string) (isset($lang['101-22']) ? $lang['101-22'] : 'Ranking & categories'), ENT_QUOTES, 'UTF-8') . '</strong></div>
+			<div class="nav-wrapper position-relative end-0">
 				<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important; flex-wrap: wrap;" id="generateScheduleNavTabs">
 				<li class="nav-item" id="gsRankingAllli">
 					<a class="nav-link mb-0 px-2 py-1 active" data-bs-toggle="tab" style="cursor: pointer;" callval="#gsRankingAll" role="tab" aria-controls="gsRankingAllli" aria-selected="true">'
@@ -199,7 +307,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			<script>initNavs("generateScheduleNavTabs");</script>
 			<div class="tabla-content" style="padding-top: 12px;">';
 
-		// First tab: tournament-wide institution ranking (position + name).
+		// Ranking tab: tournament-wide institution ranking (position + name).
 		$html .= '<div id="gsRankingAll" class="tabla active" style="display: block; height: auto;">
 			<div class="table-responsive">
 				<table class="table table-sm table-striped align-middle mb-0">
@@ -229,26 +337,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		foreach ($categories as $cat) {
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
-			$calId = (int) $cat['Calendario_ID'];
-			$weeks = (int) $cat['weekCount'];
-			$weeksValue = ($weeks > 0) ? (string) $weeks : '';
-			$weeksHint = ($weeks > 0)
-				? (string) (isset($lang['101-2']) ? $lang['101-2'] : 'Calendar has %1 week(s).')
-				: (string) (isset($lang['101-3']) ? $lang['101-3'] : 'Enter weeks.');
-			$weeksHint = str_replace('%1', (string) $weeks, $weeksHint);
-			if ($calId > 0) {
-				$shareHint = (string) (isset($lang['101-17']) ? $lang['101-17'] : 'Shared with other categories on this calendar.');
-				$weeksHint .= ' ' . $shareHint;
-			}
-
-			$html .= '<div id="' . $panelId . '" class="tabla" style="display: none; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . $calId . '">
-				<div class="row align-items-end mb-3">
-					<div class="col-12 col-md-6 col-lg-4">
-						<label class="form-label" for="gsWeeks_' . (int) $cat['Categoria_ID'] . '">' . htmlspecialchars((string) (isset($lang['108']) ? $lang['108'] : 'Weeks'), ENT_QUOTES, 'UTF-8') . '</label>
-						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_' . (int) $cat['Categoria_ID'] . '" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . $calId . '" data-default-weeks="' . $weeks . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" oninput="generateScheduleSyncWeeks(this);" />
-						<small class="text-muted">' . htmlspecialchars($weeksHint, ENT_QUOTES, 'UTF-8') . '</small>
-					</div>
-				</div>
+			$html .= '<div id="' . $panelId . '" class="tabla" style="display: none; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . (int) $cat['Calendario_ID'] . '">
 				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-16']) ? $lang['101-16'] : 'Category ranking'), ENT_QUOTES, 'UTF-8') . '</strong></div>
 				<div class="table-responsive">
 					<table class="table table-sm table-striped align-middle mb-0">
