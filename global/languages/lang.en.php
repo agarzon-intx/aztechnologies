@@ -136,7 +136,8 @@
   	$lang['101-36'] = 'New week (will be created)';
   	$lang['101-37'] = 'Confirm will create any missing weeks, then the matches.';
   	$lang['101-38'] = 'Enter the start week date for calendars without weeks.';
-  	$lang['101-39'] = 'BYE';  	$lang['102'] = 'Users';
+  	$lang['101-39'] = 'BYE';
+  	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';
   	$lang['105'] = 'Seasons';
