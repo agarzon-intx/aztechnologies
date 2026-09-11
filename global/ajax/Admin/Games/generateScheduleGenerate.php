@@ -72,6 +72,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 		$created = 0;
 		$skipped = 0;
+		$weeksCreated = 0;
 		$errors = array();
 		$Connection = $Config->connectAdmin();
 		if (!$Connection) {
@@ -81,6 +82,62 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			exit();
 		}
 
+		// Create simulated weeks once per calendar (shared across categories).
+		$createdWeekIdsByKey = array();
+		foreach ($plan['categories'] as $catPlan) {
+			foreach ($catPlan['weeks'] as $week) {
+				if (empty($week['createWeek'])) {
+					continue;
+				}
+				$calId = (int) ($week['calendarioId'] ?? 0);
+				$orden = (int) ($week['orden'] ?? 0);
+				$key = $calId . ':' . $orden;
+				if (isset($createdWeekIdsByKey[$key])) {
+					continue;
+				}
+				if ($calId <= 0 || $orden <= 0) {
+					$errors[] = isset($lang['101-33']) ? $lang['101-33'] : 'Cannot create week without calendar.';
+					continue;
+				}
+				$fecha = (string) ($week['fecha'] ?? '');
+				$inicio = (string) ($week['fechaInicio'] ?? $fecha);
+				$fin = (string) ($week['fechaFin'] ?? $fecha);
+				$desc = (string) ($week['jornadaDesc'] ?? ('Jornada ' . $orden));
+				$descEsc = $Connection->real_escape_string($desc);
+				$fechaEsc = $Connection->real_escape_string($fecha);
+				$inicioEsc = $Connection->real_escape_string($inicio);
+				$finEsc = $Connection->real_escape_string($fin);
+				$userEsc = $Connection->real_escape_string($username);
+				// WeekCreate(user, season, weekNum→DescCorta, desc→Desc, orden, fecha, inicio, fin, cal, type, @out)
+				$sqlW = "CALL $schema.WeekCreate('$userEsc', $Season, $orden, '$descEsc', $orden, '$fechaEsc', '$inicioEsc', '$finEsc', $calId, 1, @out);";
+				$okW = $Connection->query($sqlW);
+				$newId = 0;
+				if ($okW) {
+					$Connection->query("SELECT @out AS 'count'");
+					$resId = $Connection->query("SELECT LAST_INSERT_ID() AS id");
+					if ($resId && $resId->num_rows > 0) {
+						$rowId = $resId->fetch_assoc();
+						$newId = (int) $rowId['id'];
+					}
+					if ($newId <= 0) {
+						$resFind = $Connection->query("SELECT Jornada_ID FROM $schema.Jornada
+								WHERE Torneo_ID = $Season AND Calendario_ID = $calId AND Jornada_Orden = $orden
+								ORDER BY Jornada_ID DESC LIMIT 1");
+						if ($resFind && $resFind->num_rows > 0) {
+							$rowF = $resFind->fetch_assoc();
+							$newId = (int) $rowF['Jornada_ID'];
+						}
+					}
+				}
+				if ($newId > 0) {
+					$createdWeekIdsByKey[$key] = $newId;
+					$weeksCreated++;
+				} else {
+					$errors[] = (isset($lang['101-34']) ? $lang['101-34'] : 'Failed to create week') . ' #' . $orden;
+				}
+			}
+		}
+
 		foreach ($plan['categories'] as $catPlan) {
 			foreach ($catPlan['weeks'] as $week) {
 				if (!empty($week['skip'])) {
@@ -88,6 +145,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					continue;
 				}
 				$jornadaId = (int) $week['jornadaId'];
+				if (!empty($week['createWeek'])) {
+					$calId = (int) ($week['calendarioId'] ?? 0);
+					$orden = (int) ($week['orden'] ?? 0);
+					$key = $calId . ':' . $orden;
+					if (isset($createdWeekIdsByKey[$key])) {
+						$jornadaId = (int) $createdWeekIdsByKey[$key];
+					}
+				}
+				if ($jornadaId <= 0) {
+					$errors[] = isset($lang['101-34']) ? $lang['101-34'] : 'Missing week id';
+					continue;
+				}
 				$fecha = (string) $week['fecha'];
 				$fechaEsc = $Connection->real_escape_string($fecha);
 				$userEsc = $Connection->real_escape_string($username);
@@ -114,7 +183,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				array((string) $created, (string) $skipped),
 				$lang['101-12']
 			);
-			$retunData = array('status' => '1', 'message' => $msg, 'created' => $created, 'skipped' => $skipped);
+			if ($weeksCreated > 0) {
+				$msg .= ' ' . str_replace('%1', (string) $weeksCreated, isset($lang['101-35']) ? $lang['101-35'] : 'Weeks created: %1.');
+			}
+			$retunData = array('status' => '1', 'message' => $msg, 'created' => $created, 'skipped' => $skipped, 'weeksCreated' => $weeksCreated);
 		} elseif ($created > 0) {
 			$msg = str_replace(
 				array('%1', '%2'),
@@ -126,6 +198,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				'message' => $msg . "\n" . implode("\n", $errors),
 				'created' => $created,
 				'skipped' => $skipped,
+				'weeksCreated' => $weeksCreated,
 			);
 		} else {
 			$retunData = array(
@@ -133,6 +206,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				'message' => count($errors) ? implode("\n", $errors) : $lang['101-13'],
 				'created' => 0,
 				'skipped' => $skipped,
+				'weeksCreated' => $weeksCreated,
 			);
 		}
 		header('Content-Type: application/json');

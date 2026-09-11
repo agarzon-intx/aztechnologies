@@ -251,12 +251,22 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 			$html .= '<div id="' . $panelId . '" class="tabla' . $activeClass . '" style="display: ' . $display . '; height: auto;" data-calendario-id="' . $calId . '">
 				<div class="row align-items-end mb-3">
-					<div class="col-12 col-md-6 col-lg-4">
+					<div class="col-12 col-md-4 col-lg-3">
 						<label class="form-label" for="gsWeeks_cal_' . $calId . '">' . htmlspecialchars((string) (isset($lang['108']) ? $lang['108'] : 'Weeks'), ENT_QUOTES, 'UTF-8') . '</label>
-						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_cal_' . $calId . '" data-calendario-id="' . $calId . '" data-category-ids="' . htmlspecialchars($catIdsAttr, ENT_QUOTES, 'UTF-8') . '" data-default-weeks="' . $weeks . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" />
+						<input type="number" min="1" step="1" class="form-control gs-weeks-input" id="gsWeeks_cal_' . $calId . '" data-calendario-id="' . $calId . '" data-category-ids="' . htmlspecialchars($catIdsAttr, ENT_QUOTES, 'UTF-8') . '" data-default-weeks="' . $weeks . '" data-needs-start="' . ($weeks > 0 ? '0' : '1') . '" value="' . htmlspecialchars($weeksValue, ENT_QUOTES, 'UTF-8') . '" />
 						<small class="text-muted">' . htmlspecialchars($weeksHint, ENT_QUOTES, 'UTF-8') . '</small>
-					</div>
-				</div>
+					</div>';
+
+			if ($weeks <= 0) {
+				$startHint = (string) (isset($lang['101-30']) ? $lang['101-30'] : 'No weeks found. Enter the first week date; weeks will be created on confirm.');
+				$html .= '<div class="col-12 col-md-4 col-lg-3">
+						<label class="form-label" for="gsStart_cal_' . $calId . '">' . htmlspecialchars((string) (isset($lang['101-31']) ? $lang['101-31'] : 'Start week'), ENT_QUOTES, 'UTF-8') . '</label>
+						<input type="date" class="form-control gs-start-week-input" id="gsStart_cal_' . $calId . '" data-calendario-id="' . $calId . '" />
+						<small class="text-muted">' . htmlspecialchars($startHint, ENT_QUOTES, 'UTF-8') . '</small>
+					</div>';
+			}
+
+			$html .= '</div>
 				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-19']) ? $lang['101-19'] : 'Categories on this calendar'), ENT_QUOTES, 'UTF-8') . '</strong></div>
 				<div class="table-responsive">
 					<table class="table table-sm table-striped align-middle mb-0">

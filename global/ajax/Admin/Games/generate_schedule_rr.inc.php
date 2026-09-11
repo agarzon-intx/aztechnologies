@@ -274,3 +274,63 @@ if (!function_exists('az_rr_expand_weeks')) {
 		return az_rr_repair_consecutive($schedule, $maxConsec);
 	}
 }
+
+if (!function_exists('az_gs_week_sun_sat')) {
+	/**
+	 * Match week.js DateChange: Sunday–Saturday around $fechaYmd.
+	 * Returns array(fecha, inicio, fin) as Y-m-d.
+	 */
+	function az_gs_week_sun_sat($fechaYmd) {
+		$dt = DateTime::createFromFormat('Y-m-d', (string) $fechaYmd);
+		if (!$dt) {
+			$dt = new DateTime((string) $fechaYmd);
+		}
+		$fecha = $dt->format('Y-m-d');
+		$dow = (int) $dt->format('w'); // 0=Sun .. 6=Sat
+		$inicio = clone $dt;
+		if ($dow > 0) {
+			$inicio->modify('-' . $dow . ' days');
+		}
+		$fin = clone $inicio;
+		$fin->modify('+6 days');
+		return array($fecha, $inicio->format('Y-m-d'), $fin->format('Y-m-d'));
+	}
+}
+
+if (!function_exists('az_gs_simulate_jornadas')) {
+	/**
+	 * Build N simulated Jornada rows starting at $startDate (weekly).
+	 */
+	function az_gs_simulate_jornadas($startDate, $count, $calendarioId = 0) {
+		$count = (int) $count;
+		$calendarioId = (int) $calendarioId;
+		$rows = array();
+		if ($count < 1 || $startDate === '') {
+			return $rows;
+		}
+		$base = DateTime::createFromFormat('Y-m-d', (string) $startDate);
+		if (!$base) {
+			$base = new DateTime((string) $startDate);
+		}
+		for ($i = 0; $i < $count; $i++) {
+			$weekDate = clone $base;
+			if ($i > 0) {
+				$weekDate->modify('+' . ($i * 7) . ' days');
+			}
+			list($fecha, $inicio, $fin) = az_gs_week_sun_sat($weekDate->format('Y-m-d'));
+			$n = $i + 1;
+			$rows[] = array(
+				'Jornada_ID' => 0,
+				'Jornada_Desc' => 'Jornada ' . $n,
+				'Jornada_DescCorta' => (string) $n,
+				'Jornada_Orden' => $n,
+				'Fecha' => $fecha,
+				'Fecha_Inicio' => $inicio,
+				'Fecha_Fin' => $fin,
+				'Calendario_ID' => $calendarioId,
+				'createWeek' => true,
+			);
+		}
+		return $rows;
+	}
+}
