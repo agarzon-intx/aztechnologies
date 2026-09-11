@@ -95,11 +95,35 @@ if (!function_exists('az_rr_orientation_score')) {
 	}
 }
 
+if (!function_exists('az_rr_round_as_unordered')) {
+	/**
+	 * Strip orientations so assign can choose local/away freely.
+	 * Input may be oriented (byeGame) or unordered (bye).
+	 */
+	function az_rr_round_as_unordered($round) {
+		$games = array();
+		foreach (az_rr_round_games($round) as $pair) {
+			if (!is_array($pair) || count($pair) < 2) {
+				continue;
+			}
+			$a = (int) $pair[0];
+			$b = (int) $pair[1];
+			if ($a > 0 && $b > 0) {
+				$games[] = array($a, $b);
+			}
+		}
+		$bye = az_rr_round_bye($round);
+		return array(
+			'games' => $games,
+			'bye' => $bye,
+		);
+	}
+}
+
 if (!function_exists('az_rr_assign_home_away')) {
 	/**
-	 * Assign home/away for unordered pairings with max consecutive constraint.
-	 * Bye rounds become a slot [team,0] or [0,team] so local/away balance is kept
-	 * for a future team that fills the open side (0).
+	 * Assign home/away with a hard max-consecutive constraint (default 2), including bye slots.
+	 * Uses DFS over orientations per round. Bye open side is 0 (future team).
 	 * Output: array('games' => [[home,away],...], 'byeGame' => [home,away]|null).
 	 */
 	function az_rr_assign_home_away(array $unorderedRounds, $maxConsec = 2) {
@@ -107,92 +131,270 @@ if (!function_exists('az_rr_assign_home_away')) {
 		if ($maxConsec < 1) {
 			$maxConsec = 2;
 		}
+		$roundsIn = array();
+		foreach ($unorderedRounds as $round) {
+			$roundsIn[] = az_rr_round_as_unordered($round);
+		}
+		$n = count($roundsIn);
+		if ($n === 0) {
+			return array();
+		}
+
+		$best = null;
+		$stack = array();
+		$calls = 0;
+		$maxCalls = 2000000;
+
+		$search = function ($r, $history, $homeCount) use (
+			&$search,
+			&$stack,
+			&$best,
+			&$calls,
+			$roundsIn,
+			$n,
+			$maxConsec,
+			$maxCalls
+		) {
+			$calls++;
+			if ($calls > $maxCalls) {
+				return false;
+			}
+			if ($r >= $n) {
+				$best = $stack;
+				return true;
+			}
+
+			$pairs = $roundsIn[$r]['games'];
+			$byeTeam = $roundsIn[$r]['bye'];
+			$g = count($pairs);
+			$limit = 1 << $g;
+
+			// Score masks: prefer legal + balanced homes (lower is better). Try best first.
+			$maskScores = array();
+			for ($mask = 0; $mask < $limit; $mask++) {
+				$histTmp = $history;
+				$homeTmp = $homeCount;
+				$ok = true;
+				$score = 0;
+				for ($i = 0; $i < $g; $i++) {
+					$a = (int) $pairs[$i][0];
+					$b = (int) $pairs[$i][1];
+					if ($mask & (1 << $i)) {
+						$home = $b;
+						$away = $a;
+					} else {
+						$home = $a;
+						$away = $b;
+					}
+					if (!az_rr_streak_ok($histTmp, $home, 'H', $maxConsec) || !az_rr_streak_ok($histTmp, $away, 'A', $maxConsec)) {
+						$ok = false;
+						break;
+					}
+					$score += az_rr_orientation_score($histTmp, $homeTmp, $home, $away, $maxConsec);
+					if (!isset($histTmp[$home])) {
+						$histTmp[$home] = array();
+					}
+					if (!isset($histTmp[$away])) {
+						$histTmp[$away] = array();
+					}
+					$histTmp[$home][] = 'H';
+					$histTmp[$away][] = 'A';
+					$homeTmp[$home] = (isset($homeTmp[$home]) ? (int) $homeTmp[$home] : 0) + 1;
+				}
+				if ($ok) {
+					$maskScores[] = array($score, $mask);
+				}
+			}
+			usort($maskScores, function ($x, $y) {
+				if ($x[0] === $y[0]) {
+					return $x[1] - $y[1];
+				}
+				return ($x[0] < $y[0]) ? -1 : 1;
+			});
+
+			foreach ($maskScores as $entry) {
+				$mask = $entry[1];
+				$hist2 = $history;
+				$homes2 = $homeCount;
+				$games = array();
+				for ($i = 0; $i < $g; $i++) {
+					$a = (int) $pairs[$i][0];
+					$b = (int) $pairs[$i][1];
+					if ($mask & (1 << $i)) {
+						$home = $b;
+						$away = $a;
+					} else {
+						$home = $a;
+						$away = $b;
+					}
+					$games[] = array($home, $away);
+					if (!isset($hist2[$home])) {
+						$hist2[$home] = array();
+					}
+					if (!isset($hist2[$away])) {
+						$hist2[$away] = array();
+					}
+					$hist2[$home][] = 'H';
+					$hist2[$away][] = 'A';
+					$homes2[$home] = (isset($homes2[$home]) ? (int) $homes2[$home] : 0) + 1;
+				}
+
+				$byeOpts = array(null);
+				if ($byeTeam !== null && (int) $byeTeam > 0) {
+					$bt = (int) $byeTeam;
+					$byeOpts = array();
+					$asHomeOk = az_rr_streak_ok($hist2, $bt, 'H', $maxConsec);
+					$asAwayOk = az_rr_streak_ok($hist2, $bt, 'A', $maxConsec);
+					$homes = isset($homes2[$bt]) ? (int) $homes2[$bt] : 0;
+					// Prefer alternating / fewer homes, but always try all legal sides.
+					$ordered = array();
+					if ($asHomeOk && $asAwayOk) {
+						$last = '';
+						if (isset($hist2[$bt]) && count($hist2[$bt]) > 0) {
+							$last = $hist2[$bt][count($hist2[$bt]) - 1];
+						}
+						if ($last === 'H') {
+							$ordered = array(array(0, $bt), array($bt, 0));
+						} elseif ($last === 'A') {
+							$ordered = array(array($bt, 0), array(0, $bt));
+						} else {
+							$ordered = ($homes <= 0)
+								? array(array($bt, 0), array(0, $bt))
+								: array(array(0, $bt), array($bt, 0));
+						}
+					} elseif ($asHomeOk) {
+						$ordered = array(array($bt, 0));
+					} elseif ($asAwayOk) {
+						$ordered = array(array(0, $bt));
+					}
+					if (count($ordered) === 0) {
+						continue;
+					}
+					$byeOpts = $ordered;
+				}
+
+				foreach ($byeOpts as $bg) {
+					$hist3 = $hist2;
+					$homes3 = $homes2;
+					if ($bg !== null) {
+						az_rr_apply_pair_history($hist3, $bg[0], $bg[1]);
+						if ((int) $bg[0] > 0) {
+							$homes3[(int) $bg[0]] = (isset($homes3[(int) $bg[0]]) ? (int) $homes3[(int) $bg[0]] : 0) + 1;
+						}
+					}
+					$stack[$r] = array(
+						'games' => $games,
+						'byeGame' => $bg,
+					);
+					if ($search($r + 1, $hist3, $homes3)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		};
+
+		// az_rr_apply_pair_history must exist before search; defined below in file — ensure order.
+		if (!function_exists('az_rr_apply_pair_history')) {
+			function az_rr_apply_pair_history(array &$history, $home, $away) {
+				$home = (int) $home;
+				$away = (int) $away;
+				if ($home > 0) {
+					if (!isset($history[$home])) {
+						$history[$home] = array();
+					}
+					$history[$home][] = 'H';
+				}
+				if ($away > 0) {
+					if (!isset($history[$away])) {
+						$history[$away] = array();
+					}
+					$history[$away][] = 'A';
+				}
+			}
+		}
+
+		$ok = $search(0, array(), array());
+		if ($ok && is_array($best)) {
+			$result = array();
+			for ($i = 0; $i < $n; $i++) {
+				$result[] = isset($best[$i]) ? $best[$i] : array('games' => array(), 'byeGame' => null);
+			}
+			return $result;
+		}
+
+		// Fallback: greedy (should be rare) + soft repair.
+		return az_rr_assign_home_away_greedy($roundsIn, $maxConsec);
+	}
+}
+
+if (!function_exists('az_rr_assign_home_away_greedy')) {
+	/**
+	 * Greedy fallback when DFS cannot finish; still prefers legal orientations.
+	 */
+	function az_rr_assign_home_away_greedy(array $unorderedRounds, $maxConsec = 2) {
 		$history = array();
 		$homeCount = array();
 		$result = array();
-
 		foreach ($unorderedRounds as $round) {
-			$pairs = isset($round['games']) && is_array($round['games']) ? $round['games'] : array();
-			if (!isset($round['games']) && is_array($round) && isset($round[0]) && is_array($round[0])) {
-				$pairs = $round;
-			}
-			$byeTeam = isset($round['bye']) ? $round['bye'] : null;
-			if ($byeTeam === null || $byeTeam === '') {
-				$byeTeam = null;
-			} else {
-				$byeTeam = (int) $byeTeam;
-			}
+			$u = az_rr_round_as_unordered($round);
+			$pairs = $u['games'];
+			$byeTeam = $u['bye'];
 			$roundGames = array();
 			$roundHist = $history;
 			$roundHome = $homeCount;
 			foreach ($pairs as $pair) {
-				if (!is_array($pair) || count($pair) < 2) {
-					continue;
-				}
 				$a = (int) $pair[0];
 				$b = (int) $pair[1];
-				$scoreAB = az_rr_orientation_score($roundHist, $roundHome, $a, $b, $maxConsec);
-				$scoreBA = az_rr_orientation_score($roundHist, $roundHome, $b, $a, $maxConsec);
-				if ($scoreBA < $scoreAB) {
-					$home = $b;
-					$away = $a;
-				} else {
-					$home = $a;
-					$away = $b;
+				$cand = array();
+				foreach (array(array($a, $b), array($b, $a)) as $orient) {
+					$home = $orient[0];
+					$away = $orient[1];
+					$legal = az_rr_streak_ok($roundHist, $home, 'H', $maxConsec)
+						&& az_rr_streak_ok($roundHist, $away, 'A', $maxConsec);
+					$score = az_rr_orientation_score($roundHist, $roundHome, $home, $away, $maxConsec);
+					$cand[] = array($legal ? 0 : 1, $score, $home, $away);
 				}
+				usort($cand, function ($x, $y) {
+					if ($x[0] !== $y[0]) {
+						return $x[0] - $y[0];
+					}
+					if ($x[1] === $y[1]) {
+						return 0;
+					}
+					return ($x[1] < $y[1]) ? -1 : 1;
+				});
+				$home = $cand[0][2];
+				$away = $cand[0][3];
 				$roundGames[] = array($home, $away);
-				if (!isset($roundHist[$home])) {
-					$roundHist[$home] = array();
-				}
-				if (!isset($roundHist[$away])) {
-					$roundHist[$away] = array();
-				}
-				$roundHist[$home][] = 'H';
-				$roundHist[$away][] = 'A';
+				az_rr_apply_pair_history($roundHist, $home, $away);
 				$roundHome[$home] = (isset($roundHome[$home]) ? (int) $roundHome[$home] : 0) + 1;
 			}
-
 			$byeGame = null;
-			if ($byeTeam !== null && $byeTeam > 0) {
-				$asHomeOk = az_rr_streak_ok($roundHist, $byeTeam, 'H', $maxConsec);
-				$asAwayOk = az_rr_streak_ok($roundHist, $byeTeam, 'A', $maxConsec);
-				$homes = isset($roundHome[$byeTeam]) ? (int) $roundHome[$byeTeam] : 0;
-				// Choose local vs visitante like a real match vs open slot (0).
-				$preferHome = false;
-				if ($asHomeOk && !$asAwayOk) {
-					$preferHome = true;
-				} elseif ($asAwayOk && !$asHomeOk) {
-					$preferHome = false;
-				} else {
-					// Balance home appearances; default local when tied.
-					$preferHome = ($homes <= 0);
+			if ($byeTeam !== null && (int) $byeTeam > 0) {
+				$bt = (int) $byeTeam;
+				$opts = array();
+				if (az_rr_streak_ok($roundHist, $bt, 'H', $maxConsec)) {
+					$opts[] = array($bt, 0);
 				}
-				if ($preferHome) {
-					$byeGame = array($byeTeam, 0);
-					if (!isset($roundHist[$byeTeam])) {
-						$roundHist[$byeTeam] = array();
-					}
-					$roundHist[$byeTeam][] = 'H';
-					$roundHome[$byeTeam] = $homes + 1;
-				} else {
-					$byeGame = array(0, $byeTeam);
-					if (!isset($roundHist[$byeTeam])) {
-						$roundHist[$byeTeam] = array();
-					}
-					$roundHist[$byeTeam][] = 'A';
+				if (az_rr_streak_ok($roundHist, $bt, 'A', $maxConsec)) {
+					$opts[] = array(0, $bt);
+				}
+				if (count($opts) === 0) {
+					$opts[] = array($bt, 0);
+					$opts[] = array(0, $bt);
+				}
+				$byeGame = $opts[0];
+				az_rr_apply_pair_history($roundHist, $byeGame[0], $byeGame[1]);
+				if ((int) $byeGame[0] > 0) {
+					$roundHome[(int) $byeGame[0]] = (isset($roundHome[(int) $byeGame[0]]) ? (int) $roundHome[(int) $byeGame[0]] : 0) + 1;
 				}
 			}
-
-			$result[] = array(
-				'games' => $roundGames,
-				'byeGame' => $byeGame,
-			);
+			$result[] = array('games' => $roundGames, 'byeGame' => $byeGame);
 			$history = $roundHist;
 			$homeCount = $roundHome;
 		}
-
-		$result = az_rr_repair_consecutive($result, $maxConsec);
-		return $result;
+		return az_rr_repair_consecutive($result, $maxConsec);
 	}
 }
 
