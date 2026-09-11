@@ -113,6 +113,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$okW = $Connection->query($sqlW);
 				$newId = 0;
 				if ($okW) {
+					while ($Connection->more_results() && $Connection->next_result()) {
+						$extraRes = $Connection->use_result();
+						if ($extraRes instanceof mysqli_result) {
+							$extraRes->free();
+						}
+					}
 					$Connection->query("SELECT @out AS 'count'");
 					$resId = $Connection->query("SELECT LAST_INSERT_ID() AS id");
 					if ($resId && $resId->num_rows > 0) {
@@ -138,13 +144,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 		}
 
+		// Then create games (including bye rows with NULL on the open side).
 		foreach ($plan['categories'] as $catPlan) {
 			foreach ($catPlan['weeks'] as $week) {
 				if (!empty($week['skip'])) {
 					$skipN = 0;
 					if (isset($week['games']) && is_array($week['games'])) {
 						foreach ($week['games'] as $g) {
-							if (empty($g['isBye']) && (int) ($g['homeId'] ?? 0) > 0 && (int) ($g['awayId'] ?? 0) > 0) {
+							$h = (int) ($g['homeId'] ?? 0);
+							$a = (int) ($g['awayId'] ?? 0);
+							if ($h > 0 || $a > 0) {
 								$skipN++;
 							}
 						}
@@ -165,23 +174,87 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					$errors[] = isset($lang['101-34']) ? $lang['101-34'] : 'Missing week id';
 					continue;
 				}
-				$fecha = (string) $week['fecha'];
-				$fechaEsc = $Connection->real_escape_string($fecha);
 				$userEsc = $Connection->real_escape_string($username);
 				foreach ($week['games'] as $game) {
-					$home = (int) $game['homeId'];
-					$away = (int) $game['awayId'];
-					if (!empty($game['isBye']) || $home <= 0 || $away <= 0) {
-						// Open bye slot (0) is reserved for a future team — do not create a game.
+					$home = (int) ($game['homeId'] ?? 0);
+					$away = (int) ($game['awayId'] ?? 0);
+					if ($home <= 0 && $away <= 0) {
 						continue;
 					}
-					$sql = "CALL $schema.GameCreate('$userEsc', $home, $away, $jornadaId, $Season, '$fechaEsc', 0, @out);";
+					// Bye open slot → SQL NULL (future team). Real match → both IDs.
+					$localSql = ($home > 0) ? (string) $home : 'NULL';
+					$awaySql = ($away > 0) ? (string) $away : 'NULL';
+
+					$resMax = $Connection->query("SELECT IFNULL(MAX(Juego_ID), 0) + 1 AS nextId FROM $schema.Juegos");
+					$nextId = 0;
+					if ($resMax && $resMax->num_rows > 0) {
+						$rowMax = $resMax->fetch_assoc();
+						$nextId = (int) $rowMax['nextId'];
+					}
+					if ($nextId <= 0) {
+						$errors[] = $lang['js0002'];
+						continue;
+					}
+
+					// Same INSERT shape as GameCreate; Fecha/Horario from Configuration + Jornada.
+					$sql = "INSERT INTO $schema.Juegos
+						(Juego_ID,
+						Visitante_ID,
+						Gol_Local,
+						Gol_Visitante,
+						Arbitro,
+						Comentarios,
+						Jornada_ID,
+						Torneo_ID,
+						Local_ID,
+						Jugado,
+						Penal_Local,
+						Penal_Visitante,
+						Estatus,
+						Extra_Local,
+						Extra_Visitante,
+						Campo_ID,
+						Horario,
+						Fecha)
+					VALUES (
+						$nextId,
+						$awaySql,
+						0,
+						0,
+						'',
+						'',
+						$jornadaId,
+						$Season,
+						$localSql,
+						0,
+						0,
+						0,
+						'',
+						0,
+						0,
+						0,
+						(SELECT MarcadorHoraDefault FROM $schema.Configuration),
+						(SELECT DATE_ADD(Fecha_Inicio, INTERVAL (SELECT MarcadorDiaDefault FROM $schema.Configuration) DAY)
+							FROM $schema.Jornada WHERE Jornada_ID = $jornadaId)
+					)";
 					$ok = $Connection->query($sql);
 					if ($ok) {
-						$Connection->query("SELECT @out AS 'count'");
 						$created++;
+						// Best-effort audit (same as GameCreate); ignore failures.
+						$localAudit = ($home > 0) ? (string) $home : 'NULL';
+						$awayAudit = ($away > 0) ? (string) $away : 'NULL';
+						$ctrlDetail = $Connection->real_escape_string(
+							"INSERT INTO Juegos (Juego_ID,Visitante_ID,...,Jornada_ID,Torneo_ID,Local_ID,...) VALUES ($nextId,$awayAudit,...,$jornadaId,$Season,$localAudit,...)"
+						);
+						@$Connection->query("CALL $schema.insertIntoControlTable('$userEsc', 'CREATE', 'GAME', '$ctrlDetail', 'OK, total inserts: 1')");
+						while ($Connection->more_results() && $Connection->next_result()) {
+							$extraRes = $Connection->use_result();
+							if ($extraRes instanceof mysqli_result) {
+								$extraRes->free();
+							}
+						}
 					} else {
-						$errors[] = $lang['js0002'];
+						$errors[] = $lang['js0002'] . (isset($Connection->error) && $Connection->error !== '' ? (': ' . $Connection->error) : '');
 					}
 				}
 			}
@@ -548,6 +621,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					'awayName' => ($away > 0) ? $formatSeedName($away) : '',
 					'isBye' => true,
 				);
+				if (!$skip && ($home > 0 || $away > 0)) {
+					$totalGames++;
+				}
 			}
 
 			$weekPlans[] = array(
