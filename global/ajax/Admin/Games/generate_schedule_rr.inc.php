@@ -98,7 +98,9 @@ if (!function_exists('az_rr_orientation_score')) {
 if (!function_exists('az_rr_assign_home_away')) {
 	/**
 	 * Assign home/away for unordered pairings with max consecutive constraint.
-	 * Input/output rounds: array('games' => [[home,away],...], 'bye' => id|null).
+	 * Bye rounds become a slot [team,0] or [0,team] so local/away balance is kept
+	 * for a future team that fills the open side (0).
+	 * Output: array('games' => [[home,away],...], 'byeGame' => [home,away]|null).
 	 */
 	function az_rr_assign_home_away(array $unorderedRounds, $maxConsec = 2) {
 		$maxConsec = (int) $maxConsec;
@@ -110,12 +112,16 @@ if (!function_exists('az_rr_assign_home_away')) {
 		$result = array();
 
 		foreach ($unorderedRounds as $round) {
-			$pairs = isset($round['games']) && is_array($round['games']) ? $round['games'] : (is_array($round) && isset($round[0]) ? $round : array());
-			// Support legacy flat round list.
+			$pairs = isset($round['games']) && is_array($round['games']) ? $round['games'] : array();
 			if (!isset($round['games']) && is_array($round) && isset($round[0]) && is_array($round[0])) {
 				$pairs = $round;
 			}
-			$bye = isset($round['bye']) ? $round['bye'] : null;
+			$byeTeam = isset($round['bye']) ? $round['bye'] : null;
+			if ($byeTeam === null || $byeTeam === '') {
+				$byeTeam = null;
+			} else {
+				$byeTeam = (int) $byeTeam;
+			}
 			$roundGames = array();
 			$roundHist = $history;
 			$roundHome = $homeCount;
@@ -145,9 +151,41 @@ if (!function_exists('az_rr_assign_home_away')) {
 				$roundHist[$away][] = 'A';
 				$roundHome[$home] = (isset($roundHome[$home]) ? (int) $roundHome[$home] : 0) + 1;
 			}
+
+			$byeGame = null;
+			if ($byeTeam !== null && $byeTeam > 0) {
+				$asHomeOk = az_rr_streak_ok($roundHist, $byeTeam, 'H', $maxConsec);
+				$asAwayOk = az_rr_streak_ok($roundHist, $byeTeam, 'A', $maxConsec);
+				$homes = isset($roundHome[$byeTeam]) ? (int) $roundHome[$byeTeam] : 0;
+				// Choose local vs visitante like a real match vs open slot (0).
+				$preferHome = false;
+				if ($asHomeOk && !$asAwayOk) {
+					$preferHome = true;
+				} elseif ($asAwayOk && !$asHomeOk) {
+					$preferHome = false;
+				} else {
+					// Balance home appearances; default local when tied.
+					$preferHome = ($homes <= 0);
+				}
+				if ($preferHome) {
+					$byeGame = array($byeTeam, 0);
+					if (!isset($roundHist[$byeTeam])) {
+						$roundHist[$byeTeam] = array();
+					}
+					$roundHist[$byeTeam][] = 'H';
+					$roundHome[$byeTeam] = $homes + 1;
+				} else {
+					$byeGame = array(0, $byeTeam);
+					if (!isset($roundHist[$byeTeam])) {
+						$roundHist[$byeTeam] = array();
+					}
+					$roundHist[$byeTeam][] = 'A';
+				}
+			}
+
 			$result[] = array(
 				'games' => $roundGames,
-				'bye' => ($bye === null || $bye === '') ? null : (int) $bye,
+				'byeGame' => $byeGame,
 			);
 			$history = $roundHist;
 			$homeCount = $roundHome;
@@ -202,7 +240,7 @@ if (!function_exists('az_rr_team_streak_at')) {
 }
 
 if (!function_exists('az_rr_round_games')) {
-	/** Normalize a round to a list of [home,away] pairs. */
+	/** Normalize a round to a list of [home,away] pairs (real matches only). */
 	function az_rr_round_games($round) {
 		if (is_array($round) && isset($round['games']) && is_array($round['games'])) {
 			return $round['games'];
@@ -214,19 +252,63 @@ if (!function_exists('az_rr_round_games')) {
 	}
 }
 
-if (!function_exists('az_rr_round_bye')) {
-	function az_rr_round_bye($round) {
-		if (is_array($round) && array_key_exists('bye', $round) && $round['bye'] !== null && $round['bye'] !== '') {
-			return (int) $round['bye'];
+if (!function_exists('az_rr_round_bye_game')) {
+	/**
+	 * Bye slot as [homeId, awayId] with one side 0 (open for a future team).
+	 * Also accepts legacy 'bye' => teamId (treated as home vs open).
+	 */
+	function az_rr_round_bye_game($round) {
+		if (!is_array($round)) {
+			return null;
+		}
+		if (isset($round['byeGame']) && is_array($round['byeGame']) && count($round['byeGame']) >= 2) {
+			$h = (int) $round['byeGame'][0];
+			$a = (int) $round['byeGame'][1];
+			if (($h > 0 && $a === 0) || ($h === 0 && $a > 0)) {
+				return array($h, $a);
+			}
+			return null;
+		}
+		if (array_key_exists('bye', $round) && $round['bye'] !== null && $round['bye'] !== '') {
+			return array((int) $round['bye'], 0);
 		}
 		return null;
+	}
+}
+
+if (!function_exists('az_rr_round_bye')) {
+	function az_rr_round_bye($round) {
+		$bg = az_rr_round_bye_game($round);
+		if ($bg === null) {
+			return null;
+		}
+		return ($bg[0] > 0) ? $bg[0] : $bg[1];
+	}
+}
+
+if (!function_exists('az_rr_apply_pair_history')) {
+	function az_rr_apply_pair_history(array &$history, $home, $away) {
+		$home = (int) $home;
+		$away = (int) $away;
+		if ($home > 0) {
+			if (!isset($history[$home])) {
+				$history[$home] = array();
+			}
+			$history[$home][] = 'H';
+		}
+		if ($away > 0) {
+			if (!isset($history[$away])) {
+				$history[$away] = array();
+			}
+			$history[$away][] = 'A';
+		}
 	}
 }
 
 if (!function_exists('az_rr_repair_consecutive')) {
 	/**
 	 * Flip individual games when a team would have more than $maxConsec consecutive H or A.
-	 * Preserves structured rounds with bye.
+	 * Bye slots ([team,0] / [0,team]) flip side the same way to keep local/away balance.
 	 */
 	function az_rr_repair_consecutive(array $rounds, $maxConsec = 2) {
 		$maxConsec = (int) $maxConsec;
@@ -236,7 +318,7 @@ if (!function_exists('az_rr_repair_consecutive')) {
 			$history = array();
 			for ($r = 0; $r < $nRounds; $r++) {
 				$games = az_rr_round_games($rounds[$r]);
-				$bye = az_rr_round_bye($rounds[$r]);
+				$byeGame = az_rr_round_bye_game($rounds[$r]);
 				for ($g = 0, $gCount = count($games); $g < $gCount; $g++) {
 					$home = (int) $games[$g][0];
 					$away = (int) $games[$g][1];
@@ -250,21 +332,31 @@ if (!function_exists('az_rr_repair_consecutive')) {
 						$changed = true;
 					}
 				}
+				if ($byeGame !== null) {
+					$home = (int) $byeGame[0];
+					$away = (int) $byeGame[1];
+					$homeOk = ($home <= 0) || az_rr_streak_ok($history, $home, 'H', $maxConsec);
+					$awayOk = ($away <= 0) || az_rr_streak_ok($history, $away, 'A', $maxConsec);
+					if (!($homeOk && $awayOk)) {
+						$flipHome = $away;
+						$flipAway = $home;
+						$flipHomeOk = ($flipHome <= 0) || az_rr_streak_ok($history, $flipHome, 'H', $maxConsec);
+						$flipAwayOk = ($flipAway <= 0) || az_rr_streak_ok($history, $flipAway, 'A', $maxConsec);
+						if ($flipHomeOk && $flipAwayOk) {
+							$byeGame = array($flipHome, $flipAway);
+							$changed = true;
+						}
+					}
+				}
 				$rounds[$r] = array(
 					'games' => $games,
-					'bye' => $bye,
+					'byeGame' => $byeGame,
 				);
 				foreach ($games as $pair) {
-					$h = (int) $pair[0];
-					$a = (int) $pair[1];
-					if (!isset($history[$h])) {
-						$history[$h] = array();
-					}
-					if (!isset($history[$a])) {
-						$history[$a] = array();
-					}
-					$history[$h][] = 'H';
-					$history[$a][] = 'A';
+					az_rr_apply_pair_history($history, $pair[0], $pair[1]);
+				}
+				if ($byeGame !== null) {
+					az_rr_apply_pair_history($history, $byeGame[0], $byeGame[1]);
 				}
 			}
 			if (!$changed) {
@@ -278,7 +370,7 @@ if (!function_exists('az_rr_repair_consecutive')) {
 if (!function_exists('az_rr_balanced_rounds')) {
 	/**
 	 * Full single RR with home/away assignment (max 2 consecutive H/A by default).
-	 * Returns rounds => array('games'=>..., 'bye'=>...).
+	 * Returns rounds => array('games'=>..., 'byeGame'=>...).
 	 */
 	function az_rr_balanced_rounds(array $teamIds, $maxConsec = 2) {
 		$pairings = az_rr_circle_pairings($teamIds);
@@ -292,7 +384,7 @@ if (!function_exists('az_rr_balanced_rounds')) {
 if (!function_exists('az_rr_expand_weeks')) {
 	/**
 	 * Expand RR rounds to $weeksRequested. Odd cycles flip home/away (double-RR style),
-	 * then repair consecutive streaks across the full horizon. Byes are preserved.
+	 * including bye open slots, then repair consecutive streaks across the full horizon.
 	 */
 	function az_rr_expand_weeks(array $rrRounds, $weeksRequested, $maxConsec = 2) {
 		$weeksRequested = (int) $weeksRequested;
@@ -304,17 +396,20 @@ if (!function_exists('az_rr_expand_weeks')) {
 		while (count($schedule) < $weeksRequested) {
 			foreach ($rrRounds as $round) {
 				$games = az_rr_round_games($round);
-				$bye = az_rr_round_bye($round);
+				$byeGame = az_rr_round_bye_game($round);
 				if (($cycle % 2) === 1) {
 					$flipped = array();
 					foreach ($games as $pair) {
 						$flipped[] = array((int) $pair[1], (int) $pair[0]);
 					}
 					$games = $flipped;
+					if ($byeGame !== null) {
+						$byeGame = array((int) $byeGame[1], (int) $byeGame[0]);
+					}
 				}
 				$schedule[] = array(
 					'games' => $games,
-					'bye' => $bye,
+					'byeGame' => $byeGame,
 				);
 				if (count($schedule) >= $weeksRequested) {
 					break;

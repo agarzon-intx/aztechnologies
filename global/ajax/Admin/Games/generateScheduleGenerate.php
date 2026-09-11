@@ -141,7 +141,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		foreach ($plan['categories'] as $catPlan) {
 			foreach ($catPlan['weeks'] as $week) {
 				if (!empty($week['skip'])) {
-					$skipped += isset($week['games']) ? count($week['games']) : 0;
+					$skipN = 0;
+					if (isset($week['games']) && is_array($week['games'])) {
+						foreach ($week['games'] as $g) {
+							if (empty($g['isBye']) && (int) ($g['homeId'] ?? 0) > 0 && (int) ($g['awayId'] ?? 0) > 0) {
+								$skipN++;
+							}
+						}
+					}
+					$skipped += $skipN;
 					continue;
 				}
 				$jornadaId = (int) $week['jornadaId'];
@@ -163,6 +171,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				foreach ($week['games'] as $game) {
 					$home = (int) $game['homeId'];
 					$away = (int) $game['awayId'];
+					if (!empty($game['isBye']) || $home <= 0 || $away <= 0) {
+						// Open bye slot (0) is reserved for a future team — do not create a game.
+						continue;
+					}
 					$sql = "CALL $schema.GameCreate('$userEsc', $home, $away, $jornadaId, $Season, '$fechaEsc', 0, @out);";
 					$ok = $Connection->query($sql);
 					if ($ok) {
@@ -456,9 +468,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 			}
 
-			$round = isset($scheduleRounds[$wi]) ? $scheduleRounds[$wi] : array('games' => array(), 'bye' => null);
+			$round = isset($scheduleRounds[$wi]) ? $scheduleRounds[$wi] : array('games' => array(), 'byeGame' => null);
 			$roundGames = az_rr_round_games($round);
-			$byeId = az_rr_round_bye($round);
+			$byeGame = az_rr_round_bye_game($round);
 			$games = array();
 			foreach ($roundGames as $pair) {
 				$home = (int) $pair[0];
@@ -468,10 +480,22 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					'awayId' => $away,
 					'homeName' => $resolveTeamName($home),
 					'awayName' => $resolveTeamName($away),
+					'isBye' => false,
 				);
 				if (!$skip) {
 					$totalGames++;
 				}
+			}
+			if ($byeGame !== null) {
+				$home = (int) $byeGame[0];
+				$away = (int) $byeGame[1];
+				$games[] = array(
+					'homeId' => $home,
+					'awayId' => $away,
+					'homeName' => ($home > 0) ? $resolveTeamName($home) : '',
+					'awayName' => ($away > 0) ? $resolveTeamName($away) : '',
+					'isBye' => true,
+				);
 			}
 
 			$weekPlans[] = array(
@@ -485,8 +509,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				'createWeek' => $createWeek,
 				'skip' => $skip,
 				'games' => $games,
-				'byeId' => $byeId,
-				'byeName' => ($byeId !== null) ? $resolveTeamName($byeId) : '',
 			);
 		}
 
@@ -588,18 +610,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						</thead>
 						<tbody>';
 			foreach ($week['games'] as $game) {
-				$html .= '<tr>
-						<td>' . htmlspecialchars((string) $game['homeName'], ENT_QUOTES, 'UTF-8') . '</td>
+				$isBye = !empty($game['isBye']) || (int) $game['homeId'] <= 0 || (int) $game['awayId'] <= 0;
+				$homeCell = ((int) $game['homeId'] > 0)
+					? htmlspecialchars((string) $game['homeName'], ENT_QUOTES, 'UTF-8')
+					: '<em>' . htmlspecialchars($byeLbl, ENT_QUOTES, 'UTF-8') . '</em>';
+				$awayCell = ((int) $game['awayId'] > 0)
+					? htmlspecialchars((string) $game['awayName'], ENT_QUOTES, 'UTF-8')
+					: '<em>' . htmlspecialchars($byeLbl, ENT_QUOTES, 'UTF-8') . '</em>';
+				$rowClass = $isBye ? ' class="table-secondary"' : '';
+				$html .= '<tr' . $rowClass . '>
+						<td>' . $homeCell . '</td>
 						<td class="text-center">vs</td>
-						<td>' . htmlspecialchars((string) $game['awayName'], ENT_QUOTES, 'UTF-8') . '</td>
-					</tr>';
-			}
-			if (!empty($week['byeId']) || (isset($week['byeName']) && $week['byeName'] !== '')) {
-				$byeTeam = isset($week['byeName']) ? (string) $week['byeName'] : '';
-				$html .= '<tr class="table-secondary">
-						<td>' . htmlspecialchars($byeTeam, ENT_QUOTES, 'UTF-8') . '</td>
-						<td class="text-center">—</td>
-						<td><em>' . htmlspecialchars($byeLbl, ENT_QUOTES, 'UTF-8') . '</em></td>
+						<td>' . $awayCell . '</td>
 					</tr>';
 			}
 			$html .= '</tbody>
