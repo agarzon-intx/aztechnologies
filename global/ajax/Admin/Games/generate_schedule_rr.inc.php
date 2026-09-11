@@ -181,7 +181,7 @@ if (!function_exists('az_rr_assign_home_away')) {
 		$calls = 0;
 		$maxCalls = 2000000;
 
-		$search = function ($r, $history, $homeCount) use (
+		$search = function ($r, $history, $homeCount, $byeHistory) use (
 			&$search,
 			&$stack,
 			&$best,
@@ -279,19 +279,30 @@ if (!function_exists('az_rr_assign_home_away')) {
 				if ($byeTeam !== null && (int) $byeTeam > 0) {
 					$bt = (int) $byeTeam;
 					$byeOpts = array();
-					$asHomeOk = az_rr_streak_ok($hist2, $bt, 'H', $maxConsec);
-					$asAwayOk = az_rr_streak_ok($hist2, $bt, 'A', $maxConsec);
+					// Overall H/A streak AND bye-only H/A streak (max 2 each).
+					$asHomeOk = az_rr_streak_ok($hist2, $bt, 'H', $maxConsec)
+						&& az_rr_streak_ok($byeHistory, $bt, 'H', $maxConsec);
+					$asAwayOk = az_rr_streak_ok($hist2, $bt, 'A', $maxConsec)
+						&& az_rr_streak_ok($byeHistory, $bt, 'A', $maxConsec);
 					$homes = isset($homes2[$bt]) ? (int) $homes2[$bt] : 0;
-					// Prefer alternating / fewer homes, but always try all legal sides.
 					$ordered = array();
 					if ($asHomeOk && $asAwayOk) {
-						$last = '';
-						if (isset($hist2[$bt]) && count($hist2[$bt]) > 0) {
-							$last = $hist2[$bt][count($hist2[$bt]) - 1];
+						$lastBye = '';
+						if (isset($byeHistory[$bt]) && count($byeHistory[$bt]) > 0) {
+							$lastBye = $byeHistory[$bt][count($byeHistory[$bt]) - 1];
 						}
-						if ($last === 'H') {
+						$lastAll = '';
+						if (isset($hist2[$bt]) && count($hist2[$bt]) > 0) {
+							$lastAll = $hist2[$bt][count($hist2[$bt]) - 1];
+						}
+						// Prefer alternating bye side, then overall side.
+						if ($lastBye === 'H') {
 							$ordered = array(array(0, $bt), array($bt, 0));
-						} elseif ($last === 'A') {
+						} elseif ($lastBye === 'A') {
+							$ordered = array(array($bt, 0), array(0, $bt));
+						} elseif ($lastAll === 'H') {
+							$ordered = array(array(0, $bt), array($bt, 0));
+						} elseif ($lastAll === 'A') {
 							$ordered = array(array($bt, 0), array(0, $bt));
 						} else {
 							$ordered = ($homes <= 0)
@@ -312,17 +323,28 @@ if (!function_exists('az_rr_assign_home_away')) {
 				foreach ($byeOpts as $bg) {
 					$hist3 = $hist2;
 					$homes3 = $homes2;
+					$byeHist3 = $byeHistory;
 					if ($bg !== null) {
 						az_rr_apply_pair_history($hist3, $bg[0], $bg[1]);
 						if ((int) $bg[0] > 0) {
 							$homes3[(int) $bg[0]] = (isset($homes3[(int) $bg[0]]) ? (int) $homes3[(int) $bg[0]] : 0) + 1;
+							if (!isset($byeHist3[(int) $bg[0]])) {
+								$byeHist3[(int) $bg[0]] = array();
+							}
+							$byeHist3[(int) $bg[0]][] = 'H';
+						}
+						if ((int) $bg[1] > 0) {
+							if (!isset($byeHist3[(int) $bg[1]])) {
+								$byeHist3[(int) $bg[1]] = array();
+							}
+							$byeHist3[(int) $bg[1]][] = 'A';
 						}
 					}
 					$stack[$r] = array(
 						'games' => $games,
 						'byeGame' => $bg,
 					);
-					if ($search($r + 1, $hist3, $homes3)) {
+					if ($search($r + 1, $hist3, $homes3, $byeHist3)) {
 						return true;
 					}
 				}
@@ -330,7 +352,7 @@ if (!function_exists('az_rr_assign_home_away')) {
 			return false;
 		};
 
-		$ok = $search(0, array(), array());
+		$ok = $search(0, array(), array(), array());
 		if ($ok && is_array($best)) {
 			$result = array();
 			for ($i = 0; $i < $n; $i++) {
@@ -351,6 +373,7 @@ if (!function_exists('az_rr_assign_home_away_greedy')) {
 	function az_rr_assign_home_away_greedy(array $unorderedRounds, $maxConsec = 2) {
 		$history = array();
 		$homeCount = array();
+		$byeHistory = array();
 		$result = array();
 		foreach ($unorderedRounds as $round) {
 			$u = az_rr_round_as_unordered($round);
@@ -390,13 +413,23 @@ if (!function_exists('az_rr_assign_home_away_greedy')) {
 			if ($byeTeam !== null && (int) $byeTeam > 0) {
 				$bt = (int) $byeTeam;
 				$opts = array();
-				if (az_rr_streak_ok($roundHist, $bt, 'H', $maxConsec)) {
+				$homeOk = az_rr_streak_ok($roundHist, $bt, 'H', $maxConsec)
+					&& az_rr_streak_ok($byeHistory, $bt, 'H', $maxConsec);
+				$awayOk = az_rr_streak_ok($roundHist, $bt, 'A', $maxConsec)
+					&& az_rr_streak_ok($byeHistory, $bt, 'A', $maxConsec);
+				$lastBye = '';
+				if (isset($byeHistory[$bt]) && count($byeHistory[$bt]) > 0) {
+					$lastBye = $byeHistory[$bt][count($byeHistory[$bt]) - 1];
+				}
+				if ($homeOk && $awayOk) {
+					$opts = ($lastBye === 'H')
+						? array(array(0, $bt), array($bt, 0))
+						: array(array($bt, 0), array(0, $bt));
+				} elseif ($homeOk) {
 					$opts[] = array($bt, 0);
-				}
-				if (az_rr_streak_ok($roundHist, $bt, 'A', $maxConsec)) {
+				} elseif ($awayOk) {
 					$opts[] = array(0, $bt);
-				}
-				if (count($opts) === 0) {
+				} else {
 					$opts[] = array($bt, 0);
 					$opts[] = array(0, $bt);
 				}
@@ -404,6 +437,16 @@ if (!function_exists('az_rr_assign_home_away_greedy')) {
 				az_rr_apply_pair_history($roundHist, $byeGame[0], $byeGame[1]);
 				if ((int) $byeGame[0] > 0) {
 					$roundHome[(int) $byeGame[0]] = (isset($roundHome[(int) $byeGame[0]]) ? (int) $roundHome[(int) $byeGame[0]] : 0) + 1;
+					if (!isset($byeHistory[(int) $byeGame[0]])) {
+						$byeHistory[(int) $byeGame[0]] = array();
+					}
+					$byeHistory[(int) $byeGame[0]][] = 'H';
+				}
+				if ((int) $byeGame[1] > 0) {
+					if (!isset($byeHistory[(int) $byeGame[1]])) {
+						$byeHistory[(int) $byeGame[1]] = array();
+					}
+					$byeHistory[(int) $byeGame[1]][] = 'A';
 				}
 			}
 			$result[] = array('games' => $roundGames, 'byeGame' => $byeGame);
@@ -526,14 +569,15 @@ if (!function_exists('az_rr_apply_pair_history')) {
 if (!function_exists('az_rr_repair_consecutive')) {
 	/**
 	 * Flip individual games when a team would have more than $maxConsec consecutive H or A.
-	 * Bye slots ([team,0] / [0,team]) flip side the same way to keep local/away balance.
+	 * Bye slots also respect max consecutive bye-side (local/away) assignments.
 	 */
 	function az_rr_repair_consecutive(array $rounds, $maxConsec = 2) {
 		$maxConsec = (int) $maxConsec;
 		$nRounds = count($rounds);
-		for ($pass = 0; $pass < 3; $pass++) {
+		for ($pass = 0; $pass < 5; $pass++) {
 			$changed = false;
 			$history = array();
+			$byeHistory = array();
 			for ($r = 0; $r < $nRounds; $r++) {
 				$games = az_rr_round_games($rounds[$r]);
 				$byeGame = az_rr_round_bye_game($rounds[$r]);
@@ -553,13 +597,25 @@ if (!function_exists('az_rr_repair_consecutive')) {
 				if ($byeGame !== null) {
 					$home = (int) $byeGame[0];
 					$away = (int) $byeGame[1];
-					$homeOk = ($home <= 0) || az_rr_streak_ok($history, $home, 'H', $maxConsec);
-					$awayOk = ($away <= 0) || az_rr_streak_ok($history, $away, 'A', $maxConsec);
+					$homeOk = ($home <= 0) || (
+						az_rr_streak_ok($history, $home, 'H', $maxConsec)
+						&& az_rr_streak_ok($byeHistory, $home, 'H', $maxConsec)
+					);
+					$awayOk = ($away <= 0) || (
+						az_rr_streak_ok($history, $away, 'A', $maxConsec)
+						&& az_rr_streak_ok($byeHistory, $away, 'A', $maxConsec)
+					);
 					if (!($homeOk && $awayOk)) {
 						$flipHome = $away;
 						$flipAway = $home;
-						$flipHomeOk = ($flipHome <= 0) || az_rr_streak_ok($history, $flipHome, 'H', $maxConsec);
-						$flipAwayOk = ($flipAway <= 0) || az_rr_streak_ok($history, $flipAway, 'A', $maxConsec);
+						$flipHomeOk = ($flipHome <= 0) || (
+							az_rr_streak_ok($history, $flipHome, 'H', $maxConsec)
+							&& az_rr_streak_ok($byeHistory, $flipHome, 'H', $maxConsec)
+						);
+						$flipAwayOk = ($flipAway <= 0) || (
+							az_rr_streak_ok($history, $flipAway, 'A', $maxConsec)
+							&& az_rr_streak_ok($byeHistory, $flipAway, 'A', $maxConsec)
+						);
 						if ($flipHomeOk && $flipAwayOk) {
 							$byeGame = array($flipHome, $flipAway);
 							$changed = true;
@@ -575,6 +631,18 @@ if (!function_exists('az_rr_repair_consecutive')) {
 				}
 				if ($byeGame !== null) {
 					az_rr_apply_pair_history($history, $byeGame[0], $byeGame[1]);
+					if ((int) $byeGame[0] > 0) {
+						if (!isset($byeHistory[(int) $byeGame[0]])) {
+							$byeHistory[(int) $byeGame[0]] = array();
+						}
+						$byeHistory[(int) $byeGame[0]][] = 'H';
+					}
+					if ((int) $byeGame[1] > 0) {
+						if (!isset($byeHistory[(int) $byeGame[1]])) {
+							$byeHistory[(int) $byeGame[1]] = array();
+						}
+						$byeHistory[(int) $byeGame[1]][] = 'A';
+					}
 				}
 			}
 			if (!$changed) {
