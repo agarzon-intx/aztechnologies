@@ -4,6 +4,8 @@
 #
 # Usage:
 #   bash tools/deploy-production-files.sh global/ajax/Admin/GamesCoach/changeWeeksAdmin.php
+#
+# Multiple files use one SFTP session (batch) to avoid Bluehost SSH rate limits.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -33,7 +35,10 @@ if [[ $# -lt 1 ]]; then
 	exit 1
 fi
 
-fail=0
+batch="$(mktemp "${TMPDIR:-/tmp}/az-deploy-XXXXXX.tsv")"
+trap 'rm -f "$batch"' EXIT
+
+queued=0
 for arg in "$@"; do
 	rel="${arg//\\//}"
 	rel="${rel#/}"
@@ -41,10 +46,12 @@ for arg in "$@"; do
 		echo "SKIP (excluded): $rel"
 		continue
 	fi
-	if python3 "$SFTP_PY" upload "$rel" --repo "$REPO"; then
-		:
-	else
-		fail=1
-	fi
+	printf 'UPLOAD\t%s\n' "$rel" >>"$batch"
+	queued=$((queued + 1))
 done
-exit $fail
+
+if [[ "$queued" -eq 0 ]]; then
+	exit 0
+fi
+
+python3 "$SFTP_PY" batch --batch-file "$batch" --repo "$REPO"
