@@ -89,12 +89,12 @@ if (!function_exists('flyer_ci_add_page')) {
                 TIME_FORMAT(j.Horario, '%H:%i HRS') Horario,
                 DATE_FORMAT(j.Fecha, '%e de %M') Fecha
             FROM $schema.Juegos j
-            	join $schema.Equipos l on j.Local_ID = l.Equipo_ID
-            	join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID
+            	left join $schema.Equipos l on j.Local_ID = l.Equipo_ID
+            	left join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID
                 join $schema.Jornada jo on jo.Jornada_ID = j.Jornada_ID
-                join $schema.Campos c on c.Campo_ID = j.Campo_ID
-                join $schema.Categorias ca on ca.Categoria_ID = l.Fuerza and ca.Torneo_ID = j.Torneo_ID
-            where jo.Jornada_ID = $jornada and l.Fuerza = $categoria
+                left join $schema.Campos c on c.Campo_ID = j.Campo_ID
+                left join $schema.Categorias ca on ca.Categoria_ID = COALESCE(l.Fuerza, v.Fuerza) and ca.Torneo_ID = j.Torneo_ID
+            where jo.Jornada_ID = $jornada and (l.Fuerza = $categoria OR v.Fuerza = $categoria)
             order by ca.Categoria_ID, j.Fecha, j.Horario, c.Campo_DESC, j.Juego_ID asc";
 
 	}
