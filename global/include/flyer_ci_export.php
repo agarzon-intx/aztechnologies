@@ -17,17 +17,19 @@ if (!function_exists('az_flyer_ci_send_png_zip')) {
 
 	function az_flyer_ci_juegos_from_clause($schema) {
 		return "FROM $schema.Juegos j
-            	join $schema.Equipos l on j.Local_ID = l.Equipo_ID
-            	join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID
+            	left join $schema.Equipos l on j.Local_ID = l.Equipo_ID
+            	left join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID
                 join $schema.Jornada jo on jo.Jornada_ID = j.Jornada_ID
-                join $schema.Campos c on c.Campo_ID = j.Campo_ID
-                join $schema.Categorias ca on ca.Categoria_ID = l.Fuerza and ca.Torneo_ID = j.Torneo_ID";
+                left join $schema.Campos jc on jc.Campo_ID = NULLIF(j.Campo_ID, 0)
+                left join $schema.Campos lc on lc.Campo_ID = l.Campo_ID
+                left join $schema.Campos vc on vc.Campo_ID = v.Campo_ID
+                left join $schema.Categorias ca on ca.Categoria_ID = COALESCE(l.Fuerza, v.Fuerza) and ca.Torneo_ID = j.Torneo_ID";
 	}
 
 	function az_flyer_ci_juegos_where($jornadaId, $categoriaId, $juegoId = null) {
 		$where = 'where jo.Jornada_ID = ' . (int) $jornadaId;
 		if ($categoriaId > 0) {
-			$where .= ' and l.Fuerza = ' . (int) $categoriaId;
+			$where .= ' and (l.Fuerza = ' . (int) $categoriaId . ' OR v.Fuerza = ' . (int) $categoriaId . ')';
 		}
 		if ($juegoId !== null && $juegoId !== '') {
 			$where .= ' and j.Juego_ID = ' . (int) $juegoId;
@@ -58,13 +60,13 @@ if (!function_exists('az_flyer_ci_send_png_zip')) {
                 l.Equipo_FULLDESC,
                 j.Visitante_ID,
                 v.Equipo_FULLDESC,
-                j.Campo_ID,
-                c.Campo_DESC,
+                COALESCE(NULLIF(j.Campo_ID, 0), l.Campo_ID, v.Campo_ID) as Campo_ID,
+                COALESCE(jc.Campo_DESC, lc.Campo_DESC, vc.Campo_DESC) as Campo_DESC,
                 TIME_FORMAT(j.Horario, '%H:%i HRS') Horario,
                 DATE_FORMAT(j.Fecha, '%e de %M') Fecha
             " . az_flyer_ci_juegos_from_clause($schema) . "
             $where
-            order by ca.Categoria_ID, j.Fecha, j.Horario, c.Campo_DESC, j.Juego_ID asc";
+            order by ca.Categoria_ID, j.Fecha, j.Horario, COALESCE(jc.Campo_DESC, lc.Campo_DESC, vc.Campo_DESC), j.Juego_ID asc";
 	}
 
 	function az_flyer_ci_fail($code, $message) {

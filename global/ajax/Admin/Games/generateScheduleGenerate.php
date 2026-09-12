@@ -292,6 +292,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					}
 
 					// Same INSERT shape as GameCreate; Fecha/Horario from Configuration + Jornada.
+					// Campo_ID: home team field, else away (bye), else 0 — same fallback flyers use.
+					$campoTeamId = ($home > 0) ? $home : (($away > 0) ? $away : 0);
+					$campoSql = ($campoTeamId > 0)
+						? "(SELECT IFNULL(NULLIF(Campo_ID, 0), 0) FROM $schema.Equipos WHERE Equipo_ID = $campoTeamId LIMIT 1)"
+						: '0';
 					$sql = "INSERT INTO $schema.Juegos
 						(Juego_ID,
 						Visitante_ID,
@@ -327,7 +332,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						'',
 						0,
 						0,
-						0,
+						$campoSql,
 						(SELECT MarcadorHoraDefault FROM $schema.Configuration),
 						(SELECT DATE_ADD(Fecha_Inicio, INTERVAL (SELECT MarcadorDiaDefault FROM $schema.Configuration) DAY)
 							FROM $schema.Jornada WHERE Jornada_ID = $jornadaId)

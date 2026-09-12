@@ -58,6 +58,7 @@
 		}
 	} else {
 		$pageLabels[] = 'sin-juegos';
+		$pdf->AddPage();
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
 	$Config->close();

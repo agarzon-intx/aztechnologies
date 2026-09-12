@@ -46,15 +46,17 @@ if (!function_exists('flyer_sc_draw_page_header')) {
                             l.Equipo_FULLDESC as local,
                             ifnull(j.Visitante_ID, -1) Visitante_ID,
                             ifnull(v.Equipo_FULLDESC, 'Descansa') as visitante,
-                            ifnull(j.Campo_ID,-1) as Campo_ID,
-                            ifnull(c.Campo_DESC,'') as Campo_DESC,
+                            COALESCE(NULLIF(j.Campo_ID, 0), l.Campo_ID, v.Campo_ID, -1) as Campo_ID,
+                            COALESCE(jc.Campo_DESC, lc.Campo_DESC, vc.Campo_DESC, '') as Campo_DESC,
                             TIME_FORMAT(j.Horario, '%l:%i %p') Horario,
                             DATE_FORMAT(j.Fecha, '%e de %M') Fecha
                         FROM $schema.Juegos j
                         	join $schema.Equipos l on j.Local_ID = l.Equipo_ID and j.Torneo_ID = l.Torneo_ID
                         	left outer join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID and j.Torneo_ID = v.Torneo_ID
                             join $schema.Jornada jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin
-                            left outer join $schema.Campos c on c.Campo_ID = j.Campo_ID
+                            left outer join $schema.Campos jc on jc.Campo_ID = NULLIF(j.Campo_ID, 0)
+                            left outer join $schema.Campos lc on lc.Campo_ID = l.Campo_ID
+                            left outer join $schema.Campos vc on vc.Campo_ID = v.Campo_ID
                             join $schema.Categorias ca on ca.Categoria_ID = l.Fuerza
                         where jo.Jornada_ID = $jornada and ca.Categoria_ID = $catid and j.Visitante_ID is not null and ((weekday(j.Fecha) <> 2) or (weekday(j.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and j.Horario <> (SELECT MarcadorHoraDefault FROM $schema.Configuration)))
                         UNION
@@ -68,15 +70,17 @@ if (!function_exists('flyer_sc_draw_page_header')) {
                             l.Equipo_FULLDESC as local,
                             ifnull(j.Visitante_ID, -1) Visitante_ID,
                             ifnull(v.Equipo_FULLDESC, 'Descansa') as visitante,
-                            ifnull(j.Campo_ID,-1) as Campo_ID,
-                            ifnull(c.Campo_DESC,'') as Campo_DESC,
+                            COALESCE(NULLIF(j.Campo_ID, 0), l.Campo_ID, v.Campo_ID, -1) as Campo_ID,
+                            COALESCE(jc.Campo_DESC, lc.Campo_DESC, vc.Campo_DESC, '') as Campo_DESC,
                             TIME_FORMAT(j.Horario, '%l:%i %p') Horario,
                             DATE_FORMAT(j.Fecha, '%e de %M') Fecha
                         FROM $schema.Juegos j
                         	join $schema.Equipos l on j.Local_ID = l.Equipo_ID and j.Torneo_ID = l.Torneo_ID
                         	left outer join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID and j.Torneo_ID = v.Torneo_ID
                             join $schema.Jornada jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin
-                            left outer join $schema.Campos c on c.Campo_ID = j.Campo_ID
+                            left outer join $schema.Campos jc on jc.Campo_ID = NULLIF(j.Campo_ID, 0)
+                            left outer join $schema.Campos lc on lc.Campo_ID = l.Campo_ID
+                            left outer join $schema.Campos vc on vc.Campo_ID = v.Campo_ID
                             join $schema.Categorias ca on ca.Categoria_ID = l.Fuerza
                         where jo.Jornada_ID = $jornada and ca.Categoria_ID = $catid and j.Visitante_ID is null
                         UNION
@@ -90,15 +94,17 @@ if (!function_exists('flyer_sc_draw_page_header')) {
                             l.Equipo_FULLDESC as local,
                             ifnull(j.Visitante_ID, -1) Visitante_ID,
                             ifnull(v.Equipo_FULLDESC, 'Descansa') as visitante,
-                            ifnull(j.Campo_ID,-1) as Campo_ID,
-                            '' as Campo_DESC,
+                            COALESCE(NULLIF(j.Campo_ID, 0), l.Campo_ID, v.Campo_ID, -1) as Campo_ID,
+                            COALESCE(jc.Campo_DESC, lc.Campo_DESC, vc.Campo_DESC, '') as Campo_DESC,
                             'NO PROGRAMADO' Horario,
                             '' Fecha
                         FROM $schema.Juegos j
                         	join $schema.Equipos l on j.Local_ID = l.Equipo_ID and j.Torneo_ID = l.Torneo_ID
                         	left outer join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID and j.Torneo_ID = v.Torneo_ID
                             join $schema.Jornada jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin
-                            left outer join $schema.Campos c on c.Campo_ID = j.Campo_ID
+                            left outer join $schema.Campos jc on jc.Campo_ID = NULLIF(j.Campo_ID, 0)
+                            left outer join $schema.Campos lc on lc.Campo_ID = l.Campo_ID
+                            left outer join $schema.Campos vc on vc.Campo_ID = v.Campo_ID
                             join $schema.Categorias ca on ca.Categoria_ID = l.Fuerza
                         where jo.Jornada_ID = $jornada and ca.Categoria_ID = $catid and j.Visitante_ID is not null and ((weekday(j.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and j.Horario = (SELECT MarcadorHoraDefault FROM $schema.Configuration)))) a
                     order by a.visit desc, a.Fecha, a.Horario, a.Campo_DESC, a.Juego_ID asc";

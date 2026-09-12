@@ -84,18 +84,20 @@ if (!function_exists('flyer_ci_add_page')) {
                 l.Equipo_FULLDESC,
                 j.Visitante_ID,
                 v.Equipo_FULLDESC,
-                j.Campo_ID,
-                c.Campo_DESC,
+                COALESCE(NULLIF(j.Campo_ID, 0), l.Campo_ID, v.Campo_ID) as Campo_ID,
+                COALESCE(jc.Campo_DESC, lc.Campo_DESC, vc.Campo_DESC) as Campo_DESC,
                 TIME_FORMAT(j.Horario, '%H:%i HRS') Horario,
                 DATE_FORMAT(j.Fecha, '%e de %M') Fecha
             FROM $schema.Juegos j
             	left join $schema.Equipos l on j.Local_ID = l.Equipo_ID
             	left join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID
                 join $schema.Jornada jo on jo.Jornada_ID = j.Jornada_ID
-                left join $schema.Campos c on c.Campo_ID = j.Campo_ID
+                left join $schema.Campos jc on jc.Campo_ID = NULLIF(j.Campo_ID, 0)
+                left join $schema.Campos lc on lc.Campo_ID = l.Campo_ID
+                left join $schema.Campos vc on vc.Campo_ID = v.Campo_ID
                 left join $schema.Categorias ca on ca.Categoria_ID = COALESCE(l.Fuerza, v.Fuerza) and ca.Torneo_ID = j.Torneo_ID
             where jo.Jornada_ID = $jornada and (l.Fuerza = $categoria OR v.Fuerza = $categoria)
-            order by ca.Categoria_ID, j.Fecha, j.Horario, c.Campo_DESC, j.Juego_ID asc";
+            order by ca.Categoria_ID, j.Fecha, j.Horario, COALESCE(jc.Campo_DESC, lc.Campo_DESC, vc.Campo_DESC), j.Juego_ID asc";
 
 	}
 }

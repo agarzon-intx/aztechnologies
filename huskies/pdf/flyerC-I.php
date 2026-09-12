@@ -58,6 +58,7 @@
 		}
 	} else {
 		$pageLabels[] = 'sin-juegos';
+		$pdf->AddPage();
 		$pdf->SetXY(0,0);
 			    $pdf->SetFont('Coluna' , 'B' , 90);
 				$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
