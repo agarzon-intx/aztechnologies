@@ -81,4 +81,4 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		'cancel' => $lang['0001'],
 		'ok' => $lang['0000'],
 		'teams' => $teams,
-	));
+	), JSON_UNESCAPED_UNICODE);

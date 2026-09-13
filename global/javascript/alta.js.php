@@ -487,7 +487,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						}
 						$('#dupPlayerOverlay').remove();
 						var html = '<div id=\"dupPlayerOverlay\" style=\"position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;\">';
-						html += '<div style=\"background:#fff;padding:20px;border-radius:8px;min-width:280px;max-width:92%;\">';
+						html += '<div style=\"background:#fff;padding:20px;border-radius:8px;min-width:360px;max-width:92%;\">';
 						html += '<p style=\"margin-bottom:12px;\">' + (res.prompt || '') + '</p>';
 						html += '<select id=\"dupPlayerTeamSel\" class=\"form-control\">';
 						for (var i = 0; i < res.teams.length; i++) {
