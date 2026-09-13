@@ -473,6 +473,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 
 			function duplicatePlayerStart(playerId, currentTeam) {
+				if ((!currentTeam || currentTeam === '0' || currentTeam === 0) && $('#equipoE').length && $('#equipoE').val()) {
+					currentTeam = $('#equipoE').val().toString().split(',')[0];
+				}
 				mainLoadingOn();
 				$.ajax({
 					type: 'POST',

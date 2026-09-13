@@ -42,14 +42,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit;
 	}
 
-	$equipoIds = $fgmembersite->UserEquipo();
-	$isAdmin = ($equipoIds === '0' || $equipoIds === '-1');
-	if (!$isAdmin) {
-		$allowed = array_map('intval', explode(',', (string) $equipoIds));
-		if (!in_array($team, $allowed, true)) {
-			echo json_encode($retunData);
-			exit;
+	$username = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
+	$isAdmin = false;
+	$allowed = array();
+	$ue = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $username . "'");
+	if ($ue && $ue->num_rows > 0) {
+		while ($r = $ue->fetch_assoc()) {
+			$id = (int) $r['Equipo_ID'];
+			if ($id === 0 || $id === -1) {
+				$isAdmin = true;
+			} elseif ($id > 0) {
+				$allowed[] = $id;
+			}
 		}
+	}
+	$equipoIds = $fgmembersite->UserEquipo();
+	if ($equipoIds == 0 || $equipoIds == -1 || $equipoIds === '0' || $equipoIds === '-1') {
+		$isAdmin = true;
+	}
+	if (!$isAdmin && !in_array($team, $allowed, true)) {
+		echo json_encode($retunData);
+		exit;
 	}
 
 	$src = $Config->query("SELECT Curp, Equipo_ID FROM $schema.Jugadores WHERE Jugador_ID = $player LIMIT 1");

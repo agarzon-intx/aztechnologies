@@ -35,12 +35,36 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
 	$currentTeam = SanitizeInteger($_POST['team'] ?? 0);
-	$equipoIds = $fgmembersite->UserEquipo();
-	$isAdmin = ($equipoIds === '0' || $equipoIds === '-1');
+	$username = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
+	$isAdmin = false;
+	$ids = array();
+	$ue = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $username . "'");
+	if ($ue && $ue->num_rows > 0) {
+		while ($r = $ue->fetch_assoc()) {
+			$id = (int) $r['Equipo_ID'];
+			if ($id === 0 || $id === -1) {
+				$isAdmin = true;
+			} elseif ($id > 0) {
+				$ids[] = $id;
+			}
+		}
+	}
+	$sessionEq = $fgmembersite->UserEquipo();
+	if ($sessionEq == 0 || $sessionEq == -1 || $sessionEq === '0' || $sessionEq === '-1') {
+		$isAdmin = true;
+	}
+	if (!$isAdmin && count($ids) === 0) {
+		foreach (explode(',', (string) $sessionEq) as $part) {
+			$id = (int) $part;
+			if ($id > 0) {
+				$ids[] = $id;
+			}
+		}
+	}
 
 	$teamFilter = '';
 	if (!$isAdmin) {
-		$ids = array_filter(array_map('intval', explode(',', (string) $equipoIds)));
+		$ids = array_values(array_unique($ids));
 		if (count($ids) === 0) {
 			echo json_encode(array('status' => '0', 'message' => $lang['539-14'], 'teams' => array()));
 			exit;
@@ -52,10 +76,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 
 	$sql = "SELECT b.Equipo_ID, c.categoria_DESC, b.Equipo_FULLDESC
-		FROM $schema.Equipos b
+		FROM (
+			SELECT a.*
+			FROM $schema.Equipos a
+			WHERE a.Equipo_ID > 0 AND a.Torneo_ID = $Season
+		) b
 			JOIN $schema.Categorias c ON b.Fuerza = c.Categoria_ID AND c.Torneo_ID = $Season
-		WHERE b.Torneo_ID = $Season AND b.Equipo_ID > 0 $teamFilter
-		ORDER BY c.Categoria_ID ASC, b.Equipo_FULLDESC ASC";
+		WHERE b.Equipo_ID > 0 $teamFilter
+		ORDER BY c.categoria_ID ASC, b.Equipo_FULLDESC ASC";
 	$result = $Config->query($sql);
 	$teams = array();
 	if ($result && $result->num_rows > 0) {
