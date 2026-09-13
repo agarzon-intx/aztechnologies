@@ -453,6 +453,7 @@
 	$lang['539-14'] = 'No hay equipos disponibles';
 	$lang['539-15'] = 'El jugador ya existe en el equipo seleccionado';
 	$lang['539-16'] = 'El jugador ya existe: Categoría %1, Equipo %2, Jugador %3. No se puede mover porque no tienes derechos sobre el equipo actual del jugador. Pide a un administrador que lo mueva.';
+	$lang['539-17'] = 'Escribe para filtrar equipos';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';

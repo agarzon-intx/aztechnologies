@@ -106,7 +106,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		'status' => '1',
 		'message' => $lang['539-10'],
 		'prompt' => $lang['539-10'],
-		'cancel' => $lang['0001'],
+		'filter' => $lang['539-17'] ?? '',
+		'cancel' => $lang['539-13'],
 		'ok' => $lang['0000'],
 		'teams' => $teams,
 	), JSON_UNESCAPED_UNICODE);

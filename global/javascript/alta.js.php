@@ -490,22 +490,40 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						}
 						$('#dupPlayerOverlay').remove();
 						var html = '<div id=\"dupPlayerOverlay\" style=\"position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;\">';
-						html += '<div style=\"background:#fff;padding:20px;border-radius:8px;min-width:360px;max-width:92%;\">';
-						html += '<p style=\"margin-bottom:12px;\">' + (res.prompt || '') + '</p>';
-						html += '<select id=\"dupPlayerTeamSel\" class=\"form-control\">';
+						html += '<style>#dupPlayerTeamList .dup-team-row{padding:10px 12px;cursor:pointer;border-bottom:1px solid #e6e6e6;font-size:14px;line-height:1.35;}#dupPlayerTeamList .dup-team-row:last-child{border-bottom:0;}#dupPlayerTeamList .dup-team-row:hover{background:#f3f6fb;}#dupPlayerTeamList .dup-team-row.selected{background:#dbe7ff;font-weight:600;}</style>';
+						html += '<div style=\"background:#fff;padding:20px;border-radius:8px;width:520px;max-width:96%;box-shadow:0 8px 28px rgba(0,0,0,0.25);\">';
+						html += '<p style=\"margin:0 0 10px;font-weight:600;\">' + (res.prompt || '') + '</p>';
+						html += '<input type=\"text\" id=\"dupPlayerTeamFilter\" autocomplete=\"off\" placeholder=\"' + $('<div/>').text(res.filter || '').html() + '\" style=\"width:100%;box-sizing:border-box;margin-bottom:8px;padding:8px 10px;border:1px solid #c5c5c5;border-radius:4px;font-size:14px;\">';
+						html += '<div id=\"dupPlayerTeamList\" style=\"border:1px solid #bbb;border-radius:4px;max-height:320px;overflow-y:auto;background:#fff;\">';
 						for (var i = 0; i < res.teams.length; i++) {
-							html += '<option value=\"' + res.teams[i].id + '\">' + $('<div/>').text(res.teams[i].label).html() + '</option>';
+							html += '<div class=\"dup-team-row\" data-id=\"' + res.teams[i].id + '\">' + $('<div/>').text(res.teams[i].label).html() + '</div>';
 						}
-						html += '</select><div style=\"margin-top:14px;text-align:right;\">';
+						html += '</div>';
+						html += '<input type=\"hidden\" id=\"dupPlayerTeamSel\" value=\"\">';
+						html += '<div style=\"margin-top:14px;text-align:right;\">';
 						html += '<button type=\"button\" class=\"btn btn-secondary\" id=\"dupPlayerCancel\">' + (res.cancel || '') + '</button> ';
 						html += '<button type=\"button\" class=\"btn btn-primary\" id=\"dupPlayerOk\">' + (res.ok || '') + '</button>';
 						html += '</div></div></div>';
 						$('body').append(html);
+						$('#dupPlayerTeamList').on('click', '.dup-team-row', function(){
+							$('#dupPlayerTeamList .dup-team-row').removeClass('selected');
+							$(this).addClass('selected');
+							$('#dupPlayerTeamSel').val($(this).attr('data-id'));
+						});
+						$('#dupPlayerTeamFilter').on('input', function(){
+							var q = $.trim($(this).val()).toLowerCase();
+							$('#dupPlayerTeamList .dup-team-row').each(function(){
+								$(this).toggle(!q || $(this).text().toLowerCase().indexOf(q) !== -1);
+							});
+						});
 						$('#dupPlayerCancel').on('click', function(){ $('#dupPlayerOverlay').remove(); });
 						$('#dupPlayerOk').on('click', function(){
 							var team = $('#dupPlayerTeamSel').val();
+							if (!team) {
+								alert(res.prompt || MSG_AJAX_GENERIC);
+								return;
+							}
 							$('#dupPlayerOverlay').remove();
-							if (!team) { return; }
 							mainLoadingOn();
 							$.ajax({
 								type: 'POST',
