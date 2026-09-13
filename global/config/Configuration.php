@@ -68,6 +68,10 @@ class Configuration
     public $credencialBack = 0;
     /** 1 = show Generate Schedule in admin Games menu. */
     public $showGenerateSchedule = 0;
+    /** 1 = allow duplicating a player. */
+    public $duplicatePlayer = 0;
+    /** 1 = allow searching a player. */
+    public $searchPlayer = 0;
     /** 1 when pdf/Credencial.png (or legacy jpg) is stored on disk. */
     public $credencialFrontImage = 0;
     /** 1 when pdf/CredencialDetras.png (or legacy jpg) is stored on disk. */
@@ -293,6 +297,12 @@ class Configuration
         $selShowGenerateSchedule = $this->schemaHasConfigurationColumn($conn, 'showGenerateSchedule')
             ? 'showGenerateSchedule'
             : '0 AS showGenerateSchedule';
+        $selDuplicatePlayer = $this->schemaHasConfigurationColumn($conn, 'duplicatePlayer')
+            ? 'duplicatePlayer'
+            : '0 AS duplicatePlayer';
+        $selSearchPlayer = $this->schemaHasConfigurationColumn($conn, 'searchPlayer')
+            ? 'searchPlayer'
+            : '0 AS searchPlayer';
         $selCredencialFrontImage = $this->schemaHasConfigurationColumn($conn, 'credencialFrontImage')
             ? 'credencialFrontImage'
             : '0 AS credencialFrontImage';
@@ -320,6 +330,8 @@ class Configuration
 			  " . $selPlayerSignature . ",
 			  " . $selCredencialBack . ",
 			  " . $selShowGenerateSchedule . ",
+			  " . $selDuplicatePlayer . ",
+			  " . $selSearchPlayer . ",
 			  " . $selCredencialFrontImage . ",
 			  " . $selCredencialBackImage . "
 		  FROM " . $this->config["schema"] . ".Configuration";
@@ -363,6 +375,8 @@ class Configuration
             $this->playerSignature = $row2["playerSignature"];
             $this->credencialBack = $row2["credencialBack"];
             $this->showGenerateSchedule = $row2["showGenerateSchedule"];
+            $this->duplicatePlayer = $row2["duplicatePlayer"];
+            $this->searchPlayer = $row2["searchPlayer"];
             $this->credencialFrontImage = $row2["credencialFrontImage"];
             $this->credencialBackImage = $row2["credencialBackImage"];
        }

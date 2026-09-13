@@ -439,6 +439,8 @@
 	$lang['539'] = 'Jugador Doc PDF';
 	$lang['539-1'] = 'Jugador Firma';
 	$lang['539-2'] = 'Credencial Reverso';
+	$lang['539-3'] = 'Duplicar jugador';
+	$lang['539-4'] = 'Buscar jugador';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';

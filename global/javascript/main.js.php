@@ -2573,7 +2573,7 @@ function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, Ju
 		data: {EmpatesPenales: EmpatesPenales, JugadorJugado: JugadorJugado, JuegoCedulas: JuegoCedulas, MarcadorArbitro: MarcadorArbitro, MarcadorFecha: MarcadorFecha, 
 		JornadaCedulas: JornadaCedulas, columnid: columnid, MarcadorDiaDefault: MarcadorDiaDefault, lenguaje: lenguaje, ByeWeekPoints: ByeWeekPoints, ByeWeekPointsGoals: ByeWeekPointsGoals, 
 		juegoSemanal: juegoSemanal, tressets: tressets, perfilJugador:perfilJugador,jugadoresApellidos1: jugadoresApellidos1,juegosXNombre: juegosxnombre, coachjuegos: coachjuegos, coachjuegosdiainicial: coachjuegosdiainicial, 
-		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints, playerIDPDF: playerIDPDF, playerSignature: playerSignature, credencialBack: credencialBack, showGenerateSchedule: showGenerateSchedule},
+		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints, playerIDPDF: playerIDPDF, playerSignature: playerSignature, credencialBack: credencialBack, showGenerateSchedule: showGenerateSchedule, duplicatePlayer: duplicatePlayer, searchPlayer: searchPlayer},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {

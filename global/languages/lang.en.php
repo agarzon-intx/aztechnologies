@@ -439,6 +439,8 @@
 	$lang['539'] = 'Player Doc PDF';
 	$lang['539-1'] = 'Player Signature';
 	$lang['539-2'] = 'Credential Back';
+	$lang['539-3'] = 'Duplicate Player';
+	$lang['539-4'] = 'Search Player';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';
