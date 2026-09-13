@@ -50,6 +50,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			echo json_encode($retunData);
 			exit;
 		}
+		$src = $Config->query("SELECT Equipo_ID FROM $schema.Jugadores WHERE Jugador_ID = $player LIMIT 1");
+		$srcTeam = 0;
+		if ($src && $srcRow = $src->fetch_assoc()) {
+			$srcTeam = (int) $srcRow['Equipo_ID'];
+		}
+		if ($srcTeam <= 0 || !in_array($srcTeam, $allowed, true)) {
+			echo json_encode(array('status' => '0', 'message' => $lang['539-16']));
+			exit;
+		}
 	}
 
 	$already = $Config->query("SELECT Jugador_ID FROM $schema.Jugadores WHERE Equipo_ID = $team AND Jugador_ID = $player LIMIT 1");

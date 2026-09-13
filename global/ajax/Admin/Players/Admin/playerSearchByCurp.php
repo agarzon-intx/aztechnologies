@@ -81,23 +81,30 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if ($result && $result->num_rows > 0) {
 		$row = $result->fetch_assoc();
 		$playerName = trim($row['Nombre'] . ' ' . $row['Apellido_P'] . ' ' . $row['Apellido_M']);
+		$playerTeam = (int) $row['Equipo_ID'];
+		$equipoIds = $fgmembersite->UserEquipo();
+		$isAdmin = ($equipoIds === '0' || $equipoIds === '-1');
+		$allowed = array_map('intval', explode(',', (string) $equipoIds));
+		$canMove = $isAdmin || in_array($playerTeam, $allowed, true);
+		$msgKey = $canMove ? '539-6' : '539-16';
 		$confirm = str_replace(
 			array('%1', '%2', '%3'),
 			array($row['Categoria_Desc'], $row['Equipo_FULLDESC'], $playerName),
-			$lang['539-6']
+			$lang[$msgKey]
 		);
 		echo json_encode(array(
 			'status' => '1',
 			'found' => 1,
 			'sameTeam' => 0,
+			'canMove' => $canMove ? 1 : 0,
 			'player' => (int) $row['Jugador_ID'],
 			'categoria' => (int) $row['Categoria_ID'],
-			'equipo' => (int) $row['Equipo_ID'],
+			'equipo' => $playerTeam,
 			'playerName' => $playerName,
 			'categoriaDesc' => $row['Categoria_Desc'],
 			'equipoDesc' => $row['Equipo_FULLDESC'],
 			'message' => $confirm,
-		));
+		), JSON_UNESCAPED_UNICODE);
 		exit;
 	}
 

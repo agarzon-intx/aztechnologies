@@ -452,6 +452,7 @@
 	$lang['539-13'] = 'Cancel';
 	$lang['539-14'] = 'No teams available';
 	$lang['539-15'] = 'The player already exists on the selected team';
+	$lang['539-16'] = 'The player exists: Category %1, Team %2, Player %3. You cannot move this player because you have no rights on that team. Ask an administrator to move it.';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';

@@ -69,6 +69,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					return;
 				}
 				if (res.found === 1 && res.sameTeam === 0) {
+					if (res.canMove !== 1) {
+						alert(res.message);
+						return;
+					}
 					if (window.confirm(res.message)) {
 						mainLoadingOn();
 						$.ajax({
