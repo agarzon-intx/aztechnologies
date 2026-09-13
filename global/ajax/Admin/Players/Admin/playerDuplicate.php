@@ -60,6 +60,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if ($equipoIds == 0 || $equipoIds == -1 || $equipoIds === '0' || $equipoIds === '-1') {
 		$isAdmin = true;
 	}
+	if (!$isAdmin && count($allowed) === 0) {
+		foreach (explode(',', (string) $equipoIds) as $part) {
+			$id = (int) $part;
+			if ($id > 0) {
+				$allowed[] = $id;
+			}
+		}
+	}
 	if (!$isAdmin && !in_array($team, $allowed, true)) {
 		echo json_encode($retunData);
 		exit;
