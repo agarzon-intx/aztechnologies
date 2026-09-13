@@ -2563,7 +2563,7 @@ function configManagementAlertSave(Alert){
 }
 
 function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, JuegoCedulas, MarcadorArbitro, MarcadorFecha, MarcadorDiaDefault, JornadaCedulas, columnid, ByeWeekPoints, ByeWeekPointsGoals, juegoSemanal, tressets, 
-                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints, playerIDPDF, playerSignature, credencialBack, showGenerateSchedule){
+                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints, playerIDPDF, playerSignature, credencialBack, showGenerateSchedule, duplicatePlayer, searchPlayer){
 	//console.log('configManagementAlertSave');
 	mainLoadingOn();
 	$.ajax({

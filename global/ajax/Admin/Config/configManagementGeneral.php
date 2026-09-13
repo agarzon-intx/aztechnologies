@@ -4,6 +4,8 @@
 	$__selPlayerSignatureCfg = $Config->configurationHasColumn('playerSignature') ? 'playerSignature' : '0 AS playerSignature';
 	$__selCredencialBackCfg = $Config->configurationHasColumn('credencialBack') ? 'credencialBack' : '0 AS credencialBack';
 	$__selShowGenerateScheduleCfg = $Config->configurationHasColumn('showGenerateSchedule') ? 'showGenerateSchedule' : '0 AS showGenerateSchedule';
+	$__selDuplicatePlayerCfg = $Config->configurationHasColumn('duplicatePlayer') ? 'duplicatePlayer' : '0 AS duplicatePlayer';
+	$__selSearchPlayerCfg = $Config->configurationHasColumn('searchPlayer') ? 'searchPlayer' : '0 AS searchPlayer';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -45,13 +47,17 @@
 			    " . $__selPlayerIDPDFCfg . ",
 			    " . $__selPlayerSignatureCfg . ",
 			    " . $__selCredencialBackCfg . ",
-			    " . $__selShowGenerateScheduleCfg . "
+			    " . $__selShowGenerateScheduleCfg . ",
+			    " . $__selDuplicatePlayerCfg . ",
+			    " . $__selSearchPlayerCfg . "
 			FROM $schema.Configuration
 			where id = 0;";
 	$playerIDPDFCHK = '';
 	$playerSignatureCHK = '';
 	$credencialBackCHK = '';
 	$showGenerateScheduleCHK = '';
+	$duplicatePlayerCHK = '';
+	$searchPlayerCHK = '';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
@@ -174,6 +180,12 @@
 				$showGenerateSchedule = $row2["showGenerateSchedule"];
 				$showGenerateScheduleCHK = '';
 				if($showGenerateSchedule == '1') $showGenerateScheduleCHK = 'checked';
+				$duplicatePlayer = $row2["duplicatePlayer"];
+				$duplicatePlayerCHK = '';
+				if($duplicatePlayer == '1') $duplicatePlayerCHK = 'checked';
+				$searchPlayer = $row2["searchPlayer"];
+				$searchPlayerCHK = '';
+				if($searchPlayer == '1') $searchPlayerCHK = 'checked';
 				
 			    $VollByeWeekSets = $row2["VollByeWeekSets"];
 			    $VollByeWeekPoints = $row2["VollByeWeekPoints"];
@@ -353,6 +365,14 @@
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="showGenerateSchedule" id="showGenerateSchedule" ' . $showGenerateScheduleCHK . '>
 										<label class="custom-control-label" for="showGenerateSchedule">' . $lang['101-18'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="duplicatePlayer" id="duplicatePlayer" ' . $duplicatePlayerCHK . '>
+										<label class="custom-control-label" for="duplicatePlayer">' . $lang['539-3'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="searchPlayer" id="searchPlayer" ' . $searchPlayerCHK . '>
+										<label class="custom-control-label" for="searchPlayer">' . $lang['539-4'] . '</label>
 									</div>
 								</div>
 								<div class="row">

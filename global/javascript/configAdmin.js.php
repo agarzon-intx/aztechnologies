@@ -147,6 +147,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			if ($('#showGenerateSchedule').is(':checked')){
 			  showGenerateSchedule = 1;
 			}
+			var duplicatePlayer = 0;
+			if ($('#duplicatePlayer').is(':checked')){
+			  duplicatePlayer = 1;
+			}
+			var searchPlayer = 0;
+			if ($('#searchPlayer').is(':checked')){
+			  searchPlayer = 1;
+			}
 			var horario = $('#MarcadorHoraDefault').val();
 			var horario2 = $('#coachjuegoshorafinal').val();
 			if(count>0){
@@ -154,7 +162,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				return false;
 			}
 			configManagementGeneralSave($('#lenguaje').val(), EmpatesPenales, JugadorJugado, JuegoCedulas, MarcadorArbitro, MarcadorFecha, MarcadorDiaDefault, JornadaCedulas, columnid, ByeWeekPoints, 
-			    $('#ByeWeekPointsGoals').val(), juegoSemanal, tressets, perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, $('#coachjuegosdiainicial').val(), $('#coachjuegosdiafinal').val(), horario, horario2, tarjetaCambios, $('#VBByeWeekSets').val(), $('#VBByeWeekPoints').val(), $('#VBByeWeekSetPoints').val(), playerIDPDF, playerSignature, credencialBack, showGenerateSchedule);
+			    $('#ByeWeekPointsGoals').val(), juegoSemanal, tressets, perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, $('#coachjuegosdiainicial').val(), $('#coachjuegosdiafinal').val(), horario, horario2, tarjetaCambios, $('#VBByeWeekSets').val(), $('#VBByeWeekPoints').val(), $('#VBByeWeekSetPoints').val(), playerIDPDF, playerSignature, credencialBack, showGenerateSchedule, duplicatePlayer, searchPlayer);
 		}"
 		
 ?>

@@ -57,6 +57,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$playerSignature = (isset($_POST["playerSignature"]) && SanitizeInteger($_POST["playerSignature"]) == 1) ? 1 : 0;
 	$credencialBack = (isset($_POST["credencialBack"]) && SanitizeInteger($_POST["credencialBack"]) == 1) ? 1 : 0;
 	$showGenerateSchedule = (isset($_POST["showGenerateSchedule"]) && SanitizeInteger($_POST["showGenerateSchedule"]) == 1) ? 1 : 0;
+	$duplicatePlayer = (isset($_POST["duplicatePlayer"]) && SanitizeInteger($_POST["duplicatePlayer"]) == 1) ? 1 : 0;
+	$searchPlayer = (isset($_POST["searchPlayer"]) && SanitizeInteger($_POST["searchPlayer"]) == 1) ? 1 : 0;
 	
 	//echo $perfilJugadoresA;
 		
@@ -80,6 +82,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	if ($Config->configurationHasColumn('showGenerateSchedule')) {
 		$Connection->query("UPDATE $schema.Configuration SET showGenerateSchedule = $showGenerateSchedule WHERE id = 0;");
+	}
+	if ($Config->configurationHasColumn('duplicatePlayer')) {
+		$Connection->query("UPDATE $schema.Configuration SET duplicatePlayer = $duplicatePlayer WHERE id = 0;");
+	}
+	if ($Config->configurationHasColumn('searchPlayer')) {
+		$Connection->query("UPDATE $schema.Configuration SET searchPlayer = $searchPlayer WHERE id = 0;");
 	}
 
 	$sql1 = "Select @out as 'count'";
