@@ -441,6 +441,17 @@
 	$lang['539-2'] = 'Credential Back';
 	$lang['539-3'] = 'Duplicate Player';
 	$lang['539-4'] = 'Search Player';
+	$lang['539-5'] = 'Enter the CURP';
+	$lang['539-6'] = 'Player exists: Category %1, Team %2, Player %3. Move this player to the current team?';
+	$lang['539-7'] = 'The player already exists on this team';
+	$lang['539-8'] = 'No player was found with that CURP';
+	$lang['539-9'] = 'Player moved to the current team';
+	$lang['539-10'] = 'Select the team to duplicate this player to';
+	$lang['539-11'] = 'Player duplicated';
+	$lang['539-12'] = 'Could not complete the player action';
+	$lang['539-13'] = 'Cancel';
+	$lang['539-14'] = 'No teams available';
+	$lang['539-15'] = 'The player already exists on the selected team';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';

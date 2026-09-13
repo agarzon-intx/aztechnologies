@@ -534,6 +534,7 @@ $htmlPlayer .= '													</select>
 					<div class="row">
 						<div class="col-6 col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6" style="text-align: right;">
 							<button type="button" class="btn btn-primary" onClick="validateETeam(' . $player . ', ' . $equipoidA . ');" >' . $lang['0000'] . '</button>
+							' . ((int) $Config->duplicatePlayer === 1 ? '<button type="button" class="btn btn-outline-primary" onClick="duplicatePlayerStart(' . (int) $player . ', ' . (int) $equipoidA . ');" >' . $lang['539-3'] . '</button>' : '') . '
 						</div>
 						<div class="col-6 col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6" >
 							<button type="button" class="btn btn-primary" onClick="limpiarE();" >' . $lang['0001'] . '</button>

@@ -441,6 +441,17 @@
 	$lang['539-2'] = 'Credencial Reverso';
 	$lang['539-3'] = 'Duplicar jugador';
 	$lang['539-4'] = 'Buscar jugador';
+	$lang['539-5'] = 'Ingresa el CURP';
+	$lang['539-6'] = 'El jugador ya existe: Categoría %1, Equipo %2, Jugador %3. ¿Moverlo al equipo actual?';
+	$lang['539-7'] = 'El jugador ya existe en este equipo';
+	$lang['539-8'] = 'No se encontró un jugador con ese CURP';
+	$lang['539-9'] = 'Jugador movido al equipo actual';
+	$lang['539-10'] = 'Selecciona el equipo donde se duplicará el jugador';
+	$lang['539-11'] = 'Jugador duplicado';
+	$lang['539-12'] = 'No se pudo completar la acción del jugador';
+	$lang['539-13'] = 'Cancelar';
+	$lang['539-14'] = 'No hay equipos disponibles';
+	$lang['539-15'] = 'El jugador ya existe en el equipo seleccionado';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';
