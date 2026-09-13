@@ -33,6 +33,78 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	echo "
 	var MSG_AJAX_GENERIC = " . $__msg_ajax_generic . ";
+	var MSG_PLAYER_CURP_EMPTY = " . json_encode($lang['539-5'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) . ";
+
+	function searchPlayerCurpTeam() {
+		if ($('#equipo').length && $('#equipo').val()) {
+			return $('#equipo').val().toString().split(',')[0];
+		}
+		return '';
+	}
+
+	function searchPlayerCurp(defaultTeam) {
+		var curp = $('#curp').val();
+		var team = searchPlayerCurpTeam();
+		if (!team) {
+			team = defaultTeam;
+		}
+		if (!curp) {
+			alert(MSG_PLAYER_CURP_EMPTY);
+			return;
+		}
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/Players/Admin/playerSearchByCurp.php',
+			data: {curp: curp, team: team},
+			success: function (res) {
+				mainLoadingOff();
+				if (!res || res.status !== '1') {
+					alert((res && res.message) ? res.message : MSG_AJAX_GENERIC);
+					return;
+				}
+				if (res.found === 1 && res.sameTeam === 1) {
+					alert(res.message);
+					return;
+				}
+				if (res.found === 1 && res.sameTeam === 0) {
+					if (window.confirm(res.message)) {
+						mainLoadingOn();
+						$.ajax({
+							type: 'POST',
+							dataType: 'json',
+							url: 'ajax/Admin/Players/Admin/playerMoveToTeam.php',
+							data: {player: res.player, team: team},
+							success: function (moveRes) {
+								mainLoadingOff();
+								alert((moveRes && moveRes.message) ? moveRes.message : MSG_AJAX_GENERIC);
+								if (moveRes && moveRes.status === '1') {
+									var cat = moveRes.categoria || res.categoria;
+									if (typeof playersManagementAdminShow === 'function' && $('#equipo').length) {
+										playersManagementAdminShow(cat, team);
+									} else if (typeof playersManagementTeamShow === 'function') {
+										playersManagementTeamShow(cat, team);
+									}
+								}
+							},
+							error: function() {
+								mainLoadingOff();
+								alert(MSG_AJAX_GENERIC);
+							}
+						});
+					}
+					return;
+				}
+				alert(res.message);
+			},
+			error: function() {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+			}
+		});
+	}
+
   function searchCURP(cat, team) {
  
                 var curp = $('#curp').val();

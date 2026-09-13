@@ -47,6 +47,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$Season = $_COOKIE[$Config->getAlias() . 'season'];
     $Category = $_COOKIE[$Config->getAlias() . 'category'];
 	$player = SanitizeInteger($_POST['player']);
+	$Config->LoadFlags();
 
 	$retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
 
@@ -529,6 +530,7 @@ $htmlPlayer .= '													</select>
 					<div class="row">
 						<div class="col-6 col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6" style="text-align: right;">
 							<button type="button" class="btn btn-primary" onClick="validateE(' . $player . ', ' . $Category . ', ' . $equipoidA . ');" >' . $lang['0000'] . '</button>
+							' . ((int) $Config->duplicatePlayer === 1 ? '<button type="button" class="btn btn-outline-primary" onClick="duplicatePlayerStart(' . (int) $player . ', ' . (int) $equipoidA . ');" >' . $lang['539-3'] . '</button>' : '') . '
 						</div>
 						<div class="col-6 col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 col-xxl-6" >
 							<button type="button" class="btn btn-primary" onClick="limpiarE();" >' . $lang['0001'] . '</button>

@@ -29,7 +29,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	Header("content-type: application/x-javascript");
 
-	echo "	function printID1(){
+	$__msg_ajax_generic = json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+	echo "
+			if (typeof MSG_AJAX_GENERIC === 'undefined') {
+				var MSG_AJAX_GENERIC = " . $__msg_ajax_generic . ";
+			}
+			function printID1(){
 				if($('#printRegisters1').val() != ''){ 
 					$('#downloadPlayersIDBtn1').attr('href', $('#printRegisters1').val());
 					$('#downloadPlayersIDBtn1')[0].click();
@@ -465,5 +470,67 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				xmlhttp.open('POST','ajax/Admin/Players/Admin/playersManagementGeneratePrintList.php',true);
 				xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 				xmlhttp.send('list=&clear=1');
+			}
+
+			function duplicatePlayerStart(playerId, currentTeam) {
+				mainLoadingOn();
+				$.ajax({
+					type: 'POST',
+					dataType: 'json',
+					url: 'ajax/Admin/Players/Admin/playerDuplicateTeams.php',
+					data: {team: currentTeam},
+					success: function (res) {
+						mainLoadingOff();
+						if (!res || res.status !== '1' || !res.teams || !res.teams.length) {
+							alert((res && res.message) ? res.message : MSG_AJAX_GENERIC);
+							return;
+						}
+						$('#dupPlayerOverlay').remove();
+						var html = '<div id=\"dupPlayerOverlay\" style=\"position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;\">';
+						html += '<div style=\"background:#fff;padding:20px;border-radius:8px;min-width:280px;max-width:92%;\">';
+						html += '<p style=\"margin-bottom:12px;\">' + (res.prompt || '') + '</p>';
+						html += '<select id=\"dupPlayerTeamSel\" class=\"form-control\">';
+						for (var i = 0; i < res.teams.length; i++) {
+							html += '<option value=\"' + res.teams[i].id + '\">' + $('<div/>').text(res.teams[i].label).html() + '</option>';
+						}
+						html += '</select><div style=\"margin-top:14px;text-align:right;\">';
+						html += '<button type=\"button\" class=\"btn btn-secondary\" id=\"dupPlayerCancel\">' + (res.cancel || '') + '</button> ';
+						html += '<button type=\"button\" class=\"btn btn-primary\" id=\"dupPlayerOk\">' + (res.ok || '') + '</button>';
+						html += '</div></div></div>';
+						$('body').append(html);
+						$('#dupPlayerCancel').on('click', function(){ $('#dupPlayerOverlay').remove(); });
+						$('#dupPlayerOk').on('click', function(){
+							var team = $('#dupPlayerTeamSel').val();
+							$('#dupPlayerOverlay').remove();
+							if (!team) { return; }
+							mainLoadingOn();
+							$.ajax({
+								type: 'POST',
+								dataType: 'json',
+								url: 'ajax/Admin/Players/Admin/playerDuplicate.php',
+								data: {player: playerId, team: team},
+								success: function (dupRes) {
+									mainLoadingOff();
+									alert((dupRes && dupRes.message) ? dupRes.message : MSG_AJAX_GENERIC);
+									if (dupRes && dupRes.status === '1') {
+										if (typeof playersManagementAdminShow === 'function' && $('#equipoE').length && !$('#equipoE').prop('disabled')) {
+											playersManagementAdminShow(dupRes.categoria, team);
+										} else if (typeof playersManagementTeamShow === 'function') {
+											playersManagementTeamShow(dupRes.categoria, team);
+										}
+									}
+								},
+								error: function() {
+									mainLoadingOff();
+									alert(MSG_AJAX_GENERIC);
+								}
+							});
+						});
+					},
+					error: function() {
+						mainLoadingOff();
+						alert(MSG_AJAX_GENERIC);
+					}
+				});
 			}";
 ?>

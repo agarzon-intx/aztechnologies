@@ -177,29 +177,15 @@ if (!defined('APP_SITE_ROOT')) {
 															</div>
 														</div>
 													</div>';
-		if($Config->BuscaCurp == 1){
-		    $htmlPlayer .= '                        <div class="row">
-														<div class="col-11 col-xs-11 col-sm-11 col-md-11 col-lg-11 col-xl-11 col-xxl-11">
-															<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
-																<label class="form-label">' . $lang['922'] . '</label>
-																<input type="text" class="form-control" name="curp" id="curp" value="">
-															</div>
-														</div>
-														<div class="col-1 col-xs-1 col-sm-1 col-md-1 col-lg-1 col-xl-1 col-xxl-1" style="padding-left: 0;">
-														    <button class="btn btn-outline-secundary" type="button" id="btn-search" onclick="searchCURPT($(\'playersManagementTeamSelectedCategory\').val(), $(\'playersManagementTeamSelectedTeam\').val())" style="margin-bottom: 0rem !important; padding: 0.625rem 0rem;"><i class="fas fa-search"></i></button>
-															<script src="ajax/Admin/Players/Admin/playerValidation.js.php"></script>
-														</div>
-													</div>';
-		}else{
-		    $htmlPlayer .= '					    <div class="row">
+		$htmlPlayer .= '					    <div class="row">
 														<div class="col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
-															<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
+															<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important; position: relative;">
 																<label class="form-label">' . $lang['922'] . '</label>
-																<input type="text" class="form-control" name="curp" id="curp" value="">
+																<input type="text" class="form-control" name="curp" id="curp" value=""' . ((int) $Config->searchPlayer === 1 ? ' style="padding-right: 2.75rem;"' : '') . '>
+																' . ((int) $Config->searchPlayer === 1 ? '<button type="button" class="btn btn-link" id="btn-search" onclick="searchPlayerCurp(' . (int) $Team . ')" style="position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:5;margin:0;padding:0.35rem 0.65rem;min-width:auto;box-shadow:none;"><i class="fas fa-search"></i></button><script src="ajax/Admin/Players/Admin/playerValidation.js.php"></script>' : '') . '
 															</div>
 														</div>
 													</div>';
-		}
 		$htmlPlayer .= '							<div class="row">
 														<div class="col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 															<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
