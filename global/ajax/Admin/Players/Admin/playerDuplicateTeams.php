@@ -51,7 +51,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$teamFilter .= ' AND b.Equipo_ID <> ' . $currentTeam;
 	}
 
-	$sql = "SELECT b.Equipo_ID, CONCAT(c.categoria_DESC, ' - ', b.Equipo_FULLDESC) Equipo_FULLDESC
+	$sql = "SELECT b.Equipo_ID, c.categoria_DESC, b.Equipo_FULLDESC
 		FROM $schema.Equipos b
 			JOIN $schema.Categorias c ON b.Fuerza = c.Categoria_ID AND c.Torneo_ID = $Season
 		WHERE b.Torneo_ID = $Season AND b.Equipo_ID > 0 $teamFilter
@@ -60,9 +60,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$teams = array();
 	if ($result && $result->num_rows > 0) {
 		while ($row = $result->fetch_assoc()) {
+			$categoria = mb_convert_encoding((string) $row['categoria_DESC'], 'UTF-8', 'ISO-8859-1');
+			$equipo = mb_convert_encoding((string) $row['Equipo_FULLDESC'], 'UTF-8', 'ISO-8859-1');
 			$teams[] = array(
 				'id' => (int) $row['Equipo_ID'],
-				'label' => $row['Equipo_FULLDESC'],
+				'label' => $categoria . ' - ' . $equipo,
 			);
 		}
 	}
