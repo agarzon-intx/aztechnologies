@@ -6,6 +6,7 @@
 	$__selShowGenerateScheduleCfg = $Config->configurationHasColumn('showGenerateSchedule') ? 'showGenerateSchedule' : '0 AS showGenerateSchedule';
 	$__selDuplicatePlayerCfg = $Config->configurationHasColumn('duplicatePlayer') ? 'duplicatePlayer' : '0 AS duplicatePlayer';
 	$__selSearchPlayerCfg = $Config->configurationHasColumn('searchPlayer') ? 'searchPlayer' : '0 AS searchPlayer';
+	$__selCurrentWeekCfg = $Config->configurationHasColumn('currentWeek') ? 'currentWeek' : '0 AS currentWeek';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -49,7 +50,8 @@
 			    " . $__selCredencialBackCfg . ",
 			    " . $__selShowGenerateScheduleCfg . ",
 			    " . $__selDuplicatePlayerCfg . ",
-			    " . $__selSearchPlayerCfg . "
+			    " . $__selSearchPlayerCfg . ",
+			    " . $__selCurrentWeekCfg . "
 			FROM $schema.Configuration
 			where id = 0;";
 	$playerIDPDFCHK = '';
@@ -58,6 +60,7 @@
 	$showGenerateScheduleCHK = '';
 	$duplicatePlayerCHK = '';
 	$searchPlayerCHK = '';
+	$currentWeekCHK = '';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
@@ -186,6 +189,9 @@
 				$searchPlayer = $row2["searchPlayer"];
 				$searchPlayerCHK = '';
 				if($searchPlayer == '1') $searchPlayerCHK = 'checked';
+				$currentWeek = $row2["currentWeek"];
+				$currentWeekCHK = '';
+				if($currentWeek == '1') $currentWeekCHK = 'checked';
 				
 			    $VollByeWeekSets = $row2["VollByeWeekSets"];
 			    $VollByeWeekPoints = $row2["VollByeWeekPoints"];
@@ -384,9 +390,13 @@
 												if(cb.checked){
 													$(\'#coachjuegos1\').css(\'display\', \'block\');
 													$(\'#coachjuegos2\').css(\'display\', \'block\');
+													$(\'#coachjuegos3\').css(\'display\', \'block\');
+													$(\'#coachjuegos4\').css(\'display\', \'block\');
 												}else{
 													$(\'#coachjuegos1\').css(\'display\', \'none\');
 													$(\'#coachjuegos2\').css(\'display\', \'none\');
+													$(\'#coachjuegos3\').css(\'display\', \'none\');
+													$(\'#coachjuegos4\').css(\'display\', \'none\');
 												}
 											}
 										</script>
@@ -419,9 +429,13 @@
     	$htmlConfig .= '					</select>
 										</div>
 									</div>
-									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $coachjuegosDPL. '">
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $coachjuegosDPL. '" id="coachjuegos3">
 										<label for="MarcadorHoraDefault" class="ms-0">' . $lang['490'] . '</label>
 										<input type="time" style="text-align: center;padding-right: 0px !important;padding-left: 0px !important;" class="form-control form-control-sm" value="' . $coachjuegoshorafinal . '" name="coachjuegoshorafinal" id="coachjuegoshorafinal">
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $coachjuegosDPL. '" id="coachjuegos4">
+										<input class="form-check-input" type="checkbox" name="currentWeek" id="currentWeek" ' . $currentWeekCHK . '>
+										<label class="custom-control-label" for="currentWeek">' . $lang['539-18'] . '</label>
 									</div>
 								</div>
 								<div class="row">

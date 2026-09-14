@@ -72,6 +72,8 @@ class Configuration
     public $duplicatePlayer = 0;
     /** 1 = allow searching a player. */
     public $searchPlayer = 0;
+    /** 1 = coach games default to the current week; 0 = next week. */
+    public $currentWeek = 0;
     /** 1 when pdf/Credencial.png (or legacy jpg) is stored on disk. */
     public $credencialFrontImage = 0;
     /** 1 when pdf/CredencialDetras.png (or legacy jpg) is stored on disk. */
@@ -303,6 +305,9 @@ class Configuration
         $selSearchPlayer = $this->schemaHasConfigurationColumn($conn, 'searchPlayer')
             ? 'searchPlayer'
             : '0 AS searchPlayer';
+        $selCurrentWeek = $this->schemaHasConfigurationColumn($conn, 'currentWeek')
+            ? 'currentWeek'
+            : '0 AS currentWeek';
         $selCredencialFrontImage = $this->schemaHasConfigurationColumn($conn, 'credencialFrontImage')
             ? 'credencialFrontImage'
             : '0 AS credencialFrontImage';
@@ -332,6 +337,7 @@ class Configuration
 			  " . $selShowGenerateSchedule . ",
 			  " . $selDuplicatePlayer . ",
 			  " . $selSearchPlayer . ",
+			  " . $selCurrentWeek . ",
 			  " . $selCredencialFrontImage . ",
 			  " . $selCredencialBackImage . "
 		  FROM " . $this->config["schema"] . ".Configuration";
@@ -377,6 +383,7 @@ class Configuration
             $this->showGenerateSchedule = $row2["showGenerateSchedule"];
             $this->duplicatePlayer = $row2["duplicatePlayer"];
             $this->searchPlayer = $row2["searchPlayer"];
+            $this->currentWeek = $row2["currentWeek"];
             $this->credencialFrontImage = $row2["credencialFrontImage"];
             $this->credencialBackImage = $row2["credencialBackImage"];
        }

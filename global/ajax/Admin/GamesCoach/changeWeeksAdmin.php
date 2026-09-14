@@ -47,21 +47,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     
 	
 	$currentWeek = 0;
-	// Create connection
-	/*
+	$weekDateExpr = 'DATE_ADD(CURDATE(), INTERVAL 8 - WEEKDAY(CURDATE()) DAY)';
+	if ((int) $Config->currentWeek === 1) {
+		$weekDateExpr = 'CURDATE()';
+	}
 	$sql0 = "select distinct j.Jornada_ID as Jornada, j.Jornada_Desc
 			from $schema.Jornada as j 
 			    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
 				left outer join $schema.Juegos l on j.Jornada_ID = l.Jornada_ID and l.Torneo_ID = $Season 
-			where j.Torneo_ID = $Season and DATE_ADD(CURDATE(), INTERVAL 8 - WEEKDAY(CURDATE()) DAY) between Fecha_Inicio and Fecha_Fin
-			order by j.Jornada_ID
-			limit 1;";	
-			*/
-	$sql0 = "select distinct j.Jornada_ID as Jornada, j.Jornada_Desc
-			from $schema.Jornada as j 
-			    join $schema.Categorias ca on ca.Categoria_ID = $Category and ca.Torneo_Id = $Season and ca.Calendario_Id = j.Calendario_ID
-				left outer join $schema.Juegos l on j.Jornada_ID = l.Jornada_ID and l.Torneo_ID = $Season 
-			where j.Torneo_ID = $Season and CURDATE() between Fecha_Inicio and Fecha_Fin
+			where j.Torneo_ID = $Season and $weekDateExpr between Fecha_Inicio and Fecha_Fin
 			order by j.Jornada_ID
 			limit 1;";
 			//echo $sql0;

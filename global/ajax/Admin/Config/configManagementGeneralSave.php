@@ -59,6 +59,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$showGenerateSchedule = (isset($_POST["showGenerateSchedule"]) && SanitizeInteger($_POST["showGenerateSchedule"]) == 1) ? 1 : 0;
 	$duplicatePlayer = (isset($_POST["duplicatePlayer"]) && SanitizeInteger($_POST["duplicatePlayer"]) == 1) ? 1 : 0;
 	$searchPlayer = (isset($_POST["searchPlayer"]) && SanitizeInteger($_POST["searchPlayer"]) == 1) ? 1 : 0;
+	$currentWeek = (isset($_POST["currentWeek"]) && SanitizeInteger($_POST["currentWeek"]) == 1) ? 1 : 0;
 	
 	//echo $perfilJugadoresA;
 		
@@ -88,6 +89,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	if ($Config->configurationHasColumn('searchPlayer')) {
 		$Connection->query("UPDATE $schema.Configuration SET searchPlayer = $searchPlayer WHERE id = 0;");
+	}
+	if ($Config->configurationHasColumn('currentWeek')) {
+		$Connection->query("UPDATE $schema.Configuration SET currentWeek = $currentWeek WHERE id = 0;");
 	}
 
 	$sql1 = "Select @out as 'count'";
