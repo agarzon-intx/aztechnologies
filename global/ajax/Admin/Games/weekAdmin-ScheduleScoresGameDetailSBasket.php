@@ -94,6 +94,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 	}
 
+	$selLoadInfo = $Config->juegosHasColumn('LoadInfo') ? 'LoadInfo' : "'' AS LoadInfo";
 	$sql = "select 0 as VisitanteS, 
 				j.Torneo_ID as Torneo, 
 				jo.Jornada_ID as Jornada, 
@@ -102,12 +103,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				Extra_Visitante, 
 				case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
 				Comentarios,
-				LoadInfo
+				$selLoadInfo
 			from  $schema.Juegos as j 
 				join $schema.Jornada as jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin
 			where jo.Jornada_ID = $Week and j.Juego_ID = $Game;";
 	$result = $Config->query($sql);
-	if ($result->num_rows > 0) {
+	if ($result && $result->num_rows > 0) {
 		// output data of each row
 		while($row = $result->fetch_assoc()) {
 			$comentario = $row["Comentarios"];

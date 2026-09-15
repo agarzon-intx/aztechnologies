@@ -112,6 +112,26 @@ class Configuration
     }
 
     /**
+     * Whether {schema}.Juegos has a column (older DBs may not be migrated yet).
+     */
+    public function juegosHasColumn(string $columnName): bool
+    {
+        $conn = $this->connect();
+        if (!$conn) {
+            return false;
+        }
+        $schema = $this->getSchema();
+        if ($schema === '' || $columnName === '') {
+            return false;
+        }
+        $schemaEsc = $conn->real_escape_string($schema);
+        $colEsc = $conn->real_escape_string($columnName);
+        $sql = "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{$schemaEsc}' AND TABLE_NAME = 'Juegos' AND COLUMN_NAME = '{$colEsc}' LIMIT 1";
+        $r = @$conn->query($sql);
+        return $r instanceof mysqli_result && $r->num_rows > 0;
+    }
+
+    /**
      * Whether {schema}.Jugadores has a column (older DBs may not be migrated yet).
      */
     public function jugadoresHasColumn(string $columnName): bool
