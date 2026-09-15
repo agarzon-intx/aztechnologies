@@ -71,6 +71,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$langFile = 'lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php';
 	include($langFile);
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'generate_schedule_seeds.inc.php';
+	require_once __DIR__ . DIRECTORY_SEPARATOR . 'generate_schedule_rr.inc.php';
 
 	$Season = 0;
 	if (isset($_COOKIE[$Config->getAlias() . 'season']) && $_COOKIE[$Config->getAlias() . 'season'] !== '') {
@@ -400,6 +401,32 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 				if (count($reordered) > 0) {
 					$catTeams = $reordered;
+				}
+			}
+
+			// If week 1 already has games, keep those teams' seed order and append newcomers last (8, 9, …).
+			$catCalId = (int) $cat['Calendario_ID'];
+			if (count($catTeams) > 0 && $catCalId > 0) {
+				$catTeamIds = array();
+				foreach ($catTeams as $t) {
+					$catTeamIds[] = (int) $t['Equipo_ID'];
+				}
+				$existingIds = az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $catCalId, $catTeamIds);
+				if (count($existingIds) > 0) {
+					$orderedIds = az_gs_append_new_teams_after_existing($catTeamIds, $existingIds);
+					$byId = array();
+					foreach ($catTeams as $t) {
+						$byId[(int) $t['Equipo_ID']] = $t;
+					}
+					$pinned = array();
+					foreach ($orderedIds as $tid) {
+						if (isset($byId[$tid])) {
+							$pinned[] = $byId[$tid];
+						}
+					}
+					if (count($pinned) > 0) {
+						$catTeams = $pinned;
+					}
 				}
 			}
 

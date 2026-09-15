@@ -646,6 +646,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$willCreateWeeks = true;
 		}
 
+		// Existing first-week teams keep seeds 1..N; new teams are appended (N+1, N+2, …).
+		$existingWeekTeamIds = az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $calId, $teamIds);
+		if (count($existingWeekTeamIds) > 0) {
+			$teamIds = az_gs_append_new_teams_after_existing($teamIds, $existingWeekTeamIds);
+			$seedRankByTeam = array();
+			foreach ($teamIds as $idx => $tid) {
+				$seedRankByTeam[(int) $tid] = $idx + 1;
+			}
+		}
+
 		$rr = az_rr_balanced_rounds($teamIds, 2);
 		if (count($rr) === 0) {
 			$errors[] = str_replace('%1', $catLabel, $lang['101-10']);
@@ -696,16 +706,33 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$round = isset($scheduleRounds[$wi]) ? $scheduleRounds[$wi] : array('games' => array(), 'byeGame' => null);
 			$roundGames = az_rr_round_games($round);
 			$byeGame = az_rr_round_bye_game($round);
+			$existingPairs = array();
+			$existingGamesList = array();
+			if ($skip && $jornadaId > 0) {
+				$existingGamesList = az_gs_week_existing_games($Config, $schema, $Season, $jornadaId, $teamIds);
+				foreach ($existingGamesList as $eg) {
+					$existingPairs[az_gs_pair_key($eg['homeId'], $eg['awayId'])] = true;
+				}
+			}
 			$games = array();
+			$genPairs = array();
+			$hasRedChanges = false;
 			foreach ($roundGames as $pair) {
 				$home = (int) $pair[0];
 				$away = (int) $pair[1];
+				$pairKey = az_gs_pair_key($home, $away);
+				$changed = ($skip && count($existingPairs) > 0 && !isset($existingPairs[$pairKey]));
+				if ($changed) {
+					$hasRedChanges = true;
+				}
+				$genPairs[$pairKey] = true;
 				$games[] = array(
 					'homeId' => $home,
 					'awayId' => $away,
 					'homeName' => $formatSeedName($home),
 					'awayName' => $formatSeedName($away),
 					'isBye' => false,
+					'changed' => $changed,
 				);
 				if (!$skip) {
 					$totalGames++;
@@ -714,15 +741,43 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			if ($byeGame !== null) {
 				$home = (int) $byeGame[0];
 				$away = (int) $byeGame[1];
+				$pairKey = az_gs_pair_key($home, $away);
+				$changed = ($skip && count($existingPairs) > 0 && !isset($existingPairs[$pairKey]));
+				if ($changed) {
+					$hasRedChanges = true;
+				}
+				$genPairs[$pairKey] = true;
 				$games[] = array(
 					'homeId' => $home,
 					'awayId' => $away,
 					'homeName' => ($home > 0) ? $formatSeedName($home) : '',
 					'awayName' => ($away > 0) ? $formatSeedName($away) : '',
 					'isBye' => true,
+					'changed' => $changed,
 				);
 				if (!$skip && ($home > 0 || $away > 0)) {
 					$totalGames++;
+				}
+			}
+			$removedGames = array();
+			if ($skip && count($existingGamesList) > 0) {
+				foreach ($existingGamesList as $eg) {
+					$h = (int) $eg['homeId'];
+					$a = (int) $eg['awayId'];
+					$k = az_gs_pair_key($h, $a);
+					if (isset($genPairs[$k])) {
+						continue;
+					}
+					$hasRedChanges = true;
+					$removedGames[] = array(
+						'homeId' => $h,
+						'awayId' => $a,
+						'homeName' => ($h > 0) ? $formatSeedName($h) : '',
+						'awayName' => ($a > 0) ? $formatSeedName($a) : '',
+						'isBye' => ($h <= 0 || $a <= 0),
+						'changed' => true,
+						'removed' => true,
+					);
 				}
 			}
 
@@ -736,7 +791,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				'calendarioId' => $calId,
 				'createWeek' => $createWeek,
 				'skip' => $skip,
+				'hasRedChanges' => $hasRedChanges,
 				'games' => $games,
+				'removedGames' => $removedGames,
 			);
 		}
 
@@ -786,14 +843,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$previewTitle = isset($lang['101-25']) ? $lang['101-25'] : 'Schedule preview';
 	$homeLbl = isset($lang['363']) ? $lang['363'] : 'Home';
 	$awayLbl = isset($lang['364']) ? $lang['364'] : 'Away';
-	$skipLbl = isset($lang['101-27']) ? $lang['101-27'] : 'Skipped (games already exist)';
+	$skipLbl = isset($lang['101-42']) ? $lang['101-42'] : (isset($lang['101-27']) ? $lang['101-27'] : 'Existing week (not updated)');
 	$newWeekLbl = isset($lang['101-36']) ? $lang['101-36'] : 'New week (will be created)';
 	$byeLbl = isset($lang['101-39']) ? $lang['101-39'] : 'BYE';
 	$confirmLbl = isset($lang['101-28']) ? $lang['101-28'] : 'Confirm & save';
 	$weeksSaveLbl = isset($lang['101-41']) ? $lang['101-41'] : 'Weeks to save';
 	$backLbl = isset($lang['0001']) ? $lang['0001'] : 'Cancel';
 	$noteLbl = isset($lang['101-29']) ? $lang['101-29'] : 'Balanced round-robin (max 2 consecutive home or away).';
-	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Confirm will create any missing weeks, then the matches.';
+	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Confirm will create missing weeks and their matches. Existing weeks are not updated.';
+	$redNote = isset($lang['101-43']) ? $lang['101-43'] : 'Changes vs the current week are shown in red.';
 
 	$html = '<div id="generateSchedulePreview" class="tabla active" style="display: block;padding-top: 10px;">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
@@ -801,6 +859,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				<legend style="font-size: 25px; font-weight: bold; border-bottom: 0px">' . htmlspecialchars($previewTitle, ENT_QUOTES, 'UTF-8') . '</legend>
 				<div class="text-muted">' . htmlspecialchars($noteLbl, ENT_QUOTES, 'UTF-8') . '</div>
 				<div class="text-muted">' . htmlspecialchars($createNote, ENT_QUOTES, 'UTF-8') . '</div>
+				<div class="text-muted">' . htmlspecialchars($redNote, ENT_QUOTES, 'UTF-8') . '</div>
 			</div>';
 
 	if (count($errors) > 0) {
@@ -870,11 +929,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					? htmlspecialchars((string) $game['awayName'], ENT_QUOTES, 'UTF-8')
 					: '<em>' . htmlspecialchars($byeLbl, ENT_QUOTES, 'UTF-8') . '</em>';
 				$rowClass = $isBye ? ' class="table-secondary"' : '';
-				$html .= '<tr' . $rowClass . '>
+				$rowStyle = !empty($game['changed']) ? ' style="color:#c62828;font-weight:600;"' : '';
+				$html .= '<tr' . $rowClass . $rowStyle . '>
 						<td>' . $homeCell . '</td>
 						<td class="text-center">vs</td>
 						<td>' . $awayCell . '</td>
 					</tr>';
+			}
+			if (!empty($week['removedGames']) && is_array($week['removedGames'])) {
+				foreach ($week['removedGames'] as $game) {
+					$homeCell = ((int) $game['homeId'] > 0)
+						? htmlspecialchars((string) $game['homeName'], ENT_QUOTES, 'UTF-8')
+						: '<em>' . htmlspecialchars($byeLbl, ENT_QUOTES, 'UTF-8') . '</em>';
+					$awayCell = ((int) $game['awayId'] > 0)
+						? htmlspecialchars((string) $game['awayName'], ENT_QUOTES, 'UTF-8')
+						: '<em>' . htmlspecialchars($byeLbl, ENT_QUOTES, 'UTF-8') . '</em>';
+					$html .= '<tr style="color:#c62828;font-weight:600;text-decoration:line-through;">
+							<td>' . $homeCell . '</td>
+							<td class="text-center">vs</td>
+							<td>' . $awayCell . '</td>
+						</tr>';
+				}
 			}
 			$html .= '</tbody>
 					</table>

@@ -134,11 +134,13 @@
   	$lang['101-34'] = 'Failed to create week';
   	$lang['101-35'] = 'Weeks created: %1.';
   	$lang['101-36'] = 'New week (will be created)';
-  	$lang['101-37'] = 'Confirm will create any missing weeks, then the matches.';
+  	$lang['101-37'] = 'Confirm will create missing weeks and their matches. Existing weeks are not updated.';
   	$lang['101-38'] = 'Enter the start week date for calendars without weeks.';
   	$lang['101-39'] = 'BYE';
   	$lang['101-40'] = 'Seed order used for this category';
   	$lang['101-41'] = 'Weeks to save';
+  	$lang['101-42'] = 'Existing week (not updated)';
+  	$lang['101-43'] = 'Changes vs the current week are shown in red.';
   	$lang['102'] = 'Users';
   	$lang['103'] = 'Users';
   	$lang['104'] = 'Seasons';

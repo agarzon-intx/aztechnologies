@@ -1084,3 +1084,137 @@ if (!function_exists('az_gs_extend_jornadas')) {
 		return array_merge($existing, $extra);
 	}
 }
+
+if (!function_exists('az_gs_pair_key')) {
+	/** Unordered pair key so 1v2 and 2v1 match the same existing game. */
+	function az_gs_pair_key($homeId, $awayId) {
+		$h = (int) $homeId;
+		$a = (int) $awayId;
+		if ($h > $a) {
+			$t = $h;
+			$h = $a;
+			$a = $t;
+		}
+		return $h . '-' . $a;
+	}
+}
+
+if (!function_exists('az_gs_append_new_teams_after_existing')) {
+	/**
+	 * Keep existing teams in their current seed order; append newcomers at the end
+	 * (e.g. 7 existing + 2 new → seeds 8 and 9).
+	 */
+	function az_gs_append_new_teams_after_existing(array $teamIds, array $existingTeamIds) {
+		$existingSet = array();
+		foreach ($existingTeamIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid > 0) {
+				$existingSet[$tid] = true;
+			}
+		}
+		if (count($existingSet) === 0) {
+			$out = array();
+			$seen = array();
+			foreach ($teamIds as $tid) {
+				$tid = (int) $tid;
+				if ($tid <= 0 || isset($seen[$tid])) {
+					continue;
+				}
+				$seen[$tid] = true;
+				$out[] = $tid;
+			}
+			return $out;
+		}
+		$keep = array();
+		$append = array();
+		$seen = array();
+		foreach ($teamIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid <= 0 || isset($seen[$tid])) {
+				continue;
+			}
+			$seen[$tid] = true;
+			if (isset($existingSet[$tid])) {
+				$keep[] = $tid;
+			} else {
+				$append[] = $tid;
+			}
+		}
+		return array_merge($keep, $append);
+	}
+}
+
+if (!function_exists('az_gs_week_existing_games')) {
+	function az_gs_week_existing_games($Config, $schema, $Season, $jornadaId, array $teamIds) {
+		$out = array();
+		$jornadaId = (int) $jornadaId;
+		$Season = (int) $Season;
+		if ($jornadaId <= 0 || $Season <= 0 || count($teamIds) === 0) {
+			return $out;
+		}
+		$list = implode(',', array_map('intval', $teamIds));
+		$sql = "SELECT IFNULL(j.Local_ID, 0) AS Local_ID, IFNULL(j.Visitante_ID, 0) AS Visitante_ID
+				FROM $schema.Juegos j
+				WHERE j.Torneo_ID = $Season
+					AND j.Jornada_ID = $jornadaId
+					AND (IFNULL(j.Local_ID, 0) IN ($list) OR IFNULL(j.Visitante_ID, 0) IN ($list))
+				ORDER BY j.Juego_ID ASC";
+		$res = $Config->query($sql);
+		if ($res && $res->num_rows > 0) {
+			while ($row = $res->fetch_assoc()) {
+				$out[] = array(
+					'homeId' => (int) $row['Local_ID'],
+					'awayId' => (int) $row['Visitante_ID'],
+				);
+			}
+		}
+		return $out;
+	}
+}
+
+if (!function_exists('az_gs_category_first_played_week_team_ids')) {
+	/**
+	 * Team IDs that already appear in the category's first week with games.
+	 * Those keep their seed numbers; anyone else is a new team appended after them.
+	 */
+	function az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $calId, array $teamIds) {
+		$Season = (int) $Season;
+		$calId = (int) $calId;
+		if ($Season <= 0 || $calId <= 0 || count($teamIds) === 0) {
+			return array();
+		}
+		$list = implode(',', array_map('intval', $teamIds));
+		$sql = "SELECT j.Jornada_ID, IFNULL(ju.Local_ID, 0) AS Local_ID, IFNULL(ju.Visitante_ID, 0) AS Visitante_ID
+				FROM $schema.Jornada j
+				INNER JOIN $schema.Juegos ju
+					ON ju.Jornada_ID = j.Jornada_ID
+					AND ju.Torneo_ID = $Season
+				WHERE j.Torneo_ID = $Season
+					AND j.Calendario_ID = $calId
+					AND (IFNULL(ju.Local_ID, 0) IN ($list) OR IFNULL(ju.Visitante_ID, 0) IN ($list))
+				ORDER BY j.Jornada_Orden ASC, j.Jornada_ID ASC, ju.Juego_ID ASC";
+		$res = $Config->query($sql);
+		if (!$res || $res->num_rows === 0) {
+			return array();
+		}
+		$firstJornada = null;
+		$ids = array();
+		$seen = array();
+		while ($row = $res->fetch_assoc()) {
+			$jid = (int) $row['Jornada_ID'];
+			if ($firstJornada === null) {
+				$firstJornada = $jid;
+			}
+			if ($jid !== $firstJornada) {
+				break;
+			}
+			foreach (array((int) $row['Local_ID'], (int) $row['Visitante_ID']) as $tid) {
+				if ($tid > 0 && !isset($seen[$tid])) {
+					$seen[$tid] = true;
+					$ids[] = $tid;
+				}
+			}
+		}
+		return $ids;
+	}
+}
