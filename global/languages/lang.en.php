@@ -346,6 +346,14 @@
 	$lang['452-16'] = 'Pointer (Flyer)';
 	$lang['452-17'] = 'Background Scores';
 	$lang['452-18'] = 'No image';
+	$lang['452-19'] = 'Flyer text';
+	$lang['452-20'] = 'First color';
+	$lang['452-21'] = 'Second color';
+	$lang['452-22'] = 'Week font size';
+	$lang['452-23'] = 'Category font size';
+	$lang['452-24'] = 'Date font size';
+	$lang['452-25'] = 'Hour font size';
+	$lang['452-26'] = 'Field font size';
 	$lang['454'] = 'Coup/League';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penalties (Tie)';

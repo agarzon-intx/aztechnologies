@@ -346,6 +346,14 @@
 	$lang['452-16'] = 'Puntero (Flyer)';
 	$lang['452-17'] = 'Fondo Marcadores';
 	$lang['452-18'] = 'Sin imagen';
+	$lang['452-19'] = 'Texto del flyer';
+	$lang['452-20'] = 'Primer color';
+	$lang['452-21'] = 'Segundo color';
+	$lang['452-22'] = 'Tamaño de letra (jornada)';
+	$lang['452-23'] = 'Tamaño de letra (categoría)';
+	$lang['452-24'] = 'Tamaño de letra (fecha)';
+	$lang['452-25'] = 'Tamaño de letra (hora)';
+	$lang['452-26'] = 'Tamaño de letra (campo)';
 	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penales (Empate)';

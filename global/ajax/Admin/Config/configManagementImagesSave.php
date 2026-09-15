@@ -23,6 +23,7 @@
 	unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require('membersite_config.php');
+	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('configManagementImagesSave.php');
 
 	include('lang.' . $_COOKIE[$Config->getAlias() . 'language'] . '.php');
@@ -30,10 +31,29 @@
 	$targetsFn = require __DIR__ . '/configManagementImagesTargets.php';
 	$allowed = $targetsFn()['allowed'];
 
+	require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
+
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataConfigAnswer' => 'Error');
 
+	$hasFlyerTextPost = isset($_POST['flyerTextColor1']) || isset($_POST['flyerTextColor2'])
+		|| isset($_POST['flyerFontWeek']) || isset($_POST['flyerFontCategory'])
+		|| isset($_POST['flyerFontDate']) || isset($_POST['flyerFontHour'])
+		|| isset($_POST['flyerFontField']);
+	$hasImageWork = false;
+	foreach ($allowed as $field => $rel) {
+		$clearKey = $field . '_clear';
+		if (isset($_POST[$clearKey]) && (string) $_POST[$clearKey] === '1') {
+			$hasImageWork = true;
+			break;
+		}
+		if (isset($_FILES[$field]) && is_array($_FILES[$field]) && (int) $_FILES[$field]['error'] !== UPLOAD_ERR_NO_FILE) {
+			$hasImageWork = true;
+			break;
+		}
+	}
+
 	$basePath = rtrim((string) $Config->getPath(), '/\\');
-	if ($basePath === '' || !is_dir($basePath)) {
+	if ($hasImageWork && ($basePath === '' || !is_dir($basePath))) {
 		$retunData['dataConfigAnswer'] = 'Site path is not configured (ini [path]).';
 		echo json_encode($retunData);
 		exit;
@@ -41,7 +61,7 @@
 
 	$hasGd = function_exists('imagecreatefromstring') && function_exists('imagepng');
 	$hasImagick = extension_loaded('imagick') && class_exists('Imagick');
-	if (!$hasGd && !$hasImagick) {
+	if ($hasImageWork && !$hasGd && !$hasImagick) {
 		$retunData['dataConfigAnswer'] = 'PHP GD or Imagick is required to save images.';
 		echo json_encode($retunData);
 		exit;
@@ -147,6 +167,7 @@
 
 	$saved = 0;
 	$cleared = 0;
+	$textSaved = 0;
 	$errors = array();
 
 	foreach ($allowed as $field => $rel) {
@@ -210,7 +231,58 @@
 		$saved++;
 	}
 
-	if ($saved === 0 && $cleared === 0) {
+	if ($hasFlyerTextPost && $Config->configurationHasColumn('flyerTextColor1')) {
+		$c1 = az_flyer_normalize_hex_color(isset($_POST['flyerTextColor1']) ? $_POST['flyerTextColor1'] : '', '#0098AF');
+		$c2 = az_flyer_normalize_hex_color(isset($_POST['flyerTextColor2']) ? $_POST['flyerTextColor2'] : '', '#FFFFFF');
+		$fw = az_flyer_normalize_font_size(isset($_POST['flyerFontWeek']) ? $_POST['flyerFontWeek'] : 75, 75);
+		$fc = az_flyer_normalize_font_size(isset($_POST['flyerFontCategory']) ? $_POST['flyerFontCategory'] : 60, 60);
+		$fd = az_flyer_normalize_font_size(isset($_POST['flyerFontDate']) ? $_POST['flyerFontDate'] : 35, 35);
+		$fh = az_flyer_normalize_font_size(isset($_POST['flyerFontHour']) ? $_POST['flyerFontHour'] : 35, 35);
+		$ff = az_flyer_normalize_font_size(isset($_POST['flyerFontField']) ? $_POST['flyerFontField'] : 35, 35);
+		$Connection = $Config->connectAdmin();
+		if ($Connection) {
+			$c1e = $Connection->real_escape_string($c1);
+			$c2e = $Connection->real_escape_string($c2);
+			$sets = array(
+				"flyerTextColor1 = '$c1e'",
+				"flyerTextColor2 = '$c2e'",
+			);
+			if ($Config->configurationHasColumn('flyerFontWeek')) {
+				$sets[] = 'flyerFontWeek = ' . (int) $fw;
+			}
+			if ($Config->configurationHasColumn('flyerFontCategory')) {
+				$sets[] = 'flyerFontCategory = ' . (int) $fc;
+			}
+			if ($Config->configurationHasColumn('flyerFontDate')) {
+				$sets[] = 'flyerFontDate = ' . (int) $fd;
+			}
+			if ($Config->configurationHasColumn('flyerFontHour')) {
+				$sets[] = 'flyerFontHour = ' . (int) $fh;
+			}
+			if ($Config->configurationHasColumn('flyerFontField')) {
+				$sets[] = 'flyerFontField = ' . (int) $ff;
+			}
+			$okText = $Connection->query('UPDATE ' . $schema . '.Configuration SET ' . implode(', ', $sets) . ' WHERE id = 0');
+			if ($okText) {
+				$textSaved = 1;
+				$Config->flyerTextColor1 = $c1;
+				$Config->flyerTextColor2 = $c2;
+				$Config->flyerFontWeek = $fw;
+				$Config->flyerFontCategory = $fc;
+				$Config->flyerFontDate = $fd;
+				$Config->flyerFontHour = $fh;
+				$Config->flyerFontField = $ff;
+			} else {
+				$errors[] = 'flyer text: update failed';
+			}
+		} else {
+			$errors[] = 'flyer text: no admin connection';
+		}
+	} elseif ($hasFlyerTextPost) {
+		$errors[] = 'flyer text: columns not installed';
+	}
+
+	if ($saved === 0 && $cleared === 0 && $textSaved === 0) {
 		$retunData['dataConfigAnswer'] = count($errors) > 0
 			? implode('; ', $errors)
 			: $lang['452-8'];

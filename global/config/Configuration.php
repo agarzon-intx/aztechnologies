@@ -78,6 +78,14 @@ class Configuration
     public $credencialFrontImage = 0;
     /** 1 when pdf/CredencialDetras.png (or legacy jpg) is stored on disk. */
     public $credencialBackImage = 0;
+    /** Flyer letter colors (hex) and font sizes. */
+    public $flyerTextColor1 = '#0098AF';
+    public $flyerTextColor2 = '#FFFFFF';
+    public $flyerFontWeek = 75;
+    public $flyerFontCategory = 60;
+    public $flyerFontDate = 35;
+    public $flyerFontHour = 35;
+    public $flyerFontField = 35;
     
 	public $MAILSMTPDebug = 0;
 	public $MAILSMTPAuth = 'true';
@@ -314,6 +322,27 @@ class Configuration
         $selCredencialBackImage = $this->schemaHasConfigurationColumn($conn, 'credencialBackImage')
             ? 'credencialBackImage'
             : '0 AS credencialBackImage';
+        $selFlyerTextColor1 = $this->schemaHasConfigurationColumn($conn, 'flyerTextColor1')
+            ? 'flyerTextColor1'
+            : "'#0098AF' AS flyerTextColor1";
+        $selFlyerTextColor2 = $this->schemaHasConfigurationColumn($conn, 'flyerTextColor2')
+            ? 'flyerTextColor2'
+            : "'#FFFFFF' AS flyerTextColor2";
+        $selFlyerFontWeek = $this->schemaHasConfigurationColumn($conn, 'flyerFontWeek')
+            ? 'flyerFontWeek'
+            : '75 AS flyerFontWeek';
+        $selFlyerFontCategory = $this->schemaHasConfigurationColumn($conn, 'flyerFontCategory')
+            ? 'flyerFontCategory'
+            : '60 AS flyerFontCategory';
+        $selFlyerFontDate = $this->schemaHasConfigurationColumn($conn, 'flyerFontDate')
+            ? 'flyerFontDate'
+            : '35 AS flyerFontDate';
+        $selFlyerFontHour = $this->schemaHasConfigurationColumn($conn, 'flyerFontHour')
+            ? 'flyerFontHour'
+            : '35 AS flyerFontHour';
+        $selFlyerFontField = $this->schemaHasConfigurationColumn($conn, 'flyerFontField')
+            ? 'flyerFontField'
+            : '35 AS flyerFontField';
 
         $query = "SELECT  case when MarcadorArbitro = 1 then '' else 'hidden' end MarcadorArbitro,
                           case when MarcadorFecha = 1 then '' else 'hidden' end MarcadorFecha,
@@ -339,7 +368,14 @@ class Configuration
 			  " . $selSearchPlayer . ",
 			  " . $selCurrentWeek . ",
 			  " . $selCredencialFrontImage . ",
-			  " . $selCredencialBackImage . "
+			  " . $selCredencialBackImage . ",
+			  " . $selFlyerTextColor1 . ",
+			  " . $selFlyerTextColor2 . ",
+			  " . $selFlyerFontWeek . ",
+			  " . $selFlyerFontCategory . ",
+			  " . $selFlyerFontDate . ",
+			  " . $selFlyerFontHour . ",
+			  " . $selFlyerFontField . "
 		  FROM " . $this->config["schema"] . ".Configuration";
         $result = $this->query($query);
         if (!$result){
@@ -386,6 +422,13 @@ class Configuration
             $this->currentWeek = $row2["currentWeek"];
             $this->credencialFrontImage = $row2["credencialFrontImage"];
             $this->credencialBackImage = $row2["credencialBackImage"];
+            $this->flyerTextColor1 = $row2["flyerTextColor1"];
+            $this->flyerTextColor2 = $row2["flyerTextColor2"];
+            $this->flyerFontWeek = $row2["flyerFontWeek"];
+            $this->flyerFontCategory = $row2["flyerFontCategory"];
+            $this->flyerFontDate = $row2["flyerFontDate"];
+            $this->flyerFontHour = $row2["flyerFontHour"];
+            $this->flyerFontField = $row2["flyerFontField"];
        }
        return $this->template;
     }

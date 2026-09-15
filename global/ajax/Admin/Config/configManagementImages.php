@@ -7,6 +7,8 @@
 	$pack = $targetsFn();
 	$rows = $pack['rows'];
 	$siteRoot = rtrim((string) $Config->getPath(), '/\\');
+	require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
+	$flyerStyle = az_flyer_text_style($Config);
 	// Keep Configuration.credencialFrontImage / credencialBackImage in sync with disk.
 	$Config->syncCredencialImageFlags();
 	$configImgPreviewRel = function ($rel) use ($siteRoot) {
@@ -85,8 +87,57 @@
 	$msgOk = htmlspecialchars($lang['441'], ENT_QUOTES, 'UTF-8');
 	$msgErr = htmlspecialchars($lang['452-9'], ENT_QUOTES, 'UTF-8');
 	$msgAjaxGenericJs = json_encode($lang['js0002'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+	$flyerTitle = htmlspecialchars(isset($lang['452-19']) ? $lang['452-19'] : 'Flyer text', ENT_QUOTES, 'UTF-8');
+	$lblColor1 = htmlspecialchars(isset($lang['452-20']) ? $lang['452-20'] : 'First color', ENT_QUOTES, 'UTF-8');
+	$lblColor2 = htmlspecialchars(isset($lang['452-21']) ? $lang['452-21'] : 'Second color', ENT_QUOTES, 'UTF-8');
+	$lblWeek = htmlspecialchars(isset($lang['452-22']) ? $lang['452-22'] : 'Week font size', ENT_QUOTES, 'UTF-8');
+	$lblCat = htmlspecialchars(isset($lang['452-23']) ? $lang['452-23'] : 'Category font size', ENT_QUOTES, 'UTF-8');
+	$lblDate = htmlspecialchars(isset($lang['452-24']) ? $lang['452-24'] : 'Date font size', ENT_QUOTES, 'UTF-8');
+	$lblHour = htmlspecialchars(isset($lang['452-25']) ? $lang['452-25'] : 'Hour font size', ENT_QUOTES, 'UTF-8');
+	$lblField = htmlspecialchars(isset($lang['452-26']) ? $lang['452-26'] : 'Field font size', ENT_QUOTES, 'UTF-8');
+	$c1 = htmlspecialchars($flyerStyle['color1Hex'], ENT_QUOTES, 'UTF-8');
+	$c2 = htmlspecialchars($flyerStyle['color2Hex'], ENT_QUOTES, 'UTF-8');
 
 	$htmlConfig .= '
+						</div>
+						<div class="row mt-4">
+							<div class="col-12">
+								<div class="card">
+									<div class="card-body">
+										<h6 class="mb-3">' . $flyerTitle . '</h6>
+										<div class="row g-3">
+											<div class="col-12 col-md-6 col-xl-4">
+												<label class="form-label" for="flyerTextColor1">' . $lblColor1 . '</label>
+												<input type="color" class="form-control form-control-color cfg-flyer-field" name="flyerTextColor1" id="flyerTextColor1" value="' . $c1 . '" title="' . $lblColor1 . '" style="width: 100%; max-width: 120px; height: 42px; padding: 2px; cursor: pointer;">
+											</div>
+											<div class="col-12 col-md-6 col-xl-4">
+												<label class="form-label" for="flyerTextColor2">' . $lblColor2 . '</label>
+												<input type="color" class="form-control form-control-color cfg-flyer-field" name="flyerTextColor2" id="flyerTextColor2" value="' . $c2 . '" title="' . $lblColor2 . '" style="width: 100%; max-width: 120px; height: 42px; padding: 2px; cursor: pointer;">
+											</div>
+											<div class="col-12 col-md-6 col-xl-4">
+												<label class="form-label" for="flyerFontWeek">' . $lblWeek . '</label>
+												<input type="number" class="form-control cfg-flyer-field" name="flyerFontWeek" id="flyerFontWeek" min="8" max="150" step="1" value="' . (int) $flyerStyle['week'] . '">
+											</div>
+											<div class="col-12 col-md-6 col-xl-4">
+												<label class="form-label" for="flyerFontCategory">' . $lblCat . '</label>
+												<input type="number" class="form-control cfg-flyer-field" name="flyerFontCategory" id="flyerFontCategory" min="8" max="150" step="1" value="' . (int) $flyerStyle['category'] . '">
+											</div>
+											<div class="col-12 col-md-6 col-xl-4">
+												<label class="form-label" for="flyerFontDate">' . $lblDate . '</label>
+												<input type="number" class="form-control cfg-flyer-field" name="flyerFontDate" id="flyerFontDate" min="8" max="150" step="1" value="' . (int) $flyerStyle['date'] . '">
+											</div>
+											<div class="col-12 col-md-6 col-xl-4">
+												<label class="form-label" for="flyerFontHour">' . $lblHour . '</label>
+												<input type="number" class="form-control cfg-flyer-field" name="flyerFontHour" id="flyerFontHour" min="8" max="150" step="1" value="' . (int) $flyerStyle['hour'] . '">
+											</div>
+											<div class="col-12 col-md-6 col-xl-4">
+												<label class="form-label" for="flyerFontField">' . $lblField . '</label>
+												<input type="number" class="form-control cfg-flyer-field" name="flyerFontField" id="flyerFontField" min="8" max="150" step="1" value="' . (int) $flyerStyle['field'] . '">
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
 						<div class="row mt-3">
 							<div class="col-12">
@@ -142,6 +193,10 @@
 									fd.append(cb.name, "1");
 									any = true;
 								}
+							});
+							document.querySelectorAll("#configimages .cfg-flyer-field").forEach(function (inp) {
+								fd.append(inp.name, inp.value || "");
+								any = true;
 							});
 							if (!any) {
 								if (typeof Swal !== "undefined") { Swal.fire({ icon: "info", title: "' . $msgErr . '" }); }

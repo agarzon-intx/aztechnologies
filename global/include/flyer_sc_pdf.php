@@ -5,9 +5,19 @@
 if (!function_exists('flyer_sc_draw_page_header')) {
 
 	function flyer_sc_draw_page_header($pdf, $siteRoot, array $row0) {
+		if (!function_exists('az_flyer_text_style')) {
+			$inc = __DIR__ . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
+			if (is_readable($inc)) {
+				require_once $inc;
+			}
+		}
+		$fs = function_exists('az_flyer_text_style')
+			? az_flyer_text_style(isset($GLOBALS['Config']) ? $GLOBALS['Config'] : null)
+			: array('color1' => array(0, 0, 0), 'color2' => array(0, 152, 175), 'week' => 20, 'category' => 20);
+
 		az_pdf_image_file($pdf, $siteRoot, '/pdf/FondoFlyerS.png', 0, 0, 210, 210);
 
-		$pdf->SetTextColor(0, 0, 0);
+		az_flyer_pdf_set_text_color($pdf, $fs['color1']);
 		$pdf->SetXY(135, 10);
 		$pdf->SetFont('Coluna', 'B', 20);
 		if (is_numeric($row0['Jornada_Desc'])) {
@@ -18,7 +28,7 @@ if (!function_exists('flyer_sc_draw_page_header')) {
 		$pdf->SetXY(135, 18);
 		$pdf->SetFont('Coluna', 'B', 20);
 		$pdf->Cell(170, 8, 'Categoria: ' . az_utf8_decode($row0['Categoria_Desc']), 35, 0, 'L', false);
-		$pdf->SetTextColor(0, 152, 175);
+		az_flyer_pdf_set_text_color($pdf, $fs['color2']);
 		$pdf->SetXY(135.5, 10.5);
 		$pdf->SetFont('Coluna', 'B', 20);
 		if (is_numeric($row0['Jornada_Desc'])) {
