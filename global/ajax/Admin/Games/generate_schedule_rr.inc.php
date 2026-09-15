@@ -1174,7 +1174,7 @@ if (!function_exists('az_gs_week_existing_games')) {
 
 if (!function_exists('az_gs_category_first_played_week_team_ids')) {
 	/**
-	 * Team IDs that already appear in the category's first week with games.
+	 * Team IDs already on the calendar (any existing game, including bye rows).
 	 * Those keep their seed numbers; anyone else is a new team appended after them.
 	 */
 	function az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $calId, array $teamIds) {
@@ -1184,35 +1184,34 @@ if (!function_exists('az_gs_category_first_played_week_team_ids')) {
 			return array();
 		}
 		$list = implode(',', array_map('intval', $teamIds));
-		$sql = "SELECT j.Jornada_ID, IFNULL(ju.Local_ID, 0) AS Local_ID, IFNULL(ju.Visitante_ID, 0) AS Visitante_ID
+		$sql = "SELECT DISTINCT IFNULL(ju.Local_ID, 0) AS Team_ID
 				FROM $schema.Jornada j
 				INNER JOIN $schema.Juegos ju
 					ON ju.Jornada_ID = j.Jornada_ID
 					AND ju.Torneo_ID = $Season
 				WHERE j.Torneo_ID = $Season
 					AND j.Calendario_ID = $calId
-					AND (IFNULL(ju.Local_ID, 0) IN ($list) OR IFNULL(ju.Visitante_ID, 0) IN ($list))
-				ORDER BY j.Jornada_Orden ASC, j.Jornada_ID ASC, ju.Juego_ID ASC";
+					AND IFNULL(ju.Local_ID, 0) IN ($list)
+				UNION
+				SELECT DISTINCT IFNULL(ju.Visitante_ID, 0) AS Team_ID
+				FROM $schema.Jornada j
+				INNER JOIN $schema.Juegos ju
+					ON ju.Jornada_ID = j.Jornada_ID
+					AND ju.Torneo_ID = $Season
+				WHERE j.Torneo_ID = $Season
+					AND j.Calendario_ID = $calId
+					AND IFNULL(ju.Visitante_ID, 0) IN ($list)";
 		$res = $Config->query($sql);
 		if (!$res || $res->num_rows === 0) {
 			return array();
 		}
-		$firstJornada = null;
 		$ids = array();
 		$seen = array();
 		while ($row = $res->fetch_assoc()) {
-			$jid = (int) $row['Jornada_ID'];
-			if ($firstJornada === null) {
-				$firstJornada = $jid;
-			}
-			if ($jid !== $firstJornada) {
-				break;
-			}
-			foreach (array((int) $row['Local_ID'], (int) $row['Visitante_ID']) as $tid) {
-				if ($tid > 0 && !isset($seen[$tid])) {
-					$seen[$tid] = true;
-					$ids[] = $tid;
-				}
+			$tid = (int) $row['Team_ID'];
+			if ($tid > 0 && !isset($seen[$tid])) {
+				$seen[$tid] = true;
+				$ids[] = $tid;
 			}
 		}
 		return $ids;

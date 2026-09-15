@@ -584,7 +584,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		foreach ($teamIds as $idx => $tid) {
 			$seedRankByTeam[(int) $tid] = $idx + 1;
 		}
-		$formatSeedName = function ($teamId) use ($resolveTeamName, $seedRankByTeam) {
+		$formatSeedName = function ($teamId) use ($resolveTeamName, &$seedRankByTeam) {
 			$teamId = (int) $teamId;
 			$name = $resolveTeamName($teamId);
 			$rank = isset($seedRankByTeam[$teamId]) ? (int) $seedRankByTeam[$teamId] : 0;
