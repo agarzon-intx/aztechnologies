@@ -148,7 +148,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$html .= '<div class="col-12 col-sm-4 col-md-4 text-center">';
 	$html .= '<img id="foto" src="' . $h($imgsrc) . '" alt="Foto" style="width:100%;max-width:220px;border-radius:8px;">';
 	if ($logoSrc !== '') {
-		$html .= '<div class="mt-2"><img src="' . $h($logoSrc) . '" alt="" style="height:42px;width:auto;"></div>';
+		$html .= '<div class="mt-2"><img src="' . $h($logoSrc) . '" alt="" style="height:126px;width:auto;"></div>';
 	}
 	$html .= '</div>';
 	$html .= '<div class="col-12 col-sm-8 col-md-8">';
