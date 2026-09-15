@@ -700,8 +700,8 @@ function previewPlayerShow(playerID){
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
-		url: 'ajax/Content/team-PlayersPlayerPreview.php',
-		data: {playerID: playerID},
+		url: 'ajax/Content/playerProfileSoccer.php',
+		data: {Jugador_ID: playerID, playerID: playerID},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
