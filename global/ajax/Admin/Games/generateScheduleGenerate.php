@@ -646,14 +646,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$willCreateWeeks = true;
 		}
 
-		// Existing first-week teams keep seeds 1..N; new teams are appended (N+1, N+2, …).
-		$existingWeekTeamIds = az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $calId, $teamIds);
-		if (count($existingWeekTeamIds) > 0) {
-			$teamIds = az_gs_append_new_teams_after_existing($teamIds, $existingWeekTeamIds);
-			$seedRankByTeam = array();
-			foreach ($teamIds as $idx => $tid) {
-				$seedRankByTeam[(int) $tid] = $idx + 1;
-			}
+		// If week 1 already has games: seed 1 vs 2, 3 vs 4, … from those games; new teams last.
+		$teamIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, $teamIds);
+		$seedRankByTeam = array();
+		foreach ($teamIds as $idx => $tid) {
+			$seedRankByTeam[(int) $tid] = $idx + 1;
 		}
 
 		// Full RR with the new team count and seed order (e.g. 9 teams as 1–9).

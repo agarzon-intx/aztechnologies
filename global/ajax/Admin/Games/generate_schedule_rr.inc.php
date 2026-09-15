@@ -1172,6 +1172,130 @@ if (!function_exists('az_gs_week_existing_games')) {
 	}
 }
 
+if (!function_exists('az_gs_first_week_jornada_id')) {
+	/** Earliest jornada (by orden) that already has games for these teams. */
+	function az_gs_first_week_jornada_id($Config, $schema, $Season, $calId, array $teamIds) {
+		$Season = (int) $Season;
+		$calId = (int) $calId;
+		if ($Season <= 0 || $calId <= 0 || count($teamIds) === 0) {
+			return 0;
+		}
+		$list = implode(',', array_map('intval', $teamIds));
+		$sql = "SELECT j.Jornada_ID
+				FROM $schema.Jornada j
+				INNER JOIN $schema.Juegos ju
+					ON ju.Jornada_ID = j.Jornada_ID
+					AND ju.Torneo_ID = $Season
+				WHERE j.Torneo_ID = $Season
+					AND j.Calendario_ID = $calId
+					AND (IFNULL(ju.Local_ID, 0) IN ($list) OR IFNULL(ju.Visitante_ID, 0) IN ($list))
+				ORDER BY j.Jornada_Orden ASC, j.Jornada_ID ASC
+				LIMIT 1";
+		$res = $Config->query($sql);
+		if ($res && $res->num_rows > 0) {
+			$row = $res->fetch_assoc();
+			return (int) $row['Jornada_ID'];
+		}
+		return 0;
+	}
+}
+
+if (!function_exists('az_gs_seed_ids_from_week_games')) {
+	/**
+	 * Round-1 seating from stored games: 1st game = seed 1 vs 2, 2nd = 3 vs 4, …
+	 * Home (Local) is the odd seed, away (Visitante) the even seed. Bye rows come after the pairs.
+	 */
+	function az_gs_seed_ids_from_week_games(array $games) {
+		$order = array();
+		$seen = array();
+		$byeTeams = array();
+		foreach ($games as $g) {
+			$h = isset($g['homeId']) ? (int) $g['homeId'] : 0;
+			$a = isset($g['awayId']) ? (int) $g['awayId'] : 0;
+			if ($h > 0 && $a > 0) {
+				foreach (array($h, $a) as $tid) {
+					if (!isset($seen[$tid])) {
+						$seen[$tid] = true;
+						$order[] = $tid;
+					}
+				}
+			} elseif ($h > 0 || $a > 0) {
+				$bt = ($h > 0) ? $h : $a;
+				if (!isset($seen[$bt])) {
+					$byeTeams[] = $bt;
+				}
+			}
+		}
+		foreach ($byeTeams as $bt) {
+			if (!isset($seen[$bt])) {
+				$seen[$bt] = true;
+				$order[] = $bt;
+			}
+		}
+		return $order;
+	}
+}
+
+if (!function_exists('az_gs_seed_order_from_first_week')) {
+	/**
+	 * When week 1 already has games, rebuild seed order from those games and append new teams.
+	 * Returns $currentTeamIds unchanged when there is no existing week.
+	 */
+	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds) {
+		$current = array();
+		$currentSet = array();
+		foreach ($currentTeamIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid > 0 && !isset($currentSet[$tid])) {
+				$currentSet[$tid] = true;
+				$current[] = $tid;
+			}
+		}
+		if (count($current) === 0) {
+			return $current;
+		}
+		$jornadaId = az_gs_first_week_jornada_id($Config, $schema, $Season, $calId, $current);
+		if ($jornadaId <= 0) {
+			return $current;
+		}
+		$games = az_gs_week_existing_games($Config, $schema, $Season, $jornadaId, $current);
+		$weekSeeds = az_gs_seed_ids_from_week_games($games);
+		if (count($weekSeeds) === 0) {
+			return $current;
+		}
+		$scheduled = az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $calId, $current);
+		$schedSet = array();
+		foreach ($scheduled as $tid) {
+			$tid = (int) $tid;
+			if ($tid > 0) {
+				$schedSet[$tid] = true;
+			}
+		}
+		$out = array();
+		$seen = array();
+		foreach ($weekSeeds as $tid) {
+			$tid = (int) $tid;
+			if (isset($currentSet[$tid]) && !isset($seen[$tid])) {
+				$out[] = $tid;
+				$seen[$tid] = true;
+			}
+		}
+		foreach ($current as $tid) {
+			if (isset($schedSet[$tid]) && !isset($seen[$tid])) {
+				$out[] = $tid;
+				$seen[$tid] = true;
+			}
+		}
+		foreach ($current as $tid) {
+			if (!isset($seen[$tid])) {
+				$out[] = $tid;
+				$seen[$tid] = true;
+			}
+		}
+		return $out;
+	}
+}
+
 if (!function_exists('az_gs_category_first_played_week_team_ids')) {
 	/**
 	 * Team IDs already on the calendar (any existing game, including bye rows).

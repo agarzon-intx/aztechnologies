@@ -404,16 +404,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 			}
 
-			// If week 1 already has games, keep those teams' seed order and append newcomers last (8, 9, …).
+			// If week 1 already has games: 1st game = seeds 1 vs 2, 2nd = 3 vs 4, …; new teams last.
 			$catCalId = (int) $cat['Calendario_ID'];
 			if (count($catTeams) > 0 && $catCalId > 0) {
 				$catTeamIds = array();
 				foreach ($catTeams as $t) {
 					$catTeamIds[] = (int) $t['Equipo_ID'];
 				}
-				$existingIds = az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $catCalId, $catTeamIds);
-				if (count($existingIds) > 0) {
-					$orderedIds = az_gs_append_new_teams_after_existing($catTeamIds, $existingIds);
+				$orderedIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $catCalId, $catTeamIds);
+				if (count($orderedIds) > 0) {
 					$byId = array();
 					foreach ($catTeams as $t) {
 						$byId[(int) $t['Equipo_ID']] = $t;
