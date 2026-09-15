@@ -134,13 +134,13 @@
   	$lang['101-34'] = 'No se pudo crear la jornada';
   	$lang['101-35'] = 'Jornadas creadas: %1.';
   	$lang['101-36'] = 'Jornada nueva (se creará)';
-  	$lang['101-37'] = 'Al confirmar se crearán las jornadas faltantes y sus partidos. Las jornadas existentes no se actualizan.';
+  	$lang['101-37'] = 'La jornada 1 no se actualiza. Las jornadas faltantes se crean con el nuevo número y orden de equipos.';
   	$lang['101-38'] = 'Indica la fecha inicial en los calendarios sin jornadas.';
   	$lang['101-39'] = 'DESCANSO';
   	$lang['101-40'] = 'Orden de semillas usado en esta categoría';
   	$lang['101-41'] = 'Jornadas a guardar';
   	$lang['101-42'] = 'Jornada existente (no se actualiza)';
-  	$lang['101-43'] = 'Los cambios respecto a la jornada actual se muestran en rojo.';
+  	$lang['101-43'] = 'Los cambios de la jornada 1 respecto a los juegos actuales se muestran en rojo.';
   	$lang['102'] = 'Usuarios';
   	$lang['103'] = 'Usuarios';
   	$lang['104'] = 'Torneos';

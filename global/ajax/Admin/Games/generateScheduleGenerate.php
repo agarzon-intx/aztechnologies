@@ -656,6 +656,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 		}
 
+		// Full RR with the new team count and seed order (e.g. 9 teams as 1–9).
+		// Week 0 is preview-only when it already has games; weeks 1+ use these rounds normally.
 		$rr = az_rr_balanced_rounds($teamIds, 2);
 		if (count($rr) === 0) {
 			$errors[] = str_replace('%1', $catLabel, $lang['101-10']);
@@ -687,6 +689,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$jornadaDesc = 'Jornada ' . ($wi + 1);
 			}
 			$skip = false;
+			$isFirstWeek = ($wi === 0);
 			if (!$createWeek && $jornadaId > 0) {
 				$sqlExist = "SELECT COUNT(*) AS cnt
 						FROM $schema.Juegos j
@@ -708,7 +711,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$byeGame = az_rr_round_bye_game($round);
 			$existingPairs = array();
 			$existingGamesList = array();
-			if ($skip && $jornadaId > 0) {
+			// Red diff is only for week 0 (existing games kept). Later weeks are the normal new RR.
+			$showWeekDiff = ($skip && $isFirstWeek && $jornadaId > 0);
+			if ($showWeekDiff) {
 				$existingGamesList = az_gs_week_existing_games($Config, $schema, $Season, $jornadaId, $teamIds);
 				foreach ($existingGamesList as $eg) {
 					$existingPairs[az_gs_pair_key($eg['homeId'], $eg['awayId'])] = true;
@@ -721,7 +726,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$home = (int) $pair[0];
 				$away = (int) $pair[1];
 				$pairKey = az_gs_pair_key($home, $away);
-				$changed = ($skip && count($existingPairs) > 0 && !isset($existingPairs[$pairKey]));
+				$changed = ($showWeekDiff && count($existingPairs) > 0 && !isset($existingPairs[$pairKey]));
 				if ($changed) {
 					$hasRedChanges = true;
 				}
@@ -742,7 +747,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$home = (int) $byeGame[0];
 				$away = (int) $byeGame[1];
 				$pairKey = az_gs_pair_key($home, $away);
-				$changed = ($skip && count($existingPairs) > 0 && !isset($existingPairs[$pairKey]));
+				$changed = ($showWeekDiff && count($existingPairs) > 0 && !isset($existingPairs[$pairKey]));
 				if ($changed) {
 					$hasRedChanges = true;
 				}
@@ -760,7 +765,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 			}
 			$removedGames = array();
-			if ($skip && count($existingGamesList) > 0) {
+			if ($showWeekDiff && count($existingGamesList) > 0) {
 				foreach ($existingGamesList as $eg) {
 					$h = (int) $eg['homeId'];
 					$a = (int) $eg['awayId'];
@@ -850,8 +855,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$weeksSaveLbl = isset($lang['101-41']) ? $lang['101-41'] : 'Weeks to save';
 	$backLbl = isset($lang['0001']) ? $lang['0001'] : 'Cancel';
 	$noteLbl = isset($lang['101-29']) ? $lang['101-29'] : 'Balanced round-robin (max 2 consecutive home or away).';
-	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Confirm will create missing weeks and their matches. Existing weeks are not updated.';
-	$redNote = isset($lang['101-43']) ? $lang['101-43'] : 'Changes vs the current week are shown in red.';
+	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Week 1 is not updated. Missing weeks are created from the new team count and seed order.';
+	$redNote = isset($lang['101-43']) ? $lang['101-43'] : 'Week 1 changes vs the current games are shown in red.';
 
 	$html = '<div id="generateSchedulePreview" class="tabla active" style="display: block;padding-top: 10px;">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">
