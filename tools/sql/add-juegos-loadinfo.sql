@@ -28,3 +28,9 @@ ALTER TABLE `aztechn1_voleymvp`.`Juegos`
 
 ALTER TABLE `aztechn1_aztflag`.`Juegos`
   ADD COLUMN `LoadInfo` longtext COLLATE utf8_unicode_ci NULL;
+
+ALTER TABLE `aztechn1_binde`.`Juegos`
+  ADD COLUMN `LoadInfo` longtext COLLATE utf8_unicode_ci NULL;
+
+ALTER TABLE `aztechn1_mapaches`.`Juegos`
+  ADD COLUMN `LoadInfo` longtext COLLATE utf8_unicode_ci NULL;
