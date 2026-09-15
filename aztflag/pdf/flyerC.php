@@ -18,6 +18,29 @@
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
+
+	$__azFlyerText = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
+	if (is_readable($__azFlyerText)) {
+		require_once $__azFlyerText;
+	}
+	unset($__azFlyerText);
+	$fs = function_exists('az_flyer_text_style') ? az_flyer_text_style($Config) : array(
+		'color1' => array(0, 152, 175),
+		'color2' => array(255, 255, 255),
+		'week' => 75,
+		'category' => 60,
+		'date' => 35,
+		'hour' => 35,
+		'field' => 35,
+	);
+	$flyerTextColor1 = $fs['color1'];
+	$flyerTextColor2 = $fs['color2'];
+	$flyerFontWeek = (int) $fs['week'];
+	$flyerFontCategory = (int) $fs['category'];
+	$flyerFontDate = (int) $fs['date'];
+	$flyerFontHour = (int) $fs['hour'];
+	$flyerFontField = (int) $fs['field'];
+
 	
 	$pdf = new FPDF('P','mm',array(210,210));
 	$pdf->AddFont('Coluna','B','Coluna.php'); //Regular
@@ -65,28 +88,28 @@
 			$pdf->SetXY(0,0);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/FondoFlyer.png', 0,0,210, 210);
 			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->SetTextColor(0, 152, 175);
+			$pdf->SetTextColor($flyerTextColor1[0], $flyerTextColor1[1], $flyerTextColor1[2]);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/calendar.png', 35,153,10, 10);
 			$pdf->SetXY(45,155);
-			$pdf->SetFont('Coluna' , 'B' , 35);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontDate);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/clock.png', 120,153,10, 10);
 			$pdf->SetXY(130,155);
-			$pdf->SetFont('Coluna' , 'B' , 35);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontHour);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/pointer.png', 80,169,10, 10);
 			$pdf->SetXY(90,170);
-			$pdf->SetFont('Coluna' , 'B' , 35);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontField);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
-			$pdf->SetTextColor(255,255,255);
+			$pdf->SetTextColor($flyerTextColor2[0], $flyerTextColor2[1], $flyerTextColor2[2]);
 			$pdf->SetXY(45.5,155.5);
-			$pdf->SetFont('Coluna' , 'B' , 35);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontDate);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
 			$pdf->SetXY(130.5,155.5);
-			$pdf->SetFont('Coluna' , 'B' , 35);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontHour);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
 			$pdf->SetXY(90.5,170.5);
-			$pdf->SetFont('Coluna' , 'B' , 35);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontField);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
             try{
                             az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png', 30,95,45, 45);
@@ -107,7 +130,7 @@
                     }
             }
             $pdf->SetXY(0,38);
-			$pdf->SetFont('Coluna' , 'B' , 75);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontWeek);
 			if(is_numeric($row1["Jornada_Desc"])){
 			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}else{
@@ -115,11 +138,11 @@
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
 			$pdf->SetXY(0,70);
-			$pdf->SetFont('Coluna' , 'B' , 60);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontCategory);
 			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
-			$pdf->SetTextColor(0, 152, 175);
+			$pdf->SetTextColor($flyerTextColor1[0], $flyerTextColor1[1], $flyerTextColor1[2]);
 			$pdf->SetXY(.5,38.5);
-			$pdf->SetFont('Coluna' , 'B' , 75);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontWeek);
 			if(is_numeric($row1["Jornada_Desc"])){
 			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}else{
@@ -127,7 +150,7 @@
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
 			$pdf->SetXY(.5,70.5);
-			$pdf->SetFont('Coluna' , 'B' , 60);
+			$pdf->SetFont('Coluna' , 'B' , $flyerFontCategory);
 			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
 			
 			
