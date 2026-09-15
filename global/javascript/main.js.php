@@ -8,6 +8,14 @@ var mainLoadingCount = 0;
 var pendingAlerts = [];
 var pendingAlertsFlushed = false;
 var AJAX_TIMEOUT_MS = 20000;
+var pendingQrPlayerId = (function(){
+	try {
+		var params = new URLSearchParams(window.location.search);
+		return params.get('Jugador_ID') || params.get('jugador_Id') || params.get('playerID') || '';
+	} catch (e) {
+		return '';
+	}
+})();
 
 function isNumberKey(evt){
 	var charCode = (evt.which) ? evt.which : event.keyCode
@@ -159,7 +167,13 @@ function loadCategory(Season, Category){
 			if (res.status === '1') {
 				$("#teamLogos").html(res.dataLogos);
 				$("#menuteams").html(res.menulogos);
-				loadWeeks(Season, Category);
+				if (typeof pendingQrPlayerId !== 'undefined' && pendingQrPlayerId) {
+					var qrPlayer = pendingQrPlayerId;
+					pendingQrPlayerId = '';
+					loadPlayerProfileSoccer(qrPlayer);
+				} else {
+					loadWeeks(Season, Category);
+				}
 				loadCategoryReloadList(Season, Category)
 			} else {
 				flushPendingAlerts();
@@ -272,6 +286,35 @@ function reloadNotifications(){
 /*****************************************************************************************************************
 *************************************************Load Weeks*******************************************************
 *****************************************************************************************************************/
+
+function loadPlayerProfileSoccer(jugadorId){
+	if (!jugadorId) {
+		loadWeeks();
+		return;
+	}
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Content/playerProfileSoccer.php',
+		data: {Jugador_ID: jugadorId},
+		timeout: AJAX_TIMEOUT_MS,
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status === '1') {
+				var html = res.dataPlayerProfile || res.dataTeamPlayerPreview || '';
+				$("#body").html('<div class="container-fluid py-3"><div class="card p-3">' + html + '</div></div>');
+			} else {
+				loadWeeks();
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			loadWeeks();
+			console.log('Exception:' + exception);
+		}
+	});
+}
 
 function loadWeeks(Season, Category){
     //console.log('loadWeeks');
@@ -700,8 +743,8 @@ function previewPlayerShow(playerID){
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
-		url: 'ajax/Content/playerProfileSoccer.php',
-		data: {Jugador_ID: playerID, playerID: playerID},
+		url: 'ajax/Content/team-PlayersPlayerPreview.php',
+		data: {playerID: playerID},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
