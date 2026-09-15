@@ -34,3 +34,6 @@ ALTER TABLE `aztechn1_binde`.`Juegos`
 
 ALTER TABLE `aztechn1_mapaches`.`Juegos`
   ADD COLUMN `LoadInfo` longtext COLLATE utf8_unicode_ci NULL;
+
+ALTER TABLE `aztechn1_deportivolasminas`.`Juegos`
+  ADD COLUMN `LoadInfo` longtext COLLATE utf8_unicode_ci NULL;
