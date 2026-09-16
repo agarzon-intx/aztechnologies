@@ -24,24 +24,42 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	require("membersite_config.php");
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('changeWeek.php');
-	
-	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
+	$__alias = $Config->getAlias();
+	$__langCk = $__alias . 'language';
+	if (!isset($_COOKIE[$__langCk]) || $_COOKIE[$__langCk] === '') {
+		$Config->LoadLanguage();
+		$__lang = $Config->lan;
+	} else {
+		$__lang = $_COOKIE[$__langCk];
+	}
+	include 'lang.' . $__lang . '.php';
 
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
-    
-    $Season = $_COOKIE[$Config->getAlias() . 'season'];
-    $Category = $_COOKIE[$Config->getAlias() . 'category'];
-    $Week = SanitizeInteger($_POST['Week']);
+
+    $Season = 0;
+    if (isset($_COOKIE[$__alias . 'season']) && $_COOKIE[$__alias . 'season'] !== '') {
+    	$Season = SanitizeInteger($_COOKIE[$__alias . 'season']);
+    }
+    $Category = 0;
+    if (isset($_COOKIE[$__alias . 'category']) && $_COOKIE[$__alias . 'category'] !== '') {
+    	$Category = SanitizeInteger($_COOKIE[$__alias . 'category']);
+    }
+    $Week = isset($_POST['Week']) ? SanitizeInteger($_POST['Week']) : '';
+    if (!$Season) {
+    	echo json_encode($retunData);
+    	exit;
+    }
     
 	$htmlWeek = '<div class="tab-content" style="padding: 0px; width: 100%">';
 	$htmlWeekTab = '';
+	$vs = 0;
 	$Config->LoadFlags();
     $Config->LoadRegionalSettings();
     // Create connection
     $sql = "SELECT * FROM $schema.Torneos where Torneo_ID = $Season;";
 	$result1 = $Config->query($sql);
-    if ($result1->num_rows > 0) {
+    if ($result1 && $result1->num_rows > 0) {
 		while($row = $result1->fetch_assoc()) {
 			$vs = $row["TodosVsTodos"];
 		}
@@ -78,5 +96,5 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			 </script>";
     $retunData = array('status' => '1', 'message' => 'Success.', 'dataWeek' => $htmlWeek, 'dataWeekTab' => $htmlWeekTab, 'sql Pos Table' => $sql21, 'sql' => $sql);
     $Config->Close();
-    echo json_encode($retunData);
+    echo json_encode($retunData, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 ?>

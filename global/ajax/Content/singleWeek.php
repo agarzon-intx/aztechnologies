@@ -11,7 +11,7 @@
 				limit 1;";
 		//echo $sql;
 		$result1 = $Config->query($sql);
-		if ($result1->num_rows > 0) {
+		if ($result1 && $result1->num_rows > 0) {
 			// output data of each row
 			while($row = $result1->fetch_assoc()) {
 				$htmlWeek .= "<div id='Jornada" . $row["Jornada"]. "' >";
