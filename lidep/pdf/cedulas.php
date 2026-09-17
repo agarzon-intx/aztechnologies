@@ -8,12 +8,26 @@
 	$sessionstat = $fgmembersite->CheckLogin('cedulas.php');
 	$Config->connect();
 
-	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
+	$langCode = 'es';
+	if (!empty($_COOKIE[$Config->getAlias() . 'language'])) {
+		$langCode = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_COOKIE[$Config->getAlias() . 'language']);
+		if ($langCode === '') {
+			$langCode = 'es';
+		}
+	}
+	if ((@include 'lang.' . $langCode . '.php') !== 1 && $langCode !== 'es') {
+		include 'lang.es.php';
+	}
 	$folder = substr(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])),1,strlen(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])))-5);
 
-	$torneo = $_COOKIE[$Config->getAlias() . 'season'];
-	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
-	$jornada = htmlspecialchars($_GET['Jornada_ID']);
+	$alias = $Config->getAlias();
+	$torneoRaw = isset($_GET['Torneo_ID']) && $_GET['Torneo_ID'] !== '' ? $_GET['Torneo_ID'] : ($_COOKIE[$alias . 'season'] ?? '');
+	$categoriaRaw = isset($_GET['Categoria_ID']) && $_GET['Categoria_ID'] !== '' ? $_GET['Categoria_ID'] : ($_COOKIE[$alias . 'category'] ?? '');
+	$jornadaRaw = isset($_GET['Jornada_ID']) && $_GET['Jornada_ID'] !== '' ? $_GET['Jornada_ID'] : '';
+	$torneo = (int) SanitizeInteger($torneoRaw);
+	$categoria = (int) SanitizeInteger($categoriaRaw);
+	$jornada = (int) SanitizeInteger($jornadaRaw);
+	$categoriaFilter = $categoria > 0 ? " and d.Fuerza = $categoria" : '';
 	
 	$siteRoot = az_pdf_site_root($Config);
 
@@ -30,19 +44,22 @@
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
 				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = $torneo
-				join $schema.Campos e on d.Campo_ID = e.Campo_ID
+				left join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
 				join $schema.Jornada jor on a.Jornada_ID = jor.Jornada_ID
-			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and ((weekday(a.Fecha) <> 2) or (weekday(a.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and a.Horario <> (SELECT MarcadorHoraDefault FROM $schema.Configuration)))
+			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada $categoriaFilter and ((weekday(a.Fecha) <> 2) or (weekday(a.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and a.Horario <> (SELECT MarcadorHoraDefault FROM $schema.Configuration)))
 			order by a.Fecha, a.Horario, c.Campo_DESC, a.Juego_ID asc";
 	//echo $sql;
+	$result1 = false;
+	if ($torneo > 0 && $jornada > 0) {
 	$result1 = $Config->query($sql);
-	if ($result1->num_rows > 0) {
+	}
+	if ($result1 && $result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
-			$localid = az_utf8_decode($row1["Local_ID"]);
-			$visitanteid = az_utf8_decode($row1["Visitante_ID"]);
+			$localid = (int) $row1["Local_ID"];
+			$visitanteid = (int) $row1["Visitante_ID"];
 			$x = 0;
 			$y = 0;
 			$col = 0;
@@ -50,7 +67,7 @@
 		
 			$pdf->AddPage();
 			$pdf->SetAutoPageBreak(false,1);
-			$pdf->SetMargins(5, 5, 5, 5);	
+			$pdf->SetMargins(5, 5, 5);	
 			$pdf->SetXY(0,0);
 			az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', 5+((35 - (35 * ($Config->logowidth / 110)))/2),5+((35 - (35 * ($Config->logoheight / 110)))/2),(35 * ($Config->logowidth / 110)), (35 * ($Config->logoheight / 110)));
 			$pdf->SetFont('Helvetica' , 'B' , 14);
@@ -124,10 +141,7 @@
                     					Comentarios,
                     					Telefono,
                     					correo,
-        								case when Sexo = 0 then '" . $lang["942"] . "'
-        									when Sexo = 1 then '" . $lang["943"] . "'
-        									end SexoT,
-        								Sexo
+        						Sexo,
                                         Validado,
                                         FechaAlta
                     				FROM Jugadores a
@@ -160,7 +174,7 @@
 			$pdf->Cell(8, 4, $lang['995'], 1, 0, 'L' , false);
 			$y= $y+4;
 		
-			if ($result->num_rows > 0) {
+			if ($result && $result->num_rows > 0) {
 				// output data of each row
 				while($row = $result->fetch_assoc()) {
 					$colorR = 0;
@@ -232,10 +246,7 @@
                     					Comentarios,
                     					Telefono,
                     					correo,
-        								case when Sexo = 0 then '" . $lang["942"] . "'
-        									when Sexo = 1 then '" . $lang["943"] . "'
-        									end SexoT,
-        								Sexo
+        						Sexo,
                                         Validado,
                                         FechaAlta
                     				FROM Jugadores a
@@ -267,7 +278,7 @@
 			$pdf->Cell(8, 4, $lang['995'], 1, 0, 'L' , false);
 			$y= $y+4;
 		
-			if ($result->num_rows > 0) {
+			if ($result && $result->num_rows > 0) {
 				// output data of each row
 				while($row = $result->fetch_assoc()) {
 					$colorR = 0;
@@ -361,10 +372,12 @@
 			$pdf->SetXY($x+6,$y+35);
 			$pdf->Cell(204 , 5, 'NOTA: En caso de inconformidad, firmar la cedula de juego bajo protesta, si no esta firmada perdera el derecho a replica.', 0, 0 , 'C' , false);
 		} 
-	}else {
-		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
+	} else {
+		$pdf->AddPage();
+		$pdf->SetFont('Helvetica' , 'B' , 12);
+		$pdf->Cell(200 , 8, isset($lang['9998']) ? $lang['9998'] : 'No hay partidos para generar cedulas', 0, 0 , 'C' , false);
 	}
-	$Config->close();
+	$Config->Close();
 
 	$pdf->Output();
 ?>
