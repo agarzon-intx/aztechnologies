@@ -43,7 +43,7 @@
 				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID
 				left join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
