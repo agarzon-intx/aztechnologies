@@ -120,7 +120,7 @@
   	$lang['101-20'] = 'Sin calendario';
   	$lang['101-21'] = 'Categoría';
   	$lang['101-22'] = 'Ranking y categorías';
-  	$lang['101-23'] = 'Usa las flechas para cambiar el orden de semillas. El orden por defecto es alfabético si no hay juegos. Si ya existe la jornada 1: las semillas salen de esos juegos, los equipos nuevos se agregan al final, y el último cubre el primer hueco hasta que no queden.';
+  	$lang['101-23'] = 'Usa las flechas para cambiar el orden de semillas. Si ya existe la jornada 1: las semillas salen de esos juegos, los equipos nuevos se agregan al final, y el último cubre el primer hueco hasta que no queden.';
   	$lang['101-24'] = 'Orden';
   	$lang['101-25'] = 'Vista previa del calendario';
   	$lang['101-26'] = 'La vista previa expiró. Genera de nuevo.';

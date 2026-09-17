@@ -299,22 +299,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			<div class="nav-wrapper position-relative end-0">
 				<ul class="nav nav-pills nav-fill p-1" role="tablist" style="background: #cee6ff; flex-direction: unset !important; flex-wrap: wrap;" id="generateScheduleNavTabs">
 				<li class="nav-item" id="gsRankingAllli">
-					<a class="nav-link mb-0 px-2 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#gsRankingAll" role="tab" aria-controls="gsRankingAllli" aria-selected="false">'
+					<a class="nav-link mb-0 px-2 py-1 active" data-bs-toggle="tab" style="cursor: pointer;" callval="#gsRankingAll" role="tab" aria-controls="gsRankingAllli" aria-selected="true">'
 						. htmlspecialchars($rankingLabel, ENT_QUOTES, 'UTF-8') .
 					'</a>
 				</li>';
 
-		$catTabIdx = 0;
 		foreach ($categories as $cat) {
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
-			$catActive = ($catTabIdx === 0) ? ' active' : '';
-			$catSelected = ($catTabIdx === 0) ? 'true' : 'false';
 			$html .= '<li class="nav-item" id="' . $panelId . 'li">
-					<a class="nav-link mb-0 px-2 py-1' . $catActive . '" data-bs-toggle="tab" style="cursor: pointer;" callval="#' . $panelId . '" role="tab" aria-controls="' . $panelId . 'li" aria-selected="' . $catSelected . '">'
+					<a class="nav-link mb-0 px-2 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#' . $panelId . '" role="tab" aria-controls="' . $panelId . 'li" aria-selected="false">'
 						. htmlspecialchars((string) $cat['Categoria_Desc'], ENT_QUOTES, 'UTF-8') .
 					'</a>
 				</li>';
-			$catTabIdx++;
 		}
 
 		$html .= '</ul>
@@ -323,7 +319,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			<div class="tabla-content" style="padding-top: 12px;">';
 
 		// Ranking tab: tournament-wide institution ranking (position + name).
-		$html .= '<div id="gsRankingAll" class="tabla" style="display: none; height: auto;">
+		$html .= '<div id="gsRankingAll" class="tabla active" style="display: block; height: auto;">
 			<div class="table-responsive">
 				<table class="table table-sm table-striped align-middle mb-0">
 					<thead>
@@ -350,12 +346,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			</div>
 		</div>';
 
-		$catPanelIdx = 0;
 		foreach ($categories as $cat) {
 			$panelId = 'gsCat' . (int) $cat['Categoria_ID'];
-			$catPanelDisplay = ($catPanelIdx === 0) ? 'block' : 'none';
-			$catPanelActive = ($catPanelIdx === 0) ? ' active' : '';
-			$html .= '<div id="' . $panelId . '" class="tabla' . $catPanelActive . '" style="display: ' . $catPanelDisplay . '; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . (int) $cat['Calendario_ID'] . '">
+			$html .= '<div id="' . $panelId . '" class="tabla" style="display: none; height: auto;" data-category-id="' . (int) $cat['Categoria_ID'] . '" data-calendario-id="' . (int) $cat['Calendario_ID'] . '">
 				<div class="mb-2"><strong>' . htmlspecialchars((string) (isset($lang['101-16']) ? $lang['101-16'] : 'Category ranking'), ENT_QUOTES, 'UTF-8') . '</strong>
 					<small class="text-muted ms-2">' . htmlspecialchars((string) (isset($lang['101-23']) ? $lang['101-23'] : 'Use arrows to change seed order.'), ENT_QUOTES, 'UTF-8') . '</small>
 				</div>
@@ -371,31 +364,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						<tbody class="gs-cat-seed-tbody" data-category-id="' . (int) $cat['Categoria_ID'] . '">';
 
 			$catTeams = array();
-			$seenTeam = array();
 			foreach ($cat['seeds'] as $seed) {
 				foreach ($seed['teams'] as $t) {
-					$tid = (int) $t['Equipo_ID'];
-					if ($tid <= 0 || isset($seenTeam[$tid])) {
-						continue;
-					}
-					$seenTeam[$tid] = true;
 					$catTeams[] = array(
 						'seed' => (int) $seed['seed'],
-						'Equipo_ID' => $tid,
-						'Equipo_DESC' => (string) $t['Equipo_DESC'],
-					);
-				}
-			}
-			if (count($catTeams) === 0) {
-				foreach (az_generate_schedule_category_teams($Config, $schema, $Season, (int) $cat['Categoria_ID']) as $t) {
-					$catTeams[] = array(
-						'seed' => 0,
 						'Equipo_ID' => (int) $t['Equipo_ID'],
 						'Equipo_DESC' => (string) $t['Equipo_DESC'],
 					);
 				}
 			}
 			usort($catTeams, function ($a, $b) {
+				if ($a['seed'] !== $b['seed']) {
+					return $a['seed'] - $b['seed'];
+				}
 				return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
 			});
 
@@ -474,7 +455,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					</table>
 				</div>
 			</div>';
-			$catPanelIdx++;
 		}
 
 		$html .= '</div>
