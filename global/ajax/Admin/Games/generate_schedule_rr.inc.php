@@ -1236,7 +1236,8 @@ if (!function_exists('az_gs_week_games_for_category')) {
 if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 	/**
 	 * After new teams are appended at the end, fill missing original seed slots
-	 * from the latest appended team first, then the next, until gaps are gone.
+	 * from the latest fill-from team first, then the next, until gaps are gone.
+	 * With no new teams, fill-from is the remaining seeds (last seed first).
 	 * Leftover missing slots (no filler left) are dropped.
 	 *
 	 * @param array $seedIds original seeds (may include missing teams) plus appended newcomers
@@ -1324,15 +1325,7 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 	 * Latest fill-from team moves into the first hole, then the next, etc.
 	 */
 	function az_gs_order_with_rank_gaps(array $orderedIds, array $rankByTeam, array $fillFromIds) {
-		$fillSet = array();
-		foreach ($fillFromIds as $tid) {
-			$tid = (int) $tid;
-			if ($tid > 0) {
-				$fillSet[$tid] = true;
-			}
-		}
-		$remaining = array();
-		$fillKeep = array();
+		$items = array();
 		$seen = array();
 		foreach ($orderedIds as $tid) {
 			$tid = (int) $tid;
@@ -1340,13 +1333,9 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 				continue;
 			}
 			$seen[$tid] = true;
-			if (isset($fillSet[$tid])) {
-				$fillKeep[] = $tid;
-			} else {
-				$remaining[] = $tid;
-			}
+			$items[] = $tid;
 		}
-		usort($remaining, function ($a, $b) use ($rankByTeam) {
+		usort($items, function ($a, $b) use ($rankByTeam) {
 			$ra = isset($rankByTeam[$a]) ? (int) $rankByTeam[$a] : 0;
 			$rb = isset($rankByTeam[$b]) ? (int) $rankByTeam[$b] : 0;
 			if ($ra === $rb) {
@@ -1363,7 +1352,7 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 		$slots = array();
 		$hasHole = false;
 		$prevRank = null;
-		foreach ($remaining as $tid) {
+		foreach ($items as $tid) {
 			$r = isset($rankByTeam[$tid]) ? (int) $rankByTeam[$tid] : 0;
 			if ($prevRank !== null && $r > 0 && $prevRank > 0 && $r > $prevRank + 1) {
 				for ($g = $prevRank + 1; $g < $r; $g++) {
@@ -1376,19 +1365,10 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 				$prevRank = $r;
 			}
 		}
-		foreach ($fillKeep as $tid) {
-			$slots[] = $tid;
-		}
 		if (!$hasHole) {
-			$out = array();
-			foreach ($slots as $tid) {
-				if ((int) $tid > 0) {
-					$out[] = (int) $tid;
-				}
-			}
-			return $out;
+			return $items;
 		}
-		return az_gs_fill_missing_seeds_with_latest($slots, $orderedIds, $fillKeep);
+		return az_gs_fill_missing_seeds_with_latest($slots, $orderedIds, $fillFromIds);
 	}
 }
 
@@ -1461,8 +1441,9 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 	 * When week 1 already has games, rebuild seed order from those games.
 	 * 1) Keep original week-1 seed slots (including teams that are now missing).
 	 * 2) Append leftover scheduled teams, then brand-new teams.
-	 * 3) If any original seeds are missing, the latest appended team fills the first
-	 *    gap, then the next latest the next gap, until gaps are covered.
+	 * 3) If any original seeds are missing, the latest new team fills the first
+	 *    gap, then the next latest the next gap. If there are no new teams, the
+	 *    last remaining seed fills the first gap, and that repeats until no gaps remain.
 	 * If week-1 no longer has the missing team IDs, ranking seed numbers that skip
 	 * a value (1, 2, 4, …) are treated as the same gaps.
 	 * New teams are ordered by ranking so “latest” is the last new team, even if the
@@ -1532,12 +1513,16 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 			});
 		}
 		$combined = array_merge($seeds, $newTeams);
-		$out = az_gs_fill_missing_seeds_with_latest($combined, $current, $newTeams);
+		$fillFrom = $newTeams;
+		if (count($fillFrom) === 0) {
+			$fillFrom = $current;
+		}
+		$out = az_gs_fill_missing_seeds_with_latest($combined, $current, $fillFrom);
 		if ($hadMissing) {
 			return $out;
 		}
-		if (count($newTeams) > 0 && count($rankByTeam) > 0) {
-			$ranked = az_gs_order_with_rank_gaps($out, $rankByTeam, $newTeams);
+		if (count($rankByTeam) > 0) {
+			$ranked = az_gs_order_with_rank_gaps($out, $rankByTeam, $fillFrom);
 			if ($ranked !== $out) {
 				return $ranked;
 			}
