@@ -107,7 +107,7 @@ $schema = $Config->getSchema();
 						SELECT * FROM $schema.Juego_Estatus) a
 				order by Juego_Estatus_ID;";
 	$result20 = $Config->query($sql20);
-	if ($result20->num_rows > 0) {
+	if ($result20 && $result20->num_rows > 0) {
 		// output data of each row
 		while($row20 = $result20->fetch_assoc()) {
 			$sqlPTSL .= " when l.Jugado = " . $row20["Juego_Estatus_ID"] . " then " . $row20["PTSL"] . " ";
@@ -588,20 +588,66 @@ $schema = $Config->getSchema();
 	}
 	//echo $sql;
     //$htmlLogos .= $sql;
+	$logoRows = array();
+	$result = $Config->query($sql);
+	if ($result && $result->num_rows > 0) {
+		while ($row2 = $result->fetch_assoc()) {
+			$logoRows[] = $row2;
+		}
+	}
+	if (count($logoRows) === 0) {
+		$sqlTeams = "SELECT CONCAT(e.Torneo_ID, '-', e.Equipo_ID) AS Logo,
+						e.Equipo_ID,
+						e.Equipo_DESC,
+						e.Equipo_FULLDESC,
+						0 AS Puntos,
+						0 AS Reales
+					FROM $schema.Equipos e
+					WHERE e.Fuerza = $Category
+						AND e.Torneo_ID = $Season
+						AND IFNULL(e.Activo, 0) = 1
+					ORDER BY e.Equipo_DESC ASC";
+		$resultTeams = $Config->query($sqlTeams);
+		if ($resultTeams && $resultTeams->num_rows > 0) {
+			while ($row2 = $resultTeams->fetch_assoc()) {
+				$logoRows[] = $row2;
+			}
+		}
+	} else {
+		$hasPoints = false;
+		foreach ($logoRows as $lr) {
+			$pts = 0;
+			if (isset($lr['Reales'])) {
+				$pts = (int) $lr['Reales'];
+			} elseif (isset($lr['Puntos'])) {
+				$pts = (int) $lr['Puntos'];
+			}
+			if ($pts !== 0) {
+				$hasPoints = true;
+				break;
+			}
+		}
+		if (!$hasPoints) {
+			usort($logoRows, function ($a, $b) {
+				$na = isset($a['Equipo_DESC']) ? (string) $a['Equipo_DESC'] : '';
+				$nb = isset($b['Equipo_DESC']) ? (string) $b['Equipo_DESC'] : '';
+				return strcasecmp($na, $nb);
+			});
+		}
+	}
+
 	$htmlLogos .= '<div class="container-fluid py-1 px-3 d-none d-lg-none d-xl-block" style="padding-right: 0px !important;"><div class="input-group input-group-outline" style="">';
     
 	$htmlLogosDrop = '<div class="container-fluid py-1 px-3 d-md-block d-lg-block d-xl-none"><div class="dropdown">';
-    $result = $Config->query($sql);
-    $totLogos = $result->num_rows;
+    $totLogos = count($logoRows);
     $count = 0;
-    if($result){
-        if ($result->num_rows > 0) {
-            $width = round(860/($result->num_rows));
-            $radius = round((860/($result->num_rows))/5);
+    if ($totLogos > 0) {
+            $width = round(860/($totLogos));
+            $radius = round((860/($totLogos))/5);
             if($width > 60){
                  $width = 60;
             }	 $radius = 60/5;
-            while($row2 = $result->fetch_assoc()) {
+            foreach ($logoRows as $row2) {
 				$htmlLogos .= '<ul class="list-group list-group-horizontal" style="">
                   <li class="list-group-item" style="background: transparent;border: 0px;padding: 0.1rem 0.1rem;">
                     <div class="hover">
@@ -627,7 +673,6 @@ $schema = $Config->getSchema();
 	    if($totLogos > 1){
               $htmlLogosDrop .= '</ul>';
             }
-        }
     }
     $htmlLogosDrop .= '</div></div>';
     $htmlLogos .= '</div></div>';
@@ -667,24 +712,21 @@ $schema = $Config->getSchema();
 	$sql1 = "SET @rank:=0;";
 	$Config->query($sql1);
 	$htmlMenu .= '<div class="container-fluid py-1 px-3 d-md-block d-lg-block d-xl-none" style="width: 87%;"><div class="dropdown">';
-    $result = $Config->query($sql);
-    $totLogos = $result->num_rows;
+    $totLogos = count($logoRows);
     $htmlMenu .= '<a class="btn bg-gradient-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownMenuLink0" style="margin-bottom: 0rem;">-- ' . $lang['112-1'] . '</a>';
 	$htmlMenu .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink0">';
 	$count = 1;
-    if($result){
-		if ($result->num_rows > 0) {
-			$width = round(860/($result->num_rows));
-			$radius = round((860/($result->num_rows))/5);
+    if ($totLogos > 0) {
+			$width = round(860/($totLogos));
+			$radius = round((860/($totLogos))/5);
 			if($width > 60){
 				 $width = 60;
 			}	 $radius = 60/5;
-			while($row2 = $result->fetch_assoc()) {
+			foreach ($logoRows as $row2) {
 				$htmlMenu .= '<li><a class="dropdown-item"  onclick="loadTeam(' . mb_convert_encoding((string)$row2["Equipo_ID"], 'UTF-8', 'ISO-8859-1') . "," . $_COOKIE[$Config->getAlias() . "season"] . '); toggleSidenav();"><img src="./imagenes/' . mb_convert_encoding((string)$row2["Logo"], 'UTF-8', 'ISO-8859-1') . '.png?tmp=' . $fecha->getTimestamp() . '" style="width: 17px;"/> ' . $row2["Equipo_FULLDESC"] . '</a></li>';
 				
 				$count = $count + 1;
 			}
-		}
     }
     $htmlMenu .= '</ul>';
 	$htmlMenu .= '</div></div>';
@@ -692,5 +734,9 @@ $schema = $Config->getSchema();
     
     $retunData = array('status' => '1', 'message' => 'Success.', 'dataLogos' => $htmlLogos, 'menulogos' => $htmlMenu, 'Sql' => $sql);
     $Config->Close();
-    echo json_encode($retunData);
+    $jsonFlags = JSON_UNESCAPED_UNICODE;
+    if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+		$jsonFlags |= JSON_INVALID_UTF8_SUBSTITUTE;
+    }
+    echo json_encode($retunData, $jsonFlags);
 ?>
