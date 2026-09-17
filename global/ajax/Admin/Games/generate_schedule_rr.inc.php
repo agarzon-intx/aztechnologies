@@ -1199,6 +1199,40 @@ if (!function_exists('az_gs_week_all_games')) {
 	}
 }
 
+if (!function_exists('az_gs_week_games_for_category')) {
+	/**
+	 * Week games for a category: active, inactive, and opponents who left the category.
+	 */
+	function az_gs_week_games_for_category($Config, $schema, $Season, $jornadaId, $catId, array $extraTeamIds) {
+		$ids = array();
+		foreach ($extraTeamIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid > 0) {
+				$ids[$tid] = true;
+			}
+		}
+		$catId = (int) $catId;
+		$Season = (int) $Season;
+		if ($catId > 0 && $Season > 0) {
+			$sqlEq = "SELECT Equipo_ID FROM $schema.Equipos
+					WHERE Torneo_ID = $Season AND Fuerza = $catId";
+			$resEq = $Config->query($sqlEq);
+			if ($resEq && $resEq->num_rows > 0) {
+				while ($er = $resEq->fetch_assoc()) {
+					$tid = (int) $er['Equipo_ID'];
+					if ($tid > 0) {
+						$ids[$tid] = true;
+					}
+				}
+			}
+		}
+		if (count($ids) === 0) {
+			return az_gs_week_all_games($Config, $schema, $Season, $jornadaId);
+		}
+		return az_gs_week_existing_games($Config, $schema, $Season, $jornadaId, array_keys($ids));
+	}
+}
+
 if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 	/**
 	 * After new teams are appended at the end, fill missing original seed slots
@@ -1228,7 +1262,14 @@ if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 		$seen = array();
 		foreach ($seedIds as $tid) {
 			$tid = (int) $tid;
-			if ($tid <= 0 || isset($seen[$tid])) {
+			if ($tid < 0) {
+				continue;
+			}
+			if ($tid === 0) {
+				$seeds[] = 0;
+				continue;
+			}
+			if (isset($seen[$tid])) {
 				continue;
 			}
 			$seen[$tid] = true;
@@ -1238,7 +1279,7 @@ if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 		while ($guard-- > 0) {
 			$gap = -1;
 			for ($i = 0, $n = count($seeds); $i < $n; $i++) {
-				if (!isset($currentSet[$seeds[$i]])) {
+				if ($seeds[$i] === 0 || !isset($currentSet[$seeds[$i]])) {
 					$gap = $i;
 					break;
 				}
@@ -1248,7 +1289,7 @@ if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 			}
 			$src = -1;
 			for ($j = count($seeds) - 1; $j > $gap; $j--) {
-				if (isset($fillSet[$seeds[$j]])) {
+				if ($seeds[$j] > 0 && isset($fillSet[$seeds[$j]])) {
 					$src = $j;
 					break;
 				}
@@ -1256,7 +1297,7 @@ if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 			if ($src < 0) {
 				$kept = array();
 				foreach ($seeds as $tid) {
-					if (isset($currentSet[$tid])) {
+					if ($tid > 0 && isset($currentSet[$tid])) {
 						$kept[] = $tid;
 					}
 				}
@@ -1269,11 +1310,78 @@ if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 		}
 		$out = array();
 		foreach ($seeds as $tid) {
-			if (isset($currentSet[$tid])) {
+			if ($tid > 0 && isset($currentSet[$tid])) {
 				$out[] = $tid;
 			}
 		}
 		return $out;
+	}
+}
+
+if (!function_exists('az_gs_order_with_rank_gaps')) {
+	/**
+	 * Ranking seed numbers that skip a value (1, 2, 4, …) are missing slots.
+	 * Latest fill-from team moves into the first hole, then the next, etc.
+	 */
+	function az_gs_order_with_rank_gaps(array $orderedIds, array $rankByTeam, array $fillFromIds) {
+		$byRank = array();
+		$max = 0;
+		$unranked = array();
+		$seen = array();
+		foreach ($orderedIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid <= 0 || isset($seen[$tid])) {
+				continue;
+			}
+			$seen[$tid] = true;
+			$r = isset($rankByTeam[$tid]) ? (int) $rankByTeam[$tid] : 0;
+			if ($r > 0) {
+				if (!isset($byRank[$r])) {
+					$byRank[$r] = array();
+				}
+				$byRank[$r][] = $tid;
+				if ($r > $max) {
+					$max = $r;
+				}
+			} else {
+				$unranked[] = $tid;
+			}
+		}
+		if ($max <= 0) {
+			$out = array();
+			foreach ($orderedIds as $tid) {
+				$tid = (int) $tid;
+				if ($tid > 0) {
+					$out[] = $tid;
+				}
+			}
+			return $out;
+		}
+		$slots = array();
+		$hasHole = false;
+		for ($r = 1; $r <= $max; $r++) {
+			if (!empty($byRank[$r])) {
+				foreach ($byRank[$r] as $tid) {
+					$slots[] = $tid;
+				}
+			} else {
+				$slots[] = 0;
+				$hasHole = true;
+			}
+		}
+		foreach ($unranked as $tid) {
+			$slots[] = $tid;
+		}
+		if (!$hasHole) {
+			$out = array();
+			foreach ($slots as $tid) {
+				if ((int) $tid > 0) {
+					$out[] = (int) $tid;
+				}
+			}
+			return $out;
+		}
+		return az_gs_fill_missing_seeds_with_latest($slots, $orderedIds, $fillFromIds);
 	}
 }
 
@@ -1348,9 +1456,11 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 	 * 2) Append leftover scheduled teams, then brand-new teams.
 	 * 3) If any original seeds are missing, the latest appended team fills the first
 	 *    gap, then the next latest the next gap, until gaps are covered.
+	 * If week-1 no longer has the missing team IDs, ranking seed numbers that skip
+	 * a value (1, 2, 4, …) are treated as the same gaps.
 	 * Returns $currentTeamIds unchanged when there is no existing week.
 	 */
-	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds) {
+	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds, array $rankByTeam = array(), $catId = 0) {
 		$current = array();
 		$currentSet = array();
 		foreach ($currentTeamIds as $tid) {
@@ -1367,7 +1477,7 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 		if ($jornadaId <= 0) {
 			return $current;
 		}
-		$games = az_gs_week_all_games($Config, $schema, $Season, $jornadaId);
+		$games = az_gs_week_games_for_category($Config, $schema, $Season, $jornadaId, $catId, $current);
 		$weekSeeds = az_gs_seed_ids_from_week_games($games);
 		if (count($weekSeeds) === 0) {
 			return $current;
@@ -1382,6 +1492,7 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 		}
 		$seeds = array();
 		$seen = array();
+		$hadMissing = false;
 		foreach ($weekSeeds as $tid) {
 			$tid = (int) $tid;
 			if ($tid <= 0 || isset($seen[$tid])) {
@@ -1389,6 +1500,9 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 			}
 			$seen[$tid] = true;
 			$seeds[] = $tid;
+			if (!isset($currentSet[$tid])) {
+				$hadMissing = true;
+			}
 		}
 		$appended = array();
 		foreach ($current as $tid) {
@@ -1404,7 +1518,14 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 			}
 		}
 		$combined = array_merge($seeds, $appended);
-		return az_gs_fill_missing_seeds_with_latest($combined, $current, $appended);
+		$out = az_gs_fill_missing_seeds_with_latest($combined, $current, $appended);
+		if (!$hadMissing && count($appended) > 0 && count($rankByTeam) > 0) {
+			$ranked = az_gs_order_with_rank_gaps($out, $rankByTeam, $appended);
+			if (count($ranked) > 0) {
+				$out = $ranked;
+			}
+		}
+		return $out;
 	}
 }
 
