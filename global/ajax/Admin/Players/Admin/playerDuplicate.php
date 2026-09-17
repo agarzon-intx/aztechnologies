@@ -93,16 +93,69 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit;
 	}
 
-	$username = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
-	$sql0 = "CALL $schema.PlayerCopy('" . $username . "', '$curpEsc', $team, @out);";
 	$Connection = $Config->connectAdmin();
 	if (!$Connection) {
 		echo json_encode($retunData);
 		exit;
 	}
-	$Connection->query($sql0);
-	$out = $Connection->query("SELECT @out AS count");
-	$ok = $out && $out->num_rows > 0;
+
+	$nextNum = 1;
+	$numRes = $Config->queryAdmin("SELECT IFNULL(MAX(CAST(Numero AS UNSIGNED)), 0) + 1 AS n
+		FROM $schema.Jugadores
+		WHERE Equipo_ID = $team AND Numero REGEXP '^[0-9]+$'");
+	if ($numRes && $numRow = $numRes->fetch_assoc()) {
+		$n = (int) $numRow['n'];
+		if ($n > 0) {
+			$nextNum = $n;
+		}
+	}
+
+	$cols = array(
+		'Clave', 'Nombre', 'Apellido_P', 'Apellido_M', 'Fecha_Nacimiento', 'Estatus',
+		'Equipo_ID', 'Validado', 'Comentarios', 'FechaAlta', 'FechaCambio', 'Curp',
+		'Numero', 'Telefono', 'correo', 'Apodo', 'Foto', 'Identificacion', 'Firma',
+		'FechaValidacionCurp', 'IntentosValidacionCurp', 'Actualizado',
+		'ValidacionCurpComentario', 'Sexo',
+	);
+	$selects = array(
+		'Clave', 'Nombre', 'Apellido_P', 'Apellido_M', 'Fecha_Nacimiento', 'Estatus',
+		(string) $team, '0', 'Comentarios', 'NOW()', 'NOW()', 'Curp',
+		"'" . $nextNum . "'", 'Telefono', 'correo', 'Apodo', 'Foto', 'Identificacion', 'Firma',
+		'FechaValidacionCurp', 'IntentosValidacionCurp', '0',
+		'ValidacionCurpComentario', 'Sexo',
+	);
+	if ($Config->jugadoresHasColumn('Jugador_tipo')) {
+		$cols[] = 'Jugador_tipo';
+		$selects[] = 'Jugador_tipo';
+	}
+	if ($Config->jugadoresHasColumn('Fecha_Validacion')) {
+		$cols[] = 'Fecha_Validacion';
+		$selects[] = 'NULL';
+	}
+	if ($Config->jugadoresHasColumn('Fecha_Alta')) {
+		$cols[] = 'Fecha_Alta';
+		$selects[] = 'NOW()';
+	}
+	if ($Config->jugadoresHasColumn('Fecha_Baja')) {
+		$cols[] = 'Fecha_Baja';
+		$selects[] = 'NULL';
+	}
+	if ($Config->jugadoresHasColumn('IdentificacionPDF')) {
+		$cols[] = 'IdentificacionPDF';
+		$selects[] = 'IdentificacionPDF';
+	}
+
+	$sqlInsert = 'INSERT INTO ' . $schema . '.Jugadores (' . implode(', ', $cols) . ') SELECT '
+		. implode(', ', $selects) . ' FROM ' . $schema . '.Jugadores WHERE Jugador_ID = ' . $player . ' LIMIT 1';
+	$okIns = $Config->queryAdmin($sqlInsert);
+	$newId = ($okIns && $Connection) ? (int) $Connection->insert_id : 0;
+	if ($newId <= 0) {
+		$found = $Config->query("SELECT Jugador_ID FROM $schema.Jugadores WHERE Curp = '$curpEsc' AND Equipo_ID = $team AND Jugador_ID <> $player ORDER BY Jugador_ID DESC LIMIT 1");
+		if ($found && $foundRow = $found->fetch_assoc()) {
+			$newId = (int) $foundRow['Jugador_ID'];
+		}
+	}
+
 	$categoria = 0;
 	$catRes = $Config->query("SELECT Fuerza FROM $schema.Equipos WHERE Equipo_ID = $team AND Torneo_ID = $Season LIMIT 1");
 	if ($catRes && $catRow = $catRes->fetch_assoc()) {
@@ -110,7 +163,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$Connection->Close();
 
-	if ($ok) {
+	if ($newId > 0) {
 		echo json_encode(array('status' => '1', 'message' => $lang['539-11'], 'categoria' => $categoria, 'equipo' => $team));
 		exit;
 	}
