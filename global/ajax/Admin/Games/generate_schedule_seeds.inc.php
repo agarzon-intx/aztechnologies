@@ -91,6 +91,60 @@ if (!function_exists('az_generate_schedule_ensure_seed_table')) {
 	}
 }
 
+if (!function_exists('az_generate_schedule_season_has_results')) {
+	/** True when at least one game in the season has been played (has points). */
+	function az_generate_schedule_season_has_results($Config, $schema, $Season) {
+		$Season = (int) $Season;
+		if ($Season <= 0) {
+			return false;
+		}
+		$sql = "SELECT 1 AS ok
+				FROM $schema.Juegos
+				WHERE Torneo_ID = $Season
+					AND IFNULL(Jugado, 0) <> 0
+				LIMIT 1";
+		try {
+			$res = $Config->query($sql);
+			return ($res && $res->num_rows > 0);
+		} catch (Throwable $e) {
+			az_generate_schedule_seed_log('season_has_results: ' . $e->getMessage());
+			return false;
+		}
+	}
+}
+
+if (!function_exists('az_generate_schedule_category_teams')) {
+	/** Active teams in a category, alphabetical by name. */
+	function az_generate_schedule_category_teams($Config, $schema, $Season, $catId) {
+		$Season = (int) $Season;
+		$catId = (int) $catId;
+		$teams = array();
+		if ($Season <= 0 || $catId <= 0) {
+			return $teams;
+		}
+		$sql = "SELECT e.Equipo_ID, e.Equipo_DESC
+				FROM $schema.Equipos e
+				WHERE e.Torneo_ID = $Season
+					AND e.Fuerza = $catId
+					AND IFNULL(e.Activo, 0) = 1
+				ORDER BY e.Equipo_DESC ASC";
+		try {
+			$res = $Config->query($sql);
+			if ($res && $res->num_rows > 0) {
+				while ($t = $res->fetch_assoc()) {
+					$teams[] = array(
+						'Equipo_ID' => (int) $t['Equipo_ID'],
+						'Equipo_DESC' => (string) $t['Equipo_DESC'],
+					);
+				}
+			}
+		} catch (Throwable $e) {
+			az_generate_schedule_seed_log('category_teams: ' . $e->getMessage());
+		}
+		return $teams;
+	}
+}
+
 if (!function_exists('az_generate_schedule_fetch_rank_rows')) {
 	/**
 	 * Rank query (no category filter). Returns rows ordered for seeding.
@@ -98,6 +152,10 @@ if (!function_exists('az_generate_schedule_fetch_rank_rows')) {
 	function az_generate_schedule_fetch_rank_rows($Config, $schema, $Season) {
 		$Season = (int) $Season;
 		$rows = array();
+		$hasResults = az_generate_schedule_season_has_results($Config, $schema, $Season);
+		$orderBy = $hasResults
+			? 'TeamCount DESC, Institucion_DESC ASC'
+			: 'Institucion_DESC ASC';
 		$sql = "SELECT CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_ID ELSE e.Institucion_ID END AS Institucion_ID,
 					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE IFNULL(i.Institucion_DESC, '') END AS Institucion_DESC,
 					COUNT(e.Equipo_ID) AS TeamCount,
@@ -110,7 +168,7 @@ if (!function_exists('az_generate_schedule_fetch_rank_rows')) {
 					AND IFNULL(e.Activo, 0) = 1
 				GROUP BY CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_ID ELSE e.Institucion_ID END,
 					CASE WHEN IFNULL(e.Institucion_ID, 0) = 0 THEN e.Equipo_DESC ELSE IFNULL(i.Institucion_DESC, '') END
-				ORDER BY TeamCount DESC, Institucion_DESC ASC";
+				ORDER BY $orderBy";
 		$res = $Config->query($sql);
 		if ($res && $res->num_rows > 0) {
 			while ($row = $res->fetch_assoc()) {
@@ -348,6 +406,11 @@ if (!function_exists('az_generate_schedule_seeded_team_ids_for_category')) {
 		foreach ($institutionSeeds as $seed) {
 			$teams = az_generate_schedule_teams_for_seed_category($Config, $schema, $Season, $catId, $seed);
 			foreach ($teams as $t) {
+				$teamIds[] = (int) $t['Equipo_ID'];
+			}
+		}
+		if (count($teamIds) === 0) {
+			foreach (az_generate_schedule_category_teams($Config, $schema, $Season, $catId) as $t) {
 				$teamIds[] = (int) $t['Equipo_ID'];
 			}
 		}
