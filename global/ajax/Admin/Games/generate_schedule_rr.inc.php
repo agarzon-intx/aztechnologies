@@ -1172,6 +1172,111 @@ if (!function_exists('az_gs_week_existing_games')) {
 	}
 }
 
+if (!function_exists('az_gs_week_all_games')) {
+	/** Every game on a jornada (including teams no longer in the category). */
+	function az_gs_week_all_games($Config, $schema, $Season, $jornadaId) {
+		$out = array();
+		$jornadaId = (int) $jornadaId;
+		$Season = (int) $Season;
+		if ($jornadaId <= 0 || $Season <= 0) {
+			return $out;
+		}
+		$sql = "SELECT IFNULL(j.Local_ID, 0) AS Local_ID, IFNULL(j.Visitante_ID, 0) AS Visitante_ID
+				FROM $schema.Juegos j
+				WHERE j.Torneo_ID = $Season
+					AND j.Jornada_ID = $jornadaId
+				ORDER BY j.Juego_ID ASC";
+		$res = $Config->query($sql);
+		if ($res && $res->num_rows > 0) {
+			while ($row = $res->fetch_assoc()) {
+				$out[] = array(
+					'homeId' => (int) $row['Local_ID'],
+					'awayId' => (int) $row['Visitante_ID'],
+				);
+			}
+		}
+		return $out;
+	}
+}
+
+if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
+	/**
+	 * After new teams are appended at the end, fill missing original seed slots
+	 * from the latest appended team first, then the next, until gaps are gone.
+	 * Leftover missing slots (no filler left) are dropped.
+	 *
+	 * @param array $seedIds original seeds (may include missing teams) plus appended newcomers
+	 * @param array $currentTeamIds teams still in the category
+	 * @param array $fillFromIds teams allowed to move into gaps (the appended newcomers)
+	 */
+	function az_gs_fill_missing_seeds_with_latest(array $seedIds, array $currentTeamIds, array $fillFromIds) {
+		$currentSet = array();
+		foreach ($currentTeamIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid > 0) {
+				$currentSet[$tid] = true;
+			}
+		}
+		$fillSet = array();
+		foreach ($fillFromIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid > 0 && isset($currentSet[$tid])) {
+				$fillSet[$tid] = true;
+			}
+		}
+		$seeds = array();
+		$seen = array();
+		foreach ($seedIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid <= 0 || isset($seen[$tid])) {
+				continue;
+			}
+			$seen[$tid] = true;
+			$seeds[] = $tid;
+		}
+		$guard = count($seeds) + 1;
+		while ($guard-- > 0) {
+			$gap = -1;
+			for ($i = 0, $n = count($seeds); $i < $n; $i++) {
+				if (!isset($currentSet[$seeds[$i]])) {
+					$gap = $i;
+					break;
+				}
+			}
+			if ($gap < 0) {
+				break;
+			}
+			$src = -1;
+			for ($j = count($seeds) - 1; $j > $gap; $j--) {
+				if (isset($fillSet[$seeds[$j]])) {
+					$src = $j;
+					break;
+				}
+			}
+			if ($src < 0) {
+				$kept = array();
+				foreach ($seeds as $tid) {
+					if (isset($currentSet[$tid])) {
+						$kept[] = $tid;
+					}
+				}
+				return $kept;
+			}
+			$moved = $seeds[$src];
+			array_splice($seeds, $src, 1);
+			$seeds[$gap] = $moved;
+			unset($fillSet[$moved]);
+		}
+		$out = array();
+		foreach ($seeds as $tid) {
+			if (isset($currentSet[$tid])) {
+				$out[] = $tid;
+			}
+		}
+		return $out;
+	}
+}
+
 if (!function_exists('az_gs_first_week_jornada_id')) {
 	/** Earliest jornada (by orden) that already has games for these teams. */
 	function az_gs_first_week_jornada_id($Config, $schema, $Season, $calId, array $teamIds) {
@@ -1238,7 +1343,11 @@ if (!function_exists('az_gs_seed_ids_from_week_games')) {
 
 if (!function_exists('az_gs_seed_order_from_first_week')) {
 	/**
-	 * When week 1 already has games, rebuild seed order from those games and append new teams.
+	 * When week 1 already has games, rebuild seed order from those games.
+	 * 1) Keep original week-1 seed slots (including teams that are now missing).
+	 * 2) Append leftover scheduled teams, then brand-new teams.
+	 * 3) If any original seeds are missing, the latest appended team fills the first
+	 *    gap, then the next latest the next gap, until gaps are covered.
 	 * Returns $currentTeamIds unchanged when there is no existing week.
 	 */
 	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds) {
@@ -1258,7 +1367,7 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 		if ($jornadaId <= 0) {
 			return $current;
 		}
-		$games = az_gs_week_existing_games($Config, $schema, $Season, $jornadaId, $current);
+		$games = az_gs_week_all_games($Config, $schema, $Season, $jornadaId);
 		$weekSeeds = az_gs_seed_ids_from_week_games($games);
 		if (count($weekSeeds) === 0) {
 			return $current;
@@ -1271,28 +1380,31 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 				$schedSet[$tid] = true;
 			}
 		}
-		$out = array();
+		$seeds = array();
 		$seen = array();
 		foreach ($weekSeeds as $tid) {
 			$tid = (int) $tid;
-			if (isset($currentSet[$tid]) && !isset($seen[$tid])) {
-				$out[] = $tid;
-				$seen[$tid] = true;
+			if ($tid <= 0 || isset($seen[$tid])) {
+				continue;
 			}
+			$seen[$tid] = true;
+			$seeds[] = $tid;
 		}
+		$appended = array();
 		foreach ($current as $tid) {
 			if (isset($schedSet[$tid]) && !isset($seen[$tid])) {
-				$out[] = $tid;
+				$appended[] = $tid;
 				$seen[$tid] = true;
 			}
 		}
 		foreach ($current as $tid) {
 			if (!isset($seen[$tid])) {
-				$out[] = $tid;
+				$appended[] = $tid;
 				$seen[$tid] = true;
 			}
 		}
-		return $out;
+		$combined = array_merge($seeds, $appended);
+		return az_gs_fill_missing_seeds_with_latest($combined, $current, $appended);
 	}
 }
 

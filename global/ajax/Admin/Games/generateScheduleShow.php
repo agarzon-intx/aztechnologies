@@ -404,7 +404,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 			}
 
-			// If week 1 already has games: 1st game = seeds 1 vs 2, 2nd = 3 vs 4, …; new teams last.
+			// If week 1 already has games: 1st game = seeds 1 vs 2, 2nd = 3 vs 4, …;
+			// new teams last, then latest new teams fill missing seed slots in order.
 			$catCalId = (int) $cat['Calendario_ID'];
 			if (count($catTeams) > 0 && $catCalId > 0) {
 				$catTeamIds = array();
