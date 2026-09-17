@@ -39,7 +39,7 @@ $retunData = array('status' => '0', 'message' => 'Something went wrong,please tr
 $Season = $_COOKIE[$Config->getAlias() . 'season'];
 $Category = $_COOKIE[$Config->getAlias() . 'category'];
 
-$playerid = SanitizeText($_POST['playerid']);
+$playerid = (int) SanitizeInteger($_POST['playerid'] ?? 0);
 $name = SanitizeText($_POST['name']);
 $lastname = SanitizeText($_POST['lastname']);
 $lastname2 = SanitizeText($_POST['lastname2']);
@@ -53,7 +53,7 @@ $id = SanitizeText($_POST['id']);
 $comments = SanitizeText($_POST['comments']);
 $valid = SanitizeInteger($_POST['valid']);
 $status = SanitizeNonNumericText($_POST['status']);
-$team = SanitizeInteger($_POST['team']);
+$team = (int) SanitizeInteger($_POST['team'] ?? 0);
 $picture = $_POST['picture'];
 $type = $_POST['type'];
 $idf = $_POST['idf'];
@@ -66,6 +66,41 @@ $firma = '';
 
 $Config->LoadFlags();
 $Config->LoadRegionalSettings();
+
+$isAdminTeams = false;
+$allowedTeamIds = array();
+$usernameTeams = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
+$ueTeams = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $usernameTeams . "'");
+if ($ueTeams && $ueTeams->num_rows > 0) {
+	while ($rTeam = $ueTeams->fetch_assoc()) {
+		$idTeam = (int) $rTeam['Equipo_ID'];
+		if ($idTeam === 0 || $idTeam === -1) {
+			$isAdminTeams = true;
+		} elseif ($idTeam > 0) {
+			$allowedTeamIds[] = $idTeam;
+		}
+	}
+}
+$sessionEqTeams = $fgmembersite->UserEquipo();
+if ($sessionEqTeams == 0 || $sessionEqTeams == -1 || $sessionEqTeams === '0' || $sessionEqTeams === '-1') {
+	$isAdminTeams = true;
+}
+if (!$isAdminTeams && count($allowedTeamIds) === 0) {
+	foreach (explode(',', (string) $sessionEqTeams) as $partTeam) {
+		$idTeam = (int) $partTeam;
+		if ($idTeam > 0) {
+			$allowedTeamIds[] = $idTeam;
+		}
+	}
+}
+$allowedTeamIds = array_values(array_unique(array_map('intval', $allowedTeamIds)));
+if ($playerid <= 0 || $team <= 0 || (!$isAdminTeams && !in_array($team, $allowedTeamIds, true))) {
+	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataPlayerMessage' => $lang['539-12']);
+	$Config->Close();
+	ob_end_clean();
+	echo json_encode($retunData);
+	exit;
+}
 
 $target_dir = '.';
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -247,10 +282,17 @@ if ($result === false) {
 	$result = $Connection->query($sql);
 	if ($result && $result->num_rows > 0) {
 		while ($row2 = $result->fetch_assoc()) {
+			$categoria = 0;
+			$catRes = $Config->query("SELECT Fuerza FROM $schema.Equipos WHERE Equipo_ID = $team AND Torneo_ID = " . (int) $Season . " LIMIT 1");
+			if ($catRes && $catRow = $catRes->fetch_assoc()) {
+				$categoria = (int) $catRow['Fuerza'];
+			}
 			$retunData = array(
 				'status' => '1',
 				'message' => 'Success.',
 				'dataPlayerMessage' => $lang['938'],
+				'categoria' => $categoria,
+				'equipo' => $team,
 			);
 		}
 	}

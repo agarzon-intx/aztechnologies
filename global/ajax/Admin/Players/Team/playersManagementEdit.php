@@ -309,15 +309,53 @@ $htmlPlayer .= '													</select>
 															<div class="col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 																<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
 																	<label class="form-label">' . $lang['924'] . '</label>
-																	<select disabled class="form-control" onChange="playerManagementLoadImage(\'equipoE\', \'logoEE\')" name="equipoE" id="equipoE" >';
-$Config->query($sql);
+																	<select class="form-control" onChange="playerManagementLoadImage(\'equipoE\', \'logoEE\')" name="equipoE" id="equipoE" >';
+$isAdminTeams = false;
+$allowedTeamIds = array();
+$usernameTeams = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
+$ueTeams = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $usernameTeams . "'");
+if ($ueTeams && $ueTeams->num_rows > 0) {
+	while ($rTeam = $ueTeams->fetch_assoc()) {
+		$idTeam = (int) $rTeam['Equipo_ID'];
+		if ($idTeam === 0 || $idTeam === -1) {
+			$isAdminTeams = true;
+		} elseif ($idTeam > 0) {
+			$allowedTeamIds[] = $idTeam;
+		}
+	}
+}
+$sessionEqTeams = $fgmembersite->UserEquipo();
+if ($sessionEqTeams == 0 || $sessionEqTeams == -1 || $sessionEqTeams === '0' || $sessionEqTeams === '-1') {
+	$isAdminTeams = true;
+}
+if (!$isAdminTeams && count($allowedTeamIds) === 0) {
+	foreach (explode(',', (string) $sessionEqTeams) as $partTeam) {
+		$idTeam = (int) $partTeam;
+		if ($idTeam > 0) {
+			$allowedTeamIds[] = $idTeam;
+		}
+	}
+}
+$allowedTeamIds = array_values(array_unique(array_map('intval', $allowedTeamIds)));
+$equipoidAInt = (int) $equipoidA;
+if (!$isAdminTeams && $equipoidAInt > 0 && !in_array($equipoidAInt, $allowedTeamIds, true)) {
+	$allowedTeamIds[] = $equipoidAInt;
+}
+$teamFilter = '';
+if (!$isAdminTeams) {
+	if (count($allowedTeamIds) === 0) {
+		$allowedTeamIds[] = $equipoidAInt > 0 ? $equipoidAInt : 0;
+	}
+	$teamFilter = ' AND b.Equipo_ID IN (' . implode(',', $allowedTeamIds) . ')';
+}
 $sql = "SELECT c.Categoria_ID, b.Equipo_ID, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC, concat(b.Torneo_ID,'-', b.Equipo_ID) Logo
-		from (	select a.* 
+		from (	select a.*
 				from $schema.Equipos a
-				where Equipo_ID > 0 
+				where Equipo_ID > 0
 					and Torneo_ID = $Season) b
-			join $schema.Categorias c on b.Fuerza = c.Categoria_ID 
-		order by c.categoria_ID asc, b.Equipo_FULLDESC";	
+			join $schema.Categorias c on b.Fuerza = c.Categoria_ID and c.Torneo_ID = $Season
+		where 1=1 $teamFilter
+		order by c.categoria_ID asc, b.Equipo_FULLDESC";
 $result = $Config->query($sql);
 if ($result->num_rows > 0) {
 	// output data of each row

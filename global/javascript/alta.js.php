@@ -534,7 +534,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 									mainLoadingOff();
 									alert((dupRes && dupRes.message) ? dupRes.message : MSG_AJAX_GENERIC);
 									if (dupRes && dupRes.status === '1') {
-										if (typeof playersManagementAdminShow === 'function' && $('#equipoE').length && !$('#equipoE').prop('disabled')) {
+										if (typeof playersManagementAdminShow === 'function' && $('#playerAdminContentCategoryList').length) {
 											playersManagementAdminShow(dupRes.categoria, team);
 										} else if (typeof playersManagementTeamShow === 'function') {
 											playersManagementTeamShow(dupRes.categoria, team);

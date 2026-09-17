@@ -2068,7 +2068,9 @@ function playersManagementTeamEditPlayer(playerid, name, lastname, lastname2, ni
 			mainLoadingOff()
 			if (res.status === '1') {
 				alert(res.dataPlayerMessage);
-				playersManagementTeamShow(catTeamPlayerCat, catTeamPlayerTeam);
+				var destCat = res.categoria || catTeamPlayerCat;
+				var destTeam = res.equipo || team;
+				playersManagementTeamShow(destCat, destTeam);
 			}else{
 				alert(res.dataPlayerMessage);
 			}
