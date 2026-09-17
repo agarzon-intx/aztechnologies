@@ -1,4 +1,7 @@
 	            <?php
+			if (!function_exists('az_flyer_sc_category_download_menu_html')) {
+				require_once dirname(__DIR__, 3) . '/include/flyer_download_menu.php';
+			}
 			$fecha = new DateTime();
             $sqlcat = "and l.Fuerza = $Category";
 			if($vs == 1){
@@ -280,6 +283,12 @@
 									<td style="border-bottom: 0;" colspan="2">
 										<button type="button" class="btn btn-primary" onclick="saveChanges(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
 									</td>
+									<td style="border-bottom: 0;text-align: end;" colspan="5">
+										' . az_flyer_sc_category_download_menu_html($Week, $Category, $Config->getPath()) . '
+										<a href="pdf/reportePendientes.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">Reporte Pendientes</a>
+										<a href="pdf/reporteArbitros.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">Reporte Partidos</a>
+										<a href="pdf/cedulas.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">' . $lang['647'] . '</a>
+									</td>
 								</tr>';
 				
 					
@@ -527,6 +536,10 @@
 				$htmlWeek .= '	<tr>
 									<td style="border-bottom: 0;">
 										<button type="button" class="btn btn-primary" onclick="saveChangesS(' . $Season . ',' . $Week . ');">' . $lang['0000'] . '</button>
+										' . az_flyer_sc_category_download_menu_html($Week, $Category, $Config->getPath()) . '
+										<a href="pdf/reportePendientes.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">Reporte Pendientes</a>
+										<a href="pdf/reporteArbitros.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">Reporte Partidos</a>
+										<a href="pdf/cedulas.php?Torneo_ID=' . $Season . '&Jornada_ID=' . $Week . '&Categoria_ID=' . $Category . '" target="_blank" download class="btn btn-primary" role="button" aria-pressed="true">' . $lang['647'] . '</a>
 									</td>
 								</tr>';
 				$sqlcat = "and a.Fuerza = $Category";
