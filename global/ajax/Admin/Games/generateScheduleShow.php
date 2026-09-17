@@ -380,10 +380,40 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				return strcasecmp($a['Equipo_DESC'], $b['Equipo_DESC']);
 			});
 
-			// Restore last UI seed order for this category (from a previous generate).
 			$savedOrderKey = $Config->getAlias() . 'gsTeamOrder';
 			$catIdNow = (int) $cat['Categoria_ID'];
-			if (isset($_SESSION[$savedOrderKey][$catIdNow]) && is_array($_SESSION[$savedOrderKey][$catIdNow]) && count($catTeams) > 0) {
+			$catCalId = (int) $cat['Calendario_ID'];
+			$catTeamIds = array();
+			$rankByTeam = array();
+			foreach ($catTeams as $t) {
+				$tid = (int) $t['Equipo_ID'];
+				$catTeamIds[] = $tid;
+				$rankByTeam[$tid] = (int) $t['seed'];
+			}
+
+			$weekSeedApplied = false;
+			if (count($catTeams) > 0 && $catCalId > 0) {
+				$orderedIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $catCalId, $catTeamIds, $rankByTeam, $catIdNow);
+				if (count($orderedIds) > 0) {
+					$byId = array();
+					foreach ($catTeams as $t) {
+						$byId[(int) $t['Equipo_ID']] = $t;
+					}
+					$pinned = array();
+					foreach ($orderedIds as $tid) {
+						if (isset($byId[$tid])) {
+							$pinned[] = $byId[$tid];
+						}
+					}
+					if (count($pinned) > 0) {
+						$catTeams = $pinned;
+						$weekSeedApplied = true;
+					}
+				}
+			}
+
+			// Restore last UI seed order only when week 1 does not drive the list.
+			if (!$weekSeedApplied && isset($_SESSION[$savedOrderKey][$catIdNow]) && is_array($_SESSION[$savedOrderKey][$catIdNow]) && count($catTeams) > 0) {
 				$byId = array();
 				foreach ($catTeams as $t) {
 					$byId[(int) $t['Equipo_ID']] = $t;
@@ -401,32 +431,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 				if (count($reordered) > 0) {
 					$catTeams = $reordered;
-				}
-			}
-
-			// If week 1 already has games: 1st game = seeds 1 vs 2, 2nd = 3 vs 4, …;
-			// new teams last, then latest new teams fill missing seed slots in order.
-			$catCalId = (int) $cat['Calendario_ID'];
-			if (count($catTeams) > 0 && $catCalId > 0) {
-				$catTeamIds = array();
-				foreach ($catTeams as $t) {
-					$catTeamIds[] = (int) $t['Equipo_ID'];
-				}
-				$orderedIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $catCalId, $catTeamIds);
-				if (count($orderedIds) > 0) {
-					$byId = array();
-					foreach ($catTeams as $t) {
-						$byId[(int) $t['Equipo_ID']] = $t;
-					}
-					$pinned = array();
-					foreach ($orderedIds as $tid) {
-						if (isset($byId[$tid])) {
-							$pinned[] = $byId[$tid];
-						}
-					}
-					if (count($pinned) > 0) {
-						$catTeams = $pinned;
-					}
 				}
 			}
 

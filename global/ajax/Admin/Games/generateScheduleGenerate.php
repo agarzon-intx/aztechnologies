@@ -646,9 +646,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$willCreateWeeks = true;
 		}
 
-		// If week 1 already has games: seed 1 vs 2, 3 vs 4, … from those games;
-		// new teams last, then latest new teams fill missing seed slots in order.
-		$teamIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, $teamIds);
+		$rankByTeam = array();
+		foreach ($institutionSeeds as $seed) {
+			$rank = (int) $seed['rank'];
+			$seedTeams = az_generate_schedule_teams_for_seed_category($Config, $schema, $Season, $catId, $seed);
+			foreach ($seedTeams as $st) {
+				$rankByTeam[(int) $st['Equipo_ID']] = $rank;
+			}
+		}
+		$teamIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, $teamIds, $rankByTeam, $catId);
 		$seedRankByTeam = array();
 		foreach ($teamIds as $idx => $tid) {
 			$seedRankByTeam[(int) $tid] = $idx + 1;

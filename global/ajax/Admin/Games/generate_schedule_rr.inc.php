@@ -1324,9 +1324,15 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 	 * Latest fill-from team moves into the first hole, then the next, etc.
 	 */
 	function az_gs_order_with_rank_gaps(array $orderedIds, array $rankByTeam, array $fillFromIds) {
-		$byRank = array();
-		$max = 0;
-		$unranked = array();
+		$fillSet = array();
+		foreach ($fillFromIds as $tid) {
+			$tid = (int) $tid;
+			if ($tid > 0) {
+				$fillSet[$tid] = true;
+			}
+		}
+		$remaining = array();
+		$fillKeep = array();
 		$seen = array();
 		foreach ($orderedIds as $tid) {
 			$tid = (int) $tid;
@@ -1334,42 +1340,43 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 				continue;
 			}
 			$seen[$tid] = true;
-			$r = isset($rankByTeam[$tid]) ? (int) $rankByTeam[$tid] : 0;
-			if ($r > 0) {
-				if (!isset($byRank[$r])) {
-					$byRank[$r] = array();
-				}
-				$byRank[$r][] = $tid;
-				if ($r > $max) {
-					$max = $r;
-				}
+			if (isset($fillSet[$tid])) {
+				$fillKeep[] = $tid;
 			} else {
-				$unranked[] = $tid;
+				$remaining[] = $tid;
 			}
 		}
-		if ($max <= 0) {
-			$out = array();
-			foreach ($orderedIds as $tid) {
-				$tid = (int) $tid;
-				if ($tid > 0) {
-					$out[] = $tid;
-				}
+		usort($remaining, function ($a, $b) use ($rankByTeam) {
+			$ra = isset($rankByTeam[$a]) ? (int) $rankByTeam[$a] : 0;
+			$rb = isset($rankByTeam[$b]) ? (int) $rankByTeam[$b] : 0;
+			if ($ra === $rb) {
+				return $a - $b;
 			}
-			return $out;
-		}
+			if ($ra <= 0) {
+				return 1;
+			}
+			if ($rb <= 0) {
+				return -1;
+			}
+			return $ra - $rb;
+		});
 		$slots = array();
 		$hasHole = false;
-		for ($r = 1; $r <= $max; $r++) {
-			if (!empty($byRank[$r])) {
-				foreach ($byRank[$r] as $tid) {
-					$slots[] = $tid;
+		$prevRank = null;
+		foreach ($remaining as $tid) {
+			$r = isset($rankByTeam[$tid]) ? (int) $rankByTeam[$tid] : 0;
+			if ($prevRank !== null && $r > 0 && $prevRank > 0 && $r > $prevRank + 1) {
+				for ($g = $prevRank + 1; $g < $r; $g++) {
+					$slots[] = 0;
+					$hasHole = true;
 				}
-			} else {
-				$slots[] = 0;
-				$hasHole = true;
+			}
+			$slots[] = $tid;
+			if ($r > 0) {
+				$prevRank = $r;
 			}
 		}
-		foreach ($unranked as $tid) {
+		foreach ($fillKeep as $tid) {
 			$slots[] = $tid;
 		}
 		if (!$hasHole) {
@@ -1381,7 +1388,7 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 			}
 			return $out;
 		}
-		return az_gs_fill_missing_seeds_with_latest($slots, $orderedIds, $fillFromIds);
+		return az_gs_fill_missing_seeds_with_latest($slots, $orderedIds, $fillKeep);
 	}
 }
 
