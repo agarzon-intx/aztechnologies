@@ -20,7 +20,7 @@ should_deploy() {
 	local rel="$1"
 	[[ "$rel" == global/* ]] && return 0
 	local site
-	for site in elite huskies lidep nuestrodeporte vollidep voleibalmetepec voleyMVP aztflag demo candlesStore; do
+	for site in elite huskies lidep nuestrodeporte vollidep voleibalmetepec voleyMVP candlesStore; do
 		if [[ "$rel" == "$site"/* ]]; then
 			[[ "$rel" == "$site/ini"* ]] && return 1
 			[[ "$rel" == "$site/imagenes"* ]] && return 1

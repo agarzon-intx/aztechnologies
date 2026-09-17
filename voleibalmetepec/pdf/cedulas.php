@@ -8,26 +8,12 @@
 	$sessionstat = $fgmembersite->CheckLogin($Config,'cedulas.php');
 	$Config->connect();
 
-	$langCode = 'es';
-	if (!empty($_COOKIE[$Config->getAlias() . 'language'])) {
-		$langCode = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_COOKIE[$Config->getAlias() . 'language']);
-		if ($langCode === '') {
-			$langCode = 'es';
-		}
-	}
-	if ((@include 'lang.' . $langCode . '.php') !== 1 && $langCode !== 'es') {
-		include 'lang.es.php';
-	}
+	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 	$folder = substr(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])),1,strlen(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])))-5);
 
-	$alias = $Config->getAlias();
-	$torneoRaw = isset($_GET['Torneo_ID']) && $_GET['Torneo_ID'] !== '' ? $_GET['Torneo_ID'] : ($_COOKIE[$alias . 'season'] ?? '');
-	$categoriaRaw = isset($_GET['Categoria_ID']) && $_GET['Categoria_ID'] !== '' ? $_GET['Categoria_ID'] : ($_COOKIE[$alias . 'category'] ?? '');
-	$jornadaRaw = isset($_GET['Jornada_ID']) && $_GET['Jornada_ID'] !== '' ? $_GET['Jornada_ID'] : '';
-	$torneo = (int) SanitizeInteger($torneoRaw);
-	$categoria = (int) SanitizeInteger($categoriaRaw);
-	$jornada = (int) SanitizeInteger($jornadaRaw);
-	$categoriaFilter = $categoria > 0 ? " and d.Fuerza = $categoria" : '';
+	$torneo = $_COOKIE[$Config->getAlias() . 'season'];
+	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
+	$jornada = htmlspecialchars($_GET['Jornada_ID']);
 	
 	$siteRoot = az_pdf_site_root($Config);
 
@@ -50,19 +36,16 @@
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
 				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID  AND dc.Torneo_ID = g.Torneo_ID and dc.Calendario_ID in (select Calendario_ID from $schema.Jornada where Jornada_ID = $jornada)
-				left join $schema.Campos e on d.Campo_ID = e.Campo_ID
+				join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
-			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and d.Torneo_Id=$torneo $categoriaFilter
+			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and d.Torneo_Id=$torneo
 			 order by dc.Categoria_Orden asc, a.Juego_ID asc";
-	$result1 = false;
-	if ($torneo > 0 && $jornada > 0) {
 	$result1 = $Config->query($sql0);
-	}
-	if ($result1 && $result1->num_rows > 0) {
+	if ($result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
-			$localid = (int) $row1["Local_ID"];
-			$visitanteid = (int) $row1["Visitante_ID"];
+			$localid = az_utf8_decode($row1["Local_ID"]);
+			$visitanteid = az_utf8_decode($row1["Visitante_ID"]);
 			$DescTorneo = $row1["Torneo_Desc"];
 			
 			$x = 0;
@@ -4421,7 +4404,7 @@
 		} 
 	}	
 
-	$Config->Close();
+	$Config->close();
 
 	$pdf->Output();
 ?>
