@@ -1235,14 +1235,12 @@ if (!function_exists('az_gs_week_games_for_category')) {
 
 if (!function_exists('az_gs_fill_missing_seeds_with_latest')) {
 	/**
-	 * After new teams are appended at the end, fill missing original seed slots
-	 * from the latest fill-from team first, then the next, until gaps are gone.
-	 * With no new teams, fill-from is the remaining seeds (last seed first).
-	 * Leftover missing slots (no filler left) are dropped.
+	 * After new teams are appended at the end, fill missing seed slots from the
+	 * last team on that list, then the new last team, until no gaps remain.
 	 *
 	 * @param array $seedIds original seeds (may include missing teams) plus appended newcomers
 	 * @param array $currentTeamIds teams still in the category
-	 * @param array $fillFromIds teams allowed to move into gaps (the appended newcomers)
+	 * @param array $fillFromIds teams allowed to move into gaps (normally all current teams)
 	 */
 	function az_gs_fill_missing_seeds_with_latest(array $seedIds, array $currentTeamIds, array $fillFromIds) {
 		$currentSet = array();
@@ -1438,16 +1436,11 @@ if (!function_exists('az_gs_seed_ids_from_week_games')) {
 
 if (!function_exists('az_gs_seed_order_from_first_week')) {
 	/**
-	 * When week 1 already has games, rebuild seed order from those games.
-	 * 1) Keep original week-1 seed slots (including teams that are now missing).
-	 * 2) Append leftover scheduled teams, then brand-new teams.
-	 * 3) If any original seeds are missing, the latest new team fills the first
-	 *    gap, then the next latest the next gap. If there are no new teams, the
-	 *    last remaining seed fills the first gap, and that repeats until no gaps remain.
-	 * If week-1 no longer has the missing team IDs, ranking seed numbers that skip
-	 * a value (1, 2, 4, …) are treated as the same gaps.
-	 * New teams are ordered by ranking so “latest” is the last new team, even if the
-	 * UI already moved one of them. When no gap is found, the posted UI order is kept.
+	 * When week 1 already has games:
+	 * 1) Seed order comes from those games (1st game = seeds 1 vs 2, 2nd = 3 vs 4, …).
+	 * 2) New teams are appended at the end of that order.
+	 * 3) The last team on the list fills the first gap, then the new last team the
+	 *    next gap, until no gaps remain.
 	 * Returns $currentTeamIds unchanged when there is no existing week.
 	 */
 	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds, array $rankByTeam = array(), $catId = 0) {
@@ -1476,7 +1469,6 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 		}
 		$seeds = array();
 		$seen = array();
-		$hadMissing = false;
 		foreach ($weekSeeds as $tid) {
 			$tid = (int) $tid;
 			if ($tid <= 0 || isset($seen[$tid])) {
@@ -1484,9 +1476,6 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 			}
 			$seen[$tid] = true;
 			$seeds[] = $tid;
-			if (!isset($currentSet[$tid])) {
-				$hadMissing = true;
-			}
 		}
 		$newTeams = array();
 		foreach ($current as $tid) {
@@ -1513,21 +1502,7 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 			});
 		}
 		$combined = array_merge($seeds, $newTeams);
-		$fillFrom = $newTeams;
-		if (count($fillFrom) === 0) {
-			$fillFrom = $current;
-		}
-		$out = az_gs_fill_missing_seeds_with_latest($combined, $current, $fillFrom);
-		if ($hadMissing) {
-			return $out;
-		}
-		if (count($rankByTeam) > 0) {
-			$ranked = az_gs_order_with_rank_gaps($out, $rankByTeam, $fillFrom);
-			if ($ranked !== $out) {
-				return $ranked;
-			}
-		}
-		return $current;
+		return az_gs_fill_missing_seeds_with_latest($combined, $current, $current);
 	}
 }
 
