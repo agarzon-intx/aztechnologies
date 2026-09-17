@@ -37,13 +37,11 @@
 	
 	$pdf = new AlphaPDF('L','mm','Letter');
 	
-	$result1 = false;
-	if ($torneo > 0 && $jornada > 0) {
-	$sql = "select dc.Categoria_DESC, b.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia, 
-					ELT(DATE_FORMAT(a.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre')  Mes, year(a.Fecha) Anio, a.Campo_ID, 
-					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(a.Fecha, '%a, %d %b %Y') Fecha_String, DATE_FORMAT(a.Horario, '%I:%i %p') Horario
+	$sql = "select dc.Categoria_DESC, b.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, b.Fecha, day(b.Fecha) Dia, 
+					ELT(DATE_FORMAT(b.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre')  Mes, year(b.Fecha) Anio, a.Campo_ID, 
+					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(b.Fecha, '%a, %d %b %Y') Fecha_String, DATE_FORMAT(a.Horario, '%I:%i %p') Horario
 			from $schema.Juegos a
-				join $schema.Jornada b on b.Jornada_ID = $jornada and a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
 				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID
@@ -53,6 +51,8 @@
 			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada
 				$categoriaFilter
 			order by dc.Categoria_Orden asc, a.Juego_ID asc";
+	$result1 = false;
+	if ($torneo > 0 && $jornada > 0) {
 	$result1 = $Config->query($sql);
 	}
 	if ($result1 && $result1->num_rows > 0) {
@@ -70,7 +70,7 @@
 			$pdf->SetMargins(4, 4, 4);	
 			/*
 			$pdf->SetXY(0,0);
-			$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',5+((35 - (35 * ($Config->logowidth / 110)))/2),5+((35 - (35 * ($Config->logoheight / 110)))/2),(35 * ($Config->logowidth / 110)), (35 * ($Config->logoheight / 110)), 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png',5+((35 - (35 * ($Config->logowidth / 110)))/2),5+((35 - (35 * ($Config->logoheight / 110)))/2),(35 * ($Config->logowidth / 110)), (35 * ($Config->logoheight / 110)));
 			*/
 			$pdf->SetFont('Helvetica' , '' , 12);
 			$pdf->SetTextColor(0, 0, 0);
@@ -362,7 +362,8 @@
                     					Comentarios,
                     					Telefono,
                     					correo,
-        						Sexo,
+        								Sexo,
+        								Sexo
                                         Validado,
                                         FechaAlta
                     				FROM Jugadores a
@@ -3738,7 +3739,8 @@ $pdf->SetFont('Times' , 'B' , 5);
                     					Comentarios,
                     					Telefono,
                     					correo,
-        						Sexo,
+        								Sexo,
+        								Sexo
                                         Validado,
                                         FechaAlta
                     				FROM Jugadores a
@@ -3927,11 +3929,15 @@ $pdf->SetFont('Times' , 'B' , 5);
 			$pdf->SetXY(218,204);
 			$pdf->Cell(50 , 4, $lang['9996'], 0, 1 , 'C' , false);
 		} 
+	}else {
+		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
+	}
 	} else {
 		$pdf->AddPage();
 		$pdf->SetFont('Helvetica' , 'B' , 12);
 		$pdf->Cell(200 , 8, isset($lang['9998']) ? $lang['9998'] : 'No hay partidos para generar cedulas', 0, 0 , 'C' , false);
 	}
+
 	$Config->Close();
 
 	$pdf->Output();

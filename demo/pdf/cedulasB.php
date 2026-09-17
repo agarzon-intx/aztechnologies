@@ -38,8 +38,6 @@
 	
 	$pdf = new AlphaPDF('L','mm','Letter');
 	
-	$result1 = false;
-	if ($torneo > 0 && $jornada > 0) {
 	$sql0 = "select dc.Categoria_DESC, b.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local,
 	                a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia,
 					ELT(DATE_FORMAT(a.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre') Mes,
@@ -48,16 +46,19 @@
 					g.Torneo_Desc, DATE_FORMAT(a.Fecha, '%a, %d %b %Y') Fecha_String,
 					DATE_FORMAT(a.Horario, '%I:%i %p') Horario, a.Arbitro as arbitro
 			from $schema.Juegos a
-				join $schema.Jornada b on b.Jornada_ID = $jornada and a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Calendario_ID in (select Calendario_ID from $schema.Jornada where Jornada_ID = $jornada)
 				left join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
 			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada
 				$categoriaFilter
-			order by dc.Categoria_Orden asc, a.Juego_ID asc";
+			order by dc.Categoria_Orden asc, a.Juego_ID asc
+";
+	$result1 = false;
+	if ($torneo > 0 && $jornada > 0) {
 	$result1 = $Config->query($sql0);
 	}
 	if ($result1 && $result1->num_rows > 0) {
@@ -102,7 +103,7 @@
 			az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png',176+((35 - (35 * ($Config->logowidth / 110)))/2),5.5+((20 - (20 * ($Config->logoheight / 110)))/2),(20 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)));
 
 			$pdf->SetXY(190,2);
-			az_pdf_image_file($pdf, $siteRoot, '/imagenes/fmvb.PNG' ,258, 5.5, 13, 0);
+			$pdf->Image($server . '/imagenes/fmvb.PNG' ,258, 5.5, 13, 0 ,'PNG');
 
 			/*Titulo Equipos */
 			$pdf->SetXY(115,10);
@@ -4383,20 +4384,20 @@
 			$y = 47;
 			try{
 				$pdf->SetAlpha(1);
-				az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png',$x-1.9+5,$y+152,50, 15);
+				$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x-1.9+5,$y+152,50, 15, 'PNG');
 			}catch(Exception $e){
 				echo $e;
 			}
 			$y = 5;
 			try{
 				$pdf->SetAlpha(0.05);
-				az_pdf_image_file($pdf, $siteRoot, '/imagenes/voleibolFondo.png',$x+35,$y+0,200, 200);
+				$pdf->Image($server . '/imagenes/voleibolFondo.png',$x+35,$y+0,200, 200, 'PNG');
 			}catch(Exception $e){
 				echo $e;
 			}
 			try{
 				$pdf->SetAlpha(1);
-				az_pdf_image_file($pdf, $siteRoot, '/imagenes/wos.png',$x+212,$y+185,60, 24);
+				$pdf->Image($server . '/imagenes/wos.png',$x+212,$y+185,60, 24, 'PNG');
 			}catch(Exception $e){
 				echo $e;
 			}
@@ -4405,6 +4406,8 @@
 			$pdf->SetXY($x+194.5,$y+74);
 			$pdf->Cell(16.0, 31.3, '', 1, 0, 'C' , false);
 		} 
+	}	
+
 	} else {
 		$pdf->AddPage();
 		$pdf->SetFont('Helvetica' , 'B' , 12);
