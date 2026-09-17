@@ -3929,9 +3929,6 @@ $pdf->SetFont('Times' , 'B' , 5);
 			$pdf->SetXY(218,204);
 			$pdf->Cell(50 , 4, $lang['9996'], 0, 1 , 'C' , false);
 		} 
-	}else {
-		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
-	}
 	} else {
 		$pdf->AddPage();
 		$pdf->SetFont('Helvetica' , 'B' , 12);
