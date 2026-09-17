@@ -278,23 +278,31 @@ if ($result === false) {
 		'dataPlayerMessage' => $Connection->error,
 	);
 } else {
-	$sql = "Select @out as 'count'";
-	$result = $Connection->query($sql);
-	if ($result && $result->num_rows > 0) {
-		while ($row2 = $result->fetch_assoc()) {
-			$categoria = 0;
-			$catRes = $Config->query("SELECT Fuerza FROM $schema.Equipos WHERE Equipo_ID = $team AND Torneo_ID = " . (int) $Season . " LIMIT 1");
-			if ($catRes && $catRow = $catRes->fetch_assoc()) {
-				$categoria = (int) $catRow['Fuerza'];
-			}
-			$retunData = array(
-				'status' => '1',
-				'message' => 'Success.',
-				'dataPlayerMessage' => $lang['938'],
-				'categoria' => $categoria,
-				'equipo' => $team,
-			);
+	while ($Connection->more_results() && $Connection->next_result()) {
+		$extraRes = $Connection->use_result();
+		if ($extraRes instanceof mysqli_result) {
+			$extraRes->free();
 		}
+	}
+	$Connection->query("UPDATE $schema.Jugadores SET Equipo_ID = $team, FechaCambio = NOW() WHERE Jugador_ID = $playerid");
+	$savedTeam = 0;
+	$verify = $Connection->query("SELECT Equipo_ID FROM $schema.Jugadores WHERE Jugador_ID = $playerid LIMIT 1");
+	if ($verify && $vrow = $verify->fetch_assoc()) {
+		$savedTeam = (int) $vrow['Equipo_ID'];
+	}
+	if ($savedTeam === $team) {
+		$categoria = 0;
+		$catRes = $Config->query("SELECT Fuerza FROM $schema.Equipos WHERE Equipo_ID = $team AND Torneo_ID = " . (int) $Season . " LIMIT 1");
+		if ($catRes && $catRow = $catRes->fetch_assoc()) {
+			$categoria = (int) $catRow['Fuerza'];
+		}
+		$retunData = array(
+			'status' => '1',
+			'message' => 'Success.',
+			'dataPlayerMessage' => $lang['938'],
+			'categoria' => $categoria,
+			'equipo' => $team,
+		);
 	}
 }
 
