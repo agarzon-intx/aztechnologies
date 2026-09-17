@@ -646,6 +646,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$willCreateWeeks = true;
 		}
 
+		// Week 1 exists: seeds from those games, new teams at the end, last team fills each gap.
 		$rankByTeam = array();
 		foreach ($institutionSeeds as $seed) {
 			$rank = (int) $seed['rank'];

@@ -120,7 +120,7 @@
   	$lang['101-20'] = 'No calendar';
   	$lang['101-21'] = 'Category';
   	$lang['101-22'] = 'Ranking & categories';
-  	$lang['101-23'] = 'Use arrows to change seed order. If a seed is missing, the newest team fills the first gap. If there are no new teams, the last seed fills the first gap, repeating until none remain.';
+  	$lang['101-23'] = 'Use arrows to change seed order. If week 1 exists: seeds come from those games, new teams are added at the end, and the last team fills the first gap until none remain.';
   	$lang['101-24'] = 'Order';
   	$lang['101-25'] = 'Schedule preview';
   	$lang['101-26'] = 'Preview expired. Generate again.';
