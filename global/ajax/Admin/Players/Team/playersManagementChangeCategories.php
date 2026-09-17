@@ -100,7 +100,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	
 	$sql = "SELECT distinct a.Fuerza Categoria_ID, b.Categoria_Desc 
 			FROM $schema.Equipos a
-				join $schema.Categorias b on a.Fuerza = b.Categoria_ID
+				join $schema.Categorias b on a.Fuerza = b.Categoria_ID and b.Torneo_Id = $Season
 			Where a.Torneo_ID = $Season and a.Fuerza <> $Category and a.Equipo_ID in ($equipoIds)
 			order by Categoria_Orden asc";
 	$result = $Config->query($sql);
