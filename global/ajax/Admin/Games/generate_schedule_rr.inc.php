@@ -1465,14 +1465,18 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 	 *    gap, then the next latest the next gap, until gaps are covered.
 	 * If week-1 no longer has the missing team IDs, ranking seed numbers that skip
 	 * a value (1, 2, 4, …) are treated as the same gaps.
+	 * New teams are ordered by ranking so “latest” is the last new team, even if the
+	 * UI already moved one of them. When no gap is found, the posted UI order is kept.
 	 * Returns $currentTeamIds unchanged when there is no existing week.
 	 */
 	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds, array $rankByTeam = array(), $catId = 0) {
 		$current = array();
 		$currentSet = array();
+		$currentIndex = array();
 		foreach ($currentTeamIds as $tid) {
 			$tid = (int) $tid;
 			if ($tid > 0 && !isset($currentSet[$tid])) {
+				$currentIndex[$tid] = count($current);
 				$currentSet[$tid] = true;
 				$current[] = $tid;
 			}
@@ -1489,14 +1493,6 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 		if (count($weekSeeds) === 0) {
 			return $current;
 		}
-		$scheduled = az_gs_category_first_played_week_team_ids($Config, $schema, $Season, $calId, $current);
-		$schedSet = array();
-		foreach ($scheduled as $tid) {
-			$tid = (int) $tid;
-			if ($tid > 0) {
-				$schedSet[$tid] = true;
-			}
-		}
 		$seeds = array();
 		$seen = array();
 		$hadMissing = false;
@@ -1511,28 +1507,42 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 				$hadMissing = true;
 			}
 		}
-		$appended = array();
-		foreach ($current as $tid) {
-			if (isset($schedSet[$tid]) && !isset($seen[$tid])) {
-				$appended[] = $tid;
-				$seen[$tid] = true;
-			}
-		}
+		$newTeams = array();
 		foreach ($current as $tid) {
 			if (!isset($seen[$tid])) {
-				$appended[] = $tid;
-				$seen[$tid] = true;
+				$newTeams[] = $tid;
 			}
 		}
-		$combined = array_merge($seeds, $appended);
-		$out = az_gs_fill_missing_seeds_with_latest($combined, $current, $appended);
-		if (!$hadMissing && count($appended) > 0 && count($rankByTeam) > 0) {
-			$ranked = az_gs_order_with_rank_gaps($out, $rankByTeam, $appended);
-			if (count($ranked) > 0) {
-				$out = $ranked;
+		if (count($rankByTeam) > 0 && count($newTeams) > 1) {
+			usort($newTeams, function ($a, $b) use ($rankByTeam, $currentIndex) {
+				$ra = isset($rankByTeam[$a]) ? (int) $rankByTeam[$a] : 0;
+				$rb = isset($rankByTeam[$b]) ? (int) $rankByTeam[$b] : 0;
+				if ($ra !== $rb) {
+					if ($ra <= 0) {
+						return 1;
+					}
+					if ($rb <= 0) {
+						return -1;
+					}
+					return $ra - $rb;
+				}
+				$ia = isset($currentIndex[$a]) ? (int) $currentIndex[$a] : 0;
+				$ib = isset($currentIndex[$b]) ? (int) $currentIndex[$b] : 0;
+				return $ia - $ib;
+			});
+		}
+		$combined = array_merge($seeds, $newTeams);
+		$out = az_gs_fill_missing_seeds_with_latest($combined, $current, $newTeams);
+		if ($hadMissing) {
+			return $out;
+		}
+		if (count($newTeams) > 0 && count($rankByTeam) > 0) {
+			$ranked = az_gs_order_with_rank_gaps($out, $rankByTeam, $newTeams);
+			if ($ranked !== $out) {
+				return $ranked;
 			}
 		}
-		return $out;
+		return $current;
 	}
 }
 
