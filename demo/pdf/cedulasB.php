@@ -1,5 +1,6 @@
 <?php
-   	set_time_limit(300);
+	require_once dirname(__DIR__) . '/site_paths.php';
+	set_time_limit(300);
 	require("alphapdf.php");
 	require("membersite_config.php");
 	$Config = new Configuration();
@@ -7,14 +8,29 @@
 	$sessionstat = $fgmembersite->CheckLogin($Config,'cedulas.php');
 	$Config->connect();
 
-	include('lang.es.php');
+	$langCode = 'es';
+	if (!empty($_COOKIE[$Config->getAlias() . 'language'])) {
+		$langCode = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_COOKIE[$Config->getAlias() . 'language']);
+		if ($langCode === '') {
+			$langCode = 'es';
+		}
+	}
+	if ((@include 'lang.' . $langCode . '.php') !== 1 && $langCode !== 'es') {
+		include 'lang.es.php';
+	}
 	$folder = substr(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])),1,strlen(substr(__DIR__, strlen($_SERVER['DOCUMENT_ROOT'])))-5);
 
-	$torneo = $_COOKIE[$Config->getAlias() . 'season'];
-	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
-	$jornada = htmlspecialchars($_GET['Jornada_ID']);
+	$alias = $Config->getAlias();
+	$torneoRaw = isset($_GET['Torneo_ID']) && $_GET['Torneo_ID'] !== '' ? $_GET['Torneo_ID'] : ($_COOKIE[$alias . 'season'] ?? '');
+	$categoriaRaw = isset($_GET['Categoria_ID']) && $_GET['Categoria_ID'] !== '' ? $_GET['Categoria_ID'] : ($_COOKIE[$alias . 'category'] ?? '');
+	$jornadaRaw = isset($_GET['Jornada_ID']) && $_GET['Jornada_ID'] !== '' ? $_GET['Jornada_ID'] : '';
+	$torneo = (int) SanitizeInteger($torneoRaw);
+	$categoria = (int) SanitizeInteger($categoriaRaw);
+	$jornada = (int) SanitizeInteger($jornadaRaw);
+	$categoriaFilter = $categoria > 0 ? " and d.Fuerza = $categoria" : '';
 	
 	$server = $fgmembersite->getSitename();
+	$siteRoot = az_pdf_site_root($Config);
 
 	$Config->LoadLogo();
 	$Config->LoadFlags();
@@ -22,40 +38,33 @@
 	
 	$pdf = new AlphaPDF('L','mm','Letter');
 	
-	$sql0 = "select '' Categoria_DESC, 
-	                '' Jornada_DescCorta, 
-	                '' Juego_ID, 
-	                '' Local_ID, 
-	                '' Local,
-	                '' Visitante_ID, 
-	                '' Visitante, 
-	                '' Fecha, 
-	                '' Dia, 
-					'' Mes, 
-					'' Anio, 
-					'' Campo_ID, 
-					'' Campo_DESC, 
-					'' Torneo_Desc, 
-					'' Fecha_String, 
-					'' Horario, 
-					'' arbitro
+	$result1 = false;
+	if ($torneo > 0 && $jornada > 0) {
+	$sql0 = "select dc.Categoria_DESC, b.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local,
+	                a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia,
+					ELT(DATE_FORMAT(a.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre') Mes,
+					year(a.Fecha) Anio, a.Campo_ID,
+					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC,
+					g.Torneo_Desc, DATE_FORMAT(a.Fecha, '%a, %d %b %Y') Fecha_String,
+					DATE_FORMAT(a.Horario, '%I:%i %p') Horario, a.Arbitro as arbitro
 			from $schema.Juegos a
-				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				join $schema.Jornada b on b.Jornada_ID = $jornada and a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Calendario_ID in (select Calendario_ID from $schema.Jornada where Jornada_ID = $jornada)
-				join $schema.Campos e on d.Campo_ID = e.Campo_ID
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID
+				left join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
 			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada
-			order by dc.Categoria_Orden asc, a.Juego_ID asc
-			limit 1";
+				$categoriaFilter
+			order by dc.Categoria_Orden asc, a.Juego_ID asc";
 	$result1 = $Config->query($sql0);
-	if ($result1->num_rows > 0) {
+	}
+	if ($result1 && $result1->num_rows > 0) {
 		// output data of each row
 		while($row1 = $result1->fetch_assoc()) {
-			$localid = utf8_decode($row1["Local_ID"]);
-			$visitanteid = utf8_decode($row1["Visitante_ID"]);
+			$localid = (int) $row1["Local_ID"];
+			$visitanteid = (int) $row1["Visitante_ID"];
 			$x = 0;
 			$y = 0;
 			$col = 0;
@@ -63,7 +72,7 @@
 		
 			$pdf->AddPage();
 			$pdf->SetAutoPageBreak(false,1);
-			$pdf->SetMargins(4, 4, 4, 4);	
+			$pdf->SetMargins(4, 4, 4);	
 		
 		    $pdf->SetFont('Helvetica' , '' , 12);
 			$pdf->SetTextColor(0, 0, 0);
@@ -73,7 +82,7 @@
 			$pdf->SetXY(115,5);
 			$pdf->SetFont('Helvetica' , 'B' , 12);
 			$pdf->SetTextColor(0, 0, 255);
-			$pdf->Cell(62 , 5, utf8_decode($row1["Fecha_String"]) . '  ' . utf8_decode($row1["Horario"]) , 1, 1 , 'L' , false);
+			$pdf->Cell(62 , 5, az_utf8_decode($row1["Fecha_String"]) . '  ' . az_utf8_decode($row1["Horario"]) , 1, 1 , 'L' , false);
 
 			/*Torneo y Categoria */
 			$pdf->SetFont('Helvetica' , '' , 12);
@@ -90,10 +99,10 @@
 
 			/*LOGO*/
 			$pdf->SetXY(97,2);
-			$pdf->Image($server . '/imagenes/' . $Config->logo . '.png',176+((35 - (35 * ($Config->logowidth / 110)))/2),5.5+((20 - (20 * ($Config->logoheight / 110)))/2),(20 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)), 'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png',176+((35 - (35 * ($Config->logowidth / 110)))/2),5.5+((20 - (20 * ($Config->logoheight / 110)))/2),(20 * ($Config->logowidth / 110)), (15 * ($Config->logoheight / 110)));
 
 			$pdf->SetXY(190,2);
-			$pdf->Image($server . '/imagenes/fmvb.PNG' ,258, 5.5, 13, 0 ,'PNG');
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/fmvb.PNG' ,258, 5.5, 13, 0);
 
 			/*Titulo Equipos */
 			$pdf->SetXY(115,10);
@@ -116,9 +125,9 @@
             $pdf->SetTextColor(0, 0, 255);
 	    	$pdf->Cell(60, 11, '' , 0, 1 , 'C' , false);
 	    	$pdf->SetXY(115,13);
-	    	$pdf->MultiCell(30, 4.7, utf8_decode($row1["Local"]), 0 , 'C' , false);
+	    	$pdf->MultiCell(30, 4.7, az_utf8_decode($row1["Local"]), 0 , 'C' , false);
 	    	$pdf->SetXY(145,13);
-	    	$pdf->MultiCell(30, 4.7, utf8_decode($row1["Visitante"]), 0 , 'C' , false);
+	    	$pdf->MultiCell(30, 4.7, az_utf8_decode($row1["Visitante"]), 0 , 'C' , false);
 		
 		    /*Cancha y Juego */
            	$pdf->SetFont('Helvetica' , 'B' , 11);
@@ -126,7 +135,7 @@
 			$pdf->SetXY(5,15);
 			$pdf->Cell(60, 6, $lang['10517'] . ' ' . $row1["Campo_DESC"], 1, 1 , 'L' , false);			
 			$pdf->SetXY(65,15);
-			$pdf->Cell(50, 6,  $lang['986'] . ' ' . utf8_decode($row1["Jornada_DescCorta"]) . '', 1, 0 , 'C' , false);
+			$pdf->Cell(50, 6,  $lang['986'] . ' ' . az_utf8_decode($row1["Jornada_DescCorta"]) . '', 1, 0 , 'C' , false);
 			$y = .5;
 			/*Empieza Cabecera antes de los Set's*/
 			$pdf->SetFont('Times' , 'B' , 8);
@@ -142,7 +151,7 @@
 		    /*Colocacion del equipo dentro de la cancha 1er set*/
 		    $pdf->SetFont('Times' , 'B' , 9);
 		    $pdf->SetXY(27,$y+21);
-		    //$pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    //$pdf->Cell(36.8 , 6, 'A) ' . az_utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
 		    $pdf->Cell(36.8 , 6, 'A) ', 1, 1 , 'L' , false);
 		    
 		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
@@ -163,7 +172,7 @@
 			
 			$pdf->SetXY(82.8,$y+21);
             $pdf->SetFont('Times' , 'B' , 9);
-    	//	$pdf->Cell(33.8, 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+    	//	$pdf->Cell(33.8, 6, 'B) ' . az_utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
     	    $pdf->Cell(33.8, 6, 'B) ' , 1, 0 , 'L' , false);
 		 
 		    /*Dato de R=Recibe, S= Al servicio Visitante 1er set*/
@@ -201,7 +210,7 @@
 	        /*Datos de acomodo para el 2do. Set*/
 	        $pdf->SetXY(156.6,$y+21);
             $pdf->SetFont('Times' , 'B' , 8);
-			//$pdf->Cell(39.8 , 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+			//$pdf->Cell(39.8 , 6, 'B) ' . az_utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
 			//Se agrega esta línea porque se pide que no aparezca los equipos EMA 20022023
 			$pdf->Cell(39.8 , 6, 'B) ' , 1, 0 , 'L' , false);
 			
@@ -226,7 +235,7 @@
 	        /*Colocacion del equipo dentro de la cancha 2do set*/
 		    $pdf->SetFont('Times' , 'B' , 9);
 		    $pdf->SetXY(212.4,$y+21);
-		    //$pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    //$pdf->Cell(36.8 , 6, 'A) ' . az_utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
 		    //Se agrega esta línea porque se pide que no aparezca los equipos EMA 20022023
 		    $pdf->Cell(36.8 , 6, 'A) ' , 1, 1 , 'L' , false);
 		    
@@ -265,7 +274,7 @@
 			$pdf->Cell(11 , 5,''  , 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+28);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10500']) . utf8_decode($lang['10500-1']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10500']) . az_utf8_decode($lang['10500-1']), 0 , 'C' , false);
 			
 			$pdf->SetFont('Times' , 'B' , 7);
 		    $pdf->SetXY($x+16,$y+28);
@@ -290,7 +299,7 @@
 			$pdf->Cell(11 , 5,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+33);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-1']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-1']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 		    $pdf->SetFont('Times' , 'B' , 6);
 			$pdf->SetXY($x+20,$y+33);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -313,7 +322,7 @@
 			$pdf->RotatedText($x+7,$y+50,$lang['10508-4'],90);
 			$pdf->SetXY($x+8,$y+38);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(8, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(8, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 		    $pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+38);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -334,7 +343,7 @@
 			$pdf->Cell(8 , 10,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+7,$y+45.5);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(10, 2.5, utf8_decode($lang['10508-3']), 0 , 'C' , false);
+			$pdf->MultiCell(10, 2.5, az_utf8_decode($lang['10508-3']), 0 , 'C' , false);
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+43);
 			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
@@ -2093,7 +2102,7 @@
 		    /*Colocacion del equipo dentro de la cancha 1er set*/
 		    $pdf->SetFont('Times' , 'B' , 9);
 		    $pdf->SetXY(27,$y+72);
-		    //$pdf->Cell(36.8 , 6, 'A) ' . utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
+		    //$pdf->Cell(36.8 , 6, 'A) ' . az_utf8_decode($row1["Local"]), 1, 1 , 'L' , false);
 		    
 		    $pdf->Cell(36.8 , 6, 'A) ' , 1, 1 , 'L' , false);
 		    
@@ -2116,7 +2125,7 @@
 			
 			$pdf->SetXY(82.8,$y+72);
             $pdf->SetFont('Times' , 'B' , 9);
-    		//$pdf->Cell(33.8, 6, 'B) ' . utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
+    		//$pdf->Cell(33.8, 6, 'B) ' . az_utf8_decode($row1["Visitante"]), 1, 0 , 'L' , false);
     		
     		$pdf->Cell(33.8, 6, 'B) ' , 1, 0 , 'L' , false);
 		 
@@ -2184,7 +2193,7 @@
 			$pdf->Cell(11 , 5,''  , 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+28);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10500']) . utf8_decode($lang['10500-1']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10500']) . az_utf8_decode($lang['10500-1']), 0 , 'C' , false);
 			
 			
 			$pdf->SetXY($x+16,$y+28);
@@ -2209,7 +2218,7 @@
 			$pdf->Cell(11 , 5,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+5,$y+33);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(11, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-1']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(11, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-1']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 		    
 		    $pdf->SetXY($x+20,$y+33);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -2232,7 +2241,7 @@
 			$pdf->RotatedText($x+7,$y+50,$lang['10508-4'],90);
 			$pdf->SetXY($x+8,$y+38);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(8, 2.5, utf8_decode($lang['10508']) . utf8_decode($lang['10508-2']), 0 , 'C' , false);
+			$pdf->MultiCell(8, 2.5, az_utf8_decode($lang['10508']) . az_utf8_decode($lang['10508-2']), 0 , 'C' , false);
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+38);
 			$pdf->Cell(7.8 , 5, $lang['10136'], 1, 1 , 'C' , false);
@@ -2253,7 +2262,7 @@
 			$pdf->Cell(8 , 10,'', 1, 1 , 'C' , false);
 			$pdf->SetXY($x+7,$y+45.5);
 			$pdf->SetFont('Times' , '' , 5);
-			$pdf->MultiCell(10, 2.5, utf8_decode($lang['10508-3']), 0 , 'C' , false);
+			$pdf->MultiCell(10, 2.5, az_utf8_decode($lang['10508-3']), 0 , 'C' , false);
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+20,$y+43);
 			$pdf->Cell(7.8 , 5, $lang['10137'], 1, 1 , 'C' , false);
@@ -3614,11 +3623,11 @@
 			$pdf->SetTextColor(0, 0, 0);
 			
 			$pdf->SetXY($x+151,$y+125.5);
-			//$pdf->MultiCell(30.35, 3, utf8_decode($row1["Local"]), 0 , 'L' , false);
+			//$pdf->MultiCell(30.35, 3, az_utf8_decode($row1["Local"]), 0 , 'L' , false);
 			$pdf->MultiCell(30.35, 3, '', 0 , 'L' , false);
 			
 			$pdf->SetXY($x+181.35,$y+125.5);
-			//$pdf->MultiCell(30.35, 3, utf8_decode($row1["Visitante"]), 0 , 'R' , false);
+			//$pdf->MultiCell(30.35, 3, az_utf8_decode($row1["Visitante"]), 0 , 'R' , false);
 			$pdf->MultiCell(30.35, 3, '', 0 , 'R' , false);
 			
 			/*RESULTADOS 1a*/
@@ -3864,7 +3873,7 @@
 
 			$pdf->SetFont('Times' , 'B' , 6);
 			$pdf->SetXY($x+191.5,$y+134);
-			$pdf->Cell(20.2 , 3, utf8_decode($lang['10597']), 0, 0 , 'C' , false);
+			$pdf->Cell(20.2 , 3, az_utf8_decode($lang['10597']), 0, 0 , 'C' , false);
 
 			$pdf->SetFont('Times' , 'B' , 7);
 			$pdf->SetXY($x+191.5,$y+135);
@@ -3918,7 +3927,7 @@
 			
 			$pdf->SetFont('Times' , 'B' , 14);
 			$pdf->SetXY($x+59,$y+160);
-			$pdf->Cell(50, 5, utf8_decode($row1["arbitro"]) , 1, 0, 'L' , false);
+			$pdf->Cell(50, 5, az_utf8_decode($row1["arbitro"]) , 1, 0, 'L' , false);
 			
 			$pdf->SetFont('Times' , 'B' , 12);
 			$pdf->SetXY($x+109,$y+160);
@@ -4137,9 +4146,9 @@
 			$pdf->SetTextColor(0, 0, 0);
 			$pdf->Cell(62.3, 11, '' , 1, 1 , 'C' , false);
 			$pdf->SetXY($x+210.7,$y+76);
-			$pdf->MultiCell(31, 3, utf8_decode($row1["Local"]), 0 , 'L' , false);
+			$pdf->MultiCell(31, 3, az_utf8_decode($row1["Local"]), 0 , 'L' , false);
 			$pdf->SetXY($x+242.3,$y+76);
-			$pdf->MultiCell(31, 3, utf8_decode($row1["Visitante"]), 0 , 'R' , false);
+			$pdf->MultiCell(31, 3, az_utf8_decode($row1["Visitante"]), 0 , 'R' , false);
 
 			$countRow = 0;
 			$y = $y - 2;
@@ -4156,7 +4165,7 @@
 				
 				//Apodo L
 				$pdf->SetFillColor(255, 255, 255);
-				$pdf->Cell(22.2, 4, utf8_decode(''), 1, 0, 'L' , false);
+				$pdf->Cell(22.2, 4, az_utf8_decode(''), 1, 0, 'L' , false);
 				$pdf->SetXY($x+242.2,$y+85);
 				$pdf->Cell(4, 4, $lang['10136'], 1, 0, 'L' , false);
 			
@@ -4184,7 +4193,7 @@
 										Apellido_P,
 										Apellido_M,
 										Apodo,
-										'' Jugador,
+										TRIM(CONCAT(IFNULL(Nombre,''),' ',IFNULL(Apellido_P,''),' ',IFNULL(Apellido_M,''))) Jugador,
 										date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
 										YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
 										case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
@@ -4192,7 +4201,7 @@
 											 when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
 										end EdadGrupo,
 										Curp,
-										'' Numero,
+										convert(Numero,unsigned) Numero,
 										Estatus,
 										a.Equipo_ID,
 										Comentarios,
@@ -4210,7 +4219,7 @@
 										Apellido_P,
 										Apellido_M,
 										Apodo,
-										'' Jugador,
+										TRIM(CONCAT(IFNULL(Nombre,''),' ',IFNULL(Apellido_P,''),' ',IFNULL(Apellido_M,''))) Jugador,
 										date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
 										YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
 										case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
@@ -4218,15 +4227,13 @@
 											 when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
 										end EdadGrupo,
 										Curp,
-										'' Numero,
+										convert(Numero,unsigned) Numero,
 										Estatus,
 										a.Equipo_ID,
 										Comentarios,
 										Telefono,
 										correo,
-										case when Sexo = 0 then '" . $lang["942"] . "'
-											when Sexo = 1 then '" . $lang["943"] . "'
-											end SexoT,
+										Sexo,
 										Validado,
 										FechaAlta
 									FROM Jugadores a
@@ -4237,17 +4244,13 @@
 			$resultL = $Config->query($sqlL);
 			//Lista Local
 			$tmpy = 0;
-			if ($resultL->num_rows > 0) {
+			if ($resultL && $resultL->num_rows > 0) {
 				// output data of each row
 				while($rowL = $resultL->fetch_assoc()) {
 					$colorR = 0;
 					$colorG = 0;
 					$colorB = 0;
-					$date = DateTime::createFromFormat("d/m/Y", $rowL["Fecha_Nacimiento"]);
-					$birthDate = explode("/", $date->format("m/d/Y"));
-					//get age from date or birthdate
-					$age = date("Y") - $birthDate[2];
-					$Edad = $age;
+					$Edad = (int) $rowL["Edad"];
 					if($Edad >= 35){
 						if($Edad >= 50){
 							$colorR = 241;
@@ -4268,12 +4271,12 @@
 					$pdf->SetFont('Times' , 'B' , 7);
 					$pdf->SetXY($x+215,$y+85);
 					//$pdf->SetFillColor($colorR ,$colorG, $colorB);
-					$pdf->Cell(5 , 4, '' . utf8_decode($rowL["Numero"]) . '', 0, 1 , 'C' , 0);
+					$pdf->Cell(5 , 4, '' . az_utf8_decode($rowL["Numero"]) . '', 0, 1 , 'C' , 0);
 					
 					/*Datos del Apodo del Jugador Local*/
 					$pdf->SetXY($x+220,$y+85);
 					$pdf->SetFillColor(255, 255, 255);
-					$pdf->Cell(22, 4, utf8_decode('' . $rowL["Jugador"] . ''), 0, 0, 'L' , 0);
+					$pdf->Cell(22, 4, az_utf8_decode('' . $rowL["Jugador"] . ''), 0, 0, 'L' , 0);
 					$y= $y+4;
 					$tmpy = $tmpy + 4;
 				}
@@ -4287,7 +4290,7 @@
 							Apellido_P,
 							Apellido_M,
 							Apodo,
-							'' Jugador,
+							TRIM(CONCAT(IFNULL(Nombre,''),' ',IFNULL(Apellido_P,''),' ',IFNULL(Apellido_M,''))) Jugador,
 							date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
 							YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
 							case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
@@ -4295,7 +4298,7 @@
 							when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
 							end EdadGrupo,
 							Curp,
-							'' Numero,
+							convert(Numero,unsigned) Numero,
 							Estatus,
 							a.Equipo_ID,
 							Comentarios,
@@ -4313,7 +4316,7 @@
 							Apellido_P,
 							Apellido_M,
 							Apodo,
-							'' Jugador,
+							TRIM(CONCAT(IFNULL(Nombre,''),' ',IFNULL(Apellido_P,''),' ',IFNULL(Apellido_M,''))) Jugador,
 							date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento,
 							YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad,
 							case when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  >= 50 then 1
@@ -4321,15 +4324,13 @@
 							when YEAR(CURDATE())-YEAR(Fecha_Nacimiento)  < 35 then 3
 							end EdadGrupo,
 							Curp,
-							'' Numero,
+							convert(Numero,unsigned) Numero,
 							Estatus,
 							a.Equipo_ID,
 							Comentarios,
 							Telefono,
 							correo,
-							case when Sexo = 0 then '" . $lang["942"] . "'
-							when Sexo = 1 then '" . $lang["943"] . "'
-							end SexoT,
+							Sexo,
 							Validado,
 							FechaAlta
 						FROM Jugadores a
@@ -4341,17 +4342,13 @@
 			$x = $x + 31;
 			$y = $y - $tmpy;
 
-			if ($resultV->num_rows > 0) {
+			if ($resultV && $resultV->num_rows > 0) {
 				// output data of each row
 				while($rowV = $resultV->fetch_assoc()) {
 					$colorR = 0;
 					$colorG = 0;
 					$colorB = 0;
-					$date = DateTime::createFromFormat("d/m/Y", $rowV["Fecha_Nacimiento"]);
-					$birthDate = explode("/", $date->format("m/d/Y"));
-					//get age from date or birthdate
-					$age = date("Y") - $birthDate[2];
-					$Edad = $age;
+					$Edad = (int) $rowV["Edad"];
 					if($Edad >= 35){
 						if($Edad >= 50){
 							$colorR = 241;
@@ -4372,12 +4369,12 @@
 					$pdf->SetFont('Times' , 'B' , 7);
 					$pdf->SetXY($x+215,$y+85);
 					//$pdf->SetFillColor($colorR ,$colorG, $colorB);
-					$pdf->Cell(5 , 4, '' . utf8_decode($rowV["Numero"]) . '', 0, 1 , 'C' , 0);
+					$pdf->Cell(5 , 4, '' . az_utf8_decode($rowV["Numero"]) . '', 0, 1 , 'C' , 0);
 
 					/*Datos del Apodo del Jugador Local*/
 					$pdf->SetXY($x+220,$y+85);
 					$pdf->SetFillColor(255, 255, 255);
-				    $pdf->Cell(22, 4, utf8_decode('' . $rowV["Jugador"] . ''), 0, 0, 'L' , 0);
+				    $pdf->Cell(22, 4, az_utf8_decode('' . $rowV["Jugador"] . ''), 0, 0, 'L' , 0);
 					
 					$y= $y+4;
 				}
@@ -4386,20 +4383,20 @@
 			$y = 47;
 			try{
 				$pdf->SetAlpha(1);
-				$pdf->Image($server . '/imagenes/Aztechnologies-S.png',$x-1.9+5,$y+152,50, 15, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, '/imagenes/Aztechnologies-S.png',$x-1.9+5,$y+152,50, 15);
 			}catch(Exception $e){
 				echo $e;
 			}
 			$y = 5;
 			try{
 				$pdf->SetAlpha(0.05);
-				$pdf->Image($server . '/imagenes/voleibolFondo.png',$x+35,$y+0,200, 200, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, '/imagenes/voleibolFondo.png',$x+35,$y+0,200, 200);
 			}catch(Exception $e){
 				echo $e;
 			}
 			try{
 				$pdf->SetAlpha(1);
-				$pdf->Image($server . '/imagenes/wos.png',$x+212,$y+185,60, 24, 'PNG');
+				az_pdf_image_file($pdf, $siteRoot, '/imagenes/wos.png',$x+212,$y+185,60, 24);
 			}catch(Exception $e){
 				echo $e;
 			}
@@ -4408,9 +4405,13 @@
 			$pdf->SetXY($x+194.5,$y+74);
 			$pdf->Cell(16.0, 31.3, '', 1, 0, 'C' , false);
 		} 
-	}	
+	} else {
+		$pdf->AddPage();
+		$pdf->SetFont('Helvetica' , 'B' , 12);
+		$pdf->Cell(200 , 8, isset($lang['9998']) ? $lang['9998'] : 'No hay partidos para generar cedulas', 0, 0 , 'C' , false);
+	}
 
-	$Config->close();
+	$Config->Close();
 
 	$pdf->Output();
 ?>
