@@ -34,9 +34,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit;
 	}
 
-	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
-	$player = SanitizeInteger($_POST['player'] ?? 0);
-	$team = SanitizeInteger($_POST['team'] ?? 0);
+	$Season = (int) SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
+	$player = (int) SanitizeInteger($_POST['player'] ?? 0);
+	$team = (int) SanitizeInteger($_POST['team'] ?? 0);
 	if ($player <= 0 || $team <= 0) {
 		echo json_encode($retunData);
 		exit;

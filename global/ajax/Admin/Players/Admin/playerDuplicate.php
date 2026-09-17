@@ -34,9 +34,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit;
 	}
 
-	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
-	$player = SanitizeInteger($_POST['player'] ?? 0);
-	$team = SanitizeInteger($_POST['team'] ?? 0);
+	$Season = (int) SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
+	$player = (int) SanitizeInteger($_POST['player'] ?? 0);
+	$team = (int) SanitizeInteger($_POST['team'] ?? 0);
 	if ($player <= 0 || $team <= 0) {
 		echo json_encode($retunData);
 		exit;
@@ -98,6 +98,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		echo json_encode($retunData);
 		exit;
 	}
+	$Connection->set_charset('utf8');
 
 	$nextNum = 1;
 	$numRes = $Config->queryAdmin("SELECT IFNULL(MAX(CAST(Numero AS UNSIGNED)), 0) + 1 AS n
@@ -146,9 +147,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 
 	$sqlInsert = 'INSERT INTO ' . $schema . '.Jugadores (' . implode(', ', $cols) . ') SELECT '
-		. implode(', ', $selects) . ' FROM ' . $schema . '.Jugadores WHERE Jugador_ID = ' . $player . ' LIMIT 1';
-	$okIns = $Config->queryAdmin($sqlInsert);
-	$newId = ($okIns && $Connection) ? (int) $Connection->insert_id : 0;
+		. implode(', ', $selects) . ' FROM (SELECT * FROM ' . $schema . '.Jugadores WHERE Jugador_ID = ' . $player . ' LIMIT 1) src';
+	$okIns = $Connection->query($sqlInsert);
+	$newId = $okIns ? (int) $Connection->insert_id : 0;
+	$insertErr = (!$okIns && !empty($Connection->error)) ? (string) $Connection->error : '';
 	if ($newId <= 0) {
 		$found = $Config->query("SELECT Jugador_ID FROM $schema.Jugadores WHERE Curp = '$curpEsc' AND Equipo_ID = $team AND Jugador_ID <> $player ORDER BY Jugador_ID DESC LIMIT 1");
 		if ($found && $foundRow = $found->fetch_assoc()) {
@@ -166,5 +168,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if ($newId > 0) {
 		echo json_encode(array('status' => '1', 'message' => $lang['539-11'], 'categoria' => $categoria, 'equipo' => $team));
 		exit;
+	}
+	if ($insertErr !== '') {
+		$retunData['message'] = $lang['539-12'] . ' (' . $insertErr . ')';
 	}
 	echo json_encode($retunData);
