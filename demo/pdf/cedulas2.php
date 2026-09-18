@@ -3934,7 +3934,6 @@ $pdf->SetFont('Times' , 'B' , 5);
 		$pdf->SetFont('Helvetica' , 'B' , 12);
 		$pdf->Cell(200 , 8, isset($lang['9998']) ? $lang['9998'] : 'No hay partidos para generar cedulas', 0, 0 , 'C' , false);
 	}
-
 	$Config->Close();
 
 	$pdf->Output();
