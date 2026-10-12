@@ -2409,16 +2409,21 @@ function playerPhotoInit(img) {
 		return;
 	}
 	var st = playerPhotoState($frame);
-	if (!st.pendingFile) {
+	// a new file is always uploaded; the saved photo (edit form) only when the user moves or zooms it
+	var fromFile = st.pendingFile;
+	if (!fromFile && st.ready) {
 		return;
 	}
 	var fw = $frame.width(), fh = $frame.height();
+	if (!fw || !fh) {
+		return;
+	}
 	st.nw = img.naturalWidth;
 	st.nh = img.naturalHeight;
 	st.minScale = Math.min(fw / st.nw, fh / st.nh);
 	st.maxScale = Math.max(fw / st.nw, fh / st.nh) * 4;
 	st.ready = true;
-	st.dirty = true;
+	st.dirty = fromFile;
 	st.pendingFile = false;
 	$frame.css('touch-action', 'none');
 	playerPhotoReset($frame.data('suffix'), true);
