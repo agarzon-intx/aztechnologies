@@ -400,20 +400,21 @@
 				kr.appendChild(document.createTextNode(S.keepRatio));
 				row.appendChild(kr);
 				// images from the database (team logos, player photos) cannot be replaced: one upload would replace all of them
-				var srcRow = el("div", { "class": "col-12 d-flex flex-wrap align-items-center gap-2" });
-				if (G.db) { srcRow.style.display = "none"; }
-				if (o.src) {
-					var info = el("span", { "class": "text-xs text-muted" }, S.replacedBy + " " + o.src.split("/").pop());
-					srcRow.appendChild(info);
+				if (!G.db && !/^#-#\./.test(G.sig || "")) {
+					var srcRow = el("div", { "class": "col-12 d-flex flex-wrap align-items-center gap-2" });
+					if (o.src) {
+						var info = el("span", { "class": "text-xs text-muted" }, S.replacedBy + " " + o.src.split("/").pop());
+						srcRow.appendChild(info);
+					}
+					var file = el("input", { type: "file", accept: "image/png,image/jpeg,image/gif,image/webp", "data-f": "upload" });
+					file.style.display = "none";
+					srcRow.appendChild(file);
+					srcRow.appendChild(el("button", { type: "button", "class": "btn btn-sm btn-outline-primary mb-0", "data-f": "pick" }, S.changeImage));
+					if (o.src) {
+						srcRow.appendChild(el("button", { type: "button", "class": "btn btn-sm btn-outline-secondary mb-0", "data-f": "original" }, S.originalImage));
+					}
+					row.appendChild(srcRow);
 				}
-				var file = el("input", { type: "file", accept: "image/png,image/jpeg,image/gif,image/webp", "data-f": "upload" });
-				file.style.display = "none";
-				srcRow.appendChild(file);
-				srcRow.appendChild(el("button", { type: "button", "class": "btn btn-sm btn-outline-primary mb-0", "data-f": "pick" }, S.changeImage));
-				if (o.src) {
-					srcRow.appendChild(el("button", { type: "button", "class": "btn btn-sm btn-outline-secondary mb-0", "data-f": "original" }, S.originalImage));
-				}
-				row.appendChild(srcRow);
 			} else if (G.m === "Cell" || G.m === "Rect") {
 				row.appendChild(numField(S.width + unit, round1(o.w !== undefined ? o.w : (e.w || 0)), 0.5, "w", "col-6"));
 				row.appendChild(numField(S.height + unit, round1(o.h !== undefined ? o.h : (e.h || 0)), 0.5, "h", "col-6"));
