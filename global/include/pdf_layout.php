@@ -117,17 +117,40 @@ if (!function_exists('az_pdf_layout_file')) {
 		return @file_put_contents($file, $json, LOCK_EX) !== false;
 	}
 
+	/**
+	 * Images whose file comes from the database (team logos "<Season_ID>-<TEAM_ID>.png" / imagenes/Original,
+	 * player photos and QR codes written to the temp folder): they can be moved/resized but not replaced.
+	 */
+	function az_pdf_layout_is_db_image($file) {
+		static $tmp = null;
+		if (!is_string($file) || $file === '') {
+			return false;
+		}
+		$path = str_replace('\\', '/', (string) preg_replace('/\?.*$/', '', $file));
+		$base = basename($path);
+		if (preg_match('/^az-(pdf|qr)-/i', $base) || preg_match('/^\d+-\d+\.(png|jpe?g|gif|webp)$/i', $base)) {
+			return true;
+		}
+		if (preg_match('#(^|/)imagenes/Original/#i', $path)) {
+			return true;
+		}
+		if ($tmp === null) {
+			$t = sys_get_temp_dir();
+			$tmp = rtrim(str_replace('\\', '/', realpath($t) ?: $t), '/');
+		}
+		$dir = rtrim(str_replace('\\', '/', realpath(dirname($path)) ?: dirname($path)), '/');
+		return $tmp !== '' && $dir === $tmp;
+	}
+
 	/** Image signature: file name with numbers replaced, so per-team/per-player images still match. */
 	function az_pdf_layout_image_sig($file) {
 		$base = is_string($file) ? basename(str_replace('\\', '/', $file)) : '';
 		$base = preg_replace('/\?.*$/', '', $base);
-		return (string) preg_replace('/\d+/', '#', $base);
-	}
-
-	/** Team logos ("<Season_ID>-<TEAM_ID>.png") can be moved/resized but not replaced (one upload would replace every team's logo). */
-	function az_pdf_layout_is_team_logo($file) {
-		$base = is_string($file) ? basename(str_replace('\\', '/', preg_replace('/\?.*$/', '', $file))) : '';
-		return (bool) preg_match('/^\d+-\d+\.(png|jpe?g|gif|webp)$/i', $base);
+		$sig = (string) preg_replace('/\d+/', '#', $base);
+		if (!preg_match('/^#-#\./', $sig) && az_pdf_layout_is_db_image($file)) {
+			return '@db';
+		}
+		return $sig;
 	}
 
 	/** "#RRGGBB" from FPDF's color operator string ("0.000 g" or "r g b rg"). */
@@ -436,7 +459,8 @@ if (!trait_exists('AzPdfLayoutTrait')) {
 			}
 			// Replacement image: fitted (keeping its proportions) and centered in the original box.
 			$srcName = '';
-			if ($o['src'] !== null && !az_pdf_layout_is_team_logo($file)) {
+			$isDb = az_pdf_layout_is_db_image($file);
+			if ($o['src'] !== null && !$isDb) {
 				$root = az_pdf_layout_site_root();
 				$alt = $root !== '' ? $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $o['src']) : '';
 				$altPx = $alt !== '' ? self::azLayoutImageSize($alt) : null;
@@ -473,7 +497,11 @@ if (!trait_exists('AzPdfLayoutTrait')) {
 				$w = $bw;
 				$h = $bh;
 			}
-			$this->azLayoutRecord($o['key'], 'Image', $x, $y, $bw, $bh, '', $sig, $o['hide'], array('src' => $srcName));
+			$this->azLayoutRecord($o['key'], 'Image', $x, $y, $bw, $bh, '', $sig, $o['hide'], array(
+				'src' => $srcName,
+				'db' => $isDb,
+				'img' => is_string($file) ? basename(str_replace('\\', '/', $file)) : '',
+			));
 			if (!$o['hide']) {
 				parent::Image($file, $x, $y, $w, $h, $type, $link);
 			}
