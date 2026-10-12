@@ -98,6 +98,8 @@
 		'changeImage' => $pl('452-95', 'Change image'),
 		'originalImage' => $pl('452-96', 'Use original image'),
 		'replacedBy' => $pl('452-97', 'Replacement image:'),
+		'debug' => $pl('452-104', 'Debug'),
+		'debugCode' => $pl('452-105', 'Code that draws this element'),
 	);
 
 	$plFonts = array();
@@ -123,6 +125,12 @@
 
 	$htmlConfig .= '
 	<div class="container-fluid py-2" id="pdfLayoutRoot">
+		<div class="d-flex justify-content-end">
+			<div class="form-check form-switch mb-1">
+				<input class="form-check-input" type="checkbox" id="plDebug">
+				<label class="form-check-label" for="plDebug">' . $plEsc($plStrings['debug']) . '</label>
+			</div>
+		</div>
 		<div class="row g-2 align-items-end">
 			<div class="col-12 col-md-4">
 				<label class="form-label" for="plDoc">' . $plEsc($plStrings['document']) . '</label>
@@ -177,7 +185,8 @@
 			str: ' . $plJson($plStrings) . ',
 			fonts: ' . $plJson($plFonts) . ',
 			saveUrl: "./ajax/Admin/Config/configManagementPdfLayoutSave.php",
-			uploadUrl: "./ajax/Admin/Config/configManagementPdfLayoutImage.php"
+			uploadUrl: "./ajax/Admin/Config/configManagementPdfLayoutImage.php",
+			sourceUrl: "./ajax/Admin/Config/configManagementPdfLayoutSource.php"
 		};
 		function start() {
 			if (window.azPdfLayoutEditor) { window.azPdfLayoutEditor(cfg); }

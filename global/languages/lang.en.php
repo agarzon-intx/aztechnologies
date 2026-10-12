@@ -444,6 +444,8 @@
 	$lang['452-101'] = 'Search address or place';
 	$lang['452-102'] = 'Click on the map or drag the marker to select the location.';
 	$lang['452-103'] = 'My location';
+	$lang['452-104'] = 'Debug';
+	$lang['452-105'] = 'Code that draws this element';
 	$lang['454'] = 'Coup/League';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penalties (Tie)';

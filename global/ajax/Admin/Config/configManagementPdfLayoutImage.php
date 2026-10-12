@@ -24,6 +24,11 @@
 
 	require('membersite_config.php');
 	$sessionstat = $fgmembersite->CheckLogin('configManagementPdfLayoutImage.php');
+	if (!$sessionstat) {
+		http_response_code(401);
+		echo json_encode(array('status' => '0'));
+		exit;
+	}
 
 	include('lang.' . $_COOKIE[$Config->getAlias() . 'language'] . '.php');
 
