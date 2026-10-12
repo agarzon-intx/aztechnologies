@@ -292,6 +292,5 @@
 								<button type="button" class="btn btn-primary" onClick="validateInfo()" >' . $lang['0000'] . '</button>
 							</div>
 						</div>
-					</div>
-				</div>';
+					</div>';
 ?>
