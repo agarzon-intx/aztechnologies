@@ -124,6 +124,12 @@ if (!function_exists('az_pdf_layout_file')) {
 		return (string) preg_replace('/\d+/', '#', $base);
 	}
 
+	/** Team logos ("<Season_ID>-<TEAM_ID>.png") are not editable: they are drawn as the document code says. */
+	function az_pdf_layout_is_team_logo($file) {
+		$base = is_string($file) ? basename(str_replace('\\', '/', preg_replace('/\?.*$/', '', $file))) : '';
+		return (bool) preg_match('/^\d+-\d+\.(png|jpe?g|gif|webp)$/i', $base);
+	}
+
 	/** "#RRGGBB" from FPDF's color operator string ("0.000 g" or "r g b rg"). */
 	function az_pdf_layout_color_hex($op) {
 		$p = preg_split('/\s+/', trim((string) $op));
@@ -402,7 +408,7 @@ if (!trait_exists('AzPdfLayoutTrait')) {
 		}
 
 		function Image($file, $x=null, $y=null, $w=0, $h=0, $type='', $link='') {
-			if (!$this->azLayoutActive()) {
+			if (!$this->azLayoutActive() || az_pdf_layout_is_team_logo($file)) {
 				parent::Image($file, $x, $y, $w, $h, $type, $link);
 				return;
 			}
