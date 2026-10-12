@@ -124,7 +124,7 @@ if (!function_exists('az_pdf_layout_file')) {
 		return (string) preg_replace('/\d+/', '#', $base);
 	}
 
-	/** Team logos ("<Season_ID>-<TEAM_ID>.png") are not editable: they are drawn as the document code says. */
+	/** Team logos ("<Season_ID>-<TEAM_ID>.png") can be moved/resized but not replaced (one upload would replace every team's logo). */
 	function az_pdf_layout_is_team_logo($file) {
 		$base = is_string($file) ? basename(str_replace('\\', '/', preg_replace('/\?.*$/', '', $file))) : '';
 		return (bool) preg_match('/^\d+-\d+\.(png|jpe?g|gif|webp)$/i', $base);
@@ -408,7 +408,7 @@ if (!trait_exists('AzPdfLayoutTrait')) {
 		}
 
 		function Image($file, $x=null, $y=null, $w=0, $h=0, $type='', $link='') {
-			if (!$this->azLayoutActive() || az_pdf_layout_is_team_logo($file)) {
+			if (!$this->azLayoutActive()) {
 				parent::Image($file, $x, $y, $w, $h, $type, $link);
 				return;
 			}
@@ -436,7 +436,7 @@ if (!trait_exists('AzPdfLayoutTrait')) {
 			}
 			// Replacement image: fitted (keeping its proportions) and centered in the original box.
 			$srcName = '';
-			if ($o['src'] !== null) {
+			if ($o['src'] !== null && !az_pdf_layout_is_team_logo($file)) {
 				$root = az_pdf_layout_site_root();
 				$alt = $root !== '' ? $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $o['src']) : '';
 				$altPx = $alt !== '' ? self::azLayoutImageSize($alt) : null;

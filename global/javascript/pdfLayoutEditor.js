@@ -380,7 +380,10 @@
 				kr.appendChild(kc);
 				kr.appendChild(document.createTextNode(S.keepRatio));
 				row.appendChild(kr);
+				// team logos ("<Season_ID>-<TEAM_ID>.png") cannot be replaced: one upload would replace every team's logo
+				var isLogo = /^#-#\.(png|jpe?g|gif|webp)$/i.test(G.sig || "");
 				var srcRow = el("div", { "class": "col-12 d-flex flex-wrap align-items-center gap-2" });
+				if (isLogo) { srcRow.style.display = "none"; }
 				if (o.src) {
 					var info = el("span", { "class": "text-xs text-muted" }, S.replacedBy + " " + o.src.split("/").pop());
 					srcRow.appendChild(info);
