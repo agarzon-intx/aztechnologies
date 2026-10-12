@@ -99,7 +99,6 @@
 		'originalImage' => $pl('452-96', 'Use original image'),
 		'replacedBy' => $pl('452-97', 'Replacement image:'),
 		'debug' => $pl('452-104', 'Debug'),
-		'debugCode' => $pl('452-105', 'Code that draws this element'),
 	);
 
 	$plFonts = array();
@@ -185,8 +184,7 @@
 			str: ' . $plJson($plStrings) . ',
 			fonts: ' . $plJson($plFonts) . ',
 			saveUrl: "./ajax/Admin/Config/configManagementPdfLayoutSave.php",
-			uploadUrl: "./ajax/Admin/Config/configManagementPdfLayoutImage.php",
-			sourceUrl: "./ajax/Admin/Config/configManagementPdfLayoutSource.php"
+			uploadUrl: "./ajax/Admin/Config/configManagementPdfLayoutImage.php"
 		};
 		function start() {
 			if (window.azPdfLayoutEditor) { window.azPdfLayoutEditor(cfg); }

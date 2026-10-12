@@ -47,7 +47,6 @@
 		var debug = false;
 		try { debug = window.localStorage.getItem("azPdfLayoutDebug") === "1"; } catch (e) { /* storage blocked */ }
 		if (debugChk) { debugChk.checked = debug; }
-		var srcCache = {};
 
 		var layout = cfg.layout && typeof cfg.layout === "object" && !Array.isArray(cfg.layout) ? cfg.layout : {};
 		var state = {
@@ -342,45 +341,6 @@
 			return field(label, sel, col);
 		}
 
-		/** Debug block: the file:line of every drawing call of the group, with its source lines. */
-		function drawDebug(G) {
-			var box = el("div", { "class": "mb-2" });
-			box.appendChild(el("div", { "class": "text-xs text-muted" }, S.debugCode));
-			var missing = [];
-			G.keys.forEach(function (key) {
-				var lineNo = +key.slice(key.lastIndexOf(":") + 1);
-				box.appendChild(el("div", { "class": "text-xs fw-bold mt-1", style: "font-family: monospace; word-break: break-all;" }, key));
-				var pre = el("pre", { style: "margin:0;padding:4px 6px;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px;font-size:11px;line-height:1.35;max-height:140px;overflow:auto;white-space:pre;" });
-				var lines = srcCache[key];
-				if (lines === undefined) {
-					missing.push(key);
-					pre.textContent = S.loading;
-				} else if (!lines || !lines.length) {
-					pre.textContent = "-";
-				} else {
-					lines.forEach(function (ln) {
-						var row = el("div", null, String(ln.n).padStart(5, " ") + "  " + ln.t.replace(/\t/g, "    "));
-						if (ln.n === lineNo) { row.style.cssText = "background:#fff3bf;font-weight:bold;"; }
-						pre.appendChild(row);
-					});
-				}
-				box.appendChild(pre);
-			});
-			if (missing.length && cfg.sourceUrl) {
-				var fd = new FormData();
-				fd.append("keys", JSON.stringify(missing));
-				fetch(cfg.sourceUrl, { method: "POST", body: fd, credentials: "same-origin" })
-					.then(function (r) { return r.json(); })
-					.catch(function () { return null; })
-					.then(function (j) {
-						var got = j && j.lines ? j.lines : {};
-						missing.forEach(function (key) { srcCache[key] = got[key] || null; });
-						if (debug && state.selected === G.id) { drawProps(); }
-					});
-			}
-			return box;
-		}
-
 		function drawProps() {
 			props.innerHTML = "";
 			var G = state.selected ? state.groups[state.selected] : null;
@@ -395,8 +355,8 @@
 			var title = el("div", { "class": "fw-bold text-sm mb-1" }, G.label);
 			title.style.cssText = "overflow:hidden;white-space:nowrap;text-overflow:ellipsis;";
 			props.appendChild(title);
-			if (debug) { props.appendChild(drawDebug(G)); }
-			var row = el("div", { "class": "row g-2 mt-1" });
+			if (debug) { props.appendChild(el("div", { "class": "text-xs text-muted mb-2" }, G.keys.join(", "))); }
+			var row = el("div", { "class": "row g-2" });
 			row.appendChild(numField(S.moveX + unit, v.dx, 0.5, "dx", "col-6"));
 			row.appendChild(numField(S.moveY + unit, v.dy, 0.5, "dy", "col-6"));
 

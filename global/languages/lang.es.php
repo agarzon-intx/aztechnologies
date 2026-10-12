@@ -444,9 +444,7 @@
 	$lang['452-101'] = 'Buscar dirección o lugar';
 	$lang['452-102'] = 'Haga clic en el mapa o arrastre el marcador para seleccionar la ubicación.';
 	$lang['452-103'] = 'Mi ubicación';
-	$lang['452-104'] = 'Depurar';
-	$lang['452-105'] = 'Código que dibuja este elemento';
-	$lang['454'] = 'Copa/Liga';
+	$lang['452-104'] = 'Depurar';	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penales (Empate)';
 	$lang['457'] = 'Jugador (JJ) *';
