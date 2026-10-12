@@ -249,11 +249,11 @@ if ($result2->num_rows > 0) {
 							</div>
 							<div class="d-flex px-0 py-0">
 								<div style="width: 50%;text-align: center;padding-top: 0px;">
-									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"><i class="fas fa-clock" title="' . $lang['535'] . '"></i></span></p>
+									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"><i class="fas fa-clock"></i> ' . $lang['535'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["Fecha_Alta"] . '</span></div></div>
 								</div>
 								<div style="width: 50%;text-align: center;padding-top: 0px;">
-									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"><i class="fas fa-clock" title="' . $lang['536'] . '"></i></span></p>
+									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"><i class="fas fa-clock"></i> ' . $lang['536'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["Fecha_Validacion"] . '</span></div></div>
 								</div>
 							</div>
