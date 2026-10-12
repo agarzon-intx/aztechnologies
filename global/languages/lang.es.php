@@ -440,6 +440,10 @@
 	$lang['452-97'] = 'Imagen de reemplazo:';
 	$lang['452-98'] = 'Fuentes PDF';
 	$lang['452-99'] = 'Fuentes disponibles para todos los PDF (compartidas por todos los sitios). Úselas en Configuración → Diseño PDF.';
+	$lang['452-100'] = 'Ubicación';
+	$lang['452-101'] = 'Buscar dirección o lugar';
+	$lang['452-102'] = 'Haga clic en el mapa o arrastre el marcador para seleccionar la ubicación.';
+	$lang['452-103'] = 'Mi ubicación';
 	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penales (Empate)';

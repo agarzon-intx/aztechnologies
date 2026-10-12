@@ -440,6 +440,10 @@
 	$lang['452-97'] = 'Replacement image:';
 	$lang['452-98'] = 'PDF fonts';
 	$lang['452-99'] = 'Fonts available for every PDF (shared by all sites). Use them in Configuration → PDF layout.';
+	$lang['452-100'] = 'Location';
+	$lang['452-101'] = 'Search address or place';
+	$lang['452-102'] = 'Click on the map or drag the marker to select the location.';
+	$lang['452-103'] = 'My location';
 	$lang['454'] = 'Coup/League';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penalties (Tie)';

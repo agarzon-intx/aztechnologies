@@ -30,8 +30,8 @@ $schema = $Config->getSchema();
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 
 	$leagueName = SanitizeText($_POST['leagueName']);
-	$latitude = $_POST['latitude'];
-	$longitude = $_POST['longitude'];
+	$latitude = is_numeric($_POST['latitude'] ?? null) ? max(-90, min(90, round((float) $_POST['latitude'], 6))) : 0;
+	$longitude = is_numeric($_POST['longitude'] ?? null) ? max(-180, min(180, round((float) $_POST['longitude'], 6))) : 0;
 	$logo = SanitizeText($_POST['logo']);
 	$logox = SanitizeInteger($_POST['logox']);
 	$logoy = SanitizeInteger($_POST['logoy']);
