@@ -24,6 +24,7 @@ $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 								
 $count = 1;
 $idPdfExpr = $Config->jugadoresHasColumn('IdentificacionPDF') ? " or ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100" : "";
+$idPdfPreferred = $Config->playerIDPDFEnabled();
 $idPdfCol = $Config->jugadoresHasColumn('IdentificacionPDF') ? "case when ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100 then 'si' else '' end" : "''";
 $sql21 = "SET @rank:=0;";
 $Config->query($sql21);
@@ -83,7 +84,9 @@ if ($result2->num_rows > 0) {
 	    if($hasLogo == ''){
 	    	$docInfo = array(
 				'id' => (int) $row2["Jugador_ID"],
-				'idtype' => $row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
+				'idtype' => $idPdfPreferred
+					? ($row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : ''))
+					: ($row2["HasIDImg"] == 'si' ? 'img' : ($row2["HasIDPdf"] == 'si' ? 'pdf' : '')),
 				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
 				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
 				'sex' => (string) $row2["SexoT"],
