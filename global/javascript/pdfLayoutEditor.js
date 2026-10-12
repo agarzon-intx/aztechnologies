@@ -96,17 +96,25 @@
 					}
 				}
 			});
-			var groups = {}, groupOf = {}, firstIdx = {};
+			var groups = {}, groupOf = {}, firstIdx = {}, imgOf = {};
 			state.firstEl = {};
 			els.forEach(function (e, i) {
 				var g = find(e.k);
 				groupOf[e.k] = g;
 				if (!(e.k in firstIdx)) { firstIdx[e.k] = i; state.firstEl[e.k] = e; }
-				if (!groups[g]) { groups[g] = { id: g, keys: [], m: e.m, sig: e.sig || "", label: "", pages: {} }; }
+				if (!groups[g]) { groups[g] = { id: g, keys: [], m: e.m, sig: e.sig || "", label: "", pages: {}, db: false }; }
 				var G = groups[g];
 				if (G.keys.indexOf(e.k) < 0) { G.keys.push(e.k); }
 				G.pages[e.p] = true;
 				if (!G.label && e.t) { G.label = e.t; }
+				// image from the database (team logo, player photo...): flagged by the server, or the same call draws different files
+				if (e.m === "Image") {
+					if (e.db) { G.db = true; }
+					if (e.img) {
+						if (imgOf[e.k] !== undefined && imgOf[e.k] !== e.img) { G.db = true; }
+						imgOf[e.k] = e.img;
+					}
+				}
 			});
 			Object.keys(groups).forEach(function (g) {
 				var G = groups[g];
@@ -163,8 +171,9 @@
 				var sample = state.firstEl[key];
 				if (sample) {
 					o.m = sample.m;
-					if (sample.m === "Image" && sample.sig) { o.sig = sample.sig; }
+					if (sample.m === "Image" && sample.sig && !G.db) { o.sig = sample.sig; }
 				}
+				if (G.db) { delete o.sig; delete o.src; }
 				o.label = G.label.slice(0, 80);
 				["dx", "dy"].forEach(function (f) {
 					if (o[f] !== undefined) { o[f] = round1(+o[f] || 0); if (!o[f]) { delete o[f]; } }
@@ -380,10 +389,9 @@
 				kr.appendChild(kc);
 				kr.appendChild(document.createTextNode(S.keepRatio));
 				row.appendChild(kr);
-				// team logos ("<Season_ID>-<TEAM_ID>.png") cannot be replaced: one upload would replace every team's logo
-				var isLogo = /^#-#\.(png|jpe?g|gif|webp)$/i.test(G.sig || "");
+				// images from the database (team logos, player photos) cannot be replaced: one upload would replace all of them
 				var srcRow = el("div", { "class": "col-12 d-flex flex-wrap align-items-center gap-2" });
-				if (isLogo) { srcRow.style.display = "none"; }
+				if (G.db) { srcRow.style.display = "none"; }
 				if (o.src) {
 					var info = el("span", { "class": "text-xs text-muted" }, S.replacedBy + " " + o.src.split("/").pop());
 					srcRow.appendChild(info);
