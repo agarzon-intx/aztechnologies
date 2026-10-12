@@ -44,6 +44,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $phone = SanitizeInteger($_POST['phone']);
     $sex = SanitizeInteger($_POST['sex']);
     $email = SanitizeEmail($_POST['email']); 
+    $contactErrors = array();
+    if ($phone === '') { $contactErrors[] = $lang['js904']; }
+    if ($email === '') { $contactErrors[] = $lang['js905']; } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $contactErrors[] = $lang['js906']; }
+    if ($contactErrors) {
+    	while (ob_get_level() > 0) { ob_end_clean(); }
+    	echo json_encode(array('status' => '0', 'message' => 'No insert.', 'dataPlayerMessage' => implode("\n", $contactErrors)));
+    	exit;
+    }
     $id = SanitizeText($_POST['id']);
     $comments = SanitizeText($_POST['comments']);
     $valid = SanitizeInteger($_POST['valid']);

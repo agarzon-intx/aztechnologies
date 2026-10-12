@@ -91,21 +91,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js903'] . "';
 				}
-				/*
-				if($('#telefono').val().length == 0){
+				if($.trim($('#telefono').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js904'] . "';
 				}
-				if($('#correo').val().length == 0){
+				if($.trim($('#correo').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js905'] . "';
 				}else{
-					if(!validateEmail($('#correo').val())){
+					if(!validateEmail($.trim($('#correo').val()))){
 						count++;
 						error = error + '\\n' + count +  '.- " . $lang['js906'] . "';			
 					}
 				}
-				*/
 				if(count>0){
 					alert(error);
 					return false;
@@ -163,21 +161,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js903'] . "';
 				}
-				/*
-				if($('#telefono').val().length == 0){
+				if($.trim($('#telefono').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js904'] . "';
 				}
-				if($('#correo').val().length == 0){
+				if($.trim($('#correo').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js905'] . "';
 				}else{
-					if(!validateEmail($('#correo').val())){
+					if(!validateEmail($.trim($('#correo').val()))){
 						count++;
 						error = error + '\\n' + count +  '.- " . $lang['js906'] . "';			
 					}
 				}
-				*/
 				if(count>0){
 					alert(error);
 					return false;
@@ -243,21 +239,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js903'] . "';
 				}
-				/*
-				if($('#telefonoE').val().length == 0){
+				if($.trim($('#telefonoE').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js904'] . "';
 				}
-				if($('#correoE').val().length == 0){
+				if($.trim($('#correoE').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js905'] . "';
 				}else{
-					if(!validateEmail($('#correoE').val())){
+					if(!validateEmail($.trim($('#correoE').val()))){
 						count++;
 						error = error + '\\n' + count +  '.- " . $lang['js906'] . "';
 					}
 				}
-				*/
 				if(count>0){
 					alert(error);
 					return false;
@@ -313,21 +307,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js903'] . "';
 				}
-				/*
-				if($('#telefonoE').val().length == 0){
+				if($.trim($('#telefonoE').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js904'] . "';
 				}
-				if($('#correoE').val().length == 0){
+				if($.trim($('#correoE').val()).length == 0){
 					count++;
 					error = error + '\\n' + count +  '.- " . $lang['js905'] . "';
 				}else{
-					if(!validateEmail($('#correoE').val())){
+					if(!validateEmail($.trim($('#correoE').val()))){
 						count++;
 						error = error + '\\n' + count +  '.- " . $lang['js906'] . "';
 					}
 				}
-				*/
 				if(count>0){
 					alert(error);
 					return false;
