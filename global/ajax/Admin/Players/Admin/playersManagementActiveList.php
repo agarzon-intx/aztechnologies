@@ -70,29 +70,33 @@ $sql22 = "	SELECT distinct Jugador_ID,
 				and Estatus = 'A' 
 			order by Jugador_tipo asc, cast(Numero as decimal) asc, Nombre, Apellido_P;";
 //echo $sql2;
+$playerDocIcons = function ($row2) use ($lang, $idUsesPdf) {
+	$icons = '';
+	if ($row2["Picture"] == '') {
+		$icons = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
+	}
+	if ($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0) {
+		$icons .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
+	}
+	if ($icons != '') {
+		return $icons;
+	}
+	$docInfo = array(
+		'id' => (int) $row2["Jugador_ID"],
+		'idtype' => $idUsesPdf ? ($row2["HasIDPdf"] == 'si' ? 'pdf' : '') : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
+		'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
+		'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
+		'sex' => (string) $row2["SexoT"],
+		'curp' => (string) $row2["CurpTxt"],
+		'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
+	);
+	return ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
+};
 $result2 = $Config->query($sql22);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
-	    $hasLogo = '';
-	    if($row2["Picture"] == ''){
-	        $hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
-	    }
-	    if($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0){
-	        $hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
-	    }
-	    if($hasLogo == ''){
-	    	$docInfo = array(
-				'id' => (int) $row2["Jugador_ID"],
-				'idtype' => $idUsesPdf ? ($row2["HasIDPdf"] == 'si' ? 'pdf' : '') : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
-				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
-				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
-				'sex' => (string) $row2["SexoT"],
-				'curp' => (string) $row2["CurpTxt"],
-				'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
-			);
-			$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
-	    }
+		$hasLogo = $playerDocIcons($row2);
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
 		}else{
@@ -165,6 +169,7 @@ $result2 = $Config->query($sql22);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
+		$hasLogo = $playerDocIcons($row2);
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
 		}else{
@@ -182,7 +187,7 @@ if ($result2->num_rows > 0) {
 								</div>
 								<div style="width: 30%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['907'] . '</span></p>
-									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"] . $row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"] . $row2["strikef"]  . '</span></div></div>
+									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"] . $row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"] . $row2["strikef"]  . $hasLogo . '</span></div></div>
 								</div>
 								<div style="width: 10%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">#</span></p>
