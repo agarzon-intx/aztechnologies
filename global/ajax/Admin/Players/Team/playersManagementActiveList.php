@@ -50,7 +50,8 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
 					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
 					case when a.Foto is null then '' else 'si' end as Picture,
-					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID
+					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID,
+					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -76,7 +77,7 @@ if ($result2->num_rows > 0) {
 		if($row2["Picture"] == ''){
 			$hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
 		}
-		if($row2["HasID"] == ''){
+		if($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0){
 			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
 		}
 		if (($count % 2) == 1){
@@ -160,7 +161,8 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
 					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
 					case when a.Foto is null then '' else 'si' end as Picture,
-					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID
+					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID,
+					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -185,7 +187,7 @@ if ($result2->num_rows > 0) {
 		if($row2["Picture"] == ''){
 			$hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
 		}
-		if($row2["HasID"] == ''){
+		if($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0){
 			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
 		}
 		if (($count % 2) == 1){
