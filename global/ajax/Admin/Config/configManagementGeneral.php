@@ -490,4 +490,6 @@
 							</div>
 						</div>
 					</div>';
+
+	require __DIR__ . '/configManagementFonts.php';
 ?>

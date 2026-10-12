@@ -382,7 +382,7 @@
 	$lang['452-36'] = 'Preview';
 	$lang['452-37'] = 'Add font (.ttf)';
 	$lang['452-38'] = 'Add';
-	$lang['452-39'] = 'Font added. Select it and press Save to use it on the flyers.';
+	$lang['452-39'] = 'Font added. It is now available for every PDF (PDF layout).';
 	$lang['452-40'] = 'Choose a font file (.ttf).';
 	$lang['452-41'] = 'Invalid file: use a TrueType font (.ttf).';
 	$lang['452-42'] = 'This font uses PostScript (CFF) outlines and is not supported; use the .ttf version.';
@@ -438,6 +438,8 @@
 	$lang['452-95'] = 'Change image';
 	$lang['452-96'] = 'Use original image';
 	$lang['452-97'] = 'Replacement image:';
+	$lang['452-98'] = 'PDF fonts';
+	$lang['452-99'] = 'Fonts available for every PDF (shared by all sites). Use them in Configuration → PDF layout.';
 	$lang['454'] = 'Coup/League';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penalties (Tie)';

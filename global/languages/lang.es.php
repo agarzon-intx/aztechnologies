@@ -382,7 +382,7 @@
 	$lang['452-36'] = 'Vista previa';
 	$lang['452-37'] = 'Agregar fuente (.ttf)';
 	$lang['452-38'] = 'Agregar';
-	$lang['452-39'] = 'Fuente agregada. Selecciónela y presione Guardar para usarla en los flyers.';
+	$lang['452-39'] = 'Fuente agregada. Ya está disponible para todos los PDF (Diseño PDF).';
 	$lang['452-40'] = 'Seleccione un archivo de fuente (.ttf).';
 	$lang['452-41'] = 'Archivo no válido: use una fuente TrueType (.ttf).';
 	$lang['452-42'] = 'Esta fuente usa contornos PostScript (CFF) y no es compatible; use la versión .ttf.';
@@ -438,6 +438,8 @@
 	$lang['452-95'] = 'Cambiar imagen';
 	$lang['452-96'] = 'Usar imagen original';
 	$lang['452-97'] = 'Imagen de reemplazo:';
+	$lang['452-98'] = 'Fuentes PDF';
+	$lang['452-99'] = 'Fuentes disponibles para todos los PDF (compartidas por todos los sitios). Úselas en Configuración → Diseño PDF.';
 	$lang['454'] = 'Copa/Liga';
 	$lang['455'] = 'Categories';
 	$lang['456'] = 'Penales (Empate)';
