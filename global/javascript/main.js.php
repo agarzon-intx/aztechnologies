@@ -2609,11 +2609,17 @@ function playerPhotoFlush(suffix, done) {
 $(document).on('click', '.player-docs-ok', function (e) {
 	e.preventDefault();
 	e.stopPropagation();
-	var $i = $(this), id = parseInt($i.data('id'), 10), type = String($i.data('idtype') || ''), t = Date.now();
+	var info = $(this).data('info') || {}, L = info.l || {};
+	var id = parseInt(info.id, 10), type = String(info.idtype || ''), t = Date.now();
 	if (!id) {
 		return;
 	}
 	var esc = function (s) { return $('<div>').text(String(s || '')).html(); };
+	var rows = [[L.name, info.name], [L.birth, info.birth], [L.sex, info.sex], [L.curp, info.curp]].map(function (r) {
+		return '<tr><td style="color: #777; padding: 2px 8px 2px 0; white-space: nowrap; vertical-align: top;">' + esc(r[0]) + '</td>'
+			+ '<td style="padding: 2px 0; font-weight: 600; word-break: break-word;">' + esc(r[1] || '-') + '</td></tr>';
+	}).join('');
+	var details = '<table style="margin-top: 10px; width: 100%; font-size: 13px; text-align: left;">' + rows + '</table>';
 	var box = 'flex: 1 1 260px; min-width: 0; text-align: center;';
 	var label = function (s) { return '<div style="font-weight: 600; margin-bottom: 6px;">' + esc(s) + '</div>'; };
 	var idHtml;
@@ -2627,12 +2633,13 @@ $(document).on('click', '.player-docs-ok', function (e) {
 		idHtml = '<div style="color: #888; padding: 40px 0;">-</div>';
 	}
 	var html = '<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">'
-		+ '<div style="' + box + ' flex-basis: 200px; flex-grow: 0;">' + label($i.data('lfoto'))
-		+ '<img src="Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Foto&tmp=' + t + '" alt="" style="width: 200px; max-width: 100%; border-radius: 6px; background: #BFBFBF;"></div>'
-		+ '<div style="' + box + '">' + label($i.data('lid')) + idHtml + '</div>'
+		+ '<div style="' + box + ' flex-basis: 260px; flex-grow: 0;">' + label(L.foto)
+		+ '<img src="Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Foto&tmp=' + t + '" alt="" style="width: 200px; max-width: 100%; border-radius: 6px; background: #BFBFBF;">'
+		+ details + '</div>'
+		+ '<div style="' + box + '">' + label(L.id) + idHtml + '</div>'
 		+ '</div>';
 	if (typeof Swal !== 'undefined') {
-		Swal.fire({ title: esc($i.data('name')), html: html, width: 900, showCloseButton: true, showConfirmButton: false, focusConfirm: false });
+		Swal.fire({ title: esc(info.name), html: html, width: 900, showCloseButton: true, showConfirmButton: false, focusConfirm: false });
 	} else {
 		window.open('Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Foto&tmp=' + t, '_blank');
 	}

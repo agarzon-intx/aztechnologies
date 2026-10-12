@@ -868,6 +868,8 @@
 	$lang['948'] = 'ID';	
 	$lang['948-1'] = 'Missing ID';
 	$lang['948-2'] = 'Information complete';
+	$lang['948-3'] = 'Sex';
+	$lang['948-4'] = 'Full name';
 	$lang['949'] = 'Signature';	
 	$lang['950'] = 'Print';
 	$lang['951'] = 'Players added to the Print List!';

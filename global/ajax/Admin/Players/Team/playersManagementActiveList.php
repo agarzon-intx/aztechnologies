@@ -54,7 +54,8 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID,
 					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
-					" . $idPdfCol . " as HasIDPdf
+					" . $idPdfCol . " as HasIDPdf,
+					ifnull(a.Curp, '') CurpTxt
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -84,7 +85,16 @@ if ($result2->num_rows > 0) {
 			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
 		}
 		if($hasLogo == ''){
-			$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;"' . ' data-id="' . (int) $row2["Jugador_ID"] . '" data-idtype="' . ($row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : '')) . '"' . ' data-name="' . htmlspecialchars(trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]), ENT_QUOTES, 'UTF-8') . '"' . ' data-lfoto="' . htmlspecialchars($lang['946'], ENT_QUOTES, 'UTF-8') . '" data-lid="' . htmlspecialchars($lang['948'], ENT_QUOTES, 'UTF-8') . '"></i>';
+			$docInfo = array(
+				'id' => (int) $row2["Jugador_ID"],
+				'idtype' => $row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
+				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
+				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
+				'sex' => (string) $row2["SexoT"],
+				'curp' => (string) $row2["CurpTxt"],
+				'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
+			);
+			$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
 		}
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
@@ -170,7 +180,8 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID,
 					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
-					" . $idPdfCol . " as HasIDPdf
+					" . $idPdfCol . " as HasIDPdf,
+					ifnull(a.Curp, '') CurpTxt
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -199,7 +210,16 @@ if ($result2->num_rows > 0) {
 			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
 		}
 		if($hasLogo == ''){
-			$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;"' . ' data-id="' . (int) $row2["Jugador_ID"] . '" data-idtype="' . ($row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : '')) . '"' . ' data-name="' . htmlspecialchars(trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]), ENT_QUOTES, 'UTF-8') . '"' . ' data-lfoto="' . htmlspecialchars($lang['946'], ENT_QUOTES, 'UTF-8') . '" data-lid="' . htmlspecialchars($lang['948'], ENT_QUOTES, 'UTF-8') . '"></i>';
+			$docInfo = array(
+				'id' => (int) $row2["Jugador_ID"],
+				'idtype' => $row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
+				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
+				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
+				'sex' => (string) $row2["SexoT"],
+				'curp' => (string) $row2["CurpTxt"],
+				'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
+			);
+			$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
 		}
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
