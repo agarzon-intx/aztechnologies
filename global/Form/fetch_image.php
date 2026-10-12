@@ -29,7 +29,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$jugador = isset($_GET['Jugador_ID']) ? (int) $_GET['Jugador_ID'] : 0;
 	$imagen = isset($_GET['Imagen']) ? (string) $_GET['Imagen'] : '';
 	
-	if ($jugador > 0 && in_array($imagen, array('Foto', 'Identificacion', 'Firma'), true)) {
+	// ID and signature are personal documents: only for logged-in users (the photo is also shown on public pages)
+	$allowed = $sessionstat ? array('Foto', 'Identificacion', 'Firma') : array('Foto');
+	if ($jugador > 0 && in_array($imagen, $allowed, true)) {
 		$select_image = "select $imagen from $schema.Jugadores where Jugador_ID = $jugador and OCTET_LENGTH($imagen) > 100";
 		$result=$Config->query($select_image);
 		if ($result && $result->num_rows > 0) {

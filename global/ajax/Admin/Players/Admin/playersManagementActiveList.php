@@ -24,6 +24,7 @@ $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 								
 $count = 1;
 $idPdfExpr = $Config->jugadoresHasColumn('IdentificacionPDF') ? " or ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100" : "";
+$idPdfCol = $Config->jugadoresHasColumn('IdentificacionPDF') ? "case when ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100 then 'si' else '' end" : "''";
 $sql21 = "SET @rank:=0;";
 $Config->query($sql21);
 $sql22 = "	SELECT distinct Jugador_ID,
@@ -54,7 +55,9 @@ $sql22 = "	SELECT distinct Jugador_ID,
 					'' strikef,
 					case when a.Foto is null then '' else 'si' end as Picture,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID,
-					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID
+					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
+					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
+					" . $idPdfCol . " as HasIDPdf
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -77,7 +80,7 @@ if ($result2->num_rows > 0) {
 	        $hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
 	    }
 	    if($hasLogo == ''){
-	    	$hasLogo = ' <i class="fas fa-check-circle" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
+	    	$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;"' . ' data-id="' . (int) $row2["Jugador_ID"] . '" data-idtype="' . ($row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : '')) . '"' . ' data-name="' . htmlspecialchars(trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]), ENT_QUOTES, 'UTF-8') . '"' . ' data-lfoto="' . htmlspecialchars($lang['946'], ENT_QUOTES, 'UTF-8') . '" data-lid="' . htmlspecialchars($lang['948'], ENT_QUOTES, 'UTF-8') . '"></i>';
 	    }
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";

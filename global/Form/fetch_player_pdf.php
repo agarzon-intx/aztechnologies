@@ -19,6 +19,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin($Config,'fetchPlayerPdf.php');
+	if (!$sessionstat) {
+		http_response_code(401);
+		exit;
+	}
 
 	$jugador = SanitizeInteger($_GET['Jugador_ID']);
 	$pdf_content = '';
