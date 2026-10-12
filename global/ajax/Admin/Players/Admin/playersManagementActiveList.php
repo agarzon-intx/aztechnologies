@@ -76,6 +76,9 @@ if ($result2->num_rows > 0) {
 	    if($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0){
 	        $hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
 	    }
+	    if($hasLogo == ''){
+	    	$hasLogo = ' <i class="fas fa-check-circle" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
+	    }
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
 		}else{

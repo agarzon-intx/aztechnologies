@@ -867,6 +867,7 @@
 	$lang['947'] = 'Info';
 	$lang['948'] = 'ID';	
 	$lang['948-1'] = 'Missing ID';
+	$lang['948-2'] = 'Information complete';
 	$lang['949'] = 'Signature';	
 	$lang['950'] = 'Print';
 	$lang['951'] = 'Players added to the Print List!';

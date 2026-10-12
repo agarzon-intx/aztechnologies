@@ -867,6 +867,7 @@
 	$lang['947'] = 'Datos del Jugador';
 	$lang['948'] = 'Identificacion';	
 	$lang['948-1'] = 'Falta identificacion';
+	$lang['948-2'] = 'Información completa';
 	$lang['949'] = 'Firma';	
 	$lang['950'] = 'Imprimir';
 	$lang['951'] = 'Jugadores Agregados a la lista de Impresion!';
