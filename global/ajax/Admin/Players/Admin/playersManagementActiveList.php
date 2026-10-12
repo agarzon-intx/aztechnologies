@@ -176,30 +176,28 @@ if ($result2->num_rows > 0) {
 			$htmlPlayer .= "<tr class='alt'>";
 		}
 		$htmlPlayer .= '<td scope="row" style="padding-top: 0px; padding-bottom: 0px;">
+						<div class="d-flex px-0 py-0" style="align-items: stretch;">
+						<div style="flex: 1; min-width: 0;">
 							<div class="d-flex px-0 py-0">
-								<div style="width: 5%;text-align: center;padding-top: 0px;">
+								<div style="width: 6%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"></span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"] . $count . $row2["strikef"] . '</span></div></div>
 								</div>
-								<div style="width: 15%;text-align: center;padding-top: 0px;">
+								<div style="width: 19%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['906'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"]  . $row2["Apodo"] . $row2["strikef"]  . '</span></div></div>
 								</div>
-								<div style="width: 30%;text-align: center;padding-top: 0px;">
+								<div style="width: 37%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['907'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"] . $row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"] . $row2["strikef"]  . $hasLogo . '</span></div></div>
 								</div>
-								<div style="width: 10%;text-align: center;padding-top: 0px;">
+								<div style="width: 13%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">#</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"]  . $row2["Numero"] . $row2["strikef"]  . '</span></div></div>
 								</div>
-								<div style="width: 20%;text-align: center;padding-top: 0px;">
+								<div style="width: 25%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['909'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center; ' . $row2["Color_HEX"] . '"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"]  . $row2["Fecha_Nacimiento"] . $row2["strikef"]  . '</span></div></div>
-								</div>
-								<div style="width: 20%;text-align: center;padding-top: 0px; background:#fff38f">
-									<p style="margin-bottom: 0rem !important; padding-top: 26px;"></p>
-									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-bold">' . $lang['950'] . '</span></div></div>
 								</div>';
 		$color = "";
 		if($row2["Sexo"] == 0){ 
@@ -213,15 +211,15 @@ if ($result2->num_rows > 0) {
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"></span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap"></span></div></div>
 								</div>
-								<div style="width: 15%;text-align: center;padding-top: 0px;">
+								<div style="width: 19%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['910'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"]  . $row2["Edad"] . $row2["strikef"]  . '</span></div></div>
 								</div>
-								<div style="width: 15%;text-align: center;padding-top: 0px;">
+								<div style="width: 19%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['912'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"]  . $row2["Validado"] . $row2["strikef"]  . '</span></div></div>
 								</div>
-								<div style="width: 15%;text-align: center;padding-top: 0px;">
+								<div style="width: 19%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold" style="width: 100%;text-align: center;">' . $lang['914'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center; background: ' . $color . '"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"]  . $row2["SexoT"] . $row2["strikef"]  . '</span></div></div>
 								</div>';
@@ -230,23 +228,16 @@ if ($result2->num_rows > 0) {
 		}else{	
 			$color = "#bbcd31";
 		}
-		$htmlPlayer .= '		<div style="width: 15%;text-align: center;padding-top: 0px;">
-									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . '123' . '</span></p>
+		$htmlPlayer .= '		<div style="width: 19%;text-align: center;padding-top: 0px;">
+									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['922'] . '</span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center; background: ' . $color . '"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"]  . $row2["CurpValida"] . $row2["strikef"]  . '</span></div></div>
 								</div>
-								<div style="width: 15%;text-align: center;padding-top: 0px;">
+								<div style="width: 19%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important; padding-top: 23px;"><span class="text-secondary text-xs font-weight-bold"></span></p>
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal"><img onClick="playersManagementAdminShowEdit(' . $row2["Jugador_ID"] . ')" src="./imagenes/edit.png" width="20" height="20" alt=""/></span></div></div>
 								</div>
-								<div style="width: 20%;text-align: center;padding-top: 0px; background:#fff38f">
-									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">';
-		if($row2["Validado"] == $lang["940"]){
-			$htmlPlayer .= '<input type="checkbox" class="playersManagementAdminImprimir" id="playersManagementAdminImprimir' . $row2["Jugador_ID"] . '" name="playersManagementAdminImprimir' . $row2["Jugador_ID"] . '" value="' . $row2["Jugador_ID"] . '"/>';
-		}
-		$htmlPlayer .= '			</span></p>
-									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal"></span></div></div>
-								</div>
-							</div>
+';
+		$htmlPlayer .= '							</div>
 							<div class="d-flex px-0 py-0">
 								<div style="width: 50%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"><i class="fas fa-clock"></i> ' . $lang['535'] . '</span></p>
@@ -257,6 +248,14 @@ if ($result2->num_rows > 0) {
 									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["Fecha_Validacion"] . '</span></div></div>
 								</div>
 							</div>
+						</div>
+						<div style="width: 16%; background: #fff38f; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+							<span class="text-secondary text-xs font-weight-bold">' . $lang['950'] . '</span>
+							<span>';
+		$htmlPlayer .= $row2["Validado"] == $lang["940"] ? '<input type="checkbox" class="playersManagementAdminImprimir" id="playersManagementAdminImprimir' . $row2["Jugador_ID"] . '" name="playersManagementAdminImprimir' . $row2["Jugador_ID"] . '" value="' . $row2["Jugador_ID"] . '"/>' : '';
+		$htmlPlayer .= '</span>
+						</div>
+						</div>
 						</td>
 					</tr>';
 		$count++;
