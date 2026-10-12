@@ -375,9 +375,16 @@
 				}
 				G.keys.slice().reverse().forEach(function (key) {
 					var ke = keyEl(key) || {};
-					var ci = el("input", { type: "color", "class": "form-control form-control-sm form-control-color w-100", "data-f": "color", "data-key": key });
+					// the theme's .form-control (appearance:none, 8px padding) collapses the native swatch, so it is styled here
+					var ci = el("input", { type: "color", "data-f": "color", "data-key": key,
+						style: "flex:0 0 44px;width:44px;height:30px;padding:2px;border:1px solid #d2d6da;border-radius:6px;background:#fff;cursor:pointer;" });
 					ci.value = (ov(key).color || ke.c || "#000000").toLowerCase();
-					row.appendChild(field(key === G.top ? S.color : S.shadowColor, ci, "col-6"));
+					var hex = el("span", { style: "font-family:monospace;font-size:12px;" }, ci.value.toUpperCase());
+					ci.addEventListener("input", function () { hex.textContent = ci.value.toUpperCase(); });
+					var cw = el("div", { style: "display:flex;align-items:center;gap:6px;" });
+					cw.appendChild(ci);
+					cw.appendChild(hex);
+					row.appendChild(field(key === G.top ? S.color : S.shadowColor, cw, "col-6"));
 				});
 				if (G.m === "Cell") {
 					row.appendChild(numField(S.width + unit, round1(o.w !== undefined ? o.w : (e.w || 0)), 0.5, "w", "col-6"));
