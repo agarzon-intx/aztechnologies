@@ -1,6 +1,6 @@
 <?php
-$idPdfExpr = $Config->jugadoresHasColumn('IdentificacionPDF') ? " or ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100" : "";
-$idPdfPreferred = $Config->playerIDPDFEnabled();
+$idUsesPdf = $Config->playerIDPDFEnabled() && $Config->jugadoresHasColumn('IdentificacionPDF');
+$hasIdExpr = $idUsesPdf ? "ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100" : "ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100";
 $idPdfCol = $Config->jugadoresHasColumn('IdentificacionPDF') ? "case when ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100 then 'si' else '' end" : "''";
 $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 					<div class="card">
@@ -52,7 +52,7 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
 					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
 					case when a.Foto is null then '' else 'si' end as Picture,
-					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID,
+					case when " . $hasIdExpr . " then 'si' else '' end as HasID,
 					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
 					" . $idPdfCol . " as HasIDPdf,
@@ -88,9 +88,7 @@ if ($result2->num_rows > 0) {
 		if($hasLogo == ''){
 			$docInfo = array(
 				'id' => (int) $row2["Jugador_ID"],
-				'idtype' => $idPdfPreferred
-					? ($row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : ''))
-					: ($row2["HasIDImg"] == 'si' ? 'img' : ($row2["HasIDPdf"] == 'si' ? 'pdf' : '')),
+				'idtype' => $idUsesPdf ? ($row2["HasIDPdf"] == 'si' ? 'pdf' : '') : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
 				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
 				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
 				'sex' => (string) $row2["SexoT"],
@@ -180,7 +178,7 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
 					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
 					case when a.Foto is null then '' else 'si' end as Picture,
-					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID,
+					case when " . $hasIdExpr . " then 'si' else '' end as HasID,
 					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
 					" . $idPdfCol . " as HasIDPdf,
@@ -215,9 +213,7 @@ if ($result2->num_rows > 0) {
 		if($hasLogo == ''){
 			$docInfo = array(
 				'id' => (int) $row2["Jugador_ID"],
-				'idtype' => $idPdfPreferred
-					? ($row2["HasIDPdf"] == 'si' ? 'pdf' : ($row2["HasIDImg"] == 'si' ? 'img' : ''))
-					: ($row2["HasIDImg"] == 'si' ? 'img' : ($row2["HasIDPdf"] == 'si' ? 'pdf' : '')),
+				'idtype' => $idUsesPdf ? ($row2["HasIDPdf"] == 'si' ? 'pdf' : '') : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
 				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
 				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
 				'sex' => (string) $row2["SexoT"],
