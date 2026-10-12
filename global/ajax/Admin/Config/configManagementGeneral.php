@@ -7,6 +7,8 @@
 	$__selDuplicatePlayerCfg = $Config->configurationHasColumn('duplicatePlayer') ? 'duplicatePlayer' : '0 AS duplicatePlayer';
 	$__selSearchPlayerCfg = $Config->configurationHasColumn('searchPlayer') ? 'searchPlayer' : '0 AS searchPlayer';
 	$__selCurrentWeekCfg = $Config->configurationHasColumn('currentWeek') ? 'currentWeek' : '0 AS currentWeek';
+	$__selDeleteTeamCfg = $Config->configurationHasColumn('deleteTeam') ? 'deleteTeam' : '0 AS deleteTeam';
+	$__selBasketScoreManualCfg = $Config->configurationHasColumn('basketScoreManual') ? 'basketScoreManual' : '0 AS basketScoreManual';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -51,7 +53,9 @@
 			    " . $__selShowGenerateScheduleCfg . ",
 			    " . $__selDuplicatePlayerCfg . ",
 			    " . $__selSearchPlayerCfg . ",
-			    " . $__selCurrentWeekCfg . "
+			    " . $__selCurrentWeekCfg . ",
+			    " . $__selDeleteTeamCfg . ",
+			    " . $__selBasketScoreManualCfg . "
 			FROM $schema.Configuration
 			where id = 0;";
 	$playerIDPDFCHK = '';
@@ -61,6 +65,8 @@
 	$duplicatePlayerCHK = '';
 	$searchPlayerCHK = '';
 	$currentWeekCHK = '';
+	$deleteTeamCHK = '';
+	$basketScoreManualCHK = '';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
@@ -192,6 +198,8 @@
 				$currentWeek = $row2["currentWeek"];
 				$currentWeekCHK = '';
 				if($currentWeek == '1') $currentWeekCHK = 'checked';
+				$deleteTeamCHK = ($row2["deleteTeam"] == '1') ? 'checked' : '';
+				$basketScoreManualCHK = ($row2["basketScoreManual"] == '1') ? 'checked' : '';
 				
 			    $VollByeWeekSets = $row2["VollByeWeekSets"];
 			    $VollByeWeekPoints = $row2["VollByeWeekPoints"];
@@ -265,30 +273,46 @@
 										<label class="custom-control-label" for="tarjetaCambios">' . $lang['491'] . '</label>
 									</div>
 								</div>';
+								$isBasketCfg = app_sport_uses_basket((int) $Config->getSport());
 								$styleSP0 = 'style="display: none;"';
-								if(app_sport_uses_soccer((int) $Config->getSport())){
+								if(app_sport_uses_soccer((int) $Config->getSport()) || $isBasketCfg){
 								    $styleSP0 = '';
 								}
+								/* Basket reuses the volleyball bye-week point inputs (same ids, saved as VollByeWeekPoints / VollByeWeekSetPoints). */
+								$vbPointsDPL = $isBasketCfg ? $ByeWeekPointsDPL : $VollByeWeekPointsDPL;
+								$vbPointsHtml = '<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $vbPointsDPL . '" id="VBbyeWeekP">
+										<div class="input-group input-group-static mb-4">
+											<label>' . ($isBasketCfg ? $lang['479-2'] : $lang['479']) . '</label>
+											<input type="number" class="form-control" name="VBByeWeekPoints" id="VBByeWeekPoints" value="' . $VollByeWeekPoints . '" onkeypress="return isNumberKey(event)">
+										</div>
+									</div>';
+								$vbSetPointsHtml = '<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $vbPointsDPL . '" id="VBbyeWeekSP">
+										<div class="input-group input-group-static mb-4">
+											<label>' . ($isBasketCfg ? $lang['480-2'] : $lang['480-1']) . '</label>
+											<input type="number" class="form-control" name="VBByeWeekSetPoints" id="VBByeWeekSetPoints" value="' . $VollByeWeekSetPoints . '" onkeypress="return isNumberKey(event)">
+										</div>
+									</div>';
 								$htmlConfig .= '<div class="row" ' . $styleSP0 . '>
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
-										<input class="form-check-input" type="checkbox" name="ByeWeekPoints" id="ByeWeekPoints" ' . $ByeWeekPointsCHK . ' onclick="handleClick(this);">
+										<input class="form-check-input" type="checkbox" name="ByeWeekPoints" id="ByeWeekPoints" ' . $ByeWeekPointsCHK . ' onclick="handleClickByeWeek(this);">
 										<label class="custom-control-label" for="ByeWeekPoints">' . $lang['479'] . '</label>
 										<script>
-											function handleClick(cb) {
-												if(cb.checked){
-													$(\'#byeWeek\').css(\'display\', \'block\');
-												}else{
-													$(\'#byeWeek\').css(\'display\', \'none\');
-												}
+											function handleClickByeWeek(cb) {
+												var d = cb.checked ? \'block\' : \'none\';
+												' . ($isBasketCfg
+													? '$(\'#VBbyeWeekP\').css(\'display\', d);
+												$(\'#VBbyeWeekSP\').css(\'display\', d);'
+													: '$(\'#byeWeek\').css(\'display\', d);') . '
 											}
 										</script>
 									</div>
-									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $ByeWeekPointsDPL. '" id="byeWeek">
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . ($isBasketCfg ? 'display: none;' : $ByeWeekPointsDPL) . '" id="byeWeek">
 										<div class="input-group input-group-static mb-4">
 											<label>' . $lang['480'] . '</label>
 											<input type="number" class="form-control" name="ByeWeekPointsGoals" id="ByeWeekPointsGoals" value="' . $ByeWeekPointsGoals . '" onkeypress="return isNumberKey(event)">
 										</div>
 									</div>
+									' . ($isBasketCfg ? $vbPointsHtml . $vbSetPointsHtml : '') . '
 								</div>';
 				
 								$styleSP1 = 'style="display: none;"';
@@ -297,38 +321,25 @@
 								}
 								$htmlConfig .= '<div class="row" ' . $styleSP1 . '>
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
-										<input class="form-check-input" type="checkbox" name="VByeWeekPoints" id="VByeWeekPoints" ' . $VollByeWeekPointsCHK . ' onclick="handleClick(this);">
+										<input class="form-check-input" type="checkbox" name="VByeWeekPoints" id="VByeWeekPoints" ' . $VollByeWeekPointsCHK . ' onclick="handleClickVBByeWeek(this);">
 										<label class="custom-control-label" for="VByeWeekPoints">' . $lang['479'] . '</label>
 										<script>
-											function handleClick(cb) {
-												if(cb.checked){
-													$(\'#VBbyeWeekS\').css(\'display\', \'block\');
-													$(\'#VBbyeWeekP\').css(\'display\', \'block\');
-												}else{
-													$(\'#VBbyeWeekS\').css(\'display\', \'none\');
-													$(\'#VBbyeWeekP\').css(\'display\', \'none\');
-												}
+											function handleClickVBByeWeek(cb) {
+												var d = cb.checked ? \'block\' : \'none\';
+												$(\'#VBbyeWeekS\').css(\'display\', d);
+												$(\'#VBbyeWeekP\').css(\'display\', d);
+												$(\'#VBbyeWeekSP\').css(\'display\', d);
 											}
 										</script>
 									</div>
-									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $VollByeWeekPointsDPL. '" id="VBbyeWeekP">
-										<div class="input-group input-group-static mb-4">
-											<label>' . $lang['479'] . '</label>
-											<input type="number" class="form-control" name="VBByeWeekPoints" id="VBByeWeekPoints" value="' . $VollByeWeekPoints . '" onkeypress="return isNumberKey(event)">
-										</div>
-									</div>
+									' . ($isBasketCfg ? '' : $vbPointsHtml) . '
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $VollByeWeekPointsDPL. '" id="VBbyeWeekS">
 										<div class="input-group input-group-static mb-4">
 											<label>' . $lang['479-1'] . '</label>
 											<input type="number" class="form-control" name="VBByeWeekSets" id="VBByeWeekSets" value="' . $VollByeWeekSets . '" onkeypress="return isNumberKey(event)">
 										</div>
 									</div>
-									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" style="' . $VollByeWeekPointsDPL. '" id="VBbyeWeekSP">
-										<div class="input-group input-group-static mb-4">
-											<label>' . $lang['480-1'] . '</label>
-											<input type="number" class="form-control" name="VBByeWeekSetPoints" id="VBByeWeekSetPoints" value="' . $VollByeWeekSetPoints . '" onkeypress="return isNumberKey(event)">
-										</div>
-									</div>
+									' . ($isBasketCfg ? '' : $vbSetPointsHtml) . '
 								</div>';
 								
 								$htmlConfig .= '<div class="row">';
@@ -336,9 +347,17 @@
 									if($Config->getSport() == 1){
 									    $style = '';
 									}
+									$styleBasket = 'style="display: none;"';
+									if(app_sport_uses_basket((int) $Config->getSport())){
+									    $styleBasket = '';
+									}
     $htmlConfig .= '                <div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" ' . $style . '>
 										<input class="form-check-input" type="checkbox" name="tressets" id="tressets" ' . $tresSetsCHK . '>
 										<label class="custom-control-label" for="tressets">' . $lang['482'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" ' . $styleBasket . '>
+										<input class="form-check-input" type="checkbox" name="basketScoreManual" id="basketScoreManual" ' . $basketScoreManualCHK . '>
+										<label class="custom-control-label" for="basketScoreManual">' . $lang['539-25'] . '</label>
 									</div>
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="juegoSemanal" id="juegoSemanal" ' . $unjuegosemanalCHK . '>
@@ -379,6 +398,10 @@
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="searchPlayer" id="searchPlayer" ' . $searchPlayerCHK . '>
 										<label class="custom-control-label" for="searchPlayer">' . $lang['539-4'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="deleteTeam" id="deleteTeam" ' . $deleteTeamCHK . '>
+										<label class="custom-control-label" for="deleteTeam">' . $lang['539-20'] . '</label>
 									</div>
 								</div>
 								<div class="row">

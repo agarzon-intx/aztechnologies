@@ -155,8 +155,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 										<div class="row">
 											<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 												<span style="text-align: center; ">
-													<div style="width: 161px; height: 225px; background-color: #BFBFBF; margin: auto;">
-														<img id="fotoE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Foto" alt="Foto" width="161" height="220" ' . $fotostrAN . '/>
+													<div id="fotoFrameE" class="player-photo-frame" data-suffix="E" style="width: 161px; height: 220px; background-color: #BFBFBF; margin: auto; position: relative; overflow: hidden;">
+														<img id="fotoE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Foto&tmp=' . $fecha->getTimestamp() . '" alt="Foto" width="161" height="220" ' . $fotostrAN . '/>
+													</div>
+													<div id="fotoToolsE" style="display: none; width: 161px; margin: 6px auto 0;">
+														<div class="d-flex align-items-center" style="gap: 4px;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'E\', 1 / 1.15);">&minus;</button>
+															<input type="range" class="form-range" id="fotoZoomE" min="0" max="100" step="1" value="0" oninput="playerPhotoSlider(\'E\', this.value);" style="flex: 1;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'E\', 1.15);">+</button>
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $lang['931-2'] . '" onclick="playerPhotoReset(\'E\');">&#8634;</button>
+														</div>
+														<small class="text-muted" style="font-size: 11px;">' . $lang['931-1'] . '</small>
 													</div>
 												</span>
 											</div>
@@ -168,7 +177,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 													<form>
 														<div style="text-align: center;">
 															<div>
-																<input style="display: none; visibility: hidden;" type="file" accept="image/png" name="myFotoE" id="myFotoE" onchange="readURLE(this, \'fotoE\');">
+																<input style="display: none; visibility: hidden;" type="file" accept="image/png,image/jpeg" name="myFotoE" id="myFotoE" onchange="readURLE(this, \'fotoE\');">
 																<input type="hidden" name="myFotoFileNameE" id="myFotoFileNameE" value="">
 															</div>
 															<div id=\'previewMyFotoE\' style="text-align: center;"></div>
@@ -401,7 +410,7 @@ $htmlPlayer .= '													</select>
 												<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 													<span style="text-align: center; ">
 														<div style="width: 150px; height: 187px; background-color: #BFBFBF; margin: auto;">
-															<img id="identificacionE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Identificacion" width="150" height="187" ' . $idstrAN . '/>
+															<img id="identificacionE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Identificacion&tmp=' . $fecha->getTimestamp() . '" width="150" height="187" ' . $idstrAN . '/>
 														</div>
 													</span>
 												</div>
@@ -484,7 +493,7 @@ $htmlPlayer .= '													</select>
 									<div class="row">
 										<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12" style="width: 100%;">
 											<span style="text-align: left; ">
-												<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myIDPDFE\'), \'click\');" id="subiridentificacionpdfE">' . $lang['933-1'] . '</button>
+												<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myIDPDFE\'), \'click\');" id="subiridentificacionpdfE">' . $lang['933-3'] . '</button>
 												<form>
 													<div style="text-align: center;">
 														<div>
@@ -503,7 +512,7 @@ $htmlPlayer .= '													</select>
 									<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 										<span style="text-align: center; ">
 											<div style="width: 150px; height: 194px; background-color: #BFBFBF; margin: auto;">
-												<img width="150" height="194" id="firmaE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Firma" alt="" ' . $firmastrAN . '/>
+												<img width="150" height="194" id="firmaE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Firma&tmp=' . $fecha->getTimestamp() . '" alt="" ' . $firmastrAN . '/>
 											</div>
 										</span>
 									</div>

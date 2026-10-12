@@ -37,7 +37,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $Away = SanitizeInteger($_POST['Away']);
 
     if($Away == ''){
-		$Away = 'NULL';
+		$Away = '-1';
 	}
 		
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataColorAnswer' => 'Error');

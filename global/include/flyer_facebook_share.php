@@ -496,7 +496,8 @@ if (!function_exists('az_flyer_share_storage_dir')) {
 		require_once $azGlobalInclude . DIRECTORY_SEPARATOR . 'membersite_config.php';
 		require_once $azGlobalInclude . DIRECTORY_SEPARATOR . 'pdf_image_helpers.php';
 		require_once $azGlobalInclude . DIRECTORY_SEPARATOR . 'flyer_ci_export.php';
-		require_once $azGlobalInclude . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
+		$azSiteFlyerScPdf = $Config->getPath() . DIRECTORY_SEPARATOR . 'pdf' . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
+		require_once is_readable($azSiteFlyerScPdf) ? $azSiteFlyerScPdf : $azGlobalInclude . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
 		require_once $azGlobalInclude . DIRECTORY_SEPARATOR . 'flyer_game_pdf.php';
 		require_once $azGlobalInclude . DIRECTORY_SEPARATOR . 'flyer_facebook_prepare.php';
 
@@ -582,7 +583,7 @@ if (!function_exists('az_flyer_share_storage_dir')) {
 		echo 'function dlSequential(list,gapMs,onDone){var i=0;function step(){if(i>=list.length){onDone();return;}';
 		echo 'if(list.length>1)setMsg(progMsg(i+1,list.length));dlOne(list[i]);i+=1;setTimeout(step,gapMs);}step();}';
 		echo 'function go(){if(!urls.length){hideSpin();return;}var mob=isMobile();';
-		echo 'if(mob&&zipUrl&&urls.length>1){dlOne(zipUrl);setTimeout(function(){openFb();setMsg(msgZip);},2400);return;}';
+		echo 'if(zipUrl&&urls.length>1){dlOne(zipUrl);setTimeout(function(){openFb();setMsg(msgZip);},mob?2400:1500);return;}';
 		echo 'var gap=mob?4000:1000;if(urls.length===1){dlOne(urls[0]);setTimeout(function(){openFb();setMsg(msg);},mob?1800:1100);return;}';
 		echo 'dlSequential(urls,gap,function(){openFb();setMsg(msg);});}go();})();</script>';
 		echo '</body></html>';

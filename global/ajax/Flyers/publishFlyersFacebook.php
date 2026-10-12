@@ -22,7 +22,6 @@ require_once dirname(__DIR__, 2) . '/include/membersite_config.php';
 
 require_once dirname(__DIR__, 2) . '/include/pdf_image_helpers.php';
 require_once dirname(__DIR__, 2) . '/include/flyer_ci_export.php';
-require_once dirname(__DIR__, 2) . '/include/flyer_sc_pdf.php';
 require_once dirname(__DIR__, 2) . '/include/flyer_game_pdf.php';
 require_once dirname(__DIR__, 2) . '/include/flyer_facebook_publish.php';
 require_once dirname(__DIR__, 2) . '/include/flyer_facebook_share.php';
@@ -58,6 +57,9 @@ try {
 		throw new RuntimeException('Missing pdf/flyer_ci_page.php on this site.');
 	}
 	require_once $flyerCiPage;
+
+	$flyerScPdf = $sitePdf . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
+	require_once is_readable($flyerScPdf) ? $flyerScPdf : dirname(__DIR__, 2) . '/include/flyer_sc_pdf.php';
 
 	$alphapdfPath = $sitePdf . DIRECTORY_SEPARATOR . 'alphapdf.php';
 	if (!is_readable($alphapdfPath)) {

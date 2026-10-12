@@ -234,7 +234,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			}
 		}
 
-		// Then create games (including bye rows with NULL on the open side).
+		// Then create games (including bye rows with -1 on the open side).
 		foreach ($plan['categories'] as $catPlan) {
 			$weekIdx = 0;
 			foreach ($catPlan['weeks'] as $week) {
@@ -270,15 +270,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					continue;
 				}
 				$userEsc = $Connection->real_escape_string($username);
+				if (!isset($week['games']) || !is_array($week['games'])) {
+					continue;
+				}
 				foreach ($week['games'] as $game) {
 					$home = (int) ($game['homeId'] ?? 0);
 					$away = (int) ($game['awayId'] ?? 0);
 					if ($home <= 0 && $away <= 0) {
 						continue;
 					}
-					// Bye open slot → SQL NULL (future team). Real match → both IDs.
-					$localSql = ($home > 0) ? (string) $home : 'NULL';
-					$awaySql = ($away > 0) ? (string) $away : 'NULL';
+					// The bye (open) slot is stored as -1 on either side.
+					$localSql = ($home > 0) ? (string) $home : '-1';
+					$awaySql = ($away > 0) ? (string) $away : '-1';
 
 					$resMax = $Connection->query("SELECT IFNULL(MAX(Juego_ID), 0) + 1 AS nextId FROM $schema.Juegos");
 					$nextId = 0;
@@ -337,24 +340,40 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						(SELECT DATE_ADD(Fecha_Inicio, INTERVAL (SELECT MarcadorDiaDefault FROM $schema.Configuration) DAY)
 							FROM $schema.Jornada WHERE Jornada_ID = $jornadaId)
 					)";
-					$ok = $Connection->query($sql);
+					$sqlError = '';
+					try {
+						$ok = $Connection->query($sql);
+					} catch (Throwable $e) {
+						$ok = false;
+						$sqlError = $e->getMessage();
+					}
 					if ($ok) {
 						$created++;
 						// Best-effort audit (same as GameCreate); ignore failures.
-						$localAudit = ($home > 0) ? (string) $home : 'NULL';
-						$awayAudit = ($away > 0) ? (string) $away : 'NULL';
+						$localAudit = $localSql;
+						$awayAudit = $awaySql;
 						$ctrlDetail = $Connection->real_escape_string(
 							"INSERT INTO Juegos (Juego_ID,Visitante_ID,...,Jornada_ID,Torneo_ID,Local_ID,...) VALUES ($nextId,$awayAudit,...,$jornadaId,$Season,$localAudit,...)"
 						);
-						@$Connection->query("CALL $schema.insertIntoControlTable('$userEsc', 'CREATE', 'GAME', '$ctrlDetail', 'OK, total inserts: 1')");
-						while ($Connection->more_results() && $Connection->next_result()) {
-							$extraRes = $Connection->use_result();
-							if ($extraRes instanceof mysqli_result) {
-								$extraRes->free();
+						try {
+							@$Connection->query("CALL $schema.insertIntoControlTable('$userEsc', 'CREATE', 'GAME', '$ctrlDetail', 'OK, total inserts: 1')");
+							while ($Connection->more_results() && $Connection->next_result()) {
+								$extraRes = $Connection->use_result();
+								if ($extraRes instanceof mysqli_result) {
+									$extraRes->free();
+								}
+							}
+						} catch (Throwable $e) {
+							while ($Connection->more_results() && $Connection->next_result()) {
+								$extraRes = $Connection->use_result();
+								if ($extraRes instanceof mysqli_result) {
+									$extraRes->free();
+								}
 							}
 						}
 					} else {
-						$errors[] = $lang['js0002'] . (isset($Connection->error) && $Connection->error !== '' ? (': ' . $Connection->error) : '');
+						$errDetail = ($sqlError !== '') ? $sqlError : ((isset($Connection->error) && $Connection->error !== '') ? $Connection->error : '');
+						$errors[] = $lang['js0002'] . ($errDetail !== '' ? (': ' . $errDetail) : '');
 					}
 				}
 			}
@@ -646,7 +665,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$willCreateWeeks = true;
 		}
 
-		// Week 1 exists: seeds from those games, new teams at the end, last team fills each gap.
+		// Last existing week: seeds from those games, new teams at the end, last team fills each gap.
 		$rankByTeam = array();
 		foreach ($institutionSeeds as $seed) {
 			$rank = (int) $seed['rank'];
@@ -655,14 +674,23 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$rankByTeam[(int) $st['Equipo_ID']] = $rank;
 			}
 		}
-		$teamIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, $teamIds, $rankByTeam, $catId);
+		$plannedJornadaIds = array();
+		foreach ($jornadas as $jIdx => $jRow) {
+			if ($jIdx >= $weeksRequested) {
+				break;
+			}
+			$pjid = (int) $jRow['Jornada_ID'];
+			if ($pjid > 0 && empty($jRow['createWeek'])) {
+				$plannedJornadaIds[] = $pjid;
+			}
+		}
+		$teamIds = az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, $teamIds, $rankByTeam, $catId, $plannedJornadaIds);
 		$seedRankByTeam = array();
 		foreach ($teamIds as $idx => $tid) {
 			$seedRankByTeam[(int) $tid] = $idx + 1;
 		}
 
-		// Full RR with the new team count and seed order (e.g. 9 teams as 1–9).
-		// Week 0 is preview-only when it already has games; weeks 1+ use these rounds normally.
+		// Full RR from the last-week seed order. Existing weeks stay; remaining weeks continue from round 2.
 		$rr = az_rr_balanced_rounds($teamIds, 2);
 		if (count($rr) === 0) {
 			$errors[] = str_replace('%1', $catLabel, $lang['101-10']);
@@ -671,6 +699,30 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$scheduleRounds = az_rr_expand_weeks($rr, $weeksRequested, 2);
 
 		$teamIdList = implode(',', array_map('intval', $teamIds));
+		$weekSkip = array();
+		$lastSkipIndex = -1;
+		for ($wi = 0; $wi < $weeksRequested; $wi++) {
+			$weekSkip[$wi] = false;
+			$jornadaIdChk = (int) $jornadas[$wi]['Jornada_ID'];
+			$createWeekChk = !empty($jornadas[$wi]['createWeek']);
+			if (!$createWeekChk && $jornadaIdChk > 0) {
+				$sqlExist = "SELECT COUNT(*) AS cnt
+						FROM $schema.Juegos j
+						WHERE j.Torneo_ID = $Season
+							AND j.Jornada_ID = $jornadaIdChk
+							AND (j.Local_ID IN ($teamIdList) OR j.Visitante_ID IN ($teamIdList))";
+				$resExist = $Config->query($sqlExist);
+				if ($resExist && $resExist->num_rows > 0) {
+					$rowE = $resExist->fetch_assoc();
+					if ((int) $rowE['cnt'] > 0) {
+						$weekSkip[$wi] = true;
+						$lastSkipIndex = $wi;
+						$totalSkipWeeks++;
+					}
+				}
+			}
+		}
+
 		$weekPlans = array();
 		for ($wi = 0; $wi < $weeksRequested; $wi++) {
 			$jornadaId = (int) $jornadas[$wi]['Jornada_ID'];
@@ -693,35 +745,39 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			} else {
 				$jornadaDesc = 'Jornada ' . ($wi + 1);
 			}
-			$skip = false;
-			$isFirstWeek = ($wi === 0);
-			if (!$createWeek && $jornadaId > 0) {
-				$sqlExist = "SELECT COUNT(*) AS cnt
-						FROM $schema.Juegos j
-						WHERE j.Torneo_ID = $Season
-							AND j.Jornada_ID = $jornadaId
-							AND (j.Local_ID IN ($teamIdList) OR j.Visitante_ID IN ($teamIdList))";
-				$resExist = $Config->query($sqlExist);
-				if ($resExist && $resExist->num_rows > 0) {
-					$rowE = $resExist->fetch_assoc();
-					if ((int) $rowE['cnt'] > 0) {
-						$skip = true;
-						$totalSkipWeeks++;
-					}
-				}
+			$skip = !empty($weekSkip[$wi]);
+			$isLastExisting = ($skip && $wi === $lastSkipIndex);
+			if ($lastSkipIndex >= 0 && $wi >= $lastSkipIndex) {
+				$ridx = $wi - $lastSkipIndex;
+			} else {
+				$ridx = $wi;
 			}
 
-			$round = isset($scheduleRounds[$wi]) ? $scheduleRounds[$wi] : array('games' => array(), 'byeGame' => null);
+			$round = isset($scheduleRounds[$ridx]) ? $scheduleRounds[$ridx] : array('games' => array(), 'byeGame' => null);
 			$roundGames = az_rr_round_games($round);
 			$byeGame = az_rr_round_bye_game($round);
 			$existingPairs = array();
 			$existingGamesList = array();
-			// Red diff is only for week 0 (existing games kept). Later weeks are the normal new RR.
-			$showWeekDiff = ($skip && $isFirstWeek && $jornadaId > 0);
-			if ($showWeekDiff) {
+			// Red diff is for the last existing week (seed source). Remaining weeks are the new RR.
+			$showWeekDiff = ($isLastExisting && $jornadaId > 0);
+			$keepExistingPreview = ($skip && !$isLastExisting && $jornadaId > 0);
+			if ($showWeekDiff || $keepExistingPreview) {
 				$existingGamesList = az_gs_week_existing_games($Config, $schema, $Season, $jornadaId, $teamIds);
 				foreach ($existingGamesList as $eg) {
 					$existingPairs[az_gs_pair_key($eg['homeId'], $eg['awayId'])] = true;
+				}
+			}
+			if ($keepExistingPreview) {
+				$roundGames = array();
+				$byeGame = null;
+				foreach ($existingGamesList as $eg) {
+					$h = (int) $eg['homeId'];
+					$a = (int) $eg['awayId'];
+					if ($h > 0 && $a > 0) {
+						$roundGames[] = array($h, $a);
+					} elseif ($h > 0 || $a > 0) {
+						$byeGame = array($h, $a);
+					}
 				}
 			}
 			$games = array();
@@ -860,8 +916,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$weeksSaveLbl = isset($lang['101-41']) ? $lang['101-41'] : 'Weeks to save';
 	$backLbl = isset($lang['0001']) ? $lang['0001'] : 'Cancel';
 	$noteLbl = isset($lang['101-29']) ? $lang['101-29'] : 'Balanced round-robin (max 2 consecutive home or away).';
-	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Week 1 is not updated. Missing weeks are created from the new team count and seed order.';
-	$redNote = isset($lang['101-43']) ? $lang['101-43'] : 'Week 1 changes vs the current games are shown in red.';
+	$createNote = isset($lang['101-37']) ? $lang['101-37'] : 'Existing weeks are not updated. Remaining weeks are created from the last week seed order, adding new teams and filling gaps.';
+	$redNote = isset($lang['101-43']) ? $lang['101-43'] : 'Changes on the last existing week vs the new seed pairings are shown in red.';
 
 	$html = '<div id="generateSchedulePreview" class="tabla active" style="display: block;padding-top: 10px;">
 		<div class="datagridAdmin" style="display: block;width: 100%;height: auto;">

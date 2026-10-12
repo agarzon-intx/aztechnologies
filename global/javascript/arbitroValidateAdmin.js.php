@@ -222,27 +222,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						count++;
 					}
 				});			
-				var xmlhttp;
-				if (window.XMLHttpRequest){
-					// code for IE7+, Firefox, Chrome, Opera, Safari
-					xmlhttp=new XMLHttpRequest();
-				}else{// code for IE6, IE5
-					xmlhttp=new ActiveXObject('Microsoft.XMLHTTP');
-				}
-				xmlhttp.onreadystatechange=function(){
-					if (xmlhttp.readyState==4 && xmlhttp.status==200){
+				insert++;
+				$.ajax({
+					type: 'POST',
+					url: 'ajax/Admin/Players/Admin/playersManagementGeneratePrintList.php',
+					data: 'list='+list+'&clear=0',
+					success: function(){
 						insert--;
 						if(insert === 0 ){
 							alert('" . $lang['951'] . "');
 						}
 					}
-				}
-				//console.log('GeneratePrintList.php?list'+list+'&clear=0');
-			
-				xmlhttp.open('POST','ajax/Admin/Players/Admin/playersManagementGeneratePrintList.php',true);
-				xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-				insert++;
-				xmlhttp.send('list='+list+'&clear=0');
+				});
 			}
 			
 			function updatePrintList(){
@@ -258,38 +249,24 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						count++;
 					}
 				});			
-				var xmlhttp;
-				if (window.XMLHttpRequest){
-					// code for IE7+, Firefox, Chrome, Opera, Safari
-					xmlhttp=new XMLHttpRequest();
-				}else{// code for IE6, IE5
-					xmlhttp=new ActiveXObject('Microsoft.XMLHTTP');
-				}
-				xmlhttp.onreadystatechange=function(){
-					if (xmlhttp.readyState==4 && xmlhttp.status==200){
+				$.ajax({
+					type: 'POST',
+					url: 'ajax/Admin/Players/Admin/playersManagementGeneratePrintList.php',
+					data: 'list='+list+'&clear=1',
+					success: function(){
 						playersManagementAdminShowPrintList();
 					}
-				}
-				xmlhttp.open('POST','ajax/Admin/Players/Admin/playersManagementGeneratePrintList.php',true);
-				xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-				xmlhttp.send('list='+list+'&clear=1');
+				});
 			}
 			
 			function clearPrintList(){
-				var xmlhttp;
-				if (window.XMLHttpRequest){
-					// code for IE7+, Firefox, Chrome, Opera, Safari
-					xmlhttp=new XMLHttpRequest();
-				}else{// code for IE6, IE5
-					xmlhttp=new ActiveXObject('Microsoft.XMLHTTP');
-				}
-				xmlhttp.onreadystatechange=function(){
-					if (xmlhttp.readyState==4 && xmlhttp.status==200){
+				$.ajax({
+					type: 'POST',
+					url: 'ajax/Admin/Players/Admin/playersManagementGeneratePrintList.php',
+					data: 'list=&clear=1',
+					success: function(){
 						playersManagementAdminShowPrintList();
 					}
-				}				
-				xmlhttp.open('POST','ajax/Admin/Players/Admin/playersManagementGeneratePrintList.php',true);
-				xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-				xmlhttp.send('list=&clear=1');
+				});
 			}";
 ?>

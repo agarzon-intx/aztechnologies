@@ -1,6 +1,7 @@
 <?php
 	$fecha = new DateTime();
-$sql2TeamsInactive = "	SELECT a.*, concat(a.Torneo_ID,'-', a.Equipo_ID) newLogo, c.Campo_DESC, d.categoria_desc
+$sql2TeamsInactive = "	SELECT a.*, concat(a.Torneo_ID,'-', a.Equipo_ID) newLogo, c.Campo_DESC, d.categoria_desc,
+					(SELECT COUNT(*) FROM $schema.Juegos g WHERE g.Torneo_ID = a.Torneo_ID AND (g.Local_ID = a.Equipo_ID OR g.Visitante_ID = a.Equipo_ID)) totalJuegos
 			FROM $schema.Equipos a 
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				left outer join $schema.Categorias d on a.fuerza = d.Categoria_ID and d.Torneo_ID = $Season
@@ -41,6 +42,11 @@ $result2 = $Config->query($sql2TeamsInactive);
 if ($result2 && $result2->num_rows > 0) {
 	while($row2 = $result2->fetch_assoc()) {
 		$teamStatus = ((int) $row2["Activo"] === 1) ? $lang['523'] : $lang['416'];
+		$teamDeleteIcon = '';
+		if ((int) $Config->deleteTeam === 1 && (int) $row2["totalJuegos"] === 0) {
+			$teamDeleteConfirm = str_replace('%1', html_entity_decode((string) $row2["Equipo_DESC"], ENT_QUOTES, 'UTF-8'), $lang['539-21']);
+			$teamDeleteIcon = '<img onClick="teamManagementDelete(' . (int) $row2["Equipo_ID"] . ', ' . (int) $Category . ', this);" data-confirm="' . htmlspecialchars($teamDeleteConfirm, ENT_QUOTES, 'UTF-8') . '" title="' . htmlspecialchars($lang['539-20'], ENT_QUOTES, 'UTF-8') . '" src="./imagenes/eliminar.png" width="20" height="20" alt="" style="cursor: pointer; margin-left: 6px;"/>';
+		}
 		if (($count % 2) == 1){
 			$htmlTeams .= "<tr>";
 		}else{
@@ -54,7 +60,7 @@ if ($result2 && $result2->num_rows > 0) {
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["categoria_desc"]. '</span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["Equipo_FULLDESC"]. '</span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["Campo_DESC"]. '</span></td>
-						<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal"><img onClick="teamManagementShowEdit(' . $row2["Equipo_ID"] . ', ' . $Category . ');" src="./imagenes/edit.png" width="20" height="20" alt=""/></span></td>
+						<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal"><img onClick="teamManagementShowEdit(' . $row2["Equipo_ID"] . ', ' . $Category . ');" src="./imagenes/edit.png" width="20" height="20" alt=""/>' . $teamDeleteIcon . '</span></td>
 					</tr>';
 		$count++;
 	}
@@ -85,6 +91,11 @@ $result2 = $Config->query($sql2TeamsInactive);
 if ($result2 && $result2->num_rows > 0) {
 	while($row2 = $result2->fetch_assoc()) {
 		$teamStatus = ((int) $row2["Activo"] === 1) ? $lang['523'] : $lang['416'];
+		$teamDeleteIcon = '';
+		if ((int) $Config->deleteTeam === 1 && (int) $row2["totalJuegos"] === 0) {
+			$teamDeleteConfirm = str_replace('%1', html_entity_decode((string) $row2["Equipo_DESC"], ENT_QUOTES, 'UTF-8'), $lang['539-21']);
+			$teamDeleteIcon = '<img onClick="teamManagementDelete(' . (int) $row2["Equipo_ID"] . ', ' . (int) $Category . ', this);" data-confirm="' . htmlspecialchars($teamDeleteConfirm, ENT_QUOTES, 'UTF-8') . '" title="' . htmlspecialchars($lang['539-20'], ENT_QUOTES, 'UTF-8') . '" src="./imagenes/eliminar.png" width="20" height="20" alt="" style="cursor: pointer; margin-left: 6px;"/>';
+		}
 		if (($count % 2) == 1){
 			$htmlTeams .= "<tr>";
 		}else{
@@ -113,7 +124,7 @@ if ($result2 && $result2->num_rows > 0) {
 								</div>
 								<div style="flex: 0 0 12%; max-width:12%; min-width:0; text-align: center; padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important; padding-top: 0.5rem;"><span class="text-secondary text-xs font-weight-bold">&nbsp;</span></p>
-									<div class="d-flex justify-content-center align-items-center"><img onClick="teamManagementShowEdit(' . $row2["Equipo_ID"] . ', ' . $Category . ');" src="./imagenes/edit.png" width="20" height="20" alt=""/></div>
+									<div class="d-flex justify-content-center align-items-center"><img onClick="teamManagementShowEdit(' . $row2["Equipo_ID"] . ', ' . $Category . ');" src="./imagenes/edit.png" width="20" height="20" alt=""/>' . $teamDeleteIcon . '</div>
 								</div>
 							</div>
 							<div class="d-flex flex-wrap px-0 py-0 w-100" style="min-width:0; margin-top: 0.25rem;">

@@ -21,8 +21,8 @@
 				$sqlByeWeekPoints2 = "";
 				$sqlByeWeekPoints3 = "0 ";
 				if($Config->ByeWeekPoints == 1){
-					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 					$sqlByeWeekPoints3 = "" . $Config->ByeWeekPointsGoals . " ";
 				}
 

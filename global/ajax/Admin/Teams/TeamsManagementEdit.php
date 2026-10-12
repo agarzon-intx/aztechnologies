@@ -30,7 +30,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
 	
-	$Season = $_COOKIE[$Config->getAlias() . 'season'];
+	$Season = (int)($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
+	if ($Season <= 0) {
+		$resultSeason = $Config->query("SELECT Torneo_ID FROM $schema.Torneos WHERE Actual = 'S' LIMIT 1");
+		if ($resultSeason && ($rowSeason = $resultSeason->fetch_assoc())) {
+			$Season = (int)$rowSeason['Torneo_ID'];
+		}
+	}
 	$Category = SanitizeInteger($_POST["category"]);
 	$team_id = SanitizeInteger($_POST['team']);
 
@@ -45,7 +51,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$sql="	SELECT a.*, c.Campo_DESC 
 			FROM $schema.Equipos a 
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
-			WHERE Torneo_ID = (SELECT Torneo_ID FROM $schema.Torneos where Actual = 'S') and 
+			WHERE a.Torneo_ID = $Season and 
 				a.Equipo_ID = $team_id";
 	$result = $Config->query($sql);
 	if ($result->num_rows > 0) {
@@ -74,7 +80,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$htmlTeams .= '<div class="container-fluid py-2">
 					<div class="row">
 						<div class="col-xl-12">
-							<h3>' . $lang['527'] . '</h3>
+							<h3>' . $lang['528'] . '</h3>
 						</div>
 					</div>
 					<div class="row">
@@ -111,6 +117,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 											<select class="form-control" name="fuerza" id="fuerza">';
 	$sql3 = 	"SELECT Categoria_ID, Categoria_Desc 
 				FROM $schema.Categorias
+				where Torneo_Id = $Season
 				order by Categoria_Orden;";
 	$result3 = $Config->query($sql3);
 	if ($result3->num_rows > 0) {

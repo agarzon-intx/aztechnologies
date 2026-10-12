@@ -46,10 +46,10 @@
 					g.Torneo_Desc, DATE_FORMAT(a.Fecha, '%a, %d %b %Y') Fecha_String,
 					DATE_FORMAT(a.Horario, '%I:%i %p') Horario, a.Arbitro as arbitro
 			from $schema.Juegos a
-				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				join $schema.Jornada b on a.Torneo_ID = b.Torneo_ID and a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Calendario_ID in (select Calendario_ID from $schema.Jornada where Jornada_ID = $jornada)
+				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Calendario_ID in (select Calendario_ID from $schema.Jornada where Torneo_ID = a.Torneo_ID and Jornada_ID = $jornada)
 				left join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID

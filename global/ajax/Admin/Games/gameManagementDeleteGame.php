@@ -26,6 +26,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	require("membersite_config.php");
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('gameManagementDeleteGame.php');
+	// only the league admin (equipo 0) may delete games; referees (-1) and coaches (teams) never
+	if (trim((string) ($_SESSION[$Config->getAlias() . 'equipo'] ?? '')) !== '0') {
+		echo json_encode(array('status' => '0', 'message' => 'Not allowed.'));
+		exit;
+	}
 	
 	include("class.upload.php");
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');

@@ -602,13 +602,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			});
 		}
 		
-		function actualizarJuegoDetalleRefereeComentarios(Game, Week, Season, Referee, Comments, Extral, Extrav){
+		function actualizarJuegoDetalleRefereeComentarios(Game, Week, Season, Referee, Comments, Extral, Extrav, scope){
 			//console.log('actualizarJuegoDetalleRefereeComentarios');
 			mainLoadingOn();
 			$.ajax({
 				type: 'POST',
 				dataType: 'json',
-				url: 'ajax/Admin/Games/gameManagementUpdateGamePlayerStatRefereeComm.php',
+				url: 'ajax/Admin/' + (scope ? scope : 'Games') + '/gameManagementUpdateGamePlayerStatRefereeComm.php',
 				data: {Game: Game, Week: Week, Season: Season, Referee: Referee, Comments: Comments, Extral: Extral, Extrav: Extrav},
 				success: function (res) {
 					mainLoadingOff();
@@ -624,14 +624,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			});
 		}
 		
-		function actualizarJuegoDetalleJugadorJugado(Player, Team, Game, Week, Season, Played){
+		function actualizarJuegoDetalleJugadorJugado(Player, Team, Game, Week, Season, Played, scope){
 			//console.log('actualizarJuegoDetalleJugadorJugado');
 			gameplayerupdates++;
 			mainLoadingOn();
 			$.ajax({
 				type: 'POST',
 				dataType: 'json',
-				url: 'ajax/Admin/Games/gameManagementUpdateGamePlayerStatPlayed.php',
+				url: 'ajax/Admin/' + (scope ? scope : 'Games') + '/gameManagementUpdateGamePlayerStatPlayed.php',
 				data: {Player: Player, Team: Team, Game: Game, Week: Week, Season: Season, Played: Played},
 				success: function (res) {
 					mainLoadingOff();
@@ -680,14 +680,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			});
 		}
 		
-		function actualizarJuegoDetalleJugadorRojas(Player, Team, Game, Week, Season, Red, RedDays, RedFee, YellowN, RedComm){
+		function actualizarJuegoDetalleJugadorRojas(Player, Team, Game, Week, Season, Red, RedDays, RedFee, YellowN, RedComm, scope){
 			//console.log('actualizarJuegoDetalleJugadorAmarillas');
 			gameplayerupdates++;
 			mainLoadingOn();
 			$.ajax({
 				type: 'POST',
 				dataType: 'json',
-				url: 'ajax/Admin/Games/gameManagementUpdateGamePlayerStatRed.php',
+				url: 'ajax/Admin/' + (scope ? scope : 'Games') + '/gameManagementUpdateGamePlayerStatRed.php',
 				data: {Player: Player, Team: Team, Game: Game, Week: Week, Season: Season, Red: Red, RedDays: RedDays, RedFee: RedFee, YellowN: YellowN, RedComm: RedComm},
 				success: function (res) {
 					mainLoadingOff();
@@ -855,6 +855,203 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			actualizarJuegoDetalleRefereeComentarios(Game, Week, Season, referee, comments, extral, extrav);
 		}
 
+		function actualizarJuegoDetalleJugadorAmarillasBasket(Player, Team, Game, Week, Season, YellowP, YellowT, scope){
+			gameplayerupdates++;
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/' + (scope ? scope : 'Games') + '/gameManagementUpdateGamePlayerStatYellowBasket.php',
+				data: {Player: Player, Team: Team, Game: Game, Week: Week, Season: Season, YellowP: YellowP, YellowT: YellowT},
+				success: function (res) {
+					mainLoadingOff();
+					gameplayerupdates--;
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					gameplayerupdates--;
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
+		}
+
+		function actualizarJuegoDetalleJugadorGolesBasket(Player, Team, Game, Week, Season, Goals1, Goals2, Goals3, scope){
+			gameplayerupdates++;
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/' + (scope ? scope : 'Games') + '/gameManagementUpdateGamePlayerStatGoalBasket.php',
+				data: {Player: Player, Team: Team, Game: Game, Week: Week, Season: Season, Goals1: Goals1, Goals2: Goals2, Goals3: Goals3},
+				success: function (res) {
+					mainLoadingOff();
+					gameplayerupdates--;
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					gameplayerupdates--;
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
+		}
+
+		function saveGameDetailBasketRows(table, teamId, Game, Week, Season, scope){
+			if (!table) return;
+			for (var i = 1, row; row = table.rows[i]; i++) {
+				try{
+					var cells = row.cells;
+					if (cells.length < 18) continue;
+					var jugadorid = $.trim(cells[0].innerText);
+					var tjugado = $.trim(cells[1].innerText);
+					var tamarillasp = $.trim(cells[2].innerText);
+					var tamarillast = $.trim(cells[3].innerText);
+					var trojas = parseInt(cells[4].innerText, 10) || 0;
+					var rojasd = cells[8].children[0].value;
+					var rojasm = cells[9].children[0].value;
+					var rojasc = $.trim(cells[10].children[0].value);
+					var jugado = cells[14].children[0].checked ? '1' : '0';
+					var amarillasp = $.trim(cells[15].children[0].value);
+					var amarillast = $.trim(cells[16].children[0].value);
+					var rojas = cells[17].children[0].checked ? '1' : '0';
+					var faltas = (parseInt(amarillasp, 10) || 0) + (parseInt(amarillast, 10) || 0);
+
+					if (tjugado != jugado) {
+						actualizarJuegoDetalleJugadorJugado(jugadorid, teamId, Game, Week, Season, jugado, scope);
+					}
+					if (tamarillasp != amarillasp || tamarillast != amarillast) {
+						actualizarJuegoDetalleJugadorAmarillasBasket(jugadorid, teamId, Game, Week, Season, amarillasp, amarillast, scope);
+					}
+					if (rojas === '1' || trojas > 0) {
+						actualizarJuegoDetalleJugadorRojas(jugadorid, teamId, Game, Week, Season, rojas, rojasd, rojasm, faltas, rojasc, scope);
+					}
+				}catch (e) {
+					console.log('Error = ' + e.message);
+				}
+			}
+		}
+
+		function whenGamePlayerUpdatesDone(callback, tries){
+			tries = tries || 0;
+			if (gameplayerupdates <= 0 || tries >= 50) {
+				callback();
+				return;
+			}
+			setTimeout(function(){ whenGamePlayerUpdatesDone(callback, tries + 1); }, 200);
+		}
+
+		function reloadGameDetailBasket(Game, Week, scope, variant){
+			var folder = scope ? scope : 'Games';
+			var page = (variant === 'S') ? 'weekAdmin-ScheduleScoresGameDetailSBasket.php' : 'weekAdmin-ScheduleScoresGameDetailBasket.php';
+			var target = $(((variant === 'S') ? '#contentS' : '#content') + Game);
+			if (target.length === 0) return;
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/' + folder + '/' + page,
+				data: {week: Week, game: Game, gamedesc: '', lgoals: '', vgoals: '', Arbitro: '', Comentarios: '', Extral: '', Extrav: '', SQL: ''},
+				success: function (res) {
+					mainLoadingOff();
+					if (res.status === '1') {
+						target.html(res.dataWeekGameDetail);
+					}
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
+		}
+
+		function loadGameData(Game, Week, Season, lequipoid, vequipoid, gamedata, onDone, scope){
+			if ($.trim(gamedata || '') === '') {
+				if (onDone) onDone();
+				return;
+			}
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/' + (scope ? scope : 'Games') + '/parseBasketData.php',
+				data: {LTeam: lequipoid, VTeam: vequipoid, Game: Game, Week: Week, Season: Season, gamedata: gamedata},
+				success: function (res) {
+					mainLoadingOff();
+					if (res.status !== '1' || parseInt(res.errorct, 10) > 0) {
+						alert(res.error ? res.error : res.message);
+					}
+					if (onDone) onDone();
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
+		}
+
+		function saveGameDetailBasketSets(box, Game, Week, Season, scope, onDone){
+			var setValue = function(id){ return parseInt(box.find('#' + id).val(), 10) || 0; };
+			mainLoadingOn();
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Admin/' + (scope ? scope : 'Games') + '/gameManagementUpdateGamePlayerStatSets.php',
+				data: {Game: Game, Week: Week, Season: Season,
+					s1l: setValue('S1L'), s2l: setValue('S2L'), s3l: setValue('S3L'), s4l: setValue('S4L'), s5l: setValue('S5L'),
+					s1v: setValue('S1V'), s2v: setValue('S2V'), s3v: setValue('S3V'), s4v: setValue('S4V'), s5v: setValue('S5V')},
+				success: function (res) {
+					mainLoadingOff();
+					if (onDone) onDone();
+				},
+				error: function(jqxhr, status, exception) {
+					mainLoadingOff();
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
+		}
+
+		function SaveGameDetailPlayerStatsBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav, scope){
+			gameplayerupdates = 0;
+			var box = $('#content' + Game);
+			if (!box.length) box = $('body');
+			var localTable = box.find('#localList')[0] || document.getElementById('localList');
+			var visitanteTable = box.find('#visitanteList')[0] || document.getElementById('visitanteList');
+			var gamedata = (box.find('#gameData').length ? box.find('#gameData') : $('#gameData')).val();
+			actualizarJuegoDetalleRefereeComentarios(Game, Week, Season, referee, comments, extral, extrav, scope);
+			saveGameDetailBasketRows(localTable, lequipoid, Game, Week, Season, scope);
+			saveGameDetailBasketRows(visitanteTable, vequipoid, Game, Week, Season, scope);
+			whenGamePlayerUpdatesDone(function(){
+				var reload = function(){ reloadGameDetailBasket(Game, Week, scope, ''); };
+				if (box.find('#S1L').length) {
+					saveGameDetailBasketSets(box, Game, Week, Season, scope, reload);
+				} else {
+					loadGameData(Game, Week, Season, lequipoid, vequipoid, gamedata, reload, scope);
+				}
+			});
+		}
+
+		function SaveGameDetailPlayerStatsSBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav, scope){
+			gameplayerupdates = 0;
+			var box = $('#contentS' + Game);
+			if (!box.length) box = $('body');
+			var gamedata = (box.find('#gameDataS').length ? box.find('#gameDataS') : $('#gameDataS')).val();
+			actualizarJuegoDetalleRefereeComentarios(Game, Week, Season, referee, comments, extral, extrav, scope);
+			saveGameDetailBasketRows(document.getElementById('local' + Game + 'T'), lequipoid, Game, Week, Season, scope);
+			saveGameDetailBasketRows(document.getElementById('visitante' + Game + 'T'), vequipoid, Game, Week, Season, scope);
+			whenGamePlayerUpdatesDone(function(){
+				var reload = function(){ reloadGameDetailBasket(Game, Week, scope, 'S'); };
+				if (box.find('#S1L').length) {
+					saveGameDetailBasketSets(box, Game, Week, Season, scope, reload);
+				} else {
+					loadGameData(Game, Week, Season, lequipoid, vequipoid, gamedata, reload, scope);
+				}
+			});
+		}
+
 		function SaveGameDetailPlayerStatsR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
 			SaveGameDetailPlayerStats(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
 		}
@@ -867,14 +1064,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 		function SaveGameDetailPlayerStatsBasketR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
 			if (typeof SaveGameDetailPlayerStatsBasket === 'function') {
-				SaveGameDetailPlayerStatsBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+				SaveGameDetailPlayerStatsBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav, 'GamesReferee');
 			} else {
 				SaveGameDetailPlayerStats(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
 			}
 		}
 		function SaveGameDetailPlayerStatsSBasketR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav){
 			if (typeof SaveGameDetailPlayerStatsSBasket === 'function') {
-				SaveGameDetailPlayerStatsSBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
+				SaveGameDetailPlayerStatsSBasket(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav, 'GamesReferee');
 			} else {
 				SaveGameDetailPlayerStatsBasketR(Season,Week,Game,lequipoid,vequipoid, referee, comments, extral, extrav);
 			}

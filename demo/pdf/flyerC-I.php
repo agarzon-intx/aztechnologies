@@ -1,4 +1,5 @@
 <?php
+	require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
 	require_once dirname(__DIR__) . '/site_paths.php';
 	@ini_set('memory_limit', '512M');
 	set_time_limit(300);
@@ -60,7 +61,7 @@
 		$pageLabels[] = 'sin-juegos';
 		$pdf->AddPage();
 				$pdf->SetAutoPageBreak(false,1);
-				$pdf->SetXY(0,0);$pdf->SetFont('Coluna' , 'B' , 35);
+				$pdf->SetXY(0,0);az_flyer_pdf_set_font($pdf, 35);
 				$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
 	$Config->close();

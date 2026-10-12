@@ -412,7 +412,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 			}
 
-			// Restore last UI seed order only when week 1 does not drive the list.
+			// Restore last UI seed order only when an existing week does not drive the list.
 			if (!$weekSeedApplied && isset($_SESSION[$savedOrderKey][$catIdNow]) && is_array($_SESSION[$savedOrderKey][$catIdNow]) && count($catTeams) > 0) {
 				$byId = array();
 				foreach ($catTeams as $t) {

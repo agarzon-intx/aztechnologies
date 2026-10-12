@@ -17,22 +17,22 @@
 										j.Juego_ID as juego, 
 										jugado, 
 										concat(l.equipo_desc,'') 'Local',
-										case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
-										case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
-										concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', 
-										case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
-										case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', 
-										case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+										case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
+										case when j.Visitante_ID = -1 then null else Penal_local end as 'Penalties Local', 
+										concat(case when j.Visitante_ID = -1 then null else v.equipo_desc end,'') as 'Visitante', 
+										case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+										case when j.Visitante_ID = -1 then null else Penal_Visitante end as 'Penalties Visitante', 
+										case when j.Visitante_ID = -1 then null else Arbitro end as Arbitro, 
 										case 
-											when j.Visitante_Id is null then CONCAT('<img src=\"imagenes/',concat(l.Torneo_ID,'-', l.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "\" class=\"avatar avatar-sm me-0\" style=\"border-radius: 0rem !important;\"/>',l.equipo_desc,' " . $lang['654'] . "') 
+											when j.Visitante_Id = -1 then CONCAT('<img src=\"imagenes/',concat(l.Torneo_ID,'-', l.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "\" class=\"avatar avatar-sm me-0\" style=\"border-radius: 0rem !important;\"/>',l.equipo_desc,' " . $lang['654'] . "') 
 											else Comentarios 
 										end as Comentarios, 
 										Estatus, 
-										case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, 
+										case when j.Visitante_ID = -1 then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, 
 										ifnull(jc.Google, lc.Google) as Google, 
 										concat(l.Torneo_ID,'-', l.Equipo_ID) Logol, 
 										case 
-											when j.Visitante_Id is null then ''
+											when j.Visitante_Id = -1 then ''
 											else
 												concat(v.Torneo_ID,'-', v.Equipo_ID)
 										end  as Logov,
@@ -41,7 +41,7 @@
 											else ':'
 										end as marcador,
 										TIME_FORMAT(Horario, '%H:%i%p') horario,
-										case when j.Visitante_Id is null then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha,
+										case when j.Visitante_Id = -1 then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha,
 										case when ifnull(s.Set1_L,0) > ifnull(s.Set1_V,0) then 1 else 0 end +
                                 		case when ifnull(s.Set2_L,0) > ifnull(s.Set2_V,0) then 1 else 0 end +
                                         case when ifnull(s.Set3_L,0) > ifnull(s.Set3_V,0) then 1 else 0 end +
@@ -63,22 +63,22 @@
 										left outer join $schema.Juegos_Set s on j.Juego_ID = s.Juego_ID
 									where Local_ID = $Team
 									UNION
-									select 1 as VisitanteS, j.Torneo_ID as Torneo, jo.Jornada_ID as Jornada, j.Juego_ID as juego, jugado, case when j.Visitante_Id is null then '' else concat(l.equipo_desc,'') end  as 'Local', 
-										case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
-										concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
-										case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+									select 1 as VisitanteS, j.Torneo_ID as Torneo, jo.Jornada_ID as Jornada, j.Juego_ID as juego, jugado, case when j.Visitante_Id = -1 then '' else concat(l.equipo_desc,'') end  as 'Local', 
+										case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', case when j.Visitante_ID = -1 then null else Penal_local end as 'Penalties Local', 
+										concat(case when j.Visitante_ID = -1 then null else v.equipo_desc end,'') as 'Visitante', case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+										case when j.Visitante_ID = -1 then null else Penal_Visitante end as 'Penalties Visitante', case when j.Visitante_ID = -1 then null else Arbitro end as Arbitro, 
 										case 
-											when j.Visitante_Id is null then CONCAT('<img src=\"imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "\" class=\"avatar avatar-sm me-0\" style=\"border-radius: 0rem !important;\"/>',l.equipo_desc,' " . $lang['654'] . "') 
+											when j.Visitante_Id = -1 then CONCAT('<img src=\"imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "\" class=\"avatar avatar-sm me-0\" style=\"border-radius: 0rem !important;\"/>',l.equipo_desc,' " . $lang['654'] . "') 
 											else Comentarios 
 										end as Comentarios, 
-										Estatus, case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, ifnull(jc.Google, lc.Google) as Google, 
+										Estatus, case when j.Visitante_ID = -1 then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, ifnull(jc.Google, lc.Google) as Google, 
 										case 
-											when j.Visitante_Id is null then ''
+											when j.Visitante_Id = -1 then ''
 											else
 												concat(l.Torneo_ID,'-', l.Equipo_ID) 
 										end as Logol, 
 										case 
-											when j.Visitante_Id is null then ''
+											when j.Visitante_Id = -1 then ''
 											else
 												concat(v.Torneo_ID,'-', v.Equipo_ID)
 										end  as Logov,
@@ -87,7 +87,7 @@
 											else ':'
 										end as marcador,
 										TIME_FORMAT(Horario, '%H:%i%p') horario,
-										case when j.Visitante_Id is null then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha,
+										case when j.Visitante_Id = -1 then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha,
 										case when ifnull(s.Set1_L,0) > ifnull(s.Set1_V,0) then 1 else 0 end +
                                 		case when ifnull(s.Set2_L,0) > ifnull(s.Set2_V,0) then 1 else 0 end +
                                         case when ifnull(s.Set3_L,0) > ifnull(s.Set3_V,0) then 1 else 0 end +

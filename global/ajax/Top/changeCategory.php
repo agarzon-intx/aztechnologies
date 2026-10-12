@@ -80,13 +80,13 @@ $schema = $Config->getSchema();
 					when Equipo_ID = v.Visitante_ID and v.Gol_Local = v.Gol_Visitante and v.Penal_Local > v.Penal_Visitante and v.Jugado = 1 then 1 ";
 	}
 	if($Config->ByeWeekPoints == 1){
-		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 		$sqlByeWeekPoints3 = "" . $Config->ByeWeekPointsGoals . " ";
 	}
 	if($Config->VollByeWeekSets !== 0){
-		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 		$sqlByeWeekPoints3 = "" . $Config->VollByeWeekPoints . " ";
 		$sqlByeWeekSets3 = "" . $Config->VollByeWeekSets . " ";
 		$sqlByeWeekSetPoints3 = "" . $Config->VollByeWeekSetPoints . " ";
@@ -181,7 +181,7 @@ $schema = $Config->getSchema();
 													else 0
 												end + l.Extra_Local as Reales, 
 												case 
-													when l.Visitante_ID is not null then Gol_Local
+													when l.Visitante_ID <> -1 then Gol_Local
 													else " . $sqlByeWeekPoints3 . "
 												end as GF, 
 												Gol_Visitante as GC,
@@ -349,32 +349,32 @@ $schema = $Config->getSchema();
                                               s.SV, 
                                               s.PL, 
                                               s.PV, 
-                                              case  when l.Visitante_ID is null then " . $sqlByeWeekSets3 . "
+                                              case  when l.Visitante_ID = -1 then " . $sqlByeWeekSets3 . "
                                                     else s.SL end SF, 
                                               s.SV SC, 
-                                              case  when l.Visitante_ID is null then " . $sqlByeWeekSetPoints3 . "
+                                              case  when l.Visitante_ID = -1 then " . $sqlByeWeekSetPoints3 . "
                                                     else s.PL end PF, 
                                               s.PV PC, 
                                               case 	when Equipo_ID = l.Local_ID and s.SL > s.SV and s.SV = 0 and l.Jugado = 1 then 2 
                                     				when Equipo_ID = l.Local_ID and s.SL > s.SV and s.SV <> 0 and l.Jugado = 1 then 2 
                                                     when Equipo_ID = l.Local_ID and s.SL < s.SV and s.SL <> 0 and l.Jugado = 1 then 1 
                                                     when Equipo_ID = l.Local_ID and s.SL < s.SV and s.SL = 0 and l.Jugado = 1 then 0 
-                                                    when l.Visitante_ID is null then " . $sqlByeWeekPoints3 . "
+                                                    when l.Visitante_ID = -1 then " . $sqlByeWeekPoints3 . "
                                     		  end as Puntos, 
                                               l.Extra_Local Extra,  
-                                              case when l.Visitante_ID is not null then s.PL 
-                                                        when l.Visitante_ID is null then " . $sqlByeWeekSetPoints3 . "
+                                              case when l.Visitante_ID <> -1 then s.PL 
+                                                        when l.Visitante_ID = -1 then " . $sqlByeWeekSetPoints3 . "
                                                         else 0 end as GF, 
                                               s.PV as GC, 
                                               case 	when Equipo_ID = l.Local_ID and s.PL > s.PV and l.Jugado = 1 then 1 
                                     				when Equipo_ID = l.Local_ID and s.PL = s.PL and l.Jugado = 1 then 1 
                                                     when Equipo_ID = l.Local_ID and s.PL < s.PL and l.Jugado = 1 then 1 
-                                                    when l.Visitante_ID is null then 1
+                                                    when l.Visitante_ID = -1 then 1
                                                     when l.Jugado = 2 then 1 
                                                     when l.Jugado = 0 then 0 
                                     		  end as Juegos, 
                                               case when Equipo_ID = l.Local_ID and s.SL > s.SV and l.Jugado = 1 then 1 
-                                                        when l.Visitante_ID is null then 1
+                                                        when l.Visitante_ID = -1 then 1
                                                         else 0 end as JG,
                                               case when l.Jugado = 2 then 1 when Equipo_ID = l.Local_ID and s.SL < s.SV and l.Jugado = 1 then 1 else 0 end as JP, 
                                               l.Extra_Local ExtraEquipo 
@@ -403,21 +403,21 @@ $schema = $Config->getSchema();
                                             s.SV, 
                                             s.PL, 
                                             s.PV, 
-                                            case    when v.Visitante_ID is null then 0
+                                            case    when v.Visitante_ID = -1 then 0
                                                     else s.SV end SF, 
                                             s.SL SC, 
-                                            case    when v.Visitante_ID is null then 0
+                                            case    when v.Visitante_ID = -1 then 0
                                                     else s.PV end PF, 
                                             s.PL PC, 
                                             case 	when Equipo_ID = v.Visitante_ID and s.SL < s.SV and s.SL = 0 and v.Jugado = 1 then 2
                                 				    when Equipo_ID = v.Visitante_ID and s.SL < s.SV and s.SL <> 0 and v.Jugado = 1 then 2 
                                                     when Equipo_ID = v.Visitante_ID and s.SL > s.SV and s.SV <> 0 and v.Jugado = 1 then 1 
                                                     when Equipo_ID = v.Visitante_ID and s.SL > s.SV and s.SV = 0 and v.Jugado = 1 then 0  
-                                                    when v.Visitante_ID is null then 0
+                                                    when v.Visitante_ID = -1 then 0
                                 		    end as Puntos,
 										    v.Extra_Visitante Extra,
-											case  when v.Visitante_ID is not null then s.PV 
-                                                        when v.Visitante_ID is null then 0
+											case  when v.Visitante_ID <> -1 then s.PV 
+                                                        when v.Visitante_ID = -1 then 0
                                                         else 0 end as GF, 
                                             s.PL as GC, 
                                             case 	when Equipo_ID = v.Visitante_ID and s.PL < s.PV and v.Jugado = 1 then 1 
@@ -449,6 +449,19 @@ $schema = $Config->getSchema();
 					order by Puntos desc, CS desc, CP desc, Equipo_DESC";
 	}
 	if(app_sport_uses_basket((int) $Config->getSport())){
+		/*
+		 * Basket bye week (team is Local_ID, Visitante_ID = -1): enabled by ByeWeekPoints,
+		 * VollByeWeekPoints = table points, VollByeWeekSetPoints = game points.
+		 * Counts as a played and won game once its date is reached.
+		 */
+		$basketByeOn = ((int) $Config->ByeWeekPoints === 1);
+		$sqlBasketBye = "(s.Visitante_ID = -1 and s.Fecha <= CURDATE())";
+		$sqlBasketByePuntos = $basketByeOn ? (string) (int) $Config->VollByeWeekPoints : "NULL";
+		$sqlBasketByePF = $basketByeOn ? (string) (int) $Config->VollByeWeekSetPoints : "s.PF";
+		$sqlBasketByePC = $basketByeOn ? "0" : "s.PC";
+		$sqlBasketByeGF = $basketByeOn ? (string) (int) $Config->VollByeWeekSetPoints : "0";
+		$sqlBasketByeJJ = $basketByeOn ? "1" : "s.Juegos";
+		$sqlBasketByeJG = $basketByeOn ? "1" : "0";
 	    $sql = "SELECT 
                   @rank := @rank + 1 AS rank, 
                   Equipo_ID, 
@@ -482,13 +495,17 @@ $schema = $Config->getSchema();
                 		select 
                 			distinct concat(e.Torneo_ID, '-', e.Equipo_ID) Logo, 
                 			s.Jornada_ID, Equipo_ID, Equipo_DESC, Equipo_FULLDESC, Fuerza, s.Juego_ID, 
-                			s.SF, s.SC, s.PF, s.PC, 
-                			case when Equipo_ID = s.Local_ID and s.PL > s.PV  and s.Jugado = 1 then 2 
+                			s.SF, s.SC, 
+                			case when $sqlBasketBye then $sqlBasketByePF else s.PF end as PF, 
+                			case when $sqlBasketBye then $sqlBasketByePC else s.PC end as PC, 
+                			case when $sqlBasketBye then $sqlBasketByePuntos 
+                				when Equipo_ID = s.Local_ID and s.PL > s.PV  and s.Jugado = 1 then 2 
                 				when Equipo_ID = s.Local_ID and s.PL < s.PV and s.Jugado = 1 then 1 
                 			end as Puntos, s.Extra, 
-                			case when s.Visitante_ID is not null then s.PL else 0 end as GF, 
-                			s.PV as GC, s.Juegos, 
-                			case when Equipo_ID = s.Local_ID and s.PL > s.PV and s.Jugado = 1 then 1 else 0 end as JG, 
+                			case when $sqlBasketBye then $sqlBasketByeGF when s.Visitante_ID <> -1 then s.PL else 0 end as GF, 
+                			s.PV as GC, 
+                			case when $sqlBasketBye then $sqlBasketByeJJ else s.Juegos end as Juegos, 
+                			case when $sqlBasketBye then $sqlBasketByeJG when Equipo_ID = s.Local_ID and s.PL > s.PV and s.Jugado = 1 then 1 else 0 end as JG, 
                 			case when s.Jugado = 2 then 1 when Equipo_ID = s.Local_ID and s.PL < s.PV and s.Jugado = 1 then 1 else 0 end as JP, 
                 			s.ExtraEquipo,
                 			s.Local_ID, s.PL, s.PV, s.Jugado
@@ -496,7 +513,7 @@ $schema = $Config->getSchema();
                 			$schema.Equipos e 
                 			left outer join (
                 						select distinct l.Jornada_ID, l.Juego_ID, 
-                							s.SL SF, s.SV SC, s.PL PF, s.PV PC, l.Local_ID, s.PL, s.PV, l.Jugado, l.Visitante_ID, 
+                							s.SL SF, s.SV SC, s.PL PF, s.PV PC, l.Local_ID, s.PL, s.PV, l.Jugado, l.Visitante_ID, l.Fecha, 
                 							l.Extra_Local Extra, s.PV as GC, 
                 							case when l.Jugado = 1 then 1 when l.Jugado = 2 then 1 when l.Jugado = 0 then 0 end as Juegos, 
                 							l.Extra_Local ExtraEquipo 
@@ -533,8 +550,8 @@ $schema = $Config->getSchema();
                 			s.SF, s.SC, s.PF, s.PC, 
                 			case when Equipo_ID = s.Visitante_ID and s.PL < s.PV and s.Jugado = 1 then 2
                 				when Equipo_ID = s.Visitante_ID  and s.PL > s.PV and s.Jugado = 1 then 1 end as Puntos, s.Extra, 
-                			case when s.Visitante_ID is not null then s.PL else 0 end as GF, 
-                			s.PV as GC, s.Juegos, 
+                			case when s.Local_ID <> -1 then s.PV else 0 end as GF, 
+                			s.PL as GC, s.Juegos, 
                 			case when Equipo_ID = s.Visitante_ID and s.PL < s.PV and s.Jugado = 1 then 1 else 0 end as JG, 
                             case when Equipo_ID = s.Visitante_ID and s.PL > s.PV and s.Jugado = 1 then 1 when s.Jugado = 2 then 1 else 0 end as JP, 
                 			s.ExtraEquipo,
@@ -543,7 +560,7 @@ $schema = $Config->getSchema();
                 			$schema.Equipos e 
                 			left outer join (
                 						select distinct v.Jornada_ID, v.Juego_ID, 
-                							s.SL SF, s.SV SC, s.PL PF, s.PV PC, v.Local_ID, s.PL, s.PV, v.Jugado, v.Visitante_ID, 
+                							s.SV SF, s.SL SC, s.PV PF, s.PL PC, v.Local_ID, s.PL, s.PV, v.Jugado, v.Visitante_ID, 
                 							v.Extra_Visitante Extra, s.PV as GC, 
                 							case when v.Jugado = 1 then 1 when v.Jugado = 2 then 1 when v.Jugado = 0 then 0 end as Juegos, 
                 							v.Extra_Visitante ExtraEquipo 
@@ -704,8 +721,8 @@ $schema = $Config->getSchema();
 					when Equipo_ID = v.Visitante_ID and v.Gol_Local = v.Gol_Visitante and v.Penal_Local > v.Penal_Visitante and v.Jugado then 1 ";
 	}
 	if($Config->ByeWeekPoints == 1){
-		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 		$sqlByeWeekPoints3 = "" . $Config->ByeWeekPointsGoals . " ";
 	}
 	

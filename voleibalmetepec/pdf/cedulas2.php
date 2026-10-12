@@ -26,10 +26,10 @@
 					ELT(DATE_FORMAT(b.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre')  Mes, year(b.Fecha) Anio, a.Campo_ID, 
 					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(b.Fecha, '%a, %d %b %Y') Fecha_String, DATE_FORMAT(a.Horario, '%I:%i %p') Horario
 			from $schema.Juegos a
-				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				join $schema.Jornada b on a.Torneo_ID = b.Torneo_ID and a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID
+				join $schema.Categorias dc on a.Torneo_ID = dc.Torneo_ID and d.Fuerza = dc.Categoria_ID
 				join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
@@ -133,7 +133,7 @@
 	    	$pdf->Cell(16, 6, $lang['370'] , 1, 0 , 'C' , false);
 		
 		/*
-			$pdf->Cell(40 , 5, mb_strtoupper(az_utf8_decode('' . az_utf8_decode($row1["Local"]) . '')), 1, 1 , 'C' , false);
+			$pdf->Cell(40 , 5, az_pdf_upper(az_utf8_decode('' . az_utf8_decode($row1["Local"]) . '')), 1, 1 , 'C' , false);
 			$pdf->SetFont('Times' , '' , 10);
 			$y = $y + 4;
 			$pdf->SetXY($x+5,$y+47);
@@ -360,7 +360,7 @@
 			$y = $y -5;
 		/*	$pdf->SetFont('Times' , 'B' , 9);
 			$pdf->SetXY($x+25,$y+34.5);
-			$pdf->Cell(128 , 5, mb_strtoupper(az_utf8_decode('' . az_utf8_decode($row1["Local"]) . '')), 1, 1 , 'C' , false);*/
+			$pdf->Cell(128 , 5, az_pdf_upper(az_utf8_decode('' . az_utf8_decode($row1["Local"]) . '')), 1, 1 , 'C' , false);*/
 			
 				/*Empieza Cabecera antes de los Set's*/
 		
@@ -3745,7 +3745,7 @@ $pdf->SetFont('Times' , 'B' , 5);
 		/*Se comenta por el momento */
 /*			$pdf->SetFont('Times' , 'B' , 14);
 			$pdf->SetXY($x+10,$y+46);
-			$pdf->Cell(128 , 5, mb_strtoupper (az_utf8_decode('' . az_utf8_decode($row1["Visitante"]) . '')), 1, 1 , 'C' , false);
+			$pdf->Cell(128 , 5, az_pdf_upper(az_utf8_decode('' . az_utf8_decode($row1["Visitante"]) . '')), 1, 1 , 'C' , false);
 			$pdf->SetFont('Times' , '' , 10);
 			$y = $y + 4;
 			$pdf->SetXY($x+10,$y+47);
@@ -3833,7 +3833,7 @@ $pdf->SetFont('Times' , 'B' , 5);
 			$pdf->SetXY(10,10);
 			$pdf->Cell(260 , 4, $lang['9997'], 0, 1 , 'C' , false);
 			$pdf->SetXY($x+10,$y+20);
-			$pdf->Cell(128 , 4, mb_strtoupper(az_utf8_decode('' . az_utf8_decode($row1["Local"]) . ' (' . $lang['998'] . ')')), 0, 1 , 'l' , false);
+			$pdf->Cell(128 , 4, az_pdf_upper(az_utf8_decode('' . az_utf8_decode($row1["Local"]) . ' (' . $lang['998'] . ')')), 0, 1 , 'l' , false);
 			$pdf->SetXY($x+10,$y+30);
 			$pdf->Cell(128 , 4,  $lang['9991'], 0, 1 , 'l' , false);
 			$pdf->SetXY($x+10,$y+40);
@@ -3866,7 +3866,7 @@ $pdf->SetFont('Times' , 'B' , 5);
 			$y = 0;
 			$x = $x + 130;
 			$pdf->SetXY($x+10,$y+20);
-			$pdf->Cell(128 , 4, mb_strtoupper (az_utf8_decode('' . az_utf8_decode($row1["Visitante"]) . ' (' . $lang['999'] . ')')), 0, 1 , 'l' , false);
+			$pdf->Cell(128 , 4, az_pdf_upper(az_utf8_decode('' . az_utf8_decode($row1["Visitante"]) . ' (' . $lang['999'] . ')')), 0, 1 , 'l' , false);
 			$pdf->SetXY($x+10,$y+30);
 			$pdf->Cell(128 , 4, $lang['9991'], 0, 1 , 'l' , false);
 			$pdf->SetXY($x+10,$y+40);
@@ -3925,6 +3925,8 @@ $pdf->SetFont('Times' , 'B' , 5);
 			$pdf->Cell(50 , 4, $lang['9996'], 0, 1 , 'C' , false);
 		} 
 	}else {
+		$pdf->AddPage();
+		$pdf->SetFont('Helvetica' , 'B' , 12);
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
 	$Config->close();

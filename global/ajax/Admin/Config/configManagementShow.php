@@ -69,6 +69,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 									<img src="./imagenes/imagen.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['452-1'] . '
 								</a>
 							</li>
+							<li class="nav-item" id="pdflayoutli">
+								<a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" style="cursor: pointer;" callval="#pdflayout" role="tab" aria-controls="pdflayoutli" aria-selected="false">
+									<img src="./imagenes/documents.png?tmp=' . $fecha->getTimestamp() . '" style="width: 20px; height: auto;" alt=""/>  ' . $lang['452-50'] . '
+								</a>
+							</li>
 						</ul>
 					</div>';
 	$htmlConfig .= "<script>initNavs('config1');</script>";
@@ -102,6 +107,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	-----------------------------------------------------------------------------------------------------------------------------*/
 	$htmlConfig .= '<div id="configimages" class="tabla" style="display: none;height: auto;">';
 	require 'configManagementImages.php';
+	$htmlConfig .= '</div>';
+
+	$htmlConfig .= '<div id="pdflayout" class="tabla" style="display: none;height: auto;">';
+	require 'configManagementPdfLayout.php';
 	$htmlConfig .= '</div>';
 	/*-----------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------------------*/

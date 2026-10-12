@@ -15,6 +15,10 @@ if (!function_exists('az_flyer_facebook_prepare_share_data')) {
 		$categoria = (int) $categoria;
 		$juego = (int) $juego;
 
+		// The flyer page builders read colors and font sizes from $GLOBALS['Config'] (az_flyer_text_style),
+		// but the share launch page loads $Config inside a function.
+		$GLOBALS['Config'] = $Config;
+
 		$sitePath = $Config->getPath();
 		$website = $Config->getWebSite();
 		if (trim($website) === '') {
@@ -29,6 +33,9 @@ if (!function_exists('az_flyer_facebook_prepare_share_data')) {
 			throw new RuntimeException('Missing pdf/flyer_ci_page.php on this site.');
 		}
 		require_once $flyerCiPage;
+
+		$flyerScPdf = $sitePdf . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
+		require_once is_readable($flyerScPdf) ? $flyerScPdf : __DIR__ . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
 
 		$alphapdfPath = $sitePdf . DIRECTORY_SEPARATOR . 'alphapdf.php';
 		if (!is_readable($alphapdfPath)) {

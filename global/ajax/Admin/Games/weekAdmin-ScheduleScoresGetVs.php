@@ -42,20 +42,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		echo json_encode($retunData);
 		exit;
 	}
-	if ($team < 1) {
-		$retunData = array('status' => '1', 'message' => 'Success.', 'dataVs' => $htmlWeekVs);
-		$Config->Close();
-		echo json_encode($retunData);
-		exit;
-	}
-
-	$sql33 = "	SELECT a.Equipo_ID, 
-						Equipo_DESC 
-				 FROM $schema.Equipos a
-				 where Torneo_ID = $Season
-					and Activo = 1 
-					and a.Fuerza = $Category 
-					and Equipo_ID <> $team and Equipo_ID not in (	select Equipo2 AS Equipo_ID
+	$excludeTeam = '';
+	if ($team >= 1) {
+		$excludeTeam = "and Equipo_ID <> $team and Equipo_ID not in (
+										select Equipo2 AS Equipo_ID
 										from (
 											select Equipo1, Equipo2, count(*) ct
 											from (
@@ -69,7 +59,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 													join $schema.Jornada jo on ju.Jornada_ID = jo.Jornada_ID
 												where ju.Torneo_Id = $Season and Local_ID = $team and jo.Jornada_Type = 1 and ju.jugado <> 10) a
 											group by Equipo1, Equipo2
-											having count(*) >= (select Rondas from $schema.Categorias where Torneo_Id = $Season and Categoria_ID = $Category)) a)
+											having count(*) >= (select Rondas from $schema.Categorias where Torneo_Id = $Season and Categoria_ID = $Category)) a)";
+	}
+
+	$sql33 = "	SELECT a.Equipo_ID, 
+						Equipo_DESC 
+				 FROM $schema.Equipos a
+				 where Torneo_ID = $Season
+					and Activo = 1 
+					and a.Fuerza = $Category 
+					$excludeTeam
 				 order by 2 asc;";
 	//echo $sql33;
 	$result33 = $Config->query($sql33);

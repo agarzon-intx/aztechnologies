@@ -36,21 +36,27 @@ if (!function_exists('az_rr_circle_pairings')) {
 		for ($r = 0; $r < $rounds; $r++) {
 			$games = array();
 			$bye = null;
+			$byeGame = null;
 			for ($i = 0; $i < $half; $i++) {
 				$a = $teams[$i];
 				$b = $teams[$n - 1 - $i];
-				if ($a === null || $b === null) {
-					$bye = ($a === null) ? $b : $a;
-					if ($bye !== null) {
-						$bye = (int) $bye;
-					}
+				$aId = ($a === null) ? 0 : (int) $a;
+				$bId = ($b === null) ? 0 : (int) $b;
+				if ($aId <= 0 && $bId <= 0) {
 					continue;
 				}
-				$games[] = array((int) $a, (int) $b);
+				if ($aId <= 0 || $bId <= 0) {
+					// Odd field: BYE occupies a circle seat and is home or away like any team.
+					$bye = ($aId > 0) ? $aId : $bId;
+					$byeGame = array($aId, $bId);
+					continue;
+				}
+				$games[] = array($aId, $bId);
 			}
 			$result[] = array(
 				'games' => $games,
 				'bye' => $bye,
+				'byeGame' => $byeGame,
 			);
 			// Standard circle rotation: keep first fixed, rotate the rest.
 			$fixed = array_shift($teams);
@@ -111,17 +117,14 @@ if (!function_exists('az_rr_apply_pair_history')) {
 	function az_rr_apply_pair_history(array &$history, $home, $away) {
 		$home = (int) $home;
 		$away = (int) $away;
-		if ($home > 0) {
-			if (!isset($history[$home])) {
-				$history[$home] = array();
+		foreach (array($home => 'H', $away => 'A') as $teamId => $side) {
+			if ($teamId < 0) {
+				continue;
 			}
-			$history[$home][] = 'H';
-		}
-		if ($away > 0) {
-			if (!isset($history[$away])) {
-				$history[$away] = array();
+			if (!isset($history[$teamId])) {
+				$history[$teamId] = array();
 			}
-			$history[$away][] = 'A';
+			$history[$teamId][] = $side;
 		}
 	}
 }
@@ -150,20 +153,24 @@ if (!function_exists('az_rr_round_as_unordered')) {
 			}
 		}
 		$bye = null;
+		$byeGame = null;
 		if (is_array($round) && isset($round['byeGame']) && is_array($round['byeGame']) && count($round['byeGame']) >= 2) {
 			$h = (int) $round['byeGame'][0];
 			$a = (int) $round['byeGame'][1];
-			if ($h > 0 && $a === 0) {
-				$bye = $h;
-			} elseif ($h === 0 && $a > 0) {
-				$bye = $a;
+			if (($h > 0 && $a === 0) || ($h === 0 && $a > 0)) {
+				$byeGame = array($h, $a);
+				$bye = ($h > 0) ? $h : $a;
 			}
 		} elseif (is_array($round) && array_key_exists('bye', $round) && $round['bye'] !== null && $round['bye'] !== '') {
 			$bye = (int) $round['bye'];
+			if ($bye > 0) {
+				$byeGame = array($bye, 0);
+			}
 		}
 		return array(
 			'games' => $games,
 			'bye' => $bye,
+			'byeGame' => $byeGame,
 		);
 	}
 }
@@ -291,7 +298,23 @@ if (!function_exists('az_rr_assign_home_away')) {
 			}
 
 			$pairs = $roundsIn[$r]['games'];
-			$byeTeam = $roundsIn[$r]['bye'];
+			if (!is_array($pairs)) {
+				$pairs = array();
+			}
+			$byeTeam = isset($roundsIn[$r]['bye']) ? $roundsIn[$r]['bye'] : null;
+			$byePair = null;
+			if (isset($roundsIn[$r]['byeGame']) && is_array($roundsIn[$r]['byeGame']) && count($roundsIn[$r]['byeGame']) >= 2) {
+				$bh = (int) $roundsIn[$r]['byeGame'][0];
+				$ba = (int) $roundsIn[$r]['byeGame'][1];
+				if (($bh > 0 && $ba === 0) || ($bh === 0 && $ba > 0)) {
+					$byePair = array($bh, $ba);
+				}
+			} elseif ($byeTeam !== null && (int) $byeTeam > 0) {
+				$byePair = array((int) $byeTeam, 0);
+			}
+			if ($byePair !== null) {
+				$pairs[] = $byePair;
+			}
 			$g = count($pairs);
 			$limit = 1 << $g;
 
@@ -316,14 +339,7 @@ if (!function_exists('az_rr_assign_home_away')) {
 						break;
 					}
 					$score += az_rr_orientation_score($histTmp, $homeTmp, $home, $away, $maxConsec);
-					if (!isset($histTmp[$home])) {
-						$histTmp[$home] = array();
-					}
-					if (!isset($histTmp[$away])) {
-						$histTmp[$away] = array();
-					}
-					$histTmp[$home][] = 'H';
-					$histTmp[$away][] = 'A';
+					az_rr_apply_pair_history($histTmp, $home, $away);
 					$homeTmp[$home] = (isset($homeTmp[$home]) ? (int) $homeTmp[$home] : 0) + 1;
 				}
 				if ($ok) {
@@ -341,7 +357,7 @@ if (!function_exists('az_rr_assign_home_away')) {
 				$mask = $entry[1];
 				$hist2 = az_rr_copy_side_history($history);
 				$homes2 = $homeCount;
-				$games = array();
+				$allGames = array();
 				for ($i = 0; $i < $g; $i++) {
 					$a = (int) $pairs[$i][0];
 					$b = (int) $pairs[$i][1];
@@ -352,109 +368,42 @@ if (!function_exists('az_rr_assign_home_away')) {
 						$home = $a;
 						$away = $b;
 					}
-					$games[] = array($home, $away);
-					if (!isset($hist2[$home])) {
-						$hist2[$home] = array();
-					}
-					if (!isset($hist2[$away])) {
-						$hist2[$away] = array();
-					}
-					$hist2[$home][] = 'H';
-					$hist2[$away][] = 'A';
+					$allGames[] = array($home, $away);
+					az_rr_apply_pair_history($hist2, $home, $away);
 					$homes2[$home] = (isset($homes2[$home]) ? (int) $homes2[$home] : 0) + 1;
 				}
-
-				$byeOpts = array(null);
-				if ($byeTeam !== null && (int) $byeTeam > 0) {
-					$bt = (int) $byeTeam;
-					$byeOpts = array();
-					$cands = array(
-						array($bt, 0), // team local, BYE open as away
-						array(0, $bt), // BYE open as local, team away
-					);
-					$scored = array();
-					foreach ($cands as $bg) {
-						$teamSide = ((int) $bg[0] > 0) ? 'H' : 'A';
-						$openSide = ((int) $bg[0] === 0) ? 'H' : 'A';
-						if (!az_rr_streak_ok($hist2, $bt, $teamSide, $maxConsec)) {
-							continue;
-						}
-						if (!az_rr_streak_ok($byeHistory, $bt, $teamSide, $maxConsec)) {
-							continue;
-						}
-						if (!az_rr_open_side_ok($openSeq, $openSide, $maxConsec)) {
-							continue;
-						}
-						$score = 0;
-						// Prefer alternating bye open side and team bye side.
-						$lastOpen = (count($openSeq) > 0) ? $openSeq[count($openSeq) - 1] : '';
-						if ($lastOpen !== '' && $openSide === $lastOpen) {
-							$score += 50;
-						}
-						$lastBye = '';
-						if (isset($byeHistory[$bt]) && count($byeHistory[$bt]) > 0) {
-							$lastBye = $byeHistory[$bt][count($byeHistory[$bt]) - 1];
-						}
-						if ($lastBye !== '' && $teamSide === $lastBye) {
-							$score += 40;
-						}
-						$lastAll = '';
-						if (isset($hist2[$bt]) && count($hist2[$bt]) > 0) {
-							$lastAll = $hist2[$bt][count($hist2[$bt]) - 1];
-						}
-						if ($lastAll !== '' && $teamSide === $lastAll) {
-							$score += 20;
-						}
-						$homes = isset($homes2[$bt]) ? (int) $homes2[$bt] : 0;
-						if ($teamSide === 'H') {
-							$score += $homes;
-						}
-						$scored[] = array($score, $bg);
-					}
-					if (count($scored) === 0) {
-						continue;
-					}
-					usort($scored, function ($x, $y) {
-						if ($x[0] === $y[0]) {
-							return 0;
-						}
-						return ($x[0] < $y[0]) ? -1 : 1;
-					});
-					$byeOpts = array();
-					foreach ($scored as $row) {
-						$byeOpts[] = $row[1];
+				$games = array();
+				$bg = null;
+				foreach ($allGames as $pair) {
+					$h = (int) $pair[0];
+					$a = (int) $pair[1];
+					if ($h > 0 && $a > 0) {
+						$games[] = array($h, $a);
+					} elseif ($h > 0 || $a > 0) {
+						$bg = array($h, $a);
 					}
 				}
 
-				foreach ($byeOpts as $bg) {
-					$hist3 = az_rr_copy_side_history($hist2);
-					$homes3 = $homes2;
-					$byeHist3 = az_rr_copy_side_history($byeHistory);
-					$open3 = $openSeq;
-					if ($bg !== null) {
-						az_rr_apply_pair_history($hist3, $bg[0], $bg[1]);
-						if ((int) $bg[0] > 0) {
-							$homes3[(int) $bg[0]] = (isset($homes3[(int) $bg[0]]) ? (int) $homes3[(int) $bg[0]] : 0) + 1;
-							if (!isset($byeHist3[(int) $bg[0]])) {
-								$byeHist3[(int) $bg[0]] = array();
-							}
-							$byeHist3[(int) $bg[0]][] = 'H';
-							$open3[] = 'A';
-						} elseif ((int) $bg[1] > 0) {
-							if (!isset($byeHist3[(int) $bg[1]])) {
-								$byeHist3[(int) $bg[1]] = array();
-							}
-							$byeHist3[(int) $bg[1]][] = 'A';
-							$open3[] = 'H';
+				$byeHist3 = az_rr_copy_side_history($byeHistory);
+				$open3 = $openSeq;
+				if ($bg !== null) {
+					$bt = ((int) $bg[0] > 0) ? (int) $bg[0] : (int) $bg[1];
+					$teamSide = ((int) $bg[0] > 0) ? 'H' : 'A';
+					$openSide = ((int) $bg[0] === 0) ? 'H' : 'A';
+					if ($bt > 0) {
+						if (!isset($byeHist3[$bt])) {
+							$byeHist3[$bt] = array();
 						}
+						$byeHist3[$bt][] = $teamSide;
 					}
-					$stack[$r] = array(
-						'games' => $games,
-						'byeGame' => $bg,
-					);
-					if ($search($r + 1, $hist3, $homes3, $byeHist3, $open3)) {
-						return true;
-					}
+					$open3[] = $openSide;
+				}
+				$stack[$r] = array(
+					'games' => $games,
+					'byeGame' => $bg,
+				);
+				if ($search($r + 1, $hist2, $homes2, $byeHist3, $open3)) {
+					return true;
 				}
 			}
 			return false;
@@ -494,7 +443,11 @@ if (!function_exists('az_rr_assign_home_away_greedy')) {
 		foreach ($unorderedRounds as $round) {
 			$u = az_rr_round_as_unordered($round);
 			$pairs = $u['games'];
-			$byeTeam = $u['bye'];
+			if (isset($u['byeGame']) && is_array($u['byeGame']) && count($u['byeGame']) >= 2) {
+				$pairs[] = array((int) $u['byeGame'][0], (int) $u['byeGame'][1]);
+			} elseif (!empty($u['bye']) && (int) $u['bye'] > 0) {
+				$pairs[] = array((int) $u['bye'], 0);
+			}
 			$roundGames = array();
 			$roundHist = az_rr_copy_side_history($history);
 			$roundHome = $homeCount;
@@ -525,43 +478,30 @@ if (!function_exists('az_rr_assign_home_away_greedy')) {
 				az_rr_apply_pair_history($roundHist, $home, $away);
 				$roundHome[$home] = (isset($roundHome[$home]) ? (int) $roundHome[$home] : 0) + 1;
 			}
+			$realGames = array();
 			$byeGame = null;
-			if ($byeTeam !== null && (int) $byeTeam > 0) {
-				$bt = (int) $byeTeam;
-				$scored = array();
-				foreach (array(array($bt, 0), array(0, $bt)) as $bg) {
-					$teamSide = ((int) $bg[0] > 0) ? 'H' : 'A';
-					$openSide = ((int) $bg[0] === 0) ? 'H' : 'A';
-					$legal = az_rr_streak_ok($roundHist, $bt, $teamSide, $maxConsec)
-						&& az_rr_streak_ok($byeHistory, $bt, $teamSide, $maxConsec)
-						&& az_rr_open_side_ok($openSeq, $openSide, $maxConsec);
-					$score = $legal ? 0 : 1;
-					$lastOpen = (count($openSeq) > 0) ? $openSeq[count($openSeq) - 1] : '';
-					if ($lastOpen !== '' && $openSide === $lastOpen) {
-						$score += 10;
+			foreach ($roundGames as $pair) {
+				$h = (int) $pair[0];
+				$a = (int) $pair[1];
+				if ($h > 0 && $a > 0) {
+					$realGames[] = array($h, $a);
+				} elseif ($h > 0 || $a > 0) {
+					$byeGame = array($h, $a);
+				}
+			}
+			if ($byeGame !== null) {
+				$bt = ((int) $byeGame[0] > 0) ? (int) $byeGame[0] : (int) $byeGame[1];
+				$teamSide = ((int) $byeGame[0] > 0) ? 'H' : 'A';
+				$openSide = ((int) $byeGame[0] === 0) ? 'H' : 'A';
+				if ($bt > 0) {
+					if (!isset($byeHistory[$bt])) {
+						$byeHistory[$bt] = array();
 					}
-					$scored[] = array($score, $bg, $openSide, $teamSide);
+					$byeHistory[$bt][] = $teamSide;
 				}
-				usort($scored, function ($x, $y) {
-					if ($x[0] !== $y[0]) {
-						return $x[0] - $y[0];
-					}
-					return 0;
-				});
-				$byeGame = $scored[0][1];
-				$openSide = $scored[0][2];
-				$teamSide = $scored[0][3];
-				az_rr_apply_pair_history($roundHist, $byeGame[0], $byeGame[1]);
-				if ((int) $byeGame[0] > 0) {
-					$roundHome[(int) $byeGame[0]] = (isset($roundHome[(int) $byeGame[0]]) ? (int) $roundHome[(int) $byeGame[0]] : 0) + 1;
-				}
-				if (!isset($byeHistory[$bt])) {
-					$byeHistory[$bt] = array();
-				}
-				$byeHistory[$bt][] = $teamSide;
 				$openSeq[] = $openSide;
 			}
-			$result[] = array('games' => $roundGames, 'byeGame' => $byeGame);
+			$result[] = array('games' => $realGames, 'byeGame' => $byeGame);
 			$history = $roundHist;
 			$homeCount = $roundHome;
 		}
@@ -1153,11 +1093,11 @@ if (!function_exists('az_gs_week_existing_games')) {
 			return $out;
 		}
 		$list = implode(',', array_map('intval', $teamIds));
-		$sql = "SELECT IFNULL(j.Local_ID, 0) AS Local_ID, IFNULL(j.Visitante_ID, 0) AS Visitante_ID
+		$sql = "SELECT IF(j.Local_ID > 0, j.Local_ID, 0) AS Local_ID, IF(j.Visitante_ID > 0, j.Visitante_ID, 0) AS Visitante_ID
 				FROM $schema.Juegos j
 				WHERE j.Torneo_ID = $Season
 					AND j.Jornada_ID = $jornadaId
-					AND (IFNULL(j.Local_ID, 0) IN ($list) OR IFNULL(j.Visitante_ID, 0) IN ($list))
+					AND (j.Local_ID IN ($list) OR j.Visitante_ID IN ($list))
 				ORDER BY j.Juego_ID ASC";
 		$res = $Config->query($sql);
 		if ($res && $res->num_rows > 0) {
@@ -1181,7 +1121,7 @@ if (!function_exists('az_gs_week_all_games')) {
 		if ($jornadaId <= 0 || $Season <= 0) {
 			return $out;
 		}
-		$sql = "SELECT IFNULL(j.Local_ID, 0) AS Local_ID, IFNULL(j.Visitante_ID, 0) AS Visitante_ID
+		$sql = "SELECT IF(j.Local_ID > 0, j.Local_ID, 0) AS Local_ID, IF(j.Visitante_ID > 0, j.Visitante_ID, 0) AS Visitante_ID
 				FROM $schema.Juegos j
 				WHERE j.Torneo_ID = $Season
 					AND j.Jornada_ID = $jornadaId
@@ -1370,15 +1310,36 @@ if (!function_exists('az_gs_order_with_rank_gaps')) {
 	}
 }
 
-if (!function_exists('az_gs_first_week_jornada_id')) {
-	/** Earliest jornada (by orden) that already has games for these teams. */
-	function az_gs_first_week_jornada_id($Config, $schema, $Season, $calId, array $teamIds) {
+if (!function_exists('az_gs_week_jornada_id_with_games')) {
+	/**
+	 * Jornada that already has games for these teams.
+	 * $direction 'first' = earliest by orden, 'last' = latest.
+	 * Optional $limitJornadaIds restricts the search (planned weeks).
+	 */
+	function az_gs_week_jornada_id_with_games($Config, $schema, $Season, $calId, array $teamIds, $direction = 'last', array $limitJornadaIds = array()) {
 		$Season = (int) $Season;
 		$calId = (int) $calId;
 		if ($Season <= 0 || $calId <= 0 || count($teamIds) === 0) {
 			return 0;
 		}
 		$list = implode(',', array_map('intval', $teamIds));
+		$limitSql = '';
+		if (count($limitJornadaIds) > 0) {
+			$ids = array();
+			foreach ($limitJornadaIds as $jid) {
+				$jid = (int) $jid;
+				if ($jid > 0) {
+					$ids[$jid] = $jid;
+				}
+			}
+			if (count($ids) === 0) {
+				return 0;
+			}
+			$limitSql = ' AND j.Jornada_ID IN (' . implode(',', $ids) . ')';
+		}
+		$order = (strtolower((string) $direction) === 'first')
+			? 'j.Jornada_Orden ASC, j.Jornada_ID ASC'
+			: 'j.Jornada_Orden DESC, j.Jornada_ID DESC';
 		$sql = "SELECT j.Jornada_ID
 				FROM $schema.Jornada j
 				INNER JOIN $schema.Juegos ju
@@ -1386,8 +1347,9 @@ if (!function_exists('az_gs_first_week_jornada_id')) {
 					AND ju.Torneo_ID = $Season
 				WHERE j.Torneo_ID = $Season
 					AND j.Calendario_ID = $calId
-					AND (IFNULL(ju.Local_ID, 0) IN ($list) OR IFNULL(ju.Visitante_ID, 0) IN ($list))
-				ORDER BY j.Jornada_Orden ASC, j.Jornada_ID ASC
+					AND (ju.Local_ID IN ($list) OR ju.Visitante_ID IN ($list))
+					$limitSql
+				ORDER BY $order
 				LIMIT 1";
 		$res = $Config->query($sql);
 		if ($res && $res->num_rows > 0) {
@@ -1395,6 +1357,20 @@ if (!function_exists('az_gs_first_week_jornada_id')) {
 			return (int) $row['Jornada_ID'];
 		}
 		return 0;
+	}
+}
+
+if (!function_exists('az_gs_first_week_jornada_id')) {
+	/** Earliest jornada (by orden) that already has games for these teams. */
+	function az_gs_first_week_jornada_id($Config, $schema, $Season, $calId, array $teamIds) {
+		return az_gs_week_jornada_id_with_games($Config, $schema, $Season, $calId, $teamIds, 'first');
+	}
+}
+
+if (!function_exists('az_gs_last_week_jornada_id')) {
+	/** Latest jornada (by orden) that already has games for these teams. */
+	function az_gs_last_week_jornada_id($Config, $schema, $Season, $calId, array $teamIds, array $limitJornadaIds = array()) {
+		return az_gs_week_jornada_id_with_games($Config, $schema, $Season, $calId, $teamIds, 'last', $limitJornadaIds);
 	}
 }
 
@@ -1436,14 +1412,11 @@ if (!function_exists('az_gs_seed_ids_from_week_games')) {
 
 if (!function_exists('az_gs_seed_order_from_first_week')) {
 	/**
-	 * When week 1 already has games:
-	 * 1) Seed order comes from those games (1st game = seeds 1 vs 2, 2nd = 3 vs 4, …).
-	 * 2) New teams are appended at the end of that order.
-	 * 3) The last team on the list fills the first gap, then the new last team the
-	 *    next gap, until no gaps remain.
-	 * Returns $currentTeamIds unchanged when there is no existing week.
+	 * When a week already has games, seed numbers come from the last available
+	 * week (1st game = seeds 1 vs 2, 2nd = 3 vs 4, …). New teams are appended,
+	 * then the last team fills each gap. Returns $currentTeamIds when none exist.
 	 */
-	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds, array $rankByTeam = array(), $catId = 0) {
+	function az_gs_seed_order_from_first_week($Config, $schema, $Season, $calId, array $currentTeamIds, array $rankByTeam = array(), $catId = 0, array $limitJornadaIds = array()) {
 		$current = array();
 		$currentSet = array();
 		$currentIndex = array();
@@ -1458,7 +1431,7 @@ if (!function_exists('az_gs_seed_order_from_first_week')) {
 		if (count($current) === 0) {
 			return $current;
 		}
-		$jornadaId = az_gs_first_week_jornada_id($Config, $schema, $Season, $calId, $current);
+		$jornadaId = az_gs_last_week_jornada_id($Config, $schema, $Season, $calId, $current, $limitJornadaIds);
 		if ($jornadaId <= 0) {
 			return $current;
 		}
@@ -1518,23 +1491,23 @@ if (!function_exists('az_gs_category_first_played_week_team_ids')) {
 			return array();
 		}
 		$list = implode(',', array_map('intval', $teamIds));
-		$sql = "SELECT DISTINCT IFNULL(ju.Local_ID, 0) AS Team_ID
+		$sql = "SELECT DISTINCT ju.Local_ID AS Team_ID
 				FROM $schema.Jornada j
 				INNER JOIN $schema.Juegos ju
 					ON ju.Jornada_ID = j.Jornada_ID
 					AND ju.Torneo_ID = $Season
 				WHERE j.Torneo_ID = $Season
 					AND j.Calendario_ID = $calId
-					AND IFNULL(ju.Local_ID, 0) IN ($list)
+					AND ju.Local_ID IN ($list)
 				UNION
-				SELECT DISTINCT IFNULL(ju.Visitante_ID, 0) AS Team_ID
+				SELECT DISTINCT ju.Visitante_ID AS Team_ID
 				FROM $schema.Jornada j
 				INNER JOIN $schema.Juegos ju
 					ON ju.Jornada_ID = j.Jornada_ID
 					AND ju.Torneo_ID = $Season
 				WHERE j.Torneo_ID = $Season
 					AND j.Calendario_ID = $calId
-					AND IFNULL(ju.Visitante_ID, 0) IN ($list)";
+					AND ju.Visitante_ID IN ($list)";
 		$res = $Config->query($sql);
 		if (!$res || $res->num_rows === 0) {
 			return array();

@@ -26,14 +26,14 @@
 					ELT(DATE_FORMAT(a.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre')  Mes, year(a.Fecha) Anio, a.Campo_ID, 
 					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(a.Fecha, '%W, %M %d %Y') Fecha_String, DATE_FORMAT(a.Horario, '%h:%i %p') Horario
 			from $schema.Juegos a
-				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				join $schema.Jornada b on a.Torneo_ID = b.Torneo_ID and a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
-				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID
+				join $schema.Categorias dc on d.Torneo_ID = dc.Torneo_ID and d.Fuerza = dc.Categoria_ID
 				join $schema.Campos e on d.Campo_ID = e.Campo_ID
 				join $schema.Equipos f on a.Torneo_ID = f.Torneo_ID and a.Visitante_ID = f.Equipo_ID 
 				join $schema.Torneos g on a.Torneo_ID = g.Torneo_ID
-				join $schema.Jornada jor on a.Jornada_ID = jor.Jornada_ID
+				join $schema.Jornada jor on a.Torneo_ID = jor.Torneo_ID and a.Jornada_ID = jor.Jornada_ID
 			where a.Torneo_ID = $torneo and b.Jornada_ID = $jornada and ((weekday(a.Fecha) <> 2) or (weekday(a.Fecha) = 2 and a.Horario not in ('08:00', '14:00')))
 			order by a.Fecha, a.Horario, c.Campo_DESC, a.Juego_ID asc";
 	//echo $sql;
@@ -141,7 +141,7 @@
 			$y = $y -5;
 			$pdf->SetFont('Times' , 'B' , 12);
 			$pdf->SetXY($x+6,$y+46);
-			$pdf->Cell(100 , 5, az_utf8_decode(strtoupper ('' . $row1["Local"] . '')), 1, 1 , 'C' , false);
+			$pdf->Cell(100 , 5, az_pdf_upper('' . $row1["Local"] . ''), 1, 1 , 'C' , false);
 			$pdf->SetFont('Times' , '' , 10);
 			$y = $y + 4;
 			$pdf->SetXY($x+6,$y+47);
@@ -248,7 +248,7 @@
 		
 			$pdf->SetFont('Times' , 'B' , 12);
 			$pdf->SetXY($x+10,$y+46);
-			$pdf->Cell(100 , 5, az_utf8_decode(strtoupper ('' . $row1["Visitante"] . '')), 1, 1 , 'C' , false);
+			$pdf->Cell(100 , 5, az_pdf_upper('' . $row1["Visitante"] . ''), 1, 1 , 'C' , false);
 			$pdf->SetFont('Times' , '' , 10);
 			$y = $y + 4;
 			$pdf->SetXY($x+10,$y+47);
@@ -362,6 +362,8 @@
 			$pdf->Cell(204 , 5, 'NOTA: En caso de inconformidad, firmar la cedula de juego bajo protesta, si no esta firmada perdera el derecho a replica.', 0, 0 , 'C' , false);
 		} 
 	}else {
+		$pdf->AddPage();
+		$pdf->SetFont('Helvetica' , 'B' , 12);
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
 	$Config->close();

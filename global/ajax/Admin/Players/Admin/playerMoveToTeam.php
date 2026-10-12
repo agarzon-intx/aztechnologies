@@ -23,6 +23,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once __DIR__ . '/player_team_move.inc.php';
 	$schema = $Config->getSchema();
 	$fgmembersite->CheckLogin('playerMoveToTeam.php');
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
@@ -42,23 +43,16 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit;
 	}
 
-	$equipoIds = $fgmembersite->UserEquipo();
-	$isAdmin = ($equipoIds === '0' || $equipoIds === '-1');
-	if (!$isAdmin) {
-		$allowed = array_map('intval', explode(',', (string) $equipoIds));
-		if (!in_array($team, $allowed, true)) {
-			echo json_encode($retunData);
-			exit;
-		}
-		$src = $Config->query("SELECT Equipo_ID FROM $schema.Jugadores WHERE Jugador_ID = $player LIMIT 1");
-		$srcTeam = 0;
-		if ($src && $srcRow = $src->fetch_assoc()) {
-			$srcTeam = (int) $srcRow['Equipo_ID'];
-		}
-		if ($srcTeam <= 0 || !in_array($srcTeam, $allowed, true)) {
-			echo json_encode(array('status' => '0', 'message' => $lang['539-16']));
-			exit;
-		}
+	$isAdmin = az_user_is_league_admin($Config, $schema, $fgmembersite);
+	$allowed = az_user_allowed_equipo_ids($Config, $schema, $fgmembersite, $isAdmin);
+	$src = $Config->query("SELECT Equipo_ID FROM $schema.Jugadores WHERE Jugador_ID = $player LIMIT 1");
+	$srcTeam = 0;
+	if ($src && $srcRow = $src->fetch_assoc()) {
+		$srcTeam = (int) $srcRow['Equipo_ID'];
+	}
+	if (!az_player_coach_can_move_to_team($Config, $schema, $srcTeam, $team, $allowed, $isAdmin)) {
+		echo json_encode(array('status' => '0', 'message' => $lang['539-16']));
+		exit;
 	}
 
 	$already = $Config->query("SELECT Jugador_ID FROM $schema.Jugadores WHERE Equipo_ID = $team AND Jugador_ID = $player LIMIT 1");

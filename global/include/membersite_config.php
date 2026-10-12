@@ -79,5 +79,6 @@ $fgmembersite->EnableClientSidePasswordHashing(true);
 $fgmembersite->EnableTransactions(false);
 
 $fgmembersite->SetAcceptedCreditCards(array("visa", "discover", "amex", "mastercard"));
+$fgmembersite->EnforceLiveSessionForAjax();
 
 ?>

@@ -32,8 +32,8 @@
 				$sqlByeWeekSets3 = "0 ";
 				$sqlByeWeekSetPoints3 = "0 ";
 				if($Config->VollByeWeekSets !== 0){
-					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 					$sqlByeWeekPoints3 = "" . $Config->VollByeWeekPoints . " ";
     				$sqlByeWeekSets3 = "" . $Config->VollByeWeekSets . " ";
     				$sqlByeWeekSetPoints3 = "" . $Config->VollByeWeekSetPoints . " ";
@@ -129,26 +129,26 @@
                                                   Equipo_DESC3, 
                                                   Fuerza, 
                                                   l.Juego_ID, 
-                                                  case  when l.Visitante_ID is null then " . $sqlByeWeekSets3 . "
+                                                  case  when l.Visitante_ID = -1 then " . $sqlByeWeekSets3 . "
                                                         else s.SL end SF, 
                                                   s.SV SC, 
-                                                  case  when l.Visitante_ID is null then " . $sqlByeWeekSetPoints3 . "
+                                                  case  when l.Visitante_ID = -1 then " . $sqlByeWeekSetPoints3 . "
                                                         else s.PL end PF, 
                                                   s.PV PC, 
-                                                  case 	$sqlPuntoslocal when l.Visitante_ID is null then " . $sqlByeWeekPoints3 . "
+                                                  case 	$sqlPuntoslocal when l.Visitante_ID = -1 then " . $sqlByeWeekPoints3 . "
                                         		  end as Puntos, 
                                                   l.Extra_Local Extra,  
-                                                  case  when l.Visitante_ID is not null then s.PL 
-                                                        when l.Visitante_ID is null then " . $sqlByeWeekSetPoints3 . "
+                                                  case  when l.Visitante_ID <> -1 then s.PL 
+                                                        when l.Visitante_ID = -1 then " . $sqlByeWeekSetPoints3 . "
                                                         else 0 end as GF, 
                                                   s.PV as GC, 
                                                   case 	when l.Jugado = 1 then 1 
                                                         when l.Jugado = 2 then 1
-                                                        when l.Visitante_ID is null then 1 
+                                                        when l.Visitante_ID = -1 then 1 
                                                         when l.Jugado = 0 then 0
                                         		  end as Juegos, 
                                                   case  when Equipo_ID = l.Local_ID and s.SL > s.SV and l.Jugado = 1 then 1 
-                                                        when l.Visitante_ID is null then 1
+                                                        when l.Visitante_ID = -1 then 1
                                                         else 0 end as JG,
                                                   case when l.Jugado = 2 then 1 when Equipo_ID = l.Local_ID and s.SL < s.SV and l.Jugado = 1 then 1 else 0 end as JP, 
                                                   l.Extra_Local ExtraEquipo 
@@ -190,17 +190,17 @@
 												Equipo_DESC3, 
 												Fuerza, 
 												v.Juego_ID,
-                                                case    when v.Visitante_ID is null then 0
+                                                case    when v.Visitante_ID = -1 then 0
                                                         else s.SV end SF, 
                                                 s.SL SC, 
-                                                case    when v.Visitante_ID is null then 0
+                                                case    when v.Visitante_ID = -1 then 0
                                                         else s.PV end PF, 
                                                 s.PL PC, 
-                                                case 	$sqlPuntosvisitante when v.Visitante_ID is null then 0
+                                                case 	$sqlPuntosvisitante when v.Visitante_ID = -1 then 0
                                     		    end as Puntos,
 											    v.Extra_Visitante Extra, 
-                                                  case  when v.Visitante_ID is not null then s.PL 
-                                                        when v.Visitante_ID is null then 0
+                                                  case  when v.Visitante_ID <> -1 then s.PL 
+                                                        when v.Visitante_ID = -1 then 0
                                                         else 0 end as GF, 
                                                 s.PL as GC, 
                                                 case 	when v.Jugado = 1 then 1 

@@ -23,6 +23,7 @@ $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 								
 								
 $count = 1;
+$idPdfExpr = $Config->jugadoresHasColumn('IdentificacionPDF') ? " or ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100" : "";
 $sql21 = "SET @rank:=0;";
 $Config->query($sql21);
 $sql22 = "	SELECT distinct Jugador_ID,
@@ -51,7 +52,8 @@ $sql22 = "	SELECT distinct Jugador_ID,
 					year(now())-year(a.Fecha_Nacimiento) Edad, 
 					'' strikei, 
 					'' strikef,
-					case when a.Foto is null then '' else 'si' end as Picture
+					case when a.Foto is null then '' else 'si' end as Picture,
+					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -68,7 +70,10 @@ if ($result2->num_rows > 0) {
 	while($row2 = $result2->fetch_assoc()) {
 	    $hasLogo = '';
 	    if($row2["Picture"] == ''){
-	        $hasLogo = '<img onclick="playersManagementAdminShowEdit(5546)" src="./imagenes/FaltaFoto.png" width="20" height="20" alt="">';
+	        $hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
+	    }
+	    if($row2["HasID"] == ''){
+	        $hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
 	    }
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";

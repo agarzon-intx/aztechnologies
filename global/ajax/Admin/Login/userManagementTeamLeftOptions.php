@@ -23,6 +23,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once __DIR__ . '/user_institution_options.inc.php';
 	$schema = $Config->getSchema();
 	$Config->LoadFlags();
 
@@ -40,6 +41,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if ($mode === 'create') {
 		$optionsInnerHtml .= '<option value="0">' . htmlspecialchars($Config->liga, ENT_QUOTES, 'UTF-8') . '</option>';
 		$optionsInnerHtml .= '<option value="-1">' . htmlspecialchars($lang['10761'], ENT_QUOTES, 'UTF-8') . '</option>';
+		$optionsInnerHtml .= um_institution_options_html($Config, $schema, $lang);
 		$sql01 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, b.Activo AS Equipo_Activo, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza, a.Activo 
 						from $schema.Equipos a
@@ -78,6 +80,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		if ($result->num_rows == 0) {
 			$optionsInnerHtml .= '<option value="-1">' . htmlspecialchars($lang['10761'], ENT_QUOTES, 'UTF-8') . '</option>';
 		}
+		$optionsInnerHtml .= um_institution_options_html($Config, $schema, $lang, um_user_institution_id($Config, $schema, $userID));
 
 		$sql01 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, b.Activo AS Equipo_Activo, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza, a.Activo 

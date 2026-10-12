@@ -87,7 +87,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				Juego_ID as juego,
 				Extra_Local,
 				Extra_Visitante, 
-				case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+				case when j.Visitante_ID = -1 then null else Arbitro end as Arbitro, 
 				Comentarios
 			from  $schema.Juegos as j 
 				join $schema.Jornada as jo on j.Fecha between jo.Fecha_Inicio and jo.Fecha_Fin

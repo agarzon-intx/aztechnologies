@@ -43,7 +43,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 
 	function searchPlayerCurp(defaultTeam) {
-		var curp = $('#curp').val();
+		var curp = $.trim($('#curp').val() || '');
 		var team = searchPlayerCurpTeam();
 		if (!team) {
 			team = defaultTeam;

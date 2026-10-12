@@ -88,7 +88,7 @@
 	$count = 1;
     $x = 0;
     $y = 43;
-	$sql = "select distinct dc.Categoria_DESC, SUBSTRING(jor.Jornada_Desc, 1, 4) Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia, 
+	$sql = "select distinct dc.Categoria_DESC, jor.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia, 
 					ELT(DATE_FORMAT(a.Fecha,'%m'),'Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic')  Mes, year(a.Fecha) Anio, a.Campo_ID, DATE_FORMAT(a.Fecha, '%W') dia_sem,
 					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(a.Fecha, ' %d %Y') Fecha_String, Comentarios, TIME_FORMAT(a.Horario, '%H:%i %p') hora
 			from $schema.Juegos a
@@ -285,7 +285,7 @@
     $x = 0;
     $y = 43;
     $count = 1;
-	$sql = "select distinct dc.Categoria_DESC, SUBSTRING(jor.Jornada_Desc, 1, 4) Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia, 
+	$sql = "select distinct dc.Categoria_DESC, jor.Jornada_DescCorta, a.Juego_ID, a.Local_ID, d.Equipo_FULLDESC as Local, a.Visitante_ID, f.Equipo_FULLDESC as Visitante, a.Fecha, day(a.Fecha) Dia, 
 					ELT(DATE_FORMAT(a.Fecha,'%m'),'Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic')  Mes, year(a.Fecha) Anio, a.Campo_ID, DATE_FORMAT(a.Fecha, '%W') dia_sem,
 					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(a.Fecha, ' %d %Y') Fecha_String, Comentarios, TIME_FORMAT(a.Horario, '%H:%i %p') hora, dc.Categoria_Orden
 			from $schema.Juegos a

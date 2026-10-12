@@ -26,17 +26,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$Config->connect();
 	$image_content = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
 	
-	$jugador=$_GET['Jugador_ID'];
-	$imagen=$_GET['Imagen'];
+	$jugador = isset($_GET['Jugador_ID']) ? (int) $_GET['Jugador_ID'] : 0;
+	$imagen = isset($_GET['Imagen']) ? (string) $_GET['Imagen'] : '';
 	
-	$select_image = "select $imagen from $schema.Jugadores where Jugador_ID = $jugador and OCTET_LENGTH($imagen) > 100";
-	//echo $select;
-	
-	$result=$Config->query($select_image);
-	if ($result->num_rows > 0) {
-		// output data of each row
-		while($row = $result->fetch_assoc()) {
-			$image_content = $row[$imagen];
+	if ($jugador > 0 && in_array($imagen, array('Foto', 'Identificacion', 'Firma'), true)) {
+		$select_image = "select $imagen from $schema.Jugadores where Jugador_ID = $jugador and OCTET_LENGTH($imagen) > 100";
+		$result=$Config->query($select_image);
+		if ($result && $result->num_rows > 0) {
+			// output data of each row
+			while($row = $result->fetch_assoc()) {
+				$image_content = $row[$imagen];
+			}
 		}
 	}
 	$Config->close();

@@ -226,8 +226,7 @@ if (!defined('__CLASS_QRCODE__'))
 		
 		private function ERROR($msg)
 		{
-			echo 'ERROR : '.$msg;
-			exit;	
+			throw new Exception('QR code: '.$msg);
 		}
 		
 		private function addData($val, $bit, $next = true)

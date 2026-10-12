@@ -1,4 +1,5 @@
 <?php
+	require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
 	require_once dirname(__DIR__) . '/site_paths.php';
 	set_time_limit(300);
 	require("alphapdf.php");
@@ -48,7 +49,7 @@
 	$sql = "SET lc_time_names = 'es_MX';";
 	$result1 = $Config->query($sql);	
 			
-	$sql = "SELECT j.Juego_ID,
+	$sql = "SELECT distinct j.Juego_ID,
                 j.Torneo_ID,
                 j.Jornada_ID,
                 jo.Jornada_Desc,
@@ -87,62 +88,76 @@
 			$pdf->SetAutoPageBreak(false,1);
 			$pdf->SetXY(0,0);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/FondoFlyer.png', 0,0,210, 210);
-			$pdf->SetFont('Coluna' , 'B' , 35);
-			$pdf->SetTextColor($flyerTextColor1[0], $flyerTextColor1[1], $flyerTextColor1[2]);
-			az_pdf_image_file($pdf, $siteRoot, '/pdf/calendar.png', 35,153,10, 10);
-			$pdf->SetXY(45,155);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontDate);
+
+			if (!function_exists('az_flyer_text_style')) {
+				$__azFlyerText = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
+				if (is_readable($__azFlyerText)) {
+					require_once $__azFlyerText;
+				}
+				unset($__azFlyerText);
+			}
+			$fs = function_exists('az_flyer_text_style')
+				? az_flyer_text_style(isset($GLOBALS['Config']) ? $GLOBALS['Config'] : null)
+				: array('color1' => array(0, 152, 175), 'color2' => array(255, 255, 255), 'week' => 75, 'category' => 60, 'date' => 35, 'hour' => 35, 'field' => 35);
+
+			az_flyer_pdf_set_font($pdf, $fs['date']);
+			$pdf->SetTextColor($fs['color2'][0], $fs['color2'][1], $fs['color2'][2]);
+			az_pdf_image_file($pdf, $siteRoot, '/pdf/calendar.png', 35,160,10, 10);
+			$pdf->SetXY(45,162);
+			az_flyer_pdf_set_font($pdf, $fs['date']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
-			az_pdf_image_file($pdf, $siteRoot, '/pdf/clock.png', 120,153,10, 10);
-			$pdf->SetXY(130,155);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontHour);
+			az_pdf_image_file($pdf, $siteRoot, '/pdf/clock.png', 130,160,10, 10);
+			$pdf->SetXY(140,162);
+			az_flyer_pdf_set_font($pdf, $fs['hour']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
-			az_pdf_image_file($pdf, $siteRoot, '/pdf/pointer.png', 80,169,10, 10);
-			$pdf->SetXY(105,170);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontField);
+			az_pdf_image_file($pdf, $siteRoot, '/pdf/pointer.png', 65,174,10, 10);
+			$pdf->SetXY(75,175);
+			az_flyer_pdf_set_font($pdf, $fs['field']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
-			$pdf->SetTextColor($flyerTextColor2[0], $flyerTextColor2[1], $flyerTextColor2[2]);
-			$pdf->SetXY(45.5,155.5);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontDate);
+			$pdf->SetTextColor($fs['color1'][0], $fs['color1'][1], $fs['color1'][2]);
+			$pdf->SetXY(45.5,162.5);
+			az_flyer_pdf_set_font($pdf, $fs['date']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
-			$pdf->SetXY(130.5,155.5);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontHour);
+			$pdf->SetXY(140.5,162.5);
+			az_flyer_pdf_set_font($pdf, $fs['hour']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
-			$pdf->SetXY(105.5,170.5);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontField);
+			$pdf->SetXY(75.5,175.5);
+			az_flyer_pdf_set_font($pdf, $fs['field']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
-			az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png', 30,95,45, 45);
-			az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png', 135,95,45, 45);
-			$pdf->SetTextColor($flyerTextColor1[0], $flyerTextColor1[1], $flyerTextColor1[2]);
+			$pdf->SetTextColor($fs['color2'][0], $fs['color2'][1], $fs['color2'][2]);
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png', 17.5,82.5,70, 70);
+			az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png', 132.5,82.5,70, 70);
 			$pdf->SetXY(0,38);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontWeek);
+			az_flyer_pdf_set_font($pdf, $fs['week']);
+			
 			if(is_numeric($row1["Jornada_Desc"])){
 			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}else{
 			    $pdf->Cell(210 , 25, az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
-			$pdf->SetXY(0,70);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontCategory);
+			$pdf->SetXY(0,60);
+			az_flyer_pdf_set_font($pdf, $fs['category']);
 			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
-			$pdf->SetTextColor($flyerTextColor2[0], $flyerTextColor2[1], $flyerTextColor2[2]);
+			$pdf->SetTextColor($fs['color1'][0], $fs['color1'][1], $fs['color1'][2]);
 			$pdf->SetXY(.5,38.5);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontWeek);
+			az_flyer_pdf_set_font($pdf, $fs['week']);
 			if(is_numeric($row1["Jornada_Desc"])){
 			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}else{
 			    $pdf->Cell(210 , 25, az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
-			$pdf->SetXY(.5,70.5);
-			$pdf->SetFont('Coluna' , 'B' , $flyerFontCategory);
+			$pdf->SetXY(.5,60.5);
+			az_flyer_pdf_set_font($pdf, $fs['category']);
 			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
 			
 			
 		} 
 	}else {
-	    $pdf->SetXY(0,0);
-	    $pdf->SetFont('Coluna' , 'B' , 90);
+		$pdf->AddPage();
+		$pdf->SetAutoPageBreak(false,1);
+		$pdf->SetXY(0,0);az_flyer_pdf_set_font($pdf, 35);
 		$pdf->Cell(200 , 8, $lang['9998'], 0, 0 , 'C' , false);
 	}
 	$Config->close();

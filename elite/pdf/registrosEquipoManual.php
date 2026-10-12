@@ -15,9 +15,9 @@
 	$torneo = $_COOKIE[$Config->getAlias() . 'season'];
 	$categoria = $_COOKIE[$Config->getAlias() . 'category'];
 
-	$edad1 = htmlspecialchars($_GET["Edad1"]);	
-	$edad2 = htmlspecialchars($_GET["Edad2"]);	
-	$imprimir = htmlspecialchars($_GET["Imprimir"]);
+	$edad1 = htmlspecialchars($_GET["Edad1"] ?? '');
+	$edad2 = htmlspecialchars($_GET["Edad2"] ?? '');
+	$imprimir = htmlspecialchars($_GET["Imprimir"] ?? '');
 
 	$siteRoot = az_pdf_site_root($Config);
 
@@ -27,7 +27,16 @@
 	$Config->LoadLogo();
 	$Config->LoadFlags();
 	$Config->connect();
-	$_SESSION[$Config->getAlias() . 'printList'];
+	$printKey = $Config->getAlias() . 'printList';
+	$printRaw = isset($_SESSION[$printKey]) ? (string) $_SESSION[$printKey] : '';
+	$printIds = array();
+	foreach (explode(',', $printRaw) as $idPart) {
+		$idPart = trim($idPart);
+		if ($idPart !== '' && ctype_digit($idPart)) {
+			$printIds[] = (int) $idPart;
+		}
+	}
+	$printListSql = implode(',', array_unique($printIds));
 
 	// 5mm page margin: each credential slot is 5mm narrower and 2.5mm shorter than 108×70.
 	$cardW = 103.0;
@@ -35,43 +44,45 @@
 	$marginX = 5.0;
 	$marginY = 5.0;
 
-	$sql = "SELECT  Jugador_ID, 
-	                Clave, Nombre, 
-	                Apellido_P, 
-	                Apellido_M, 
-	                Apodo, 
-	                date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento, 
-            		YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad, 
-            		Curp, Numero, 
-            		Estatus, 
-            		a.Equipo_ID, 
-            		b.Equipo_FULLDESC, 
-            		Comentarios, 
-                    Telefono, correo, 
-                    concat(b.Torneo_ID,'-', b.Equipo_ID) Logo, 
-                    c.Categoria_Desc, 
-                    c.Color, 
-                    d.Color_HEX, 
-                    date_format(CURDATE(),'%d %M %Y') FechaAlta, 
-                    e.Torneo_Desc 
-            FROM $schema.Jugadores a 
-            	join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = (	select max(Torneo_ID) 
-            																					from $schema.Equipos 
-                                                                                                where Equipo_ID in (	SELECT Equipo_ID 
-            																											FROM $schema.Jugadores
-            																											where Jugador_ID in (" . $_SESSION[$Config->getAlias() . 'printList'] . "))) 
-            	join $schema.Categorias c on b.Fuerza = c.Categoria_ID and c.Torneo_ID = $torneo
-                join $schema.Colores d on c.Color = d.Color_HEX 
-                join $schema.Torneos e on b.Torneo_ID = e.Torneo_ID 
-            where YEAR(CURDATE())-YEAR(Fecha_Nacimiento) between 0 and 150 
-            		and a.Jugador_ID in (" . $_SESSION[$Config->getAlias() . 'printList'] . ") 
-            order by c.Categoria_Desc, b.Equipo_FULLDESC, convert(Numero,unsigned), Nombre, Apellido_P asc;";
-	//echo $sql;
-	$result = $Config->query($sql);
 	$players = array();
-	if ($result && $result->num_rows > 0) {
-		while ($row = $result->fetch_assoc()) {
-			$players[] = $row;
+	if ($printListSql !== '') {
+		$sql = "SELECT  Jugador_ID, 
+		                Clave, Nombre, 
+		                Apellido_P, 
+		                Apellido_M, 
+		                Apodo, 
+		                date_format(Fecha_Nacimiento,'%d/%m/%Y') Fecha_Nacimiento, 
+	            		YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad, 
+	            		Curp, Numero, 
+	            		Estatus, 
+	            		a.Equipo_ID, 
+	            		b.Equipo_FULLDESC, 
+	            		Comentarios, 
+	                    Telefono, correo, 
+	                    concat(b.Torneo_ID,'-', b.Equipo_ID) Logo, 
+	                    c.Categoria_Desc, 
+	                    c.Color, 
+	                    d.Color_HEX,
+	                    b.Credencial_Color, 
+	                    date_format(CURDATE(),'%d %M %Y') FechaAlta, 
+	                    e.Torneo_Desc 
+	            FROM $schema.Jugadores a 
+	            	join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = (	select max(Torneo_ID) 
+	            																					from $schema.Equipos 
+	                                                                                                where Equipo_ID in (	SELECT Equipo_ID 
+	            																											FROM $schema.Jugadores
+	            																											where Jugador_ID in ($printListSql))) 
+	            	join $schema.Categorias c on b.Fuerza = c.Categoria_ID and c.Torneo_ID = $torneo
+	                join $schema.Colores d on c.Color = d.Color_HEX 
+	                join $schema.Torneos e on b.Torneo_ID = e.Torneo_ID 
+	            where YEAR(CURDATE())-YEAR(Fecha_Nacimiento) between 0 and 150 
+	            		and a.Jugador_ID in ($printListSql) 
+	            order by c.Categoria_Desc, b.Equipo_FULLDESC, convert(Numero,unsigned), Nombre, Apellido_P asc;";
+		$result = $Config->query($sql);
+		if ($result && $result->num_rows > 0) {
+			while ($row = $result->fetch_assoc()) {
+				$players[] = $row;
+			}
 		}
 	}
 
@@ -95,7 +106,7 @@
 					az_pdf_image_file($pdf, $siteRoot, 'pdf/Credencial.png', $x+0, $y+0, $cardW, $cardH);
 				}
 				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+10, $y+15, 26, 35);
-				az_pdf_image_file($pdf, $siteRoot, 'imagenes/Original/' . $row['Logo'] . '.png',$x+15.5,$y+45,15, 15);
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/Original/' . $row['Logo'] . '.png',$x+15.5,$y+42.5,15, 15);
 
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetAlpha(1);
@@ -105,6 +116,27 @@
 				$pdf->SetXY($x+40,$y+21);
 				$pdf->Cell(45 , 5, '' . az_utf8_decode($row["Categoria_Desc"]) . '', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+26);
+				$credHex = isset($row['Credencial_Color']) ? trim((string) $row['Credencial_Color']) : '';
+				$credRgb = null;
+				if ($credHex !== '' && strcasecmp($credHex, 'null') !== 0) {
+					$h = ltrim($credHex, '#');
+					if (strlen($h) === 3 && ctype_xdigit($h)) {
+						$h = $h[0] . $h[0] . $h[1] . $h[1] . $h[2] . $h[2];
+					}
+					if (strlen($h) === 6 && ctype_xdigit($h)) {
+						$credRgb = array(
+							hexdec(substr($h, 0, 2)),
+							hexdec(substr($h, 2, 2)),
+							hexdec(substr($h, 4, 2)),
+						);
+					}
+				}
+				if ($credRgb !== null) {
+					$pdf->SetFillColor($credRgb[0], $credRgb[1], $credRgb[2]);
+					$pdf->SetDrawColor($credRgb[0], $credRgb[1], $credRgb[2]);
+					$pdf->SetLineWidth(1);
+					$pdf->Rect($x+40, $y+26, 48, 20, 'F');
+				}
 				$pdf->MultiCell(45	 , 5, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , false);
 				$pdf->SetXY($x+40,$y+36);
 				$pdf->Cell(65 , 5, 'Fech Nac ' . az_utf8_decode($row["Fecha_Nacimiento"]) . '', 0, 0 , 'L' , false);
@@ -112,7 +144,7 @@
 				$pdf->Cell(65 , 5, '' . az_utf8_decode(substr($row["Curp"],0,11)) . 'XXXXXXX', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+46);
 				$pdf->Cell(65 , 5, az_utf8_decode($row["FechaAlta"]), 0, 0 , 'L' , false);
-
+				az_pdf_qrcode($pdf, $Config, $row['Jugador_ID'], $x+82, $y+46, 16, 17.5);
 				if ($col == 1) {
 					$x = $marginX;
 					$col = 0;
@@ -127,7 +159,7 @@
 					$x = $x + $cardW;
 					$col = $col + 1;
 				}
-			} catch (Exception $ae) {
+			} catch (Throwable $ae) {
 			}
 		}
 	};
@@ -151,7 +183,7 @@
 				if ($Config->credencialBackImage == 1) {
 					az_pdf_image_file($pdf, $siteRoot, 'pdf/CredencialDetras.png', $x, $y, $cardW, $cardH);
 				}
-			} catch (Exception $ae) {
+			} catch (Throwable $ae) {
 			}
 		}
 	};

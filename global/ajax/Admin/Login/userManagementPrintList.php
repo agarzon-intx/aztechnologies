@@ -73,6 +73,7 @@
 				email,
 				GROUP_CONCAT(ifnull(b.Equipo_ID ,'')) Equipo_ID, 
 				GROUP_CONCAT(ifnull(c.Equipo_FULLDESC ,'')) Equipo_FULLDESC,
+				MAX((select i.Institucion_DESC from $schema.Instituciones i where i.Institucion_ID = a.Institucion_ID and a.Institucion_ID > 0 limit 1)) Institucion_DESC,
 				case When a.active = 0 then '" . $lang['0012'] . "' else '" . $lang['0011'] . "' end active,
 				case When a.active = 0 then '' else '' end strikei,
 				case When a.active = 0 then '' else '' end strikef,
@@ -103,6 +104,9 @@
 	if ($result2->num_rows > 0) {
 		// output data of each row
 		while($row2 = $result2->fetch_assoc()) {
+			if (trim((string) $row2['Equipo_FULLDESC'], ', ') === '' && (string) $row2['Institucion_DESC'] !== '') {
+				$row2['Equipo_FULLDESC'] = $lang['819-2'] . ' - ' . $row2['Institucion_DESC'];
+			}
 			if (($count % 2) == 1){
 				$htmlUsers .= "<tr>";
 			}else{
@@ -163,6 +167,7 @@
 			email,
 			GROUP_CONCAT(ifnull(b.Equipo_ID ,'')) Equipo_ID, 
 			GROUP_CONCAT(ifnull(c.Equipo_FULLDESC ,'')) Equipo_FULLDESC,
+				MAX((select i.Institucion_DESC from $schema.Instituciones i where i.Institucion_ID = a.Institucion_ID and a.Institucion_ID > 0 limit 1)) Institucion_DESC,
 			case When a.active = 0 then '" . $lang['0012'] . "' else '" . $lang['0011'] . "' end active,
 			case When a.active = 0 then '<strike>' else '' end strikei,
 			case When a.active = 0 then '</strike>' else '' end strikef,
@@ -190,6 +195,9 @@
 	if ($result2->num_rows > 0) {
 		// output data of each row
 		while($row2 = $result2->fetch_assoc()) {
+			if (trim((string) $row2['Equipo_FULLDESC'], ', ') === '' && (string) $row2['Institucion_DESC'] !== '') {
+				$row2['Equipo_FULLDESC'] = $lang['819-2'] . ' - ' . $row2['Institucion_DESC'];
+			}
 			if (($count % 2) == 1){
 				$htmlUsers .= "<tr>";
 			}else{
@@ -274,6 +282,7 @@
 			email,
 			GROUP_CONCAT(ifnull(b.Equipo_ID ,'')) Equipo_ID, 
 			GROUP_CONCAT(ifnull(c.Equipo_FULLDESC ,'')) Equipo_FULLDESC,
+				MAX((select i.Institucion_DESC from $schema.Instituciones i where i.Institucion_ID = a.Institucion_ID and a.Institucion_ID > 0 limit 1)) Institucion_DESC,
 			case When a.active = 0 then '" . $lang['0012'] . "' else '" . $lang['0011'] . "' end active,
 			case When a.active = 0 then '<strike>' else '' end strikei,
 			case When a.active = 0 then '</strike>' else '' end strikef,
@@ -301,6 +310,9 @@
 	if ($result2->num_rows > 0) {
 		// output data of each row
 		while($row2 = $result2->fetch_assoc()) {
+			if (trim((string) $row2['Equipo_FULLDESC'], ', ') === '' && (string) $row2['Institucion_DESC'] !== '') {
+				$row2['Equipo_FULLDESC'] = $lang['819-2'] . ' - ' . $row2['Institucion_DESC'];
+			}
 			if (($count % 2) == 1){
 				$htmlUsers .= "<tr>";
 			}else{

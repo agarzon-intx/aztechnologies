@@ -17,7 +17,7 @@
 	require_once $__azPdfHelpers;
 	unset($__azPdfHelpers);
 	require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_ci_export.php';
-	require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
+	require_once __DIR__ . DIRECTORY_SEPARATOR . 'flyer_sc_pdf.php';
 	require('membersite_config.php');
 	$Config = new Configuration();
 	$schema = $Config->getSchema();

@@ -20,6 +20,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once __DIR__ . '/user_institution_options.inc.php';
 	$schema = $Config->getSchema();
 	$Config->LoadFlags();
 	
@@ -58,6 +59,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$active = $row2["active"];
 		}
 	}
+	$userInstitucionId = um_user_institution_id($Config, $schema, $userID);
 	
 	$sqlCat = "SELECT Categoria_ID, Categoria_Desc FROM $schema.Categorias WHERE Torneo_ID = $Season ORDER BY Categoria_Orden ASC, Categoria_ID ASC";
 	$resCat = $Config->query($sqlCat);
@@ -136,7 +138,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								<label class="custom-control-label" for="activo">' . $lang['835'] . '</label>
 							</div>
 						</div>
-						<div class="col-4 col-xs-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
+						' . um_assign_type_filter_html($lang, um_institutions_available($Config, $schema, $lang, $userInstitucionId), $userInstitucionId > 0) . '
+							<div class="um-team-filter-col col-4 col-xs-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
 							<div class="input-group input-group-static mb-4">
 								<label>' . htmlspecialchars($lang['378'], ENT_QUOTES, 'UTF-8') . '</label>
 								<select class="form-control um-team-status-filter">
@@ -146,7 +149,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								</select>
 							</div>
 						</div>
-						<div class="col-4 col-xs-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
+						<div class="um-team-filter-col col-4 col-xs-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
 							<div class="input-group input-group-static mb-4">
 							<label >' . htmlspecialchars($lang['70'], ENT_QUOTES, 'UTF-8') . '</label>
 							<select class="form-control flex-grow-1 um-category-filter" style="min-width: 8rem;">' . $umCategoryOptionsHtml . '</select>
@@ -174,6 +177,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if ($result->num_rows == 0) {
 			$htmlUsers .= '<option value="-1">' . $lang['10761'] . '</option>';
 	}
+	$htmlUsers .= um_institution_options_html($Config, $schema, $lang, $userInstitucionId);
 	$sql01 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, b.Activo AS Equipo_Activo, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza, a.Activo 
 						from $schema.Equipos a
@@ -236,6 +240,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$htmlUsers .= '<option value="-1">' . $lang['10761'] . '</option>';
 		}
 	}
+	if ($userInstitucionId > 0) {
+		$htmlUsers .= um_institution_options_html($Config, $schema, $lang, 0, $userInstitucionId);
+	}
 	$sql11 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza 
 						from $schema.Equipos a
@@ -269,58 +276,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				</div>
 				<script type="text/javascript">
 				// <![CDATA[
-				    function moveRight(leftValue, rightValue, type) {
-                        if ($("#" + leftValue + " > option:selected").length == 0) {
-                            window.alert("' . $lang['846'] . '");
-                        } else {
-                            if(($("#" + leftValue + " option[value=0]:selected").length > 0 || $("#" + leftValue + " option[value=-1]:selected").length > 0) && type){
-                                if($("#" + rightValue + " option").length > 0){
-                                    if(confirm("' . $lang['847-0'] . '" + $("#" + leftValue + " option").eq(0).text()+ "' . $lang['847-1'] . '")){
-                                        var options1 = $("#" + rightValue + " option").clone();
-                                        $("#" + leftValue).append(options1);
-                                        $("#" + rightValue).empty();
-                                        var value = $("#" + leftValue + " option:selected").val();
-                                        var options = $("#" + leftValue + " > option[value=\'" + value + "\']").clone();
-                                        $("#" + rightValue).append(options);
-                                        $("#" + leftValue + " option[value=\'" + value + "\']").remove();
-                                        
-                                    }else{
-                                        var value = $("#" + leftValue + " option:selected").val();
-                                        $("#" + leftValue + " option[value=\'" + value + "\']").prop("selected", false);
-                                    }
-                                }else{
-                                    var value = $("#" + leftValue + " option:selected").val();
-                                    var options = $("#" + leftValue + " > option[value=\'" + value + "\']").clone();
-                                    $("#" + rightValue).append(options);
-                                    $("#" + leftValue + " option[value=\'" + value + "\']").remove();
-                                }
-                            }else{
-                                if(($("#" + rightValue + " option").eq(0).val() == 0 || $("#" + rightValue + " option").eq(0).val() == -1) && type){
-                                    if(confirm("' . $lang['848-0'] . '" + $("#" + rightValue + " option").eq(0).text()+ "' . $lang['848-1'] . '")){
-                                        var value = $("#" + rightValue + " option").eq(0).val();
-                                        var options = $("#" + rightValue + " > option[value=\'" + value + "\']").clone();
-                                        $("#" + leftValue).append(options);
-                                        $("#" + rightValue + " option[value=\'" + value + "\']").remove();
-                                        var options1 = $("#" + leftValue + " option:selected").clone();
-                                        $("#" + rightValue).append(options1);
-
-                                    }else{
-                                        $("#" + leftValue + " option").prop("selected", false);
-                                    }
-                                }else{
-                                    var options = $("#" + leftValue + " > option:selected").clone();
-                                    $("#" + rightValue).append(options);
-                                    $("#" + leftValue + " option:selected").remove();
-                                }
-                            }
-                            if ((leftValue === \'equipol\' || rightValue === \'equipol\') && typeof userManagementApplyTeamLeftFilters === \'function\') {
-                                var $umPanel = $(\'#equipol\').closest(\'#userManagementCreate, #userManagementEdit\');
-                                if ($umPanel.length) {
-                                    setTimeout(function () { userManagementApplyTeamLeftFilters($umPanel); }, 0);
-                                }
-                            }
-                        }
-                    }
+' . um_move_right_js($lang) . '
 				// ]]>
 				</script>';
 	

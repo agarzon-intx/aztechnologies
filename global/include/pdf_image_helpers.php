@@ -176,24 +176,68 @@ if (!function_exists('az_pdf_site_root')) {
 		return $path;
 	}
 
-	function az_pdf_qrcode($pdf, $fgmembersite, $jugadorId, $x, $y, $w, $h) {
+	function az_pdf_qr_site_url($source) {
 		$site = '';
-		if (is_object($fgmembersite) && method_exists($fgmembersite, 'getSitename')) {
-			$site = rtrim((string) $fgmembersite->getSitename(), '/');
+		if (is_string($source)) {
+			$site = trim($source);
+		} elseif (is_object($source)) {
+			if (method_exists($source, 'getWebSite')) {
+				$site = trim((string) $source->getWebSite());
+			}
+			if ($site === '' && method_exists($source, 'getSitename')) {
+				$site = trim((string) $source->getSitename());
+			}
 		}
+		if ($site === '' && isset($GLOBALS['fgmembersite']) && is_object($GLOBALS['fgmembersite']) && method_exists($GLOBALS['fgmembersite'], 'getSitename')) {
+			$site = trim((string) $GLOBALS['fgmembersite']->getSitename());
+		}
+		if ($site === '' && isset($GLOBALS['Config']) && is_object($GLOBALS['Config']) && method_exists($GLOBALS['Config'], 'getWebSite')) {
+			$site = trim((string) $GLOBALS['Config']->getWebSite());
+		}
+		if ($site === '' && !empty($_SERVER['HTTP_HOST'])) {
+			$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+				|| (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+				|| (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+			$site = ($https ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
+		}
+		$site = rtrim($site, "/ \t\n\r\0\x0B");
+		if ($site !== '' && !preg_match('#^https?://#i', $site)) {
+			$site = 'https://' . ltrim($site, '/');
+		}
+		return $site;
+	}
+
+	function az_pdf_qrcode($pdf, $fgmembersite, $jugadorId, $x, $y, $w, $h) {
+		$site = az_pdf_qr_site_url($fgmembersite);
 		$msg = $site . '/QR.php?Jugador_ID=' . (int) $jugadorId;
-		$path = az_pdf_qrcode_path($msg);
-		if ($path === null) {
+		$er = error_reporting(E_ERROR);
+		$obLevel = ob_get_level();
+		ob_start();
+		$path = null;
+		try {
+			$path = az_pdf_qrcode_path($msg);
+		} catch (Throwable $e) {
+			$path = null;
+		}
+		while (ob_get_level() > $obLevel) {
+			ob_end_clean();
+		}
+		error_reporting($er);
+		if ($path === null || !is_readable($path) || filesize($path) < 32) {
 			return false;
 		}
-		if (method_exists($pdf, 'SetFillColor') && method_exists($pdf, 'Rect')) {
-			$pdf->SetFillColor(255, 255, 255);
-			$pdf->Rect($x - 0.5, $y - 0.5, $w + 1, $h + 1, 'F');
+		try {
+			if (method_exists($pdf, 'SetFillColor') && method_exists($pdf, 'Rect')) {
+				$pdf->SetFillColor(255, 255, 255);
+				$pdf->Rect($x - 0.5, $y - 0.5, $w + 1, $h + 1, 'F');
+			}
+			if (method_exists($pdf, 'SetAlpha')) {
+				$pdf->SetAlpha(1);
+			}
+			return az_pdf_image($pdf, $path, $x, $y, $w, $h);
+		} catch (Throwable $e) {
+			return false;
 		}
-		if (method_exists($pdf, 'SetAlpha')) {
-			$pdf->SetAlpha(1);
-		}
-		return az_pdf_image($pdf, $path, $x, $y, $w, $h);
 	}
 
 }

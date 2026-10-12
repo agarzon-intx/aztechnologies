@@ -331,7 +331,7 @@ $alto  = 85.6; // alto PVC
 				}
 				
 				$pdf->SetXY($x+4-15.7,$y+14+28);
-			    az_pdf_image_file($pdf, $siteRoot, 'imagenes/fmvb.PNG' ,$x+58-18.7,$y+11.5+27.45,13.68, 13.68,'PNG'));
+			    az_pdf_image_file($pdf, $siteRoot, 'imagenes/fmvb.PNG' ,$x+58-18.7,$y+11.5+27.45,13.68, 13.68,'PNG');
 			    //az_pdf_image_file($pdf, $siteRoot, 'imagenes/fmvb.PNG' ,$x+65-18.7,$y+10.5+27.45,13.68, 13.68,'PNG'));
 			  
 			//    az_pdf_image_file($pdf, $siteRoot, '/imagenes/' . $Config->logo . '.png', $x+45-18.7,$y+10.5+27.45,13.68, 13.68);
@@ -339,7 +339,7 @@ $alto  = 85.6; // alto PVC
 			   	try{
 			  	    $pdf->SetAlpha(.4);
 			   $pdf->SetXY(2,62);
-			    az_pdf_image_file($pdf, $siteRoot, 'imagenes/FondoAvi1.png' ,$x+39-18.7,$y+1.5+5.45,66, 43,'PNG'));
+			    az_pdf_image_file($pdf, $siteRoot, 'imagenes/FondoAvi1.png' ,$x+39-18.7,$y+1.5+5.45,66, 43,'PNG');
 			 //     az_pdf_image_file($pdf, $siteRoot, 'imagenes/FondoAvi1.png' ,$x+39-18.7,$y+1.5+5.45,66, 39,'PNG'));
 			   	}catch(Exception $e){
 					echo $e;

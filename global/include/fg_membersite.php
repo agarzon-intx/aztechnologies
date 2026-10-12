@@ -862,6 +862,7 @@ class FGMembersite {
 		$_SESSION[$this->Config->getAlias() . 'CREATED'] = time();
 		$_SESSION[$this->Config->getAlias() . 'hasPurchasedThisSession'] = false;
 		$_SESSION[$this->Config->getAlias() . 'username'] = SanitizeEmail($_POST['username']);
+		unset($_SESSION[$this->Config->getAlias() . 'EXPIRED_USER']);
 		
 		return true;
 	}
@@ -985,19 +986,13 @@ class FGMembersite {
 		// They were properly logged in, but that was too long ago (sessionLifeTime) so they need to login again
 		if (isset($_SESSION[$this->Config->getAlias() . 'LAST_ACTIVITY']) && (time() - $_SESSION[$this->Config->getAlias() . 'LAST_ACTIVITY'] > $this->sessionLifeTime)) {
 			/* last request was more than sessionLifeTime ago*/
-			session_unset();
-			session_destroy();
-			if (session_status() !== PHP_SESSION_ACTIVE) {
-				session_set_cookie_params(3600,'/','',true,true);
-				session_start();
-			}
-			$this->ensureSiteContextCookies();
-			//http_response_code(401);
+			$this->ExpireSession();
 			return false;
 		}
 		
 		// They are properly logged in, so let's update their session timers as appropriate.
 		$_SESSION[$this->Config->getAlias() . 'LAST_ACTIVITY'] = time(); // update last activity time stamp
+		$this->SyncCoachTeamsForSeason();
 		if (!isset($_SESSION[$this->Config->getAlias() . 'CREATED'])) {
 			$_SESSION[$this->Config->getAlias() . 'CREATED'] = time();
 		} else if (time() - $_SESSION[$this->Config->getAlias() . 'CREATED'] > $this->sessionLifeTime) {
@@ -1006,6 +1001,105 @@ class FGMembersite {
 			$_SESSION[$this->Config->getAlias() . 'CREATED'] = time(); // update creation time
 		}
 		return true;
+	}
+
+	/**
+	 * Ends a timed-out session but keeps who was logged in, so the browser can ask only for the password again.
+	 * @return string username of the expired session ('' if nobody was logged in)
+	 */
+	function ExpireSession() {
+		$alias = $this->Config->getAlias();
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			session_set_cookie_params(3600,'/','',true,true);
+			session_start();
+		}
+		$username = '';
+		if (!empty($_SESSION[$alias . 'username'])) {
+			$username = (string) $_SESSION[$alias . 'username'];
+		} else if (!empty($_SESSION[$alias . 'EXPIRED_USER'])) {
+			$username = (string) $_SESSION[$alias . 'EXPIRED_USER'];
+		}
+		// Clear the data but keep the session id: a replacement id would need a new (Secure) cookie the browser may drop.
+		session_unset();
+		if ($username !== '') {
+			$_SESSION[$alias . 'EXPIRED_USER'] = $username;
+		}
+		$this->ensureSiteContextCookies();
+		return $username;
+	}
+
+	/**
+	 * Data the browser needs to show the "enter your password again" prompt.
+	 */
+	function SessionReauthPayload($username, array $lang) {
+		return array(
+			'status' => '401',
+			'sessionExpired' => true,
+			'username' => (string) $username,
+			'message' => isset($lang['230-2']) ? $lang['230-2'] : 'Your session expired. Enter your password to continue.',
+			'labels' => array(
+				'title' => isset($lang['230-1']) ? $lang['230-1'] : 'Session expired',
+				'user' => isset($lang['230-5']) ? $lang['230-5'] : 'User',
+				'password' => isset($lang['230-6']) ? $lang['230-6'] : 'Password',
+				'submit' => isset($lang['230-3']) ? $lang['230-3'] : 'Continue',
+				'logout' => isset($lang['230-4']) ? $lang['230-4'] : 'Log out',
+				'empty' => isset($lang['10061']) ? $lang['10061'] : 'Password is empty',
+				'error' => isset($lang['js0002']) ? $lang['js0002'] : 'Error',
+				'expired' => isset($lang['230']) ? $lang['230'] : '',
+			),
+		);
+	}
+
+	/**
+	 * Admin/Flyers AJAX requests must not run on a dead session: answer 401 before the endpoint does any work.
+	 * The browser then asks for the password and re-sends the request.
+	 */
+	function EnforceLiveSessionForAjax() {
+		if (PHP_SAPI === 'cli' || !$this->Config) {
+			return;
+		}
+		if (strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) !== 'xmlhttprequest') {
+			return;
+		}
+		$script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+		if (!preg_match('#/ajax/(Admin|Flyers)/#', $script)) {
+			return;
+		}
+		// Password reset is used from the login screen, before anyone is logged in.
+		if (preg_match('#/ajax/Admin/Login/userManagementResetPassword#', $script)) {
+			return;
+		}
+
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			session_set_cookie_params(3600,'/','',true,true);
+			session_start();
+		}
+		$alias = $this->Config->getAlias();
+		$username = !empty($_SESSION[$alias . 'username']) ? (string) $_SESSION[$alias . 'username'] : '';
+		$lastActivity = isset($_SESSION[$alias . 'LAST_ACTIVITY']) ? (int) $_SESSION[$alias . 'LAST_ACTIVITY'] : 0;
+		if ($username !== '' && ($lastActivity === 0 || time() - $lastActivity <= $this->sessionLifeTime)) {
+			return;
+		}
+		$username = $this->ExpireSession();
+
+		$lang = array();
+		$langCode = (string) ($_COOKIE[$alias . 'language'] ?? '');
+		if ($langCode === '') {
+			$this->Config->LoadLanguage();
+			$langCode = (string) $this->Config->lan;
+		}
+		if ($langCode === '' || !@include('lang.' . basename($langCode) . '.php')) {
+			@include('lang.es.php');
+		}
+
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
+		http_response_code(401);
+		header('Content-Type: application/json; charset=utf-8');
+		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+		echo json_encode($this->SessionReauthPayload($username, $lang));
+		exit;
 	}
 	
 	function ConfirmCSRFToken() {
@@ -1093,6 +1187,64 @@ class FGMembersite {
 		return isset($_SESSION[$this->Config->getAlias() . 'telefono'])?SanitizeRealName($_SESSION[$this->Config->getAlias() . 'telefono']):'';
 	}
 	
+	/*
+	 * Users assigned to an institution (usuarios.Institucion_ID) get its teams of the current season
+	 * (Torneos.Actual = 'S'). Returns array(seasonId, teamsCsv); array('', '') for users without institution.
+	 */
+	function InstitutionTeams($connection, $institucionId)
+	{
+		$institucionId = (int) $institucionId;
+		if ($institucionId <= 0) {
+			return array('', '');
+		}
+		$schema = $this->Config->getSchema();
+		$teams = array();
+		try {
+			$res = $connection->query("SELECT max(Torneo_ID) FROM $schema.Torneos WHERE Actual = 'S'");
+			$row = $res ? $res->fetch_row() : null;
+			if (!$row || (int) $row[0] <= 0) {
+				return array('', '');
+			}
+			$season = (string) (int) $row[0];
+			$res = $connection->query("SELECT DISTINCT Equipo_ID FROM $schema.Equipos
+				WHERE Torneo_ID = $season AND Institucion_ID = $institucionId AND Equipo_ID > 0");
+			if ($res) {
+				while ($row = $res->fetch_row()) {
+					$teams[] = (int) $row[0];
+				}
+				$res->free();
+			}
+		} catch (Throwable $e) {
+			return array('', '');
+		}
+		return array($season, implode(',', $teams));
+	}
+
+	/*
+	 * Session team list: team users get only their assigned teams; institution users get the institution
+	 * teams only while the selected season is the season they were computed for.
+	 * Sessions without equipoBase (older logins, ChangeTeam) are left as is.
+	 */
+	function SyncCoachTeamsForSeason()
+	{
+		$alias = $this->Config->getAlias();
+		if (!isset($_SESSION[$alias . 'equipoBase'])) {
+			return;
+		}
+		$teams = (string) $_SESSION[$alias . 'equipoBase'];
+		$extra = ((int) ($_SESSION[$alias . 'institucion'] ?? 0) > 0) ? (string) ($_SESSION[$alias . 'equipoInst'] ?? '') : '';
+		$extraSeason = (string) ($_SESSION[$alias . 'equipoInstSeason'] ?? '');
+		$season = (string) ($_COOKIE[$alias . 'season'] ?? $_SESSION[$alias . 'season'] ?? '');
+		if ($extra !== '' && ($season === '' || $season === $extraSeason)) {
+			$teams = ($teams === '') ? $extra : $teams . ',' . $extra;
+		}
+		// institution users without teams in the selected season: -2 keeps "IN (...)" queries valid and empty
+		if ($teams === '') {
+			$teams = '-2';
+		}
+		$_SESSION[$alias . 'equipo'] = SanitizeTextComa($teams);
+	}
+
 	function UserEquipo()
 	{
 		return isset($_SESSION[$this->Config->getAlias() . 'equipo'])?SanitizeTextComa($_SESSION[$this->Config->getAlias() . 'equipo']):'';
@@ -1576,6 +1728,7 @@ class FGMembersite {
 		}
 	
 		$_SESSION[$this->Config->getAlias() . "equipo"] = $newteam;
+		unset($_SESSION[$this->Config->getAlias() . 'equipoBase'], $_SESSION[$this->Config->getAlias() . 'equipoInst'], $_SESSION[$this->Config->getAlias() . 'equipoInstSeason']);
 		return true;
 	}
 	
@@ -2108,6 +2261,16 @@ class FGMembersite {
 			mysqli_close($connection);
 			return false;
 		}
+		$institucionId = $this->UserInstitutionFromEquipo($formvars['equipo']);
+		if(!$this->SaveUserInstitution($connection, 'username', SanitizeUsername($formvars['username']), $institucionId)){
+			$this->HandleDBError($lang['10091']);
+			mysqli_close($connection);
+			return false;
+		}
+		if($institucionId > 0){
+			mysqli_close($connection);
+			return true;
+		}
 		if(SanitizeTextComa($formvars['equipo']) == '0' || SanitizeTextComa($formvars['equipo']) == '-1'){
 		    if($stmt = $connection->prepare("insert into " . $this->Config->getSchema() . ".usuarios_equipo
                                 			select '" . $formvars['username'] ."', ".$formvars['equipo'])){
@@ -2149,6 +2312,32 @@ class FGMembersite {
 		return true;
 	}
 	
+	/** Institucion_ID when the assignment is an institution ("i<ID>"), otherwise 0 (league / referee / teams). */
+	function UserInstitutionFromEquipo($equipo){
+		if(preg_match('/^i(\d+)$/', trim((string) $equipo), $m)){
+			return (int) $m[1];
+		}
+		return 0;
+	}
+
+	/** Sets usuarios.Institucion_ID (NULL when $institucionId is 0 or not an existing institution). */
+	function SaveUserInstitution($connection, $keyColumn, $keyValue, $institucionId){
+		$schema = $this->Config->getSchema();
+		$keyColumn = ($keyColumn === 'id_user') ? 'id_user' : 'username';
+		$stmt = $connection->prepare("update $schema.usuarios
+				set Institucion_ID = (select Institucion_ID from $schema.Instituciones where Institucion_ID = ? and Institucion_ID > 0 limit 1)
+				where $keyColumn = ?");
+		if(!$stmt){
+			return false;
+		}
+		$instId = (int) $institucionId;
+		$key = (string) $keyValue;
+		$stmt->bind_param("is", $instId, $key);
+		$ok = $stmt->execute();
+		$stmt->close();
+		return $ok;
+	}
+
 	function InsertIntoDBUpdate(&$formvars){
 		if(isset($_COOKIE[$this->Config->getAlias() . 'language'])){
 			include('lang.' . $_COOKIE[$this->Config->getAlias() . 'language'] . '.php');
@@ -2223,6 +2412,16 @@ class FGMembersite {
 				$this->HandleDBError($lang['10091']);
 				mysqli_close($connection);
 				return false;
+			}
+			$institucionId = $this->UserInstitutionFromEquipo($formvars['equipo']);
+			if(!$this->SaveUserInstitution($connection, 'id_user', SanitizeInteger($formvars['userid']), $institucionId)){
+				$this->HandleDBError($lang['10091']);
+				mysqli_close($connection);
+				return false;
+			}
+			if($institucionId > 0){
+				mysqli_close($connection);
+				return true;
 			}
 			if(SanitizeTextComa($formvars['equipo']) == '0' || SanitizeTextComa($formvars['equipo']) == '-1'){
 			    if($stmt = $connection->prepare("insert into " . $this->Config->getSchema() . ".usuarios_equipo
@@ -2992,16 +3191,21 @@ class FGMembersite {
 		$username = SanitizeUsername($username);
 		$pwdhash = SanitizeHex(hash_pbkdf2("sha512", $password, $salt, $iterations, 80));
 		//echo $pwdhash;
-		if($stmt = $connection->prepare("Select a.username, phone_number, name, ApellidoP, ApellidoM, email, GROUP_CONCAT(b.Equipo_ID) Equipo_ID, id_user, message, adminMessage, paymentProblem, credit, active 
+		if($stmt = $connection->prepare("Select a.username, phone_number, name, ApellidoP, ApellidoM, email, GROUP_CONCAT(b.Equipo_ID) Equipo_ID, id_user, message, adminMessage, paymentProblem, credit, active, a.Institucion_ID 
                                             from " . $this->Config->getSchema() . ".usuarios a
-                                            	join " . $this->Config->getSchema() . ".usuarios_equipo b on a.username = b.username
+                                            	left join " . $this->Config->getSchema() . ".usuarios_equipo b on a.username = b.username
                                             where a.username=? and password=?
                                             group by a.username")) {
 			$stmt->bind_param("ss", $username, $pwdhash);
 			$stmt->execute();
-			$stmt->bind_result($username, $phone_number, $name, $ApellidoP, $ApellidoM, $email, $Equipo_ID, $id_user, $message, $adminMessage, $paymentProblem, $credit, $active);
+			$stmt->bind_result($username, $phone_number, $name, $ApellidoP, $ApellidoM, $email, $Equipo_ID, $id_user, $message, $adminMessage, $paymentProblem, $credit, $active, $Institucion_ID);
 			$stmt->fetch();
 			$stmt->close();
+		}
+		// Users need team assignments (usuarios_equipo) or an institution (usuarios.Institucion_ID)
+		$Institucion_ID = ((string) $Equipo_ID === '') ? (int) $Institucion_ID : 0;
+		if ((string) $Equipo_ID === '' && $Institucion_ID <= 0) {
+			unset($email);
 		}
 
 		if (!isset($email)) {
@@ -3065,7 +3269,13 @@ class FGMembersite {
 		$_SESSION[$this->Config->getAlias() . 'apellidop'] = SanitizeUsername($ApellidoP);
 		$_SESSION[$this->Config->getAlias() . 'apellidom']  = SanitizeUsername($ApellidoM);
 		$_SESSION[$this->Config->getAlias() . 'telefono'] = SanitizeInteger($phone_number);
-		$_SESSION[$this->Config->getAlias() . 'equipo']  = SanitizeTextComa($Equipo_ID);
+		$_SESSION[$this->Config->getAlias() . 'institucion'] = $Institucion_ID;
+		$_SESSION[$this->Config->getAlias() . 'equipoBase'] = SanitizeTextComa($Equipo_ID);
+		list($instSeason, $instTeams) = $this->InstitutionTeams($connection, $Institucion_ID);
+		$_SESSION[$this->Config->getAlias() . 'equipoInstSeason'] = $instSeason;
+		$_SESSION[$this->Config->getAlias() . 'equipoInst'] = SanitizeTextComa($instTeams);
+		$_SESSION[$this->Config->getAlias() . 'equipo'] = SanitizeTextComa($Equipo_ID);
+		$this->SyncCoachTeamsForSeason();
 		$_SESSION[$this->Config->getAlias() . 'email'] = SanitizeEmail($email);
 		$_SESSION[$this->Config->getAlias() . 'active'] = SanitizeEmail($active);
 		

@@ -23,6 +23,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once __DIR__ . '/../Admin/player_team_move.inc.php';
 $schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('playersManagementEdit.php');
 	
@@ -155,8 +156,17 @@ $schema = $Config->getSchema();
 										<div class="row">
 											<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 												<span style="text-align: center; ">
-													<div style="width: 161px; height: 225px; background-color: #BFBFBF; margin: auto;">
-														<img id="fotoE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Foto" alt="Foto" width="161" height="220" ' . $fotostrAN . '/>
+													<div id="fotoFrameE" class="player-photo-frame" data-suffix="E" style="width: 161px; height: 220px; background-color: #BFBFBF; margin: auto; position: relative; overflow: hidden;">
+														<img id="fotoE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Foto&tmp=' . $fecha->getTimestamp() . '" alt="Foto" width="161" height="220" ' . $fotostrAN . '/>
+													</div>
+													<div id="fotoToolsE" style="display: none; width: 161px; margin: 6px auto 0;">
+														<div class="d-flex align-items-center" style="gap: 4px;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'E\', 1 / 1.15);">&minus;</button>
+															<input type="range" class="form-range" id="fotoZoomE" min="0" max="100" step="1" value="0" oninput="playerPhotoSlider(\'E\', this.value);" style="flex: 1;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'E\', 1.15);">+</button>
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $lang['931-2'] . '" onclick="playerPhotoReset(\'E\');">&#8634;</button>
+														</div>
+														<small class="text-muted" style="font-size: 11px;">' . $lang['931-1'] . '</small>
 													</div>
 												</span>
 											</div>
@@ -168,7 +178,7 @@ $schema = $Config->getSchema();
 													<form>
 														<div style="text-align: center;">
 															<div>
-																<input style="display: none; visibility: hidden;" type="file" accept="image/png" name="myFotoE" id="myFotoE" onchange="readURLE(this, \'fotoE\');">
+																<input style="display: none; visibility: hidden;" type="file" accept="image/png,image/jpeg" name="myFotoE" id="myFotoE" onchange="readURLE(this, \'fotoE\');">
 																<input type="hidden" name="myFotoFileNameE" id="myFotoFileNameE" value="">
 															</div>
 															<div id=\'previewMyFotoE\' style="text-align: center;"></div>
@@ -310,32 +320,8 @@ $htmlPlayer .= '													</select>
 																<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
 																	<label class="form-label">' . $lang['924'] . '</label>
 																	<select class="form-control" onChange="playerManagementLoadImage(\'equipoE\', \'logoEE\')" name="equipoE" id="equipoE" >';
-$isAdminTeams = false;
-$allowedTeamIds = array();
-$usernameTeams = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
-$ueTeams = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $usernameTeams . "'");
-if ($ueTeams && $ueTeams->num_rows > 0) {
-	while ($rTeam = $ueTeams->fetch_assoc()) {
-		$idTeam = (int) $rTeam['Equipo_ID'];
-		if ($idTeam === 0 || $idTeam === -1) {
-			$isAdminTeams = true;
-		} elseif ($idTeam > 0) {
-			$allowedTeamIds[] = $idTeam;
-		}
-	}
-}
-$sessionEqTeams = $fgmembersite->UserEquipo();
-if ($sessionEqTeams == 0 || $sessionEqTeams == -1 || $sessionEqTeams === '0' || $sessionEqTeams === '-1') {
-	$isAdminTeams = true;
-}
-if (!$isAdminTeams && count($allowedTeamIds) === 0) {
-	foreach (explode(',', (string) $sessionEqTeams) as $partTeam) {
-		$idTeam = (int) $partTeam;
-		if ($idTeam > 0) {
-			$allowedTeamIds[] = $idTeam;
-		}
-	}
-}
+$isAdminTeams = az_user_is_league_admin($Config, $schema, $fgmembersite);
+$allowedTeamIds = az_user_allowed_equipo_ids($Config, $schema, $fgmembersite, $isAdminTeams);
 $allowedTeamIds = array_values(array_unique(array_map('intval', $allowedTeamIds)));
 $equipoidAInt = (int) $equipoidA;
 if (!$isAdminTeams && $equipoidAInt > 0 && !in_array($equipoidAInt, $allowedTeamIds, true)) {
@@ -443,7 +429,7 @@ $htmlPlayer .= '													</select>
 												<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 													<span style="text-align: center; ">
 														<div style="width: 150px; height: 187px; background-color: #BFBFBF; margin: auto;">
-															<img id="identificacionE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Identificacion" width="150" height="187" ' . $idstrAN . '/>
+															<img id="identificacionE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Identificacion&tmp=' . $fecha->getTimestamp() . '" width="150" height="187" ' . $idstrAN . '/>
 														</div>
 													</span>
 												</div>
@@ -526,7 +512,7 @@ $htmlPlayer .= '													</select>
 									<div class="row">
 										<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12" style="width: 100%;">
 											<span style="text-align: left; ">
-												<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myIDPDFE\'), \'click\');" id="subiridentificacionpdfE">' . $lang['933-1'] . '</button>
+												<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myIDPDFE\'), \'click\');" id="subiridentificacionpdfE">' . $lang['933-3'] . '</button>
 												<form>
 													<div style="text-align: center;">
 														<div>
@@ -545,7 +531,7 @@ $htmlPlayer .= '													</select>
 									<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 										<span style="text-align: center; ">
 											<div style="width: 150px; height: 60px; background-color: #BFBFBF; margin: auto;">
-												<img width="150" height="60" id="firmaE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Firma" alt="" ' . $firmastrAN . '/>
+												<img width="150" height="60" id="firmaE" src="Form/fetch_image.php?Jugador_ID=' . $player . '&Imagen=Firma&tmp=' . $fecha->getTimestamp() . '" alt="" ' . $firmastrAN . '/>
 											</div>
 										</span>
 									</div>

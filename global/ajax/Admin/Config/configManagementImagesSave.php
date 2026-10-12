@@ -38,7 +38,8 @@
 	$hasFlyerTextPost = isset($_POST['flyerTextColor1']) || isset($_POST['flyerTextColor2'])
 		|| isset($_POST['flyerFontWeek']) || isset($_POST['flyerFontCategory'])
 		|| isset($_POST['flyerFontDate']) || isset($_POST['flyerFontHour'])
-		|| isset($_POST['flyerFontField']);
+		|| isset($_POST['flyerFontField'])
+		|| isset($_POST['flyerFontFamily']) || isset($_POST['flyerFontStyle']);
 	$hasImageWork = false;
 	foreach ($allowed as $field => $rel) {
 		$clearKey = $field . '_clear';
@@ -262,6 +263,16 @@
 			if ($Config->configurationHasColumn('flyerFontField')) {
 				$sets[] = 'flyerFontField = ' . (int) $ff;
 			}
+			$fontChoice = null;
+			if (isset($_POST['flyerFontFamily']) && $Config->configurationHasColumn('flyerFontFamily') && $Config->configurationHasColumn('flyerFontStyle')) {
+				$probe = (object) array(
+					'flyerFontFamily' => (string) $_POST['flyerFontFamily'],
+					'flyerFontStyle' => isset($_POST['flyerFontStyle']) ? (string) $_POST['flyerFontStyle'] : '',
+				);
+				$fontChoice = az_flyer_font_choice($probe, $basePath . DIRECTORY_SEPARATOR . 'pdf' . DIRECTORY_SEPARATOR . 'font');
+				$sets[] = "flyerFontFamily = '" . $Connection->real_escape_string($fontChoice['family']) . "'";
+				$sets[] = "flyerFontStyle = '" . $Connection->real_escape_string($fontChoice['style']) . "'";
+			}
 			$okText = $Connection->query('UPDATE ' . $schema . '.Configuration SET ' . implode(', ', $sets) . ' WHERE id = 0');
 			if ($okText) {
 				$textSaved = 1;
@@ -272,6 +283,10 @@
 				$Config->flyerFontDate = $fd;
 				$Config->flyerFontHour = $fh;
 				$Config->flyerFontField = $ff;
+				if ($fontChoice !== null) {
+					$Config->flyerFontFamily = $fontChoice['family'];
+					$Config->flyerFontStyle = $fontChoice['style'];
+				}
 			} else {
 				$errors[] = 'flyer text: update failed';
 			}

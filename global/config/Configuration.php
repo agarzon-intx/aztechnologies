@@ -74,6 +74,10 @@ class Configuration
     public $searchPlayer = 0;
     /** 1 = coach games default to the current week; 0 = next week. */
     public $currentWeek = 0;
+    /** 1 = allow deleting a team. */
+    public $deleteTeam = 0;
+    /** 1 = basketball Score Manual/Data. */
+    public $basketScoreManual = 0;
     /** 1 when pdf/Credencial.png (or legacy jpg) is stored on disk. */
     public $credencialFrontImage = 0;
     /** 1 when pdf/CredencialDetras.png (or legacy jpg) is stored on disk. */
@@ -86,6 +90,9 @@ class Configuration
     public $flyerFontDate = 35;
     public $flyerFontHour = 35;
     public $flyerFontField = 35;
+    /** Flyer FPDF font family (see pdf/font) and style code ('', 'B', 'I', 'BI'). */
+    public $flyerFontFamily = 'Coluna';
+    public $flyerFontStyle = 'B';
     
 	public $MAILSMTPDebug = 0;
 	public $MAILSMTPAuth = 'true';
@@ -336,6 +343,12 @@ class Configuration
         $selCurrentWeek = $this->schemaHasConfigurationColumn($conn, 'currentWeek')
             ? 'currentWeek'
             : '0 AS currentWeek';
+        $selDeleteTeam = $this->schemaHasConfigurationColumn($conn, 'deleteTeam')
+            ? 'deleteTeam'
+            : '0 AS deleteTeam';
+        $selBasketScoreManual = $this->schemaHasConfigurationColumn($conn, 'basketScoreManual')
+            ? 'basketScoreManual'
+            : '0 AS basketScoreManual';
         $selCredencialFrontImage = $this->schemaHasConfigurationColumn($conn, 'credencialFrontImage')
             ? 'credencialFrontImage'
             : '0 AS credencialFrontImage';
@@ -363,6 +376,12 @@ class Configuration
         $selFlyerFontField = $this->schemaHasConfigurationColumn($conn, 'flyerFontField')
             ? 'flyerFontField'
             : '35 AS flyerFontField';
+        $selFlyerFontFamily = $this->schemaHasConfigurationColumn($conn, 'flyerFontFamily')
+            ? 'flyerFontFamily'
+            : "'Coluna' AS flyerFontFamily";
+        $selFlyerFontStyle = $this->schemaHasConfigurationColumn($conn, 'flyerFontStyle')
+            ? 'flyerFontStyle'
+            : "'B' AS flyerFontStyle";
 
         $query = "SELECT  case when MarcadorArbitro = 1 then '' else 'hidden' end MarcadorArbitro,
                           case when MarcadorFecha = 1 then '' else 'hidden' end MarcadorFecha,
@@ -387,6 +406,8 @@ class Configuration
 			  " . $selDuplicatePlayer . ",
 			  " . $selSearchPlayer . ",
 			  " . $selCurrentWeek . ",
+			  " . $selDeleteTeam . ",
+			  " . $selBasketScoreManual . ",
 			  " . $selCredencialFrontImage . ",
 			  " . $selCredencialBackImage . ",
 			  " . $selFlyerTextColor1 . ",
@@ -395,7 +416,9 @@ class Configuration
 			  " . $selFlyerFontCategory . ",
 			  " . $selFlyerFontDate . ",
 			  " . $selFlyerFontHour . ",
-			  " . $selFlyerFontField . "
+			  " . $selFlyerFontField . ",
+			  " . $selFlyerFontFamily . ",
+			  " . $selFlyerFontStyle . "
 		  FROM " . $this->config["schema"] . ".Configuration";
         $result = $this->query($query);
         if (!$result){
@@ -440,6 +463,8 @@ class Configuration
             $this->duplicatePlayer = $row2["duplicatePlayer"];
             $this->searchPlayer = $row2["searchPlayer"];
             $this->currentWeek = $row2["currentWeek"];
+            $this->deleteTeam = $row2["deleteTeam"];
+            $this->basketScoreManual = $row2["basketScoreManual"];
             $this->credencialFrontImage = $row2["credencialFrontImage"];
             $this->credencialBackImage = $row2["credencialBackImage"];
             $this->flyerTextColor1 = $row2["flyerTextColor1"];
@@ -449,6 +474,8 @@ class Configuration
             $this->flyerFontDate = $row2["flyerFontDate"];
             $this->flyerFontHour = $row2["flyerFontHour"];
             $this->flyerFontField = $row2["flyerFontField"];
+            $this->flyerFontFamily = $row2["flyerFontFamily"];
+            $this->flyerFontStyle = $row2["flyerFontStyle"];
        }
        return $this->template;
     }

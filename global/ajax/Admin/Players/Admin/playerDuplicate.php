@@ -23,6 +23,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once __DIR__ . '/player_team_move.inc.php';
 	$schema = $Config->getSchema();
 	$fgmembersite->CheckLogin('playerDuplicate.php');
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
@@ -42,32 +43,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit;
 	}
 
-	$username = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
-	$isAdmin = false;
-	$allowed = array();
-	$ue = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $username . "'");
-	if ($ue && $ue->num_rows > 0) {
-		while ($r = $ue->fetch_assoc()) {
-			$id = (int) $r['Equipo_ID'];
-			if ($id === 0 || $id === -1) {
-				$isAdmin = true;
-			} elseif ($id > 0) {
-				$allowed[] = $id;
-			}
-		}
-	}
-	$equipoIds = $fgmembersite->UserEquipo();
-	if ($equipoIds == 0 || $equipoIds == -1 || $equipoIds === '0' || $equipoIds === '-1') {
-		$isAdmin = true;
-	}
-	if (!$isAdmin && count($allowed) === 0) {
-		foreach (explode(',', (string) $equipoIds) as $part) {
-			$id = (int) $part;
-			if ($id > 0) {
-				$allowed[] = $id;
-			}
-		}
-	}
+	$isAdmin = az_user_is_league_admin($Config, $schema, $fgmembersite);
+	$allowed = az_user_allowed_equipo_ids($Config, $schema, $fgmembersite, $isAdmin);
 	if (!$isAdmin && !in_array($team, $allowed, true)) {
 		echo json_encode($retunData);
 		exit;

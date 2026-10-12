@@ -38,19 +38,28 @@ if (!defined('APP_SITE_ROOT')) {
 	$htmlLogosList = '';
 	$__alias = $Config->getAlias();
 	//echo $Season;
-	if($Season == '-1'){
+	if((int)$Season <= 0){
+		$Season = 0;
 		$sql = "select max(Torneo_ID) Torneo_ID
 				from $schema.Torneos  
 				where Actual = 'S'";
 		$result = $Config->query($sql);
-		if ($result->num_rows > 0) {
+		if ($result && $result->num_rows > 0) {
 			// output data of each row
 			while($row2 = $result->fetch_assoc()) {
-				$Season = mb_convert_encoding((string)$row2["Torneo_ID"], 'UTF-8', 'ISO-8859-1');
-				setcookie($__alias . "season",$Season,0,'/');
-				$_COOKIE[$__alias . "season"] = $Season;
-				$_SESSION[$__alias . "season"] = $Season;
+				if ($row2["Torneo_ID"] !== null) {
+					$Season = (int)$row2["Torneo_ID"];
+					setcookie($__alias . "season",$Season,0,'/');
+					$_COOKIE[$__alias . "season"] = $Season;
+					$_SESSION[$__alias . "season"] = $Season;
+				}
 			}
+		}
+		if ($Season <= 0) {
+			$retunData = array('status' => '0', 'message' => 'No active season.', 'dataCategories' => '', 'category' => 0);
+			$Config->Close();
+			echo json_encode($retunData);
+			exit;
 		}
 	}else{
 		setcookie($__alias . "season",$Season,0,'/');
@@ -137,6 +146,6 @@ if (!defined('APP_SITE_ROOT')) {
 	
 	$htmlCategories .= '<input type="hidden" id="selectedCategory" value="' . $Category . '">';
 	
-	$retunData = array('status' => '1', 'message' => 'Success.', 'dataCategories' => $htmlCategories, 'category' => $Category);
+	$retunData = array('status' => '1', 'message' => 'Success.', 'dataCategories' => $htmlCategories, 'category' => $Category, 'season' => (int)$Season);
 	$Config->Close();
 	echo json_encode($retunData);

@@ -25,6 +25,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 require 'membersite_config.php';
+require_once __DIR__ . '/../Admin/player_team_move.inc.php';
 $schema = $Config->getSchema();
 $sessionstat = $fgmembersite->CheckLogin('playersManagementEditSave.php');
 
@@ -67,32 +68,8 @@ $firma = '';
 $Config->LoadFlags();
 $Config->LoadRegionalSettings();
 
-$isAdminTeams = false;
-$allowedTeamIds = array();
-$usernameTeams = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
-$ueTeams = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $usernameTeams . "'");
-if ($ueTeams && $ueTeams->num_rows > 0) {
-	while ($rTeam = $ueTeams->fetch_assoc()) {
-		$idTeam = (int) $rTeam['Equipo_ID'];
-		if ($idTeam === 0 || $idTeam === -1) {
-			$isAdminTeams = true;
-		} elseif ($idTeam > 0) {
-			$allowedTeamIds[] = $idTeam;
-		}
-	}
-}
-$sessionEqTeams = $fgmembersite->UserEquipo();
-if ($sessionEqTeams == 0 || $sessionEqTeams == -1 || $sessionEqTeams === '0' || $sessionEqTeams === '-1') {
-	$isAdminTeams = true;
-}
-if (!$isAdminTeams && count($allowedTeamIds) === 0) {
-	foreach (explode(',', (string) $sessionEqTeams) as $partTeam) {
-		$idTeam = (int) $partTeam;
-		if ($idTeam > 0) {
-			$allowedTeamIds[] = $idTeam;
-		}
-	}
-}
+$isAdminTeams = az_user_is_league_admin($Config, $schema, $fgmembersite);
+$allowedTeamIds = az_user_allowed_equipo_ids($Config, $schema, $fgmembersite, $isAdminTeams);
 $allowedTeamIds = array_values(array_unique(array_map('intval', $allowedTeamIds)));
 if ($playerid <= 0 || $team <= 0 || (!$isAdminTeams && !in_array($team, $allowedTeamIds, true))) {
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataPlayerMessage' => $lang['539-12']);

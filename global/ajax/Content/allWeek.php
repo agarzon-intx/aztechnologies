@@ -12,7 +12,7 @@
 				LIMIT 1), (select max(Jornada_ID) from $schema.Jornada where Torneo_ID = $Season)) Jornada_ID) k on j.Jornada_ID = k.Jornada_ID
 					join $schema.Jornada jk on j.Jornada_ID = jk.Jornada_ID and jk.Torneo_ID = $Season
 					join $schema.Equipos e on j.Local_ID = e.Equipo_ID
-				where j.Torneo_ID = $Season $sqlcat and j.Visitante_ID is not null
+				where j.Torneo_ID = $Season $sqlcat and j.Visitante_ID <> -1
 				order by jk.Fecha_Inicio desc;";
 
 		//$htmlWeek .= $sql;
@@ -26,21 +26,21 @@
 				}
 				
 			
-                $sql2 = "select * from (select 0 as VisitanteS, j.Torneo_ID as Torneo, Jornada_ID as Jornada, Juego_ID as juego, jugado, case when j.Visitante_Id is null then '' else concat(l.equipo_desc,'') end  as 'Local', 
-                    case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
-                    concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
-                    case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+                $sql2 = "select * from (select 0 as VisitanteS, j.Torneo_ID as Torneo, Jornada_ID as Jornada, Juego_ID as juego, jugado, case when j.Visitante_Id = -1 then '' else concat(l.equipo_desc,'') end  as 'Local', 
+                    case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', case when j.Visitante_ID = -1 then null else Penal_local end as 'Penalties Local', 
+                    concat(case when j.Visitante_ID = -1 then null else v.equipo_desc end,'') as 'Visitante', case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+                    case when j.Visitante_ID = -1 then null else Penal_Visitante end as 'Penalties Visitante', case when j.Visitante_ID = -1 then null else Arbitro end as Arbitro, 
                     case 
-                        when j.Visitante_Id is null then CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius:7px; text-align: left;''><img src=''imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt='''' style=''vertical-align:middle !important;''/></div>','&nbsp;&nbsp;&nbsp;',l.equipo_desc,' " . $lang['654'] . "') 
+                        when j.Visitante_Id = -1 then CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius:7px; text-align: left;''><img src=''imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt='''' style=''vertical-align:middle !important;''/></div>','&nbsp;&nbsp;&nbsp;',l.equipo_desc,' " . $lang['654'] . "') 
                         else Comentarios 
-                    end as Comentarios, Estatus, case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, ifnull(jc.Google, lc.Google) as Google, 
+                    end as Comentarios, Estatus, case when j.Visitante_ID = -1 then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, ifnull(jc.Google, lc.Google) as Google, 
                     case 
-                        when j.Visitante_Id is null then ''
+                        when j.Visitante_Id = -1 then ''
                         else
                             CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius:7px;''><img src=''imagenes/',concat(l.Torneo_ID,'-', l.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
                     end as Logol, 
                     case 
-                        when j.Visitante_Id is null then ''
+                        when j.Visitante_Id = -1 then ''
                         else
                             CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius: 7px; text-align: left;''><img src=''imagenes/',concat(v.Torneo_ID,'-', v.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
                     end  as Logov,
@@ -63,23 +63,23 @@
                     join $schema.Equipos as l on j.local_ID = l.Equipo_ID and j.Torneo_ID = $Season and l.Torneo_ID = $Season
                     left outer join $schema.Campos lc on l.Campo_ID = lc.Campo_ID
                     left outer join $schema.Equipos as v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = $Season
-                where j.Fecha between '".$row["Fecha_InicioS"]."' and '".$row["Fecha_FinS"]."' and Visitante_ID is not null $sqlcat
+                where j.Fecha between '".$row["Fecha_InicioS"]."' and '".$row["Fecha_FinS"]."' and Visitante_ID <> -1 $sqlcat
 				UNION
-				select 1 as VisitanteS, j.Torneo_ID as Torneo, Jornada_ID as Jornada, Juego_ID as juego, jugado, case when j.Visitante_Id is null then '' else concat(l.equipo_desc,'') end  as 'Local', 
-                    case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
-                    concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
-                    case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+				select 1 as VisitanteS, j.Torneo_ID as Torneo, Jornada_ID as Jornada, Juego_ID as juego, jugado, case when j.Visitante_Id = -1 then '' else concat(l.equipo_desc,'') end  as 'Local', 
+                    case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', case when j.Visitante_ID = -1 then null else Penal_local end as 'Penalties Local', 
+                    concat(case when j.Visitante_ID = -1 then null else v.equipo_desc end,'') as 'Visitante', case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+                    case when j.Visitante_ID = -1 then null else Penal_Visitante end as 'Penalties Visitante', case when j.Visitante_ID = -1 then null else Arbitro end as Arbitro, 
                     case 
-                        when j.Visitante_Id is null then CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius:7px; text-align: left;''><img src=''imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt='''' style=''vertical-align:middle !important;''/></div>','&nbsp;&nbsp;&nbsp;',l.equipo_desc,' " . $lang['654'] . "') 
+                        when j.Visitante_Id = -1 then CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius:7px; text-align: left;''><img src=''imagenes/', concat(l.Torneo_ID,'-', l.Equipo_ID), '.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt='''' style=''vertical-align:middle !important;''/></div>','&nbsp;&nbsp;&nbsp;',l.equipo_desc,' " . $lang['654'] . "') 
                         else Comentarios 
-                    end as Comentarios, Estatus, case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, ifnull(jc.Google, lc.Google) as Google, 
+                    end as Comentarios, Estatus, case when j.Visitante_ID = -1 then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo, ifnull(jc.Google, lc.Google) as Google, 
                     case 
-                        when j.Visitante_Id is null then ''
+                        when j.Visitante_Id = -1 then ''
                         else
                             CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius:7px;''><img src=''imagenes/',concat(l.Torneo_ID,'-', l.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
                     end as Logol, 
                     case 
-                        when j.Visitante_Id is null then ''
+                        when j.Visitante_Id = -1 then ''
                         else
                             CONCAT('<div class=''circularsmall'' style=''height: 30px;width: 30px;border-radius: 7px; text-align: left;''><img src=''imagenes/',concat(v.Torneo_ID,'-', v.Equipo_ID),'.png?tmp=" . $fecha->getTimestamp() . "'' width=''30'' height=''30'' alt=''''/></div>') 
                     end  as Logov,
@@ -102,7 +102,7 @@
                     join $schema.Equipos as l on j.local_ID = l.Equipo_ID and j.Torneo_ID = $Season and l.Torneo_ID = $Season
                     left outer join $schema.Campos lc on l.Campo_ID = lc.Campo_ID
                     left outer join $schema.Equipos as v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = $Season
-                where j.Fecha between '".$row["Fecha_InicioS"]."' and '".$row["Fecha_FinS"]."' and Visitante_ID is null $sqlcat) a
+                where j.Fecha between '".$row["Fecha_InicioS"]."' and '".$row["Fecha_FinS"]."' and Visitante_ID = -1 $sqlcat) a
                 order by VisitanteS, Torneo, Jornada, Juego;";
 				//$htmlWeek .= $sql2;
                 $result2 = $Config->query($sql2);

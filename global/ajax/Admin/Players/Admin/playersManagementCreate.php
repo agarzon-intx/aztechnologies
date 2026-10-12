@@ -68,8 +68,17 @@ if (!defined('APP_SITE_ROOT')) {
 									<div class="row">
 										<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 											<span style="text-align: center; ">
-												<div style="width: 161px; height: 225px; background-color: #BFBFBF; margin: auto;">
+												<div id="fotoFrame" class="player-photo-frame" data-suffix="" style="width: 161px; height: 220px; background-color: #BFBFBF; margin: auto; position: relative; overflow: hidden;">
 													<img id="foto" src="" alt="Foto" width="161" height="220" style="display: none"/>
+												</div>
+												<div id="fotoTools" style="display: none; width: 161px; margin: 6px auto 0;">
+													<div class="d-flex align-items-center" style="gap: 4px;">
+														<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'\', 1 / 1.15);">&minus;</button>
+														<input type="range" class="form-range" id="fotoZoom" min="0" max="100" step="1" value="0" oninput="playerPhotoSlider(\'\', this.value);" style="flex: 1;">
+														<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'\', 1.15);">+</button>
+														<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $lang['931-2'] . '" onclick="playerPhotoReset(\'\');">&#8634;</button>
+													</div>
+													<small class="text-muted" style="font-size: 11px;">' . $lang['931-1'] . '</small>
 												</div>
 											</span>
 										</div>
@@ -81,7 +90,7 @@ if (!defined('APP_SITE_ROOT')) {
 												<form>
 													<div style="text-align: center;">
 														<div>
-															<input style="display: none; visibility: hidden;" type="file" accept="image/png" name="myFoto" id="myFoto" onchange="readURL(this, \'foto\');">
+															<input style="display: none; visibility: hidden;" type="file" accept="image/png,image/jpeg" name="myFoto" id="myFoto" onchange="readURL(this, \'foto\');">
 															<input type="hidden" name="myFotoFileName" id="myFotoFileName" value="">
 														</div>
 														<div id=\'previewMyFoto\' style="text-align: center;"></div>
@@ -177,7 +186,7 @@ $htmlPlayer .= '							<img width="120" height="120" id="logoE" src="imagenes/' 
 													<div class="row">
 														<div class="col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 															<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important; position: relative;">
-																<label class="form-label">' . $lang['922'] . '</label>
+																<label class="form-label">' . ((int) $Config->searchPlayer === 1 ? ($lang['539-19'] ?? ($lang['922'] . ' / ID')) : $lang['922']) . '</label>
 																<input type="text" class="form-control" name="curp" id="curp" value=""' . ((int) $Config->searchPlayer === 1 ? ' style="padding-right: 2.75rem;"' : '') . '>
 																' . ((int) $Config->searchPlayer === 1 ? '<button type="button" class="btn btn-link" id="btn-search" onclick="searchPlayerCurp(' . (int) $Team . ')" style="position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:5;margin:0;padding:0.35rem 0.65rem;min-width:auto;box-shadow:none;"><i class="fas fa-search"></i></button><script src="ajax/Admin/Players/Admin/playerValidation.js.php"></script>' : '') . '
 															</div>
@@ -377,7 +386,7 @@ $htmlPlayer .= '													</select>
 								<div class="row">
 									<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12" style="width: 100%;">
 										<span style="text-align: left; ">
-											<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myIDPDF\'), \'click\');" id="subiridentificacionpdf">' . $lang['933-1'] . '</button>
+											<button style="margin: 0; width: 135px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myIDPDF\'), \'click\');" id="subiridentificacionpdf">' . $lang['933-3'] . '</button>
 											<form>
 												<div style="text-align: center;">
 													<div>

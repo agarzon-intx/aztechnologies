@@ -66,6 +66,282 @@ function closeDiv(){
 	$("#Avisos").css("display", "none");
 }
 
+/*
+ * Session re-authentication. Admin/Flyers endpoints answer 401 {sessionExpired} instead of running on a dead
+ * session; every such request is held, the user is asked for the password, and the held requests are re-sent.
+ */
+var azReauthQueue = [];
+var azReauthActions = [];
+var azReauthOpen = false;
+var AZ_REAUTH_USER_KEY = 'azSessionUser';
+
+function azReauthRemember(user){
+	try {
+		if (user) {
+			localStorage.setItem(AZ_REAUTH_USER_KEY, user);
+		} else {
+			localStorage.removeItem(AZ_REAUTH_USER_KEY);
+		}
+	} catch (e) {}
+}
+
+function azReauthStoredUser(){
+	try {
+		return localStorage.getItem(AZ_REAUTH_USER_KEY) || '';
+	} catch (e) {
+		return '';
+	}
+}
+
+function azReauthResponse(xhr){
+	if (!xhr || xhr.status !== 401) {
+		return null;
+	}
+	var res = xhr.responseJSON;
+	if (!res && xhr.responseText) {
+		try {
+			res = JSON.parse(xhr.responseText);
+		} catch (e) {
+			res = null;
+		}
+	}
+	return (res && res.sessionExpired) ? res : null;
+}
+
+function azCallAll(fns, ctx, args){
+	if (!fns) {
+		return;
+	}
+	fns = Array.isArray(fns) ? fns : [fns];
+	for (var i = 0; i < fns.length; i++) {
+		if (typeof fns[i] === 'function') {
+			fns[i].apply(ctx, args);
+		}
+	}
+}
+
+$.ajaxPrefilter(function (options, originalOptions) {
+	if (options.azNoReauth) {
+		return;
+	}
+	var error = options.error;
+	var complete = options.complete;
+	options.error = function (xhr) {
+		var res = azReauthResponse(xhr);
+		if (res) {
+			azReauthQueue.push(originalOptions);
+			azReauthShow(res);
+			return;
+		}
+		azCallAll(error, this, arguments);
+	};
+	options.complete = function (xhr) {
+		if (azReauthResponse(xhr)) {
+			return;
+		}
+		azCallAll(complete, this, arguments);
+	};
+});
+
+function azReauthShow(res){
+	var labels = (res && res.labels) || {};
+	var user = (res && res.username) || azReauthStoredUser();
+	if (!user) {
+		// Nobody to re-authenticate: fall back to the regular login screen.
+		azReauthQueue = [];
+		azReauthActions = [];
+		mainLoadingCount = 0;
+		mainLoadingOff();
+		alert(String(labels.expired || (res && res.message) || '').replace(/\\n/g, "\n"));
+		logout();
+		return;
+	}
+	if (azReauthOpen) {
+		return;
+	}
+	azReauthOpen = true;
+	clearInterval(nIntervId);
+
+	var $m = $('<div id="azReauth" role="dialog" aria-modal="true" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:100001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;">'
+		+ '<div class="card" style="max-width:380px;width:100%;padding:24px;">'
+		+ '<h5 class="mb-2 azReauthTitle"></h5>'
+		+ '<p class="text-sm mb-3 azReauthMsg"></p>'
+		+ '<label class="text-sm mb-1 azReauthUserLabel" for="azReauthUser"></label>'
+		+ '<input type="text" class="form-control mb-2" id="azReauthUser" readonly style="border:1px solid #d2d6da;padding:6px 10px;background:#f0f2f5;">'
+		+ '<label class="text-sm mb-1 azReauthPasswordLabel" for="azReauthPassword"></label>'
+		+ '<input type="password" class="form-control" id="azReauthPassword" autocomplete="current-password" style="border:1px solid #d2d6da;padding:6px 10px;">'
+		+ '<div class="text-danger text-sm mt-2" id="azReauthError"></div>'
+		+ '<div class="d-flex justify-content-between mt-3">'
+		+ '<button type="button" class="btn btn-outline-secondary mb-0" id="azReauthLogout"></button>'
+		+ '<button type="button" class="btn bg-gradient-success mb-0" id="azReauthSubmit">'
+		+ '<span class="spinner-border spinner-border-sm me-1" id="azReauthSpin" style="display:none;"></span>'
+		+ '<span class="azReauthSubmitText"></span></button>'
+		+ '</div></div></div>');
+	$m.find('.azReauthTitle').text(labels.title || 'Session expired');
+	$m.find('.azReauthMsg').text((res && res.message) || '');
+	$m.find('.azReauthUserLabel').text(labels.user || 'User');
+	$m.find('.azReauthPasswordLabel').text(labels.password || 'Password');
+	$m.find('.azReauthSubmitText').text(labels.submit || 'Continue');
+	$m.find('#azReauthLogout').text(labels.logout || 'Log out').on('click', azReauthLogout);
+	$m.find('#azReauthUser').val(user);
+	$m.data('user', user).data('labels', labels);
+	$m.find('#azReauthSubmit').on('click', azReauthSubmit);
+	$m.find('#azReauthPassword').on('keydown', function (e) {
+		if (e.key === 'Enter' || e.keyCode === 13) {
+			e.preventDefault();
+			azReauthSubmit();
+		}
+	});
+	$('body').append($m);
+	$m.find('#azReauthPassword').trigger('focus');
+}
+
+function azReauthBusy(on){
+	$('#azReauthSubmit, #azReauthLogout, #azReauthPassword').prop('disabled', on);
+	$('#azReauthSpin').css('display', on ? 'inline-block' : 'none');
+}
+
+function azReauthFail(message){
+	azReauthBusy(false);
+	$('#azReauthError').text(message || '');
+	$('#azReauthPassword').trigger('select').trigger('focus');
+}
+
+function azReauthSubmit(){
+	var $m = $('#azReauth');
+	var user = $m.data('user');
+	var labels = $m.data('labels') || {};
+	var password = $('#azReauthPassword').val();
+	if (!password) {
+		azReauthFail(labels.empty);
+		return;
+	}
+	$('#azReauthError').text('');
+	azReauthBusy(true);
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Login/get_salt.php',
+		data: {username: user},
+		timeout: AJAX_TIMEOUT_MS,
+		azNoReauth: true,
+		success: function (salt) {
+			if (!salt || salt.status !== '1') {
+				azReauthFail(labels.error);
+				return;
+			}
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: 'ajax/Login/login.php',
+				data: {username: user, password: CryptoJS.PBKDF2(password, salt.salt, { keySize: 160/32, iterations: 1000 }).toString(), CSRFtoken: ''},
+				timeout: AJAX_TIMEOUT_MS,
+				azNoReauth: true,
+				success: function (res) {
+					if (res && res.status == '1') {
+						azReauthDone(user);
+					} else {
+						azReauthFail($('<div>').html((res && res.dataError) || labels.error).text());
+					}
+				},
+				error: function () {
+					azReauthFail(labels.error);
+				}
+			});
+		},
+		error: function () {
+			azReauthFail(labels.error);
+		}
+	});
+}
+
+function azReauthDone(user){
+	azReauthRemember(user);
+	$('#azReauth').remove();
+	azReauthOpen = false;
+	clearInterval(nIntervId);
+	nIntervId = setInterval(checkSessionExpire, 60000);
+	var queue = azReauthQueue;
+	var actions = azReauthActions;
+	azReauthQueue = [];
+	azReauthActions = [];
+	for (var i = 0; i < queue.length; i++) {
+		$.ajax(queue[i]);
+	}
+	for (var j = 0; j < actions.length; j++) {
+		actions[j]();
+	}
+}
+
+function azReauthLogout(){
+	azReauthQueue = [];
+	azReauthActions = [];
+	$('#azReauth').remove();
+	azReauthOpen = false;
+	mainLoadingCount = 0;
+	mainLoadingOff();
+	logout();
+}
+
+/*
+ * PDF links (pdf/*.php) build the document from session values, so check the session on the click itself.
+ * The check is synchronous on purpose: when the session is alive the original click continues untouched
+ * (new tab / download), which an async check followed by a re-click would lose to popup blockers.
+ */
+function azSessionCheckNow(){
+	var result = null;
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/sessionExpiredCheck.php',
+		async: false,
+		azNoReauth: true,
+		success: function (res) {
+			result = res;
+		}
+	});
+	return result;
+}
+
+function azOpenPdfLink(link){
+	var a = document.createElement('a');
+	a.href = link.href;
+	a.target = link.target || '_blank';
+	// No click gesture is left after the password prompt; a download is not popup-blocked like a new tab.
+	a.setAttribute('download', link.getAttribute('download') || '');
+	a.setAttribute('data-az-session-ok', '1');
+	a.style.display = 'none';
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+}
+
+$(document).on('click', 'a[href*="pdf/"]', function (e) {
+	if (this.getAttribute('data-az-session-ok') === '1') {
+		return;
+	}
+	if (!/(^|\/)pdf\/[^?#\/]+\.php/i.test(this.getAttribute('href') || '')) {
+		return;
+	}
+	var res = azSessionCheckNow();
+	if (!res || res.status === '1') {
+		return;
+	}
+	var user = (res.status === '0' && res.username) ? res.username : azReauthStoredUser();
+	if (!user) {
+		// Never logged in (public flyers): open as before.
+		return;
+	}
+	e.preventDefault();
+	e.stopImmediatePropagation();
+	var link = this;
+	azReauthActions.push(function () {
+		azOpenPdfLink(link);
+	});
+	res.username = user;
+	azReauthShow(res);
+});
+
 function checkSessionExpire(){
 	//console.log('checkSessionExpire');
 	$.ajax({
@@ -75,8 +351,7 @@ function checkSessionExpire(){
 		timeout: AJAX_TIMEOUT_MS,
 		success: function (res) {
 			if (res.status === '0') {
-				alert(res.message.replace(/\\n/g, "\n").replace(/<br\s*\/?>/gi, "\n"));
-				logout();
+				azReauthShow(res);
 			}
 			if (res.status === '1') {
 				var d = new Date();
@@ -115,6 +390,9 @@ function loadTournament(Season){
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1' && res.category) {
+				if (res.season) {
+					Season = res.season;
+				}
 				$("#categorysel").html(res.dataCategories);
 				$("#teamLogos").html(res.dataLogos);
 				loadCategory(Season, res.category);
@@ -252,16 +530,19 @@ function loadMenu(){
 	});
 }
 
+// Background poll: must never lock the screen or alert, since it fires while the user is working or the tab is idle.
 function reloadNotifications(){
     //console.log('loadNotifications');
-	mainLoadingOn();
+	if (document.hidden || navigator.onLine === false) {
+		return;
+	}
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Top/reloadNotifications.php',
+		timeout: 15000,
 		success: function (res) {
-			mainLoadingOff()
-			if (res.status === '1') {
+			if (res && res.status === '1') {
 				if(res.totAlert > 0){
 					$("#notificationssec").css('display', 'block');
 					$("#notificationssec").html(res.dataAlert);
@@ -272,9 +553,7 @@ function reloadNotifications(){
 			}
 		},
 		error: function(jqxhr, status, exception) {
-			mainLoadingOff();
-			alert(MSG_AJAX_GENERIC);
-			console.log('Exception:' + exception);
+			console.log('reloadNotifications failed: ' + status + ' ' + exception);
 		}
 	});
 	
@@ -522,6 +801,7 @@ function login(user, password, CSRFtoken){
 				$("#errorLoginL").html(res.dataError);
 			}
 			if (res.status == '1') {
+				azReauthRemember(user);
 				nIntervId = setInterval(checkSessionExpire, 60000);
 				loadMenu();
 				loadWeeks();
@@ -548,6 +828,7 @@ function logout(){
 			mainLoadingOff()
 			if (res.status === '1') {
 				clearInterval(nIntervId);
+				azReauthRemember('');
 				loadMenu();
 				loadWeeks();
 			}
@@ -1181,20 +1462,26 @@ function userManagementApplyTeamLeftFilters($root) {
 	}
 	var st = userManagementNormSelectVal($status);
 	var cat = userManagementNormSelectVal($cat);
+	var $type = $root.find('.um-assign-type-filter').first();
+	var instMode = $type.length > 0 && !$type.prop('disabled') && userManagementNormSelectVal($type) === 'inst';
+	$root.find('.um-team-filter-col').toggle(!instMode);
 	$equipol.find('option').each(function () {
 		var opt = this;
 		var $o = $(opt);
 		var v = userManagementNormSelectVal($o);
-		if (v === '0' || v === '-1') {
-			opt.removeAttribute('hidden');
-			opt.disabled = false;
-			return;
+		var isInst = /^i\d+$/.test(v);
+		var show;
+		if (instMode || isInst) {
+			show = instMode && isInst;
+		} else if (v === '0' || v === '-1') {
+			show = true;
+		} else {
+			var act = $o.attr('data-activo');
+			var cId = $o.attr('data-categoria');
+			var okS = (st === '2' || st === String(act));
+			var okC = (cat === '' || cat === String(cId));
+			show = okS && okC;
 		}
-		var act = $o.attr('data-activo');
-		var cId = $o.attr('data-categoria');
-		var okS = (st === '2' || st === String(act));
-		var okC = (cat === '' || cat === String(cId));
-		var show = okS && okC;
 		if (show) {
 			opt.removeAttribute('hidden');
 			opt.disabled = false;
@@ -1218,7 +1505,7 @@ function userManagementBindTeamLeftFilters($root) {
 	}
 	$status.val('2');
 	$cat.val('');
-	$status.add($cat).off('change.umTeamFilter input.umTeamFilter').on('change.umTeamFilter input.umTeamFilter', function () {
+	$status.add($cat).add($root.find('.um-assign-type-filter').first()).off('change.umTeamFilter input.umTeamFilter').on('change.umTeamFilter input.umTeamFilter', function () {
 		userManagementApplyTeamLeftFilters($root);
 	});
 	userManagementApplyTeamLeftFilters($root);
@@ -2083,7 +2370,241 @@ function playersManagementTeamEditPlayer(playerid, name, lastname, lastname2, ni
 	});
 }
 
+/*
+ * Player photo editor: frames marked .player-photo-frame (id fotoFrame / fotoFrameE) let the user drag and
+ * zoom the picture; the framed result is rendered to the stored size (500x683, same ratio as the 161x220
+ * frame) and uploaded through UploadPicture(E).php only when saving (playerPhotoFlush).
+ */
+var PLAYER_PHOTO_OUT_W = 500;
+var PLAYER_PHOTO_OUT_H = 683;
+
+function playerPhotoState($frame) {
+	var st = $frame.data('pp');
+	if (!st) {
+		st = {ready: false, dirty: false, pendingFile: false, pointers: {}};
+		$frame.data('pp', st);
+	}
+	return st;
+}
+
+function playerPhotoApply($frame) {
+	var st = playerPhotoState($frame);
+	var img = $frame.find('img')[0];
+	if (!st.ready || !img) {
+		return;
+	}
+	var fw = $frame.width(), fh = $frame.height();
+	var w = st.nw * st.scale, h = st.nh * st.scale;
+	st.x = (w >= fw) ? Math.min(0, Math.max(fw - w, st.x)) : Math.max(0, Math.min(fw - w, st.x));
+	st.y = (h >= fh) ? Math.min(0, Math.max(fh - h, st.y)) : Math.max(0, Math.min(fh - h, st.y));
+	img.style.cssText = 'position: absolute; display: block; max-width: none; max-height: none; cursor: grab; user-select: none; -webkit-user-drag: none;'
+		+ ' left: ' + st.x + 'px; top: ' + st.y + 'px; width: ' + w + 'px; height: ' + h + 'px;';
+	var range = st.maxScale - st.minScale;
+	$('#fotoZoom' + $frame.data('suffix')).val(range > 0 ? Math.round((st.scale - st.minScale) / range * 100) : 0);
+}
+
+function playerPhotoInit(img) {
+	var $frame = $(img).closest('.player-photo-frame');
+	if (!$frame.length || !img.naturalWidth || $(img).css('display') === 'none') {
+		return;
+	}
+	var st = playerPhotoState($frame);
+	if (!st.pendingFile) {
+		return;
+	}
+	var fw = $frame.width(), fh = $frame.height();
+	st.nw = img.naturalWidth;
+	st.nh = img.naturalHeight;
+	st.minScale = Math.min(fw / st.nw, fh / st.nh);
+	st.maxScale = Math.max(fw / st.nw, fh / st.nh) * 4;
+	st.ready = true;
+	st.dirty = true;
+	st.pendingFile = false;
+	$frame.css('touch-action', 'none');
+	playerPhotoReset($frame.data('suffix'), true);
+	$('#fotoTools' + $frame.data('suffix')).show();
+}
+
+document.addEventListener('load', function (e) {
+	if (e.target && e.target.tagName === 'IMG' && $(e.target).closest('.player-photo-frame').length) {
+		playerPhotoInit(e.target);
+	}
+}, true);
+
+function playerPhotoZoomTo($frame, scale, cx, cy) {
+	var st = playerPhotoState($frame);
+	if (!st.ready) {
+		return;
+	}
+	scale = Math.max(st.minScale, Math.min(st.maxScale, scale));
+	var k = scale / st.scale;
+	st.x = cx - (cx - st.x) * k;
+	st.y = cy - (cy - st.y) * k;
+	st.scale = scale;
+	st.dirty = true;
+	playerPhotoApply($frame);
+}
+
+function playerPhotoStep(suffix, factor) {
+	var $frame = $('#fotoFrame' + suffix);
+	playerPhotoZoomTo($frame, playerPhotoState($frame).scale * factor, $frame.width() / 2, $frame.height() / 2);
+}
+
+function playerPhotoSlider(suffix, value) {
+	var $frame = $('#fotoFrame' + suffix);
+	var st = playerPhotoState($frame);
+	playerPhotoZoomTo($frame, st.minScale + (st.maxScale - st.minScale) * (value / 100), $frame.width() / 2, $frame.height() / 2);
+}
+
+/** Fill the frame (cover) and center; keepDirty=true when called from init. */
+function playerPhotoReset(suffix, keepDirty) {
+	var $frame = $('#fotoFrame' + suffix);
+	var st = playerPhotoState($frame);
+	if (!st.ready) {
+		return;
+	}
+	var fw = $frame.width(), fh = $frame.height();
+	st.scale = Math.max(fw / st.nw, fh / st.nh);
+	st.x = (fw - st.nw * st.scale) / 2;
+	st.y = (fh - st.nh * st.scale) / 2;
+	if (!keepDirty) {
+		st.dirty = true;
+	}
+	playerPhotoApply($frame);
+}
+
+$(document).on('pointerdown', '.player-photo-frame', function (e) {
+	var st = playerPhotoState($(this));
+	if (!st.ready) {
+		return;
+	}
+	e.preventDefault();
+	var oe = e.originalEvent;
+	if (this.setPointerCapture) {
+		this.setPointerCapture(oe.pointerId);
+	}
+	st.pointers[oe.pointerId] = {x: oe.clientX, y: oe.clientY};
+});
+
+$(document).on('pointermove', '.player-photo-frame', function (e) {
+	var $frame = $(this), st = playerPhotoState($frame), oe = e.originalEvent;
+	var p = st.pointers[oe.pointerId];
+	if (!st.ready || !p) {
+		return;
+	}
+	var ids = Object.keys(st.pointers);
+	if (ids.length === 1) {
+		st.x += oe.clientX - p.x;
+		st.y += oe.clientY - p.y;
+		p.x = oe.clientX;
+		p.y = oe.clientY;
+		st.dirty = true;
+		playerPhotoApply($frame);
+		return;
+	}
+	var other = st.pointers[String(ids[0]) === String(oe.pointerId) ? ids[1] : ids[0]];
+	var d0 = Math.hypot(p.x - other.x, p.y - other.y);
+	p.x = oe.clientX;
+	p.y = oe.clientY;
+	var d1 = Math.hypot(p.x - other.x, p.y - other.y);
+	if (d0 > 0) {
+		var r = this.getBoundingClientRect();
+		playerPhotoZoomTo($frame, st.scale * d1 / d0, (p.x + other.x) / 2 - r.left, (p.y + other.y) / 2 - r.top);
+	}
+});
+
+$(document).on('pointerup pointercancel', '.player-photo-frame', function (e) {
+	delete playerPhotoState($(this)).pointers[e.originalEvent.pointerId];
+});
+
+$(document).on('dragstart', '.player-photo-frame img', function (e) {
+	e.preventDefault();
+});
+
+document.addEventListener('wheel', function (e) {
+	var frame = e.target && e.target.closest ? e.target.closest('.player-photo-frame') : null;
+	if (!frame || !playerPhotoState($(frame)).ready) {
+		return;
+	}
+	e.preventDefault();
+	var r = frame.getBoundingClientRect();
+	playerPhotoZoomTo($(frame), playerPhotoState($(frame)).scale * (e.deltaY < 0 ? 1.1 : 1 / 1.1), e.clientX - r.left, e.clientY - r.top);
+}, {passive: false});
+
+function playerPhotoLoadFile(input, suffix) {
+	var $frame = $('#fotoFrame' + suffix);
+	if (!input.files || !input.files[0]) {
+		return;
+	}
+	$frame.data('pp', {ready: false, dirty: false, pendingFile: true, pointers: {}});
+	$('#fotoTools' + suffix).hide();
+	$('#myFotoFileName' + suffix).val('');
+	$('#previewMyFoto' + suffix).html('');
+	var reader = new FileReader();
+	reader.onload = function (e) {
+		$('#foto' + suffix).show().attr('src', e.target.result);
+	};
+	reader.readAsDataURL(input.files[0]);
+}
+
+/** Upload the framed photo when it was changed, then continue with done(). */
+function playerPhotoFlush(suffix, done) {
+	var $frame = $('#fotoFrame' + suffix);
+	var st = $frame.length ? playerPhotoState($frame) : null;
+	if (!st || !st.ready || !st.dirty) {
+		done();
+		return;
+	}
+	var img = $frame.find('img')[0];
+	var r = PLAYER_PHOTO_OUT_W / $frame.width();
+	var canvas = document.createElement('canvas');
+	canvas.width = PLAYER_PHOTO_OUT_W;
+	canvas.height = PLAYER_PHOTO_OUT_H;
+	var ctx = canvas.getContext('2d');
+	ctx.fillStyle = '#FFFFFF';
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	ctx.imageSmoothingQuality = 'high';
+	ctx.drawImage(img, st.x * r, st.y * r, st.nw * st.scale * r, st.nh * st.scale * r);
+	mainLoadingOn();
+	canvas.toBlob(function (blob) {
+		if (!blob) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			return;
+		}
+		var fd = new FormData();
+		fd.append('myFoto' + suffix, blob, 'foto.png');
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'objects/UploadPicture' + suffix + '.php',
+			data: fd,
+			contentType: false,
+			processData: false,
+			success: function (data) {
+				mainLoadingOff();
+				if (data.status === '1') {
+					$('#myFotoFileName' + suffix).val(data.action);
+					st.dirty = false;
+					done();
+				} else {
+					$('#previewMyFoto' + suffix).html(data.alert);
+				}
+			},
+			error: function (jqxhr, status, exception) {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+				console.log('Exception:' + exception);
+			}
+		});
+	}, 'image/png');
+}
+
 function readURL(input, foto) {
+	if ($('#fotoFrame').length) {
+		playerPhotoLoadFile(input, '');
+		return;
+	}
 	var fd = new FormData();
 	var files = $('#myFoto')[0].files;
 	fd.append('myFoto',files[0]);
@@ -2126,6 +2647,10 @@ function readURL(input, foto) {
 }
 
 function readURLE(input, fotoE) {
+	if ($('#fotoFrameE').length) {
+		playerPhotoLoadFile(input, 'E');
+		return;
+	}
 	var fd = new FormData();
 	var files = $('#myFotoE')[0].files;
 	fd.append('myFotoE',files[0]);
@@ -2608,7 +3133,7 @@ function configManagementAlertSave(Alert){
 }
 
 function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, JuegoCedulas, MarcadorArbitro, MarcadorFecha, MarcadorDiaDefault, JornadaCedulas, columnid, ByeWeekPoints, ByeWeekPointsGoals, juegoSemanal, tressets, 
-                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints, playerIDPDF, playerSignature, credencialBack, showGenerateSchedule, duplicatePlayer, searchPlayer, currentWeek){
+                                perfilJugador, jugadoresApellidos1, juegosxnombre, coachjuegos, coachjuegosdiainicial, coachjuegosdiafinal, hora, hora2, tarjetaCambios, VBByeWeekSets, VBByeWeekPoints, VBByeWeekSetPoints, playerIDPDF, playerSignature, credencialBack, showGenerateSchedule, duplicatePlayer, searchPlayer, currentWeek, deleteTeam, basketScoreManual){
 	//console.log('configManagementAlertSave');
 	mainLoadingOn();
 	$.ajax({
@@ -2618,7 +3143,7 @@ function configManagementGeneralSave(lenguaje, EmpatesPenales, JugadorJugado, Ju
 		data: {EmpatesPenales: EmpatesPenales, JugadorJugado: JugadorJugado, JuegoCedulas: JuegoCedulas, MarcadorArbitro: MarcadorArbitro, MarcadorFecha: MarcadorFecha, 
 		JornadaCedulas: JornadaCedulas, columnid: columnid, MarcadorDiaDefault: MarcadorDiaDefault, lenguaje: lenguaje, ByeWeekPoints: ByeWeekPoints, ByeWeekPointsGoals: ByeWeekPointsGoals, 
 		juegoSemanal: juegoSemanal, tressets: tressets, perfilJugador:perfilJugador,jugadoresApellidos1: jugadoresApellidos1,juegosXNombre: juegosxnombre, coachjuegos: coachjuegos, coachjuegosdiainicial: coachjuegosdiainicial, 
-		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints, playerIDPDF: playerIDPDF, playerSignature: playerSignature, credencialBack: credencialBack, showGenerateSchedule: showGenerateSchedule, duplicatePlayer: duplicatePlayer, searchPlayer: searchPlayer, currentWeek: currentWeek},
+		coachjuegosdiafinal: coachjuegosdiafinal, hora: hora, hora2: hora2, tarjetaCambios: tarjetaCambios, VBByeWeekSets: VBByeWeekSets, VBByeWeekPoints: VBByeWeekPoints, VBByeWeekSetPoints: VBByeWeekSetPoints, playerIDPDF: playerIDPDF, playerSignature: playerSignature, credencialBack: credencialBack, showGenerateSchedule: showGenerateSchedule, duplicatePlayer: duplicatePlayer, searchPlayer: searchPlayer, currentWeek: currentWeek, deleteTeam: deleteTeam, basketScoreManual: basketScoreManual},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -3685,6 +4210,32 @@ function teamManagementHideEdit(){
 	$("#teamsManagementEdit").html('');
 }
 
+function teamManagementDelete(id, category, el){
+	var confirmMsg = el ? $(el).attr('data-confirm') : '';
+	if (confirmMsg && !confirm(confirmMsg)) {
+		return;
+	}
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Teams/TeamsManagementDelete.php',
+		data: {team: id},
+		success: function (res) {
+			mainLoadingOff();
+			alert(res.message);
+			if (res.status === '1') {
+				teamsManagementAdminCategoryTeamShow(category);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
 function teamManagementEditSave(id, categoria, descripcion, descripcionlarga, estatus, fuerza, institucion, campo, playera, short, calcetas, file, desc3, nombreColor, credencialColor){
 	//console.log('teamManagementEditSave id = ' + id + ', descripcion = ' + descripcion + ', descripcionLarga = ' + descripcionLarga + ', estatus = ' + estatus + ', fuerza = ' + fuerza + ', campo = ' + campo);
 	mainLoadingOn();
@@ -4460,6 +5011,262 @@ function generateScheduleCollectTeamOrder(){
 		}
 	});
 	return teamOrder;
+}
+
+function gamesExportCsv(){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Games/gamesCsvShow.php',
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status === '1') {
+				$("#body").html(res.dataGamesCsv);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function gamesExportCsvDownload(){
+	var type = $('#gcType').val();
+	if (!type) {
+		return;
+	}
+	window.location.href = 'ajax/Admin/Games/gamesCsvDownload.php?type=' + encodeURIComponent(type);
+}
+
+var teamSubstitutionData = {categories: [], teams: [], weeks: [], chooseTeam: '', chooseWeek: ''};
+
+function teamSubstitutionShow(){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Games/teamSubstitutionShow.php',
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status === '1') {
+				teamSubstitutionData = res.tsData || {categories: [], teams: [], weeks: [], chooseTeam: '', chooseWeek: ''};
+				$("#body").html(res.dataTeamSubstitution);
+				teamSubstitutionInit();
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function teamSubstitutionInit(){
+	var catSel = document.getElementById('tsCategory');
+	if (!catSel) {
+		return;
+	}
+	var cats = teamSubstitutionData.categories || [];
+	catSel.innerHTML = '';
+	for (var i = 0; i < cats.length; i++) {
+		var o = document.createElement('option');
+		o.value = String(cats[i].id);
+		o.setAttribute('data-calendar-id', String(cats[i].calendarId || 0));
+		o.text = cats[i].name;
+		catSel.appendChild(o);
+	}
+	if (cats.length > 0) {
+		catSel.selectedIndex = 0;
+	}
+	teamSubstitutionOnCategoryChange();
+}
+
+function teamSubstitutionSelectValue(id){
+	var root = document.getElementById('teamSubstitution');
+	var el = (root && root.querySelector) ? root.querySelector('#' + id) : document.getElementById(id);
+	if (!el) {
+		return 0;
+	}
+	var raw = '';
+	if (el.selectedIndex >= 0 && el.options && el.options[el.selectedIndex]) {
+		raw = el.options[el.selectedIndex].value;
+	} else if (el.value != null) {
+		raw = el.value;
+	}
+	return parseInt(raw, 10) || 0;
+}
+
+function teamSubstitutionOnCategoryChange(){
+	var catSel = document.getElementById('tsCategory');
+	var sourceSel = document.getElementById('tsSource');
+	var weekSel = document.getElementById('tsWeek');
+	if (!catSel || !sourceSel || !weekSel) {
+		return;
+	}
+	var catId = teamSubstitutionSelectValue('tsCategory');
+	var calId = 0;
+	if (catSel.selectedIndex >= 0 && catSel.options[catSel.selectedIndex]) {
+		calId = parseInt(catSel.options[catSel.selectedIndex].getAttribute('data-calendar-id'), 10) || 0;
+	}
+	sourceSel.innerHTML = '';
+	var teams = teamSubstitutionData.teams || [];
+	for (var i = 0; i < teams.length; i++) {
+		if ((parseInt(teams[i].categoryId, 10) || 0) !== catId) {
+			continue;
+		}
+		var o = document.createElement('option');
+		o.value = String(teams[i].id);
+		o.text = teams[i].name;
+		sourceSel.appendChild(o);
+	}
+	if (sourceSel.options.length > 0) {
+		sourceSel.selectedIndex = 0;
+	}
+
+	weekSel.innerHTML = '';
+	var weeks = teamSubstitutionData.weeks || [];
+	for (var w = 0; w < weeks.length; w++) {
+		if (calId > 0 && (parseInt(weeks[w].calendarId, 10) || 0) !== calId) {
+			continue;
+		}
+		var wo = document.createElement('option');
+		wo.value = String(weeks[w].id);
+		wo.text = weeks[w].name;
+		weekSel.appendChild(wo);
+	}
+	if (weekSel.options.length > 0) {
+		weekSel.selectedIndex = 0;
+	}
+	teamSubstitutionFillTarget();
+}
+
+function teamSubstitutionOccupiedTeamIds(calId, weekId){
+	var occupied = {};
+	var weeks = teamSubstitutionData.weeks || [];
+	var calWeeks = [];
+	for (var i = 0; i < weeks.length; i++) {
+		if (calId > 0 && (parseInt(weeks[i].calendarId, 10) || 0) !== calId) {
+			continue;
+		}
+		calWeeks.push(weeks[i]);
+	}
+	var start = 0;
+	if (weekId > 0) {
+		for (var w = 0; w < calWeeks.length; w++) {
+			if ((parseInt(calWeeks[w].id, 10) || 0) === weekId) {
+				start = w;
+				break;
+			}
+		}
+	}
+	var jornadaSet = {};
+	for (var j = start; j < calWeeks.length; j++) {
+		jornadaSet[String(calWeeks[j].id)] = true;
+	}
+	var rows = teamSubstitutionData.occupancy || [];
+	for (var r = 0; r < rows.length; r++) {
+		var jid = String(rows[r].jornadaId || 0);
+		var tid = parseInt(rows[r].teamId, 10) || 0;
+		if (tid > 0 && jornadaSet[jid]) {
+			occupied[tid] = true;
+		}
+	}
+	return occupied;
+}
+
+function teamSubstitutionFillTarget(){
+	var sourceSel = document.getElementById('tsSource');
+	var targetSel = document.getElementById('tsTarget');
+	var catSel = document.getElementById('tsCategory');
+	var weekSel = document.getElementById('tsWeek');
+	if (!sourceSel || !targetSel || !catSel) {
+		return;
+	}
+	var catId = teamSubstitutionSelectValue('tsCategory');
+	var sourceId = teamSubstitutionSelectValue('tsSource');
+	var weekId = weekSel ? teamSubstitutionSelectValue('tsWeek') : 0;
+	var prevTarget = teamSubstitutionSelectValue('tsTarget');
+	var calId = 0;
+	if (catSel.selectedIndex >= 0 && catSel.options[catSel.selectedIndex]) {
+		calId = parseInt(catSel.options[catSel.selectedIndex].getAttribute('data-calendar-id'), 10) || 0;
+	}
+	var occupied = teamSubstitutionOccupiedTeamIds(calId, weekId);
+	targetSel.innerHTML = '';
+	var restore = -1;
+	var teams = teamSubstitutionData.teams || [];
+	for (var i = 0; i < teams.length; i++) {
+		var tid = parseInt(teams[i].id, 10) || 0;
+		if ((parseInt(teams[i].categoryId, 10) || 0) !== catId) {
+			continue;
+		}
+		if (tid === sourceId) {
+			continue;
+		}
+		if (occupied[tid]) {
+			continue;
+		}
+		var o = document.createElement('option');
+		o.value = String(tid);
+		o.text = teams[i].name;
+		targetSel.appendChild(o);
+		if (tid === prevTarget) {
+			restore = targetSel.options.length - 1;
+		}
+	}
+	if (restore >= 0) {
+		targetSel.selectedIndex = restore;
+	} else if (targetSel.options.length > 0) {
+		targetSel.selectedIndex = 0;
+	}
+}
+
+function teamSubstitutionOnSourceChange(){
+	teamSubstitutionFillTarget();
+}
+
+function teamSubstitutionRun(){
+	var categoryId = teamSubstitutionSelectValue('tsCategory');
+	var sourceId = teamSubstitutionSelectValue('tsSource');
+	var targetId = teamSubstitutionSelectValue('tsTarget');
+	var weekId = teamSubstitutionSelectValue('tsWeek');
+	var missing = (teamSubstitutionData && teamSubstitutionData.msgMissing) ? teamSubstitutionData.msgMissing : 'Select source team, target team and week.';
+	if (!categoryId || !sourceId || !targetId || !weekId) {
+		alert(missing);
+		return;
+	}
+	var confirmMsg = (teamSubstitutionData && teamSubstitutionData.msgConfirm) ? teamSubstitutionData.msgConfirm : 'Replace the source team from this week on?';
+	if (!confirm(confirmMsg)) {
+		return;
+	}
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/Games/teamSubstitutionSave.php',
+		data: {
+			categoryId: categoryId,
+			sourceId: sourceId,
+			targetId: targetId,
+			weekId: weekId
+		},
+		success: function (res) {
+			mainLoadingOff();
+			if (res.status === '1') {
+				alert(res.message);
+			} else {
+				alert(res.message || MSG_AJAX_GENERIC);
+			}
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
 }
 
 function generateScheduleShow(){

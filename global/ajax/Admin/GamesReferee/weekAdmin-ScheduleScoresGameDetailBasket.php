@@ -89,7 +89,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				Juego_ID as juego,
 				Extra_Local,
 				Extra_Visitante, 
-				case when j.Visitante_ID is null then null else Arbitro end as Arbitro, 
+				case when j.Visitante_ID = -1 then null else Arbitro end as Arbitro, 
 				Comentarios,
 				$selLoadInfo
 			from  $schema.Juegos as j 
@@ -107,6 +107,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 	}
 	$Config->LoadFlags();
+	$basketScoreManual = ((int) $Config->basketScoreManual === 1);
 
 
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
@@ -167,19 +168,19 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
                     $htmlWeekGameDetail .= '</tr>
                 	            <tr>
                                 	<td style="text-align:left; border: none;border: 1px solid #000000;" width="180px"><img src="./imagenes/Original/' . $llogo . '.png?tmp=' . $fecha->getTimestamp() . '" width="70" height="70" alt=""/>' . $lequipo . '</td>
-                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q1l . '</td>
-                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q2l . '</td>
-                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q3l . '</td>
-                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q4l . '</td>
-                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q5l . '</td>';
+                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q1l : '<input id="S1L" type="number" min="0" value="' . (int) ($q1l ?? 0) . '" style="width: 60px;">') . '</td>
+                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q2l : '<input id="S2L" type="number" min="0" value="' . (int) ($q2l ?? 0) . '" style="width: 60px;">') . '</td>
+                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q3l : '<input id="S3L" type="number" min="0" value="' . (int) ($q3l ?? 0) . '" style="width: 60px;">') . '</td>
+                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q4l : '<input id="S4L" type="number" min="0" value="' . (int) ($q4l ?? 0) . '" style="width: 60px;">') . '</td>
+                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q5l : '<input id="S5L" type="number" min="0" value="' . (int) ($q5l ?? 0) . '" style="width: 60px;">') . '</td>';
                     $htmlWeekGameDetail .= '</tr>
                 	            <tr>
                                 	<td style="text-align:left; border: none;border: 1px solid #000000;" width="180px"><img src="./imagenes/Original/' . $vlogo . '.png?tmp=' . $fecha->getTimestamp() . '" width="70" height="70" alt=""/>' . $vequipo . '</td>
-                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q1v . '</td>
-                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q2v . '</td>
-                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q3v . '</td>
-                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q4v . '</td>
-                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . $q5v . '</td>';
+                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q1v : '<input id="S1V" type="number" min="0" value="' . (int) ($q1v ?? 0) . '" style="width: 60px;">') . '</td>
+                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q2v : '<input id="S2V" type="number" min="0" value="' . (int) ($q2v ?? 0) . '" style="width: 60px;">') . '</td>
+                                	<td style="text-align:center; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q3v : '<input id="S3V" type="number" min="0" value="' . (int) ($q3v ?? 0) . '" style="width: 60px;">') . '</td>
+                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q4v : '<input id="S4V" type="number" min="0" value="' . (int) ($q4v ?? 0) . '" style="width: 60px;">') . '</td>
+                                    <td style="text-align:left; border: none;border: 1px solid #000000;text-align: center;" width="90px">' . ($basketScoreManual ? $q5v : '<input id="S5V" type="number" min="0" value="' . (int) ($q5v ?? 0) . '" style="width: 60px;">') . '</td>';
                     $htmlWeekGameDetail .= '</tr>
                             </table>';
                     $htmlWeekGameDetail .= '</div>
@@ -220,11 +221,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 												</div>
 											</div>
 										</div>
-										<div class="col-1 col-sm-1 col-md-1 col-lg-1 col-xl-1">
+										<div class="col-1 col-sm-1 col-md-1 col-lg-1 col-xl-1"' . ($basketScoreManual ? '' : ' style="display: none;"') . '>
 											<div style="text-align:left;border: none;margin-top: 10px;">
 												<div class="input-group input-group-outline my-3" style="margin-top: -5px !important;margin-bottom: 0px !important;">
 													<label class="form-label">Game Data</label>
-													<textarea class="form-control" spellcheck="false" name="gameData" id="gameData">' . $gameData . '</textarea>
+													<textarea class="form-control" spellcheck="false" name="gameData" id="gameData">' . htmlspecialchars((string) $gameData, ENT_QUOTES, 'UTF-8') . '</textarea>
 												</div>
 											</div>
 										</div>

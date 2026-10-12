@@ -1,4 +1,5 @@
 <?php
+$idPdfExpr = $Config->jugadoresHasColumn('IdentificacionPDF') ? " or ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100" : "";
 $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 					<div class="card">
 						<div class="table-responsive">
@@ -47,7 +48,9 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					a.Fecha_Alta,
 					a.Fecha_Validacion,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
-					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef
+					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
+					case when a.Foto is null then '' else 'si' end as Picture,
+					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -69,6 +72,13 @@ $result2 = $Config->query($sql2);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
+		$hasLogo = '';
+		if($row2["Picture"] == ''){
+			$hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
+		}
+		if($row2["HasID"] == ''){
+			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
+		}
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
 		}else{
@@ -77,7 +87,7 @@ if ($result2->num_rows > 0) {
 		$htmlPlayer .= '<td scope="row" class="align-middle text-left" hidden="true"><span class="text-secondary text-xs font-weight-normal">' . $row2["Jugador_ID"] . '</span></td>
 						<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"] . $count . $row2["strikef"] . '</span></td>
 						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["Apodo"] . $row2["strikef"]  . '</span></td>
-						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"] . $row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"] . $row2["strikef"]  . '</span></td>
+						<td scope="row" class="align-middle text-left"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"] . $row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"] . $row2["strikef"]  . $hasLogo . '</span></td>
 						<td scope="row" class="align-middle text-center"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["Numero"] . $row2["strikef"]  . '</span></td>
 						<td scope="row" class="align-middle text-center" style="' . $row2["Color_HEX"] . '"><span class="text-secondary text-xs font-weight-normal">' . $row2["strikei"]  . $row2["Fecha_Nacimiento"] . $row2["strikef"]  . '</span></td>';
 		$color = "";
@@ -148,7 +158,9 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					Sexo,
 					case when FechaValidacionCurp is null then '" . $lang["941"] . "' else '" . $lang["940"] . "' end CurpValida,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
-					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef
+					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
+					case when a.Foto is null then '' else 'si' end as Picture,
+					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100" . $idPdfExpr . " then 'si' else '' end as HasID
 			FROM $schema.Jugadores a  
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
@@ -169,6 +181,13 @@ $result2 = $Config->query($sql2);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
+		$hasLogo = '';
+		if($row2["Picture"] == ''){
+			$hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
+		}
+		if($row2["HasID"] == ''){
+			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
+		}
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
 		}else{
@@ -186,7 +205,7 @@ if ($result2->num_rows > 0) {
 								</div>
 								<div style="width: 35%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">' . $lang['907'] . '</span></p>
-									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"] . $row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"] . $row2["strikef"]  . '</span></div></div>
+									<div class="d-flex px-0 py-0 lh-1"><div style="width: 100%;text-align: center;"><span class="text-secondary text-xs font-weight-normal text-wrap">' . $row2["strikei"] . $row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"] . $row2["strikef"]  . $hasLogo . '</span></div></div>
 								</div>
 								<div style="width: 15%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold">#</span></p>

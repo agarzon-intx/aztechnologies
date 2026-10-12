@@ -23,6 +23,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once __DIR__ . '/player_team_move.inc.php';
 	$schema = $Config->getSchema();
 	$fgmembersite->CheckLogin('playerDuplicateTeams.php');
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
@@ -35,32 +36,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
 	$currentTeam = SanitizeInteger($_POST['team'] ?? 0);
-	$username = SanitizeUsername($_SESSION[$Config->getAlias() . 'username'] ?? '');
-	$isAdmin = false;
-	$ids = array();
-	$ue = $Config->query("SELECT DISTINCT Equipo_ID FROM $schema.usuarios_equipo WHERE username = '" . $username . "'");
-	if ($ue && $ue->num_rows > 0) {
-		while ($r = $ue->fetch_assoc()) {
-			$id = (int) $r['Equipo_ID'];
-			if ($id === 0 || $id === -1) {
-				$isAdmin = true;
-			} elseif ($id > 0) {
-				$ids[] = $id;
-			}
-		}
-	}
-	$sessionEq = $fgmembersite->UserEquipo();
-	if ($sessionEq == 0 || $sessionEq == -1 || $sessionEq === '0' || $sessionEq === '-1') {
-		$isAdmin = true;
-	}
-	if (!$isAdmin && count($ids) === 0) {
-		foreach (explode(',', (string) $sessionEq) as $part) {
-			$id = (int) $part;
-			if ($id > 0) {
-				$ids[] = $id;
-			}
-		}
-	}
+	$isAdmin = az_user_is_league_admin($Config, $schema, $fgmembersite);
+	$ids = az_user_allowed_equipo_ids($Config, $schema, $fgmembersite, $isAdmin);
 
 	$teamFilter = '';
 	if (!$isAdmin) {

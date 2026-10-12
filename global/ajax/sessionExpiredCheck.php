@@ -46,8 +46,14 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$session_lifetime = $fgmembersite->sessionLifeTime;
 	
 	if(empty($_SESSION[$__alias . 'username'])){
-		$retunData = array('status' => '2', 'message' => 'No hay sesion');
-		$fgmembersite->LogOut();
+		if (!empty($_SESSION[$__alias . 'EXPIRED_USER'])) {
+			$retunData = $fgmembersite->SessionReauthPayload($_SESSION[$__alias . 'EXPIRED_USER'], $lang);
+			$retunData['status'] = '0';
+		} else {
+			$retunData = $fgmembersite->SessionReauthPayload('', $lang);
+			$retunData['status'] = '2';
+			$fgmembersite->LogOut();
+		}
 	}else{
 		if (!isset($_SESSION[$__activityKey])) {
 			$_SESSION[$__activityKey] = time();
@@ -56,10 +62,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$time_lapsed = time() - $last_activity;
 		// They were properly logged in, but that was too long ago (sessionLifeTime) so they need to login again
 		if ((time() - $_SESSION[$__activityKey]) > $fgmembersite->sessionLifeTime) {
-			//http_response_code(401);
-			$expiredMessage = isset($lang['230']) ? $lang['230'] : 'Your session has expired. Please login again.';
-			$retunData = array('status' => '0', 'message' => $expiredMessage, 'last_activity' => $last_activity, 'time' => time(), 'time_lapsed' => $time_lapsed, 'session_lifetime' => $session_lifetime);
-			$fgmembersite->LogOut();
+			$retunData = $fgmembersite->SessionReauthPayload($fgmembersite->ExpireSession(), $lang);
+			$retunData['status'] = '0';
 		}else{
 			$secondsO = (time() - $_SESSION[$__activityKey]);
 			$minutes = intdiv($secondsO, 60) % 60;

@@ -41,7 +41,7 @@
 					ELT(DATE_FORMAT(b.Fecha,'%m'),'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre')  Mes, year(b.Fecha) Anio, a.Campo_ID, 
 					case when c.Campo_DESC is null then e.Campo_DESC else c.Campo_DESC end Campo_DESC, g.Torneo_Desc, DATE_FORMAT(b.Fecha, '%a, %d %b %Y') Fecha_String, DATE_FORMAT(a.Horario, '%I:%i %p') Horario
 			from $schema.Juegos a
-				join $schema.Jornada b on a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
+				join $schema.Jornada b on a.Torneo_ID = b.Torneo_ID and a.Fecha between b.Fecha_Inicio and b.Fecha_Fin
 				left outer join $schema.Campos c on a.Campo_ID = c.Campo_ID
 				join $schema.Equipos d on a.Torneo_ID = d.Torneo_ID and a.Local_ID = d.Equipo_ID 
 				join $schema.Categorias dc on d.Fuerza = dc.Categoria_ID and dc.Torneo_ID = a.Torneo_ID

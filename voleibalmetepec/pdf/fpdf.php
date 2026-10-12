@@ -7,7 +7,11 @@
 * Author:  Olivier PLATHEY                                                     *
 *******************************************************************************/
 
-class FPDF
+$__azPdfImageNormalize = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'pdf_image_normalize.php';
+if(!function_exists('az_pdf_normalize_image') && is_readable($__azPdfImageNormalize))
+	require_once $__azPdfImageNormalize;
+unset($__azPdfImageNormalize);
+class FPDF_Core
 {
 const VERSION = '1.85';
 protected $page;               // current page number
@@ -870,6 +874,15 @@ function Image($file, $x=null, $y=null, $w=0, $h=0, $type='', $link='')
 	// Put an image on the page
 	if($file=='')
 		$this->Error('Image file name is empty');
+	if(function_exists('az_pdf_normalize_image'))
+	{
+		// Trust the file bytes, not the extension or the type the caller passed; skip images that cannot be used.
+		$norm = az_pdf_normalize_image($file);
+		if($norm===null)
+			return;
+		$file = $norm['file'];
+		$type = $norm['type'];
+	}
 	if(!isset($this->images[$file]))
 	{
 		// First use of this image, get info
@@ -1932,4 +1945,20 @@ protected function _enddoc()
 	$this->CreationDate = time();
 }
 }
+$__azPdfLayout = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'pdf_layout.php';
+if(is_readable($__azPdfLayout))
+{
+	require_once $__azPdfLayout;
+	class FPDF extends FPDF_Core
+	{
+		use AzPdfLayoutTrait;
+	}
+}
+else
+{
+	class FPDF extends FPDF_Core
+	{
+	}
+}
+unset($__azPdfLayout);
 ?>

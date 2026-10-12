@@ -221,6 +221,21 @@ $schema = $Config->getSchema();
     										</a>
     									</li>';
     			}
+    			$htmlMenu .= '<li class="nav-item ">
+    										<a class="nav-link text-white " aria-expanded="false" onClick="teamSubstitutionShow(); toggleSidenav();">
+    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">swap_horiz</i> </span>
+    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101-44'] . ' <b class="caret"></b></span>
+    										</a>
+    									</li>';
+    			$__gamesRes = $Config->query("SELECT 1 FROM $schema.Juegos WHERE Torneo_ID = (SELECT max(Torneo_ID) FROM $schema.Torneos WHERE Actual = 'S') LIMIT 1");
+    			if ($__gamesRes && $__gamesRes->num_rows > 0) {
+    				$htmlMenu .= '<li class="nav-item ">
+    										<a class="nav-link text-white " aria-expanded="false" onClick="gamesExportCsv(); toggleSidenav();">
+    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">download</i> </span>
+    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101-52'] . ' <b class="caret"></b></span>
+    										</a>
+    									</li>';
+    			}
     			$htmlMenu .= '      </ul>
     							</div>';
     			$htmlMenu .= '</li>';
@@ -665,8 +680,8 @@ $schema = $Config->getSchema();
 					when Equipo_ID = v.Visitante_ID and v.Gol_Local = v.Gol_Visitante and v.Penal_Local > v.Penal_Visitante and v.Jugado then 1 ";
 	}
 	if($Config->ByeWeekPoints == 1){
-		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+		$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+		$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 		$sqlByeWeekPoints3 = "" . $Config->ByeWeekPointsGoals . " ";
 	}
 	
@@ -711,7 +726,7 @@ $schema = $Config->getSchema();
 							else 0
 						end + l.Extra_Local as Reales, 
 						case 
-							when l.Visitante_ID is not null then Gol_Local
+							when l.Visitante_ID <> -1 then Gol_Local
 							else " . $sqlByeWeekPoints3 . "
 						end as GF, 
 						Gol_Visitante as GC,

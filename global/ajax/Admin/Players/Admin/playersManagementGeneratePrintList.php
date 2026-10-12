@@ -50,7 +50,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}else{
 		echo "No borro<br>";
 		$str = htmlspecialchars($_POST["list"]);
-		if(strlen($_SESSION[$cookieName]) > 0){
+		if (isset($_SESSION[$cookieName]) && strlen((string) $_SESSION[$cookieName]) > 0) {
 			$_SESSION[$cookieName] = $_SESSION[$cookieName] . ',' . $str;
 		}else{
 			$_SESSION[$cookieName] = $str;

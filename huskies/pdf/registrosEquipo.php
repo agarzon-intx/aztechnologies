@@ -54,6 +54,7 @@
 					c.Categoria_Desc, 
 					c.Color, 
 					d.Color_HEX,
+					b.Credencial_Color,
 					date_format(CURDATE(),'%d %M %Y') FechaAlta,
 					e.Torneo_Desc
 			FROM $schema.Jugadores a 
@@ -93,7 +94,7 @@
 					az_pdf_image_file($pdf, $siteRoot, 'pdf/Credencial.png', $x+0, $y+0, $cardW, $cardH);
 				}
 				az_pdf_player_photo($pdf, $Config, $schema, $row['Jugador_ID'], 'Foto', $x+10, $y+15, 26, 35);
-				az_pdf_image_file($pdf, $siteRoot, 'imagenes/Original/' . $row['Logo'] . '.png',$x+15.5,$y+45,15, 15);
+				az_pdf_image_file($pdf, $siteRoot, 'imagenes/Original/' . $row['Logo'] . '.png',$x+15.5,$y+42.5,15, 15);
 
 				$pdf->SetTextColor(0, 0, 0);
 				$pdf->SetAlpha(1);
@@ -101,17 +102,39 @@
 				$pdf->SetFont('Helvetica' , '' , 11);
 				$pdf->Cell(45 , 5, '' . az_utf8_decode($row["Equipo_FULLDESC"]) . '', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+21);
-				$pdf->Cell(45 , 5, '' . $row["Categoria_Desc"] . '', 0, 0 , 'L' , false);
+				$pdf->Cell(45 , 5, '' . az_utf8_decode($row["Categoria_Desc"]) . '', 0, 0 , 'L' , false);
 				$pdf->SetXY($x+40,$y+26);
-				$pdf->MultiCell(45	 , 5, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , false);
+				$credHex = isset($row['Credencial_Color']) ? trim((string) $row['Credencial_Color']) : '';
+				$credRgb = null;
+				if ($credHex !== '' && strcasecmp($credHex, 'null') !== 0) {
+					$h = ltrim($credHex, '#');
+					if (strlen($h) === 3 && ctype_xdigit($h)) {
+						$h = $h[0] . $h[0] . $h[1] . $h[1] . $h[2] . $h[2];
+					}
+					if (strlen($h) === 6 && ctype_xdigit($h)) {
+						$credRgb = array(
+							hexdec(substr($h, 0, 2)),
+							hexdec(substr($h, 2, 2)),
+							hexdec(substr($h, 4, 2)),
+						);
+					}
+				}
+				if ($credRgb !== null) {
+					$pdf->SetFillColor($credRgb[0], $credRgb[1], $credRgb[2]);
+					$pdf->SetDrawColor($credRgb[0], $credRgb[1], $credRgb[2]);
+					$pdf->SetLineWidth(1);
+					$pdf->Rect($x+40, $y+26, 48, 20, 'F');
+				}
+				$pdf->MultiCell(45	 , 5, az_utf8_decode('' . $row["Nombre"] . ' ' . $row["Apellido_P"] . ' ' . $row["Apellido_M"] . ''), 0, 'L' , 0);
 				$pdf->SetXY($x+40,$y+36);
-				$pdf->Cell(65 , 5, 'Fech Nac ' . az_utf8_decode($row["Fecha_Nacimiento"]) . '', 0, 0 , 'L' , false);
+				$pdf->Cell(45 , 5, 'Fech Nac ' . az_utf8_decode($row["Fecha_Nacimiento"]) . '', 0, 0 , 'L' , 0);
 				$pdf->SetXY($x+40,$y+41);
-				$pdf->Cell(65 , 5, '' . az_utf8_decode(substr($row["Curp"],0,11)) . 'XXXXXXX', 0, 0 , 'L' , false);
+				$pdf->setFillColor(255,255,255);
+				$pdf->Cell(65 , 5, '' . az_utf8_decode(substr($row["Curp"],0,11)) . 'XXXXXXX', 0, 0 , 'L' , 0);
 				$pdf->SetXY($x+40,$y+46);
 				$pdf->Cell(65 , 5, $row["FechaAlta"], 0, 0 , 'L' , false);
 				// Top-right of card (clear of photo/text); drawn last with white pad in helper.
-				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+82, $y+46, 16, 17.5);
+				az_pdf_qrcode($pdf, $Config, $row['Jugador_ID'], $x+82, $y+46, 16, 17.5);
 				if ($col == 1) {
 					$x = $marginX;
 					$col = 0;

@@ -60,6 +60,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$duplicatePlayer = (isset($_POST["duplicatePlayer"]) && SanitizeInteger($_POST["duplicatePlayer"]) == 1) ? 1 : 0;
 	$searchPlayer = (isset($_POST["searchPlayer"]) && SanitizeInteger($_POST["searchPlayer"]) == 1) ? 1 : 0;
 	$currentWeek = (isset($_POST["currentWeek"]) && SanitizeInteger($_POST["currentWeek"]) == 1) ? 1 : 0;
+	$deleteTeam = (isset($_POST["deleteTeam"]) && SanitizeInteger($_POST["deleteTeam"]) == 1) ? 1 : 0;
+	$basketScoreManual = (isset($_POST["basketScoreManual"]) && SanitizeInteger($_POST["basketScoreManual"]) == 1) ? 1 : 0;
 	
 	//echo $perfilJugadoresA;
 		
@@ -92,6 +94,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	if ($Config->configurationHasColumn('currentWeek')) {
 		$Connection->query("UPDATE $schema.Configuration SET currentWeek = $currentWeek WHERE id = 0;");
+	}
+	// Pages loaded before the checkbox existed do not post it; keep the stored value instead of clearing it.
+	if (isset($_POST["deleteTeam"]) && $Config->configurationHasColumn('deleteTeam')) {
+		$Connection->query("UPDATE $schema.Configuration SET deleteTeam = $deleteTeam WHERE id = 0;");
+	}
+	if (isset($_POST["basketScoreManual"]) && $Config->configurationHasColumn('basketScoreManual')) {
+		$Connection->query("UPDATE $schema.Configuration SET basketScoreManual = $basketScoreManual WHERE id = 0;");
 	}
 
 	$sql1 = "Select @out as 'count'";

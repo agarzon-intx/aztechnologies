@@ -47,8 +47,8 @@
 								when Equipo_ID = v.Visitante_ID and v.Gol_Local = v.Gol_Visitante and v.Penal_Local > v.Penal_Visitante and v.Jugado =1 then 1 ";
 				}
 				if($Config->ByeWeekPoints == 1){
-					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 					$sqlByeWeekPoints3 = "" . $Config->ByeWeekPointsGoals . " ";
 				}
 
@@ -93,7 +93,7 @@
 													else 0
 												end + l.Extra_Local as Reales, 
 												case 
-													when l.Visitante_ID is not null then Gol_Local
+													when l.Visitante_ID <> -1 then Gol_Local
 													else " . $sqlByeWeekPoints3 . "
 												end as GF, 
 												Gol_Visitante as GC,
@@ -325,8 +325,8 @@
 								when Equipo_ID = v.Visitante_ID and v.Gol_Local = v.Gol_Visitante and v.Penal_Local > v.Penal_Visitante and v.Jugado =1 then 1 ";
 				}
 				if($Config->ByeWeekPoints == 1){
-					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 3 ";
-					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID is null then 1 ";
+					$sqlByeWeekPoints1 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 3 ";
+					$sqlByeWeekPoints2 = "when Equipo_ID = l.Local_ID and l.Visitante_ID = -1 then 1 ";
 					$sqlByeWeekPoints3 = "" . $Config->ByeWeekPointsGoals . " ";
 				}
 
@@ -371,7 +371,7 @@
 													else 0
 												end + l.Extra_Local as Reales, 
 												case 
-													when l.Visitante_ID is not null then Gol_Local
+													when l.Visitante_ID <> -1 then Gol_Local
 													else " . $sqlByeWeekPoints3 . "
 												end as GF, 
 												Gol_Visitante as GC,

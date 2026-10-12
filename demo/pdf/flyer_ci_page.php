@@ -1,4 +1,5 @@
 <?php
+	require_once dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'flyer_text_style.inc.php';
 /**
  * Flyer page layout for nuestrodeporte (from flyerC.php).
  */
@@ -29,34 +30,35 @@ if (!function_exists('flyer_ci_add_page')) {
 				? az_flyer_text_style(isset($GLOBALS['Config']) ? $GLOBALS['Config'] : null)
 				: array('color1' => array(0, 152, 175), 'color2' => array(255, 255, 255), 'week' => 75, 'category' => 60, 'date' => 35, 'hour' => 35, 'field' => 35);
 
-			$pdf->SetFont('Coluna' , 'B' , $fs['date']);
-			$pdf->SetTextColor($fs['color1'][0], $fs['color1'][1], $fs['color1'][2]);
+			az_flyer_pdf_set_font($pdf, $fs['date']);
+			$pdf->SetTextColor($fs['color2'][0], $fs['color2'][1], $fs['color2'][2]);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/calendar.png', 35,153,10, 10);
 			$pdf->SetXY(45,155);
-			$pdf->SetFont('Coluna' , 'B' , $fs['date']);
+			az_flyer_pdf_set_font($pdf, $fs['date']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/clock.png', 120,153,10, 10);
 			$pdf->SetXY(130,155);
-			$pdf->SetFont('Coluna' , 'B' , $fs['hour']);
+			az_flyer_pdf_set_font($pdf, $fs['hour']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
 			az_pdf_image_file($pdf, $siteRoot, '/pdf/pointer.png', 80,169,10, 10);
 			$pdf->SetXY(105,170);
-			$pdf->SetFont('Coluna' , 'B' , $fs['field']);
+			az_flyer_pdf_set_font($pdf, $fs['field']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
-			$pdf->SetTextColor($fs['color2'][0], $fs['color2'][1], $fs['color2'][2]);
+			$pdf->SetTextColor($fs['color1'][0], $fs['color1'][1], $fs['color1'][2]);
 			$pdf->SetXY(45.5,155.5);
-			$pdf->SetFont('Coluna' , 'B' , $fs['date']);
+			az_flyer_pdf_set_font($pdf, $fs['date']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Fecha"]) . '', 45, 0 , 'L' , false);
 			$pdf->SetXY(130.5,155.5);
-			$pdf->SetFont('Coluna' , 'B' , $fs['hour']);
+			az_flyer_pdf_set_font($pdf, $fs['hour']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Horario"]) . '', 35, 0 , 'L' , false);
 			$pdf->SetXY(105.5,170.5);
-			$pdf->SetFont('Coluna' , 'B' , $fs['field']);
+			az_flyer_pdf_set_font($pdf, $fs['field']);
 			$pdf->Cell(90 , 8, az_utf8_decode($row1["Campo_DESC"]) . '', 35, 0 , 'L' , false);
+			$pdf->SetTextColor($fs['color2'][0], $fs['color2'][1], $fs['color2'][2]);
 			az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Local_ID"] . '.png', 30,95,45, 45);
 			az_pdf_image_file($pdf, $siteRoot, '/imagenes/Original/' . $row1["Torneo_ID"] . '-' . $row1["Visitante_ID"] . '.png', 135,95,45, 45);
 			$pdf->SetXY(0,38);
-			$pdf->SetFont('Coluna' , 'B' , $fs['week']);
+			az_flyer_pdf_set_font($pdf, $fs['week']);
 			
 			if(is_numeric($row1["Jornada_Desc"])){
 			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
@@ -65,11 +67,11 @@ if (!function_exists('flyer_ci_add_page')) {
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
 			$pdf->SetXY(0,70);
-			$pdf->SetFont('Coluna' , 'B' , $fs['category']);
+			az_flyer_pdf_set_font($pdf, $fs['category']);
 			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
 			$pdf->SetTextColor($fs['color1'][0], $fs['color1'][1], $fs['color1'][2]);
 			$pdf->SetXY(.5,38.5);
-			$pdf->SetFont('Coluna' , 'B' , $fs['week']);
+			az_flyer_pdf_set_font($pdf, $fs['week']);
 			if(is_numeric($row1["Jornada_Desc"])){
 			    $pdf->Cell(210 , 25, 'Jornada ' . az_utf8_decode($row1["Jornada_Desc"]) . '', 35, 0 , 'C' , false);
 			}else{
@@ -77,7 +79,7 @@ if (!function_exists('flyer_ci_add_page')) {
 			}
 			//$pdf->Cell(210 , 25, '4TOS DE FINAL', 35, 0 , 'C' , false);
 			$pdf->SetXY(.5,70.5);
-			$pdf->SetFont('Coluna' , 'B' , $fs['category']);
+			az_flyer_pdf_set_font($pdf, $fs['category']);
 			$pdf->Cell(210 , 18, 'Categoria: ' . az_utf8_decode($row1["Categoria_Desc"]) . '', 35, 0 , 'C' , false);
 			
 			

@@ -36,8 +36,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
     $Home = SanitizeInteger($_POST['Home']);
     $Away = SanitizeInteger($_POST['Away']);
 
+    if($Home === '' || $Home === null){
+		$Home = '-1';
+	}
     if($Away == ''){
-		$Away = 'NULL';
+		$Away = '-1';
 	}
 		
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataColorAnswer' => 'Error');

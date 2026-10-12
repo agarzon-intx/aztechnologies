@@ -14,9 +14,9 @@
 				$htmlTeam .= '</thead>';
 				$htmlTeam .= '<tbody>';
 				$sql2 = "select j.Torneo_ID as Torneo, h.Jornada_DescCorta as Jornada, j.Fecha,
-									case when j.Visitante_Id is null then 'Descansa' else concat(l.equipo_desc,'') end  as 'Local', 
-									case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
-									case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
+									case when j.Visitante_Id = -1 then 'Descansa' else concat(l.equipo_desc,'') end  as 'Local', 
+									case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
+									case when j.Visitante_ID = -1 then null else Penal_local end as 'Penalties Local', 
 									case 
 										when jugado = 0 then '' 
 										else '-'
@@ -29,25 +29,25 @@
 										when jugado = 0 then '' 
 										else case when Penal_local < Penal_Visitante then '*' else '' end
 									end as marcadorpv,
-									concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', 
-									case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
-									case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', 
-									case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo,
+									concat(case when j.Visitante_ID = -1 then null else v.equipo_desc end,'') as 'Visitante', 
+									case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+									case when j.Visitante_ID = -1 then null else Penal_Visitante end as 'Penalties Visitante', 
+									case when j.Visitante_ID = -1 then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo,
 									case 
-										when j.Visitante_Id is null then ''
+										when j.Visitante_Id = -1 then ''
 										else
 											concat(l.Torneo_ID,'-', l.Equipo_ID) 
 									end as Logol, 
 									case 
-										when j.Visitante_Id is null then ''
+										when j.Visitante_Id = -1 then ''
 										else
 											concat(v.Torneo_ID,'-', v.Equipo_ID)
 									end  as Logov, ifnull(jc.Google, lc.Google) as Google, 
-									case when Jugado = 0 and j.Visitante_ID is not null then '' else CONCAT('',i.Pts) end as Pts, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.Reales) end as Reales, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.Last5) end as Last5, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.PosGrupo) end as PosGru, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.PosGeneral) end as PosGen,
+									case when Jugado = 0 and j.Visitante_ID <> -1 then '' else CONCAT('',i.Pts) end as Pts, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.Reales) end as Reales, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.Last5) end as Last5, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.PosGrupo) end as PosGru, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.PosGeneral) end as PosGen,
 									j.jugado
 								from  $schema.Juegos as j 
 									left outer join $schema.Campos jc on j.Campo_ID = jc.Campo_ID
@@ -106,9 +106,9 @@
 									<table class=" table align-items-center mb-0" style="border-color: #136aeb;">';
 				$htmlTeam .= '			<tbody>';
 				$sql2 = "select j.Torneo_ID as Torneo, h.Jornada_DescCorta as Jornada, j.Fecha,
-									case when j.Visitante_Id is null then 'Descansa' else concat(l.equipo_desc,'') end  as 'Local', 
-									case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
-									case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
+									case when j.Visitante_Id = -1 then 'Descansa' else concat(l.equipo_desc,'') end  as 'Local', 
+									case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
+									case when j.Visitante_ID = -1 then null else Penal_local end as 'Penalties Local', 
 									case 
 										when jugado = 0 then '' 
 										else '-'
@@ -121,25 +121,25 @@
 										when jugado = 0 then '' 
 										else case when Penal_local < Penal_Visitante then '*' else '' end
 									end as marcadorpv,
-									concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', 
-									case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
-									case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', 
-									case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo,
+									concat(case when j.Visitante_ID = -1 then null else v.equipo_desc end,'') as 'Visitante', 
+									case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+									case when j.Visitante_ID = -1 then null else Penal_Visitante end as 'Penalties Visitante', 
+									case when j.Visitante_ID = -1 then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo,
 									case 
-										when j.Visitante_Id is null then ''
+										when j.Visitante_Id = -1 then ''
 										else
 											concat(l.Torneo_ID,'-', l.Equipo_ID) 
 									end as Logol, 
 									case 
-										when j.Visitante_Id is null then ''
+										when j.Visitante_Id = -1 then ''
 										else
 											concat(v.Torneo_ID,'-', v.Equipo_ID)
 									end  as Logov, ifnull(jc.Google, lc.Google) as Google, 
-									case when Jugado = 0 and j.Visitante_ID is not null then '' else CONCAT('',i.Pts) end as Pts, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.Reales) end as Reales, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.Last5) end as Last5, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.PosGrupo) end as PosGru, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.PosGeneral) end as PosGen,
+									case when Jugado = 0 and j.Visitante_ID <> -1 then '' else CONCAT('',i.Pts) end as Pts, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.Reales) end as Reales, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.Last5) end as Last5, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.PosGrupo) end as PosGru, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.PosGeneral) end as PosGen,
 									j.jugado
 								from  $schema.Juegos as j 
 									left outer join $schema.Campos jc on j.Campo_ID = jc.Campo_ID
@@ -213,9 +213,9 @@
 										</thead>';
 				$htmlTeam .= '			<tbody>';
 				$sql2 = "select j.Torneo_ID as Torneo, h.Jornada_DescCorta as Jornada, j.Fecha,
-									case when j.Visitante_Id is null then 'Descansa' else concat(l.equipo_desc,'') end  as 'Local', 
-									case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
-									case when j.Visitante_ID is null then null else Penal_local end as 'Penalties Local', 
+									case when j.Visitante_Id = -1 then 'Descansa' else concat(l.equipo_desc,'') end  as 'Local', 
+									case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Local,'') end as 'Goles Local', 
+									case when j.Visitante_ID = -1 then null else Penal_local end as 'Penalties Local', 
 									case 
 										when jugado = 0 then '' 
 										else '-'
@@ -228,25 +228,25 @@
 										when jugado = 0 then '' 
 										else case when Penal_local < Penal_Visitante then '*' else '' end
 									end as marcadorpv,
-									concat(case when j.Visitante_ID is null then null else v.equipo_desc end,'') as 'Visitante', 
-									case when j.Visitante_ID is null then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
-									case when j.Visitante_ID is null then null else Penal_Visitante end as 'Penalties Visitante', 
-									case when j.Visitante_ID is null then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo,
+									concat(case when j.Visitante_ID = -1 then null else v.equipo_desc end,'') as 'Visitante', 
+									case when j.Visitante_ID = -1 then null when jugado = 0 then '' else CONCAT(Gol_Visitante,'') end as 'Goles Visitante', 
+									case when j.Visitante_ID = -1 then null else Penal_Visitante end as 'Penalties Visitante', 
+									case when j.Visitante_ID = -1 then null else ifnull(jc.Campo_DESC, lc.Campo_DESC) end as Campo,
 									case 
-										when j.Visitante_Id is null then ''
+										when j.Visitante_Id = -1 then ''
 										else
 											concat(l.Torneo_ID,'-', l.Equipo_ID) 
 									end as Logol, 
 									case 
-										when j.Visitante_Id is null then ''
+										when j.Visitante_Id = -1 then ''
 										else
 											concat(v.Torneo_ID,'-', v.Equipo_ID)
 									end  as Logov, ifnull(jc.Google, lc.Google) as Google, 
-									case when Jugado = 0 and j.Visitante_ID is not null then '' else CONCAT('',i.Pts) end as Pts, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.Reales) end as Reales, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.Last5) end as Last5, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.PosGrupo) end as PosGru, 
-									case when Jugado = 0 and j.Visitante_ID is not null  then '' else CONCAT('',i.PosGeneral) end as PosGen,
+									case when Jugado = 0 and j.Visitante_ID <> -1 then '' else CONCAT('',i.Pts) end as Pts, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.Reales) end as Reales, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.Last5) end as Last5, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.PosGrupo) end as PosGru, 
+									case when Jugado = 0 and j.Visitante_ID <> -1  then '' else CONCAT('',i.PosGeneral) end as PosGen,
 									j.jugado
 								from  $schema.Juegos as j 
 									left outer join $schema.Campos jc on j.Campo_ID = jc.Campo_ID

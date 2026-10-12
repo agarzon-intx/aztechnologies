@@ -146,7 +146,7 @@ set_time_limit(300);
 				$pdf->SetXY($x+25,$y+70);
 				$pdf->Cell(42 , 14, '' . $row["Numero"] . '', 0, 0 , 'C' , false);
 
-				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+2, $y+85, 20, 20));
+				az_pdf_qrcode($pdf, $fgmembersite, $row['Jugador_ID'], $x+2, $y+85, 20, 20);
 				
 				$pdf->SetDrawColor(0 ,0, 0);
 				$pdf->SetTextColor(0, 0, 0);

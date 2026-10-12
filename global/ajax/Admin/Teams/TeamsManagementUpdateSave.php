@@ -52,10 +52,28 @@ if (!defined('APP_SITE_ROOT')) {
 
 	$__a = $Config->getAlias();
 	$Season = (isset($_COOKIE[$__a . 'season']) && $_COOKIE[$__a . 'season'] !== '') ? (int) $_COOKIE[$__a . 'season'] : 0;
+	$activeSeason = 0;
+	$resultSeason = $Config->query("SELECT Torneo_ID FROM $schema.Torneos WHERE Actual = 'S' LIMIT 1");
+	if ($resultSeason && ($rowSeason = $resultSeason->fetch_assoc())) {
+		$activeSeason = (int) $rowSeason['Torneo_ID'];
+	}
+	if ($Season <= 0) {
+		$Season = $activeSeason;
+	}
+	// TeamUpdate only touches the active season; other seasons are updated directly.
+	$updateOtherSeason = ($Season > 0 && $Season !== $activeSeason);
 
 	$retunData = array('status' => '0', 'message' => 'No insert.', 'dataTeamdAnswer' => 'Error');
 
-	$sql1 = "CALL $schema.TeamUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $id, '$descripcion', '$descripcionLarga', $fuerza, $estatus, $campo, '$playera', '$short', '$calcetas', '$desc3', $institucion, '$nombreColor', $credencialColorSql, @out);";
+	if ($updateOtherSeason) {
+		$sql1 = "UPDATE $schema.Equipos
+			SET Equipo_DESC = '$descripcion', Activo = $estatus, Fuerza = $fuerza, Logo = '', Equipo_FULLDESC = '$descripcionLarga',
+				Campo_ID = $campo, Playera = '$playera', Short = '$short', Calcetas = '$calcetas', Equipo_DESC3 = '$desc3',
+				Institucion_ID = $institucion, Nombre_Color = '$nombreColor', Credencial_Color = $credencialColorSql
+			WHERE Torneo_ID = $Season and Equipo_ID = " . (int) $id . ";";
+	} else {
+		$sql1 = "CALL $schema.TeamUpdate('" . $_SESSION[$Config->getAlias() . 'username'] . "', $id, '$descripcion', '$descripcionLarga', $fuerza, $estatus, $campo, '$playera', '$short', '$calcetas', '$desc3', $institucion, '$nombreColor', $credencialColorSql, @out);";
+	}
 	//echo $sql1;
 	$Connection = $Config->connectAdmin();
 	if (!$Connection) {
@@ -70,6 +88,11 @@ if (!defined('APP_SITE_ROOT')) {
 		$Connection->close();
 		echo json_encode($retunData);
 		exit;
+	}
+	if ($updateOtherSeason) {
+		$updatedRows = (int) $Connection->affected_rows;
+		$Connection->query("SET @out = $updatedRows");
+		$Connection->query("CALL $schema.insertIntoControlTable('" . $_SESSION[$Config->getAlias() . 'username'] . "', 'UPDATE', 'TEAM', '" . $Connection->real_escape_string(preg_replace('/\s+/', ' ', $sql1)) . "', 'OK, total updates: $updatedRows')");
 	}
 
 	$sql2 = "Select @out as 'count'";

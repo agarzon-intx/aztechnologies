@@ -23,6 +23,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once __DIR__ . '/player_team_move.inc.php';
 	$schema = $Config->getSchema();
 	$fgmembersite->CheckLogin('playerSearchByCurp.php');
 	include('lang.'.$_COOKIE[$Config->getAlias() . 'language'].'.php');
@@ -34,8 +35,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		exit;
 	}
 
-	$Season = SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
-	$team = SanitizeInteger($_POST['team'] ?? 0);
+	$Season = (int) SanitizeInteger($_COOKIE[$Config->getAlias() . 'season'] ?? 0);
+	$team = (int) SanitizeInteger($_POST['team'] ?? 0);
 	$curp = trim((string) SanitizeText($_POST['curp'] ?? ''));
 	if ($curp === '' || $team <= 0) {
 		$retunData['message'] = $lang['539-5'];
@@ -45,13 +46,15 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	$conn = $Config->connect();
 	$curpEsc = $conn ? $conn->real_escape_string($curp) : addslashes($curp);
+	$byId = ctype_digit($curp);
+	$playerWhere = $byId ? ('a.Jugador_ID = ' . (int) $curp) : ("a.Curp = '$curpEsc'");
 
 	$sqlSame = "SELECT a.Jugador_ID, a.Nombre, a.Apellido_P, a.Apellido_M, a.Equipo_ID,
 			b.Equipo_FULLDESC, c.Categoria_Desc, c.Categoria_ID
 		FROM $schema.Jugadores a
 			JOIN $schema.Equipos b ON a.Equipo_ID = b.Equipo_ID AND b.Torneo_ID = $Season
 			JOIN $schema.Categorias c ON b.Fuerza = c.Categoria_ID AND c.Torneo_ID = $Season
-		WHERE a.Curp = '$curpEsc' AND a.Equipo_ID = $team
+		WHERE $playerWhere AND a.Equipo_ID = $team
 		LIMIT 1";
 	$result = $Config->query($sqlSame);
 	if ($result && $result->num_rows > 0) {
@@ -70,22 +73,21 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 
 	$sqlOther = "SELECT a.Jugador_ID, a.Nombre, a.Apellido_P, a.Apellido_M, a.Equipo_ID,
-			b.Equipo_FULLDESC, c.Categoria_Desc, c.Categoria_ID
+			b.Equipo_FULLDESC, IFNULL(c.Categoria_Desc, '') AS Categoria_Desc, IFNULL(c.Categoria_ID, 0) AS Categoria_ID
 		FROM $schema.Jugadores a
 			JOIN $schema.Equipos b ON a.Equipo_ID = b.Equipo_ID
-			JOIN $schema.Categorias c ON b.Fuerza = c.Categoria_ID
-		WHERE a.Curp = '$curpEsc' AND a.Equipo_ID <> $team
-		ORDER BY b.Torneo_ID DESC, a.Jugador_ID DESC
+			LEFT JOIN $schema.Categorias c ON b.Fuerza = c.Categoria_ID AND c.Torneo_ID = b.Torneo_ID
+		WHERE $playerWhere AND a.Equipo_ID <> $team
+		ORDER BY (b.Torneo_ID = $Season) DESC, b.Torneo_ID DESC, a.Jugador_ID DESC
 		LIMIT 1";
 	$result = $Config->query($sqlOther);
 	if ($result && $result->num_rows > 0) {
 		$row = $result->fetch_assoc();
 		$playerName = trim($row['Nombre'] . ' ' . $row['Apellido_P'] . ' ' . $row['Apellido_M']);
 		$playerTeam = (int) $row['Equipo_ID'];
-		$equipoIds = $fgmembersite->UserEquipo();
-		$isAdmin = ($equipoIds === '0' || $equipoIds === '-1');
-		$allowed = array_map('intval', explode(',', (string) $equipoIds));
-		$canMove = $isAdmin || in_array($playerTeam, $allowed, true);
+		$isAdmin = az_user_is_league_admin($Config, $schema, $fgmembersite);
+		$allowed = az_user_allowed_equipo_ids($Config, $schema, $fgmembersite, $isAdmin);
+		$canMove = az_player_coach_can_move_to_team($Config, $schema, $playerTeam, $team, $allowed, $isAdmin);
 		$msgKey = $canMove ? '539-6' : '539-16';
 		$confirm = str_replace(
 			array('%1', '%2', '%3'),
