@@ -321,8 +321,16 @@ $htmlPlayer .= '													</select>
 										<div class="row">
 											<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 												<span style="text-align: center; ">
-													<div style="width: 150px; height: 98px; background-color: #BFBFBF; margin: auto;">
-														<img id="identificacion11" src=""  width="150px" height="98px" style="display: none"/>
+													<div id="id11Frame" class="player-photo-frame" data-out-w="700" data-out-h="438" data-upload="objects/UploadIDF.php" data-field="myID11" data-target="#myID11FileName" data-preview="#previewMyID11" data-tools="#id11Tools" data-zoom="#id11Zoom" style="width: 150px; height: 94px; background-color: #BFBFBF; margin: auto; position: relative; overflow: hidden;">
+														<img id="identificacion11" src="" width="150" height="94" style="display: none"/>
+													</div>
+													<div id="id11Tools" style="display: none; width: 150px; margin: 6px auto 0;">
+														<div class="d-flex align-items-center" style="gap: 4px;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'#id11Frame\', 1 / 1.15);">&minus;</button>
+															<input type="range" class="form-range" id="id11Zoom" min="0" max="100" step="1" value="0" oninput="playerPhotoSlider(\'#id11Frame\', this.value);" style="flex: 1;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'#id11Frame\', 1.15);">+</button>
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $lang['931-2'] . '" onclick="playerPhotoReset(\'#id11Frame\');">&#8634;</button>
+														</div>
 													</div>
 												</span>
 											</div>
@@ -334,7 +342,7 @@ $htmlPlayer .= '													</select>
 													<form>
 														<div style="text-align: center;">
 															<div>
-																<input style="display: none; visibility: hidden;" type="file" accept="image/png" name="myID11" id="myID11" onchange="readIDURL11(this, \'identificacion11\');">
+																<input style="display: none; visibility: hidden;" type="file" accept="image/png,image/jpeg" name="myID11" id="myID11" onchange="readIDURL11(this, \'identificacion11\');">
 																<input type="hidden" name="myID11FileName" id="myID11FileName" value="">
 															</div>
 															<div id=\'previewMyID11\' style="display: inline-block; vertical-align:middle;"></div>
@@ -346,8 +354,16 @@ $htmlPlayer .= '													</select>
 										<div class="row">
 											<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 												<span style="text-align: center; ">
-													<div style="width: 150px; height: 98px; background-color: #BFBFBF; margin: auto;">
-														<img id="identificacion12" src="" width="150px" height="98px" style="display: none"/>
+													<div id="id12Frame" class="player-photo-frame" data-out-w="700" data-out-h="438" data-upload="objects/UploadIDB.php" data-field="myID12" data-target="#myID12FileName" data-preview="#previewMyID12" data-tools="#id12Tools" data-zoom="#id12Zoom" style="width: 150px; height: 94px; background-color: #BFBFBF; margin: auto; position: relative; overflow: hidden;">
+														<img id="identificacion12" src="" width="150" height="94" style="display: none"/>
+													</div>
+													<div id="id12Tools" style="display: none; width: 150px; margin: 6px auto 0;">
+														<div class="d-flex align-items-center" style="gap: 4px;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'#id12Frame\', 1 / 1.15);">&minus;</button>
+															<input type="range" class="form-range" id="id12Zoom" min="0" max="100" step="1" value="0" oninput="playerPhotoSlider(\'#id12Frame\', this.value);" style="flex: 1;">
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'#id12Frame\', 1.15);">+</button>
+															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $lang['931-2'] . '" onclick="playerPhotoReset(\'#id12Frame\');">&#8634;</button>
+														</div>
 													</div>
 												</span>
 											</div>
@@ -359,7 +375,7 @@ $htmlPlayer .= '													</select>
 													<form>
 														<div style="text-align: center;">
 															<div>
-																<input style="display: none; visibility: hidden;" type="file" accept="image/png" name="myID12" id="myID12" onchange="readIDURL12(this, \'identificacion12\');">
+																<input style="display: none; visibility: hidden;" type="file" accept="image/png,image/jpeg" name="myID12" id="myID12" onchange="readIDURL12(this, \'identificacion12\');">
 																<input type="hidden" name="myID12FileName" id="myID12FileName" value="">
 															</div>
 															<div id=\'previewMyID12\' style="display: inline-block; vertical-align:middle;"></div>

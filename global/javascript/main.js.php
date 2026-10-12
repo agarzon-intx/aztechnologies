@@ -2374,9 +2374,34 @@ function playersManagementTeamEditPlayer(playerid, name, lastname, lastname2, ni
  * Player photo editor: frames marked .player-photo-frame (id fotoFrame / fotoFrameE) let the user drag and
  * zoom the picture; the framed result is rendered to the stored size (500x683, same ratio as the 161x220
  * frame) and uploaded through UploadPicture(E).php only when saving (playerPhotoFlush).
+ * Other frames (ID front/back) set data-out-w/h, data-upload, data-field, data-target, data-preview,
+ * data-tools and data-zoom; the photo frames use the defaults below.
  */
 var PLAYER_PHOTO_OUT_W = 500;
 var PLAYER_PHOTO_OUT_H = 683;
+
+/** Frame from a suffix ('' / 'E': photo frames) or a selector ('#id11FrameE'). */
+function playerPhotoFrame(s) {
+	if (s && s.jquery) {
+		return s;
+	}
+	s = String(s || '');
+	return s.charAt(0) === '#' ? $(s) : $('#fotoFrame' + s);
+}
+
+function playerPhotoCfg($frame) {
+	var s = String($frame.data('suffix') || ''), d = function (k, def) { var v = $frame.data(k); return v === undefined || v === '' ? def : v; };
+	return {
+		outW: +d('out-w', PLAYER_PHOTO_OUT_W),
+		outH: +d('out-h', PLAYER_PHOTO_OUT_H),
+		upload: d('upload', 'objects/UploadPicture' + s + '.php'),
+		field: d('field', 'myFoto' + s),
+		target: d('target', '#myFotoFileName' + s),
+		preview: d('preview', '#previewMyFoto' + s),
+		tools: d('tools', '#fotoTools' + s),
+		zoom: d('zoom', '#fotoZoom' + s)
+	};
+}
 
 function playerPhotoState($frame) {
 	var st = $frame.data('pp');
@@ -2400,7 +2425,7 @@ function playerPhotoApply($frame) {
 	img.style.cssText = 'position: absolute; display: block; max-width: none; max-height: none; cursor: grab; user-select: none; -webkit-user-drag: none;'
 		+ ' left: ' + st.x + 'px; top: ' + st.y + 'px; width: ' + w + 'px; height: ' + h + 'px;';
 	var range = st.maxScale - st.minScale;
-	$('#fotoZoom' + $frame.data('suffix')).val(range > 0 ? Math.round((st.scale - st.minScale) / range * 100) : 0);
+	$(playerPhotoCfg($frame).zoom).val(range > 0 ? Math.round((st.scale - st.minScale) / range * 100) : 0);
 }
 
 function playerPhotoInit(img) {
@@ -2426,8 +2451,8 @@ function playerPhotoInit(img) {
 	st.dirty = fromFile;
 	st.pendingFile = false;
 	$frame.css('touch-action', 'none');
-	playerPhotoReset($frame.data('suffix'), true);
-	$('#fotoTools' + $frame.data('suffix')).show();
+	playerPhotoReset($frame, true);
+	$(playerPhotoCfg($frame).tools).show();
 }
 
 document.addEventListener('load', function (e) {
@@ -2451,19 +2476,19 @@ function playerPhotoZoomTo($frame, scale, cx, cy) {
 }
 
 function playerPhotoStep(suffix, factor) {
-	var $frame = $('#fotoFrame' + suffix);
+	var $frame = playerPhotoFrame(suffix);
 	playerPhotoZoomTo($frame, playerPhotoState($frame).scale * factor, $frame.width() / 2, $frame.height() / 2);
 }
 
 function playerPhotoSlider(suffix, value) {
-	var $frame = $('#fotoFrame' + suffix);
+	var $frame = playerPhotoFrame(suffix);
 	var st = playerPhotoState($frame);
 	playerPhotoZoomTo($frame, st.minScale + (st.maxScale - st.minScale) * (value / 100), $frame.width() / 2, $frame.height() / 2);
 }
 
 /** Fill the frame (cover) and center; keepDirty=true when called from init. */
 function playerPhotoReset(suffix, keepDirty) {
-	var $frame = $('#fotoFrame' + suffix);
+	var $frame = playerPhotoFrame(suffix);
 	var st = playerPhotoState($frame);
 	if (!st.ready) {
 		return;
@@ -2537,34 +2562,48 @@ document.addEventListener('wheel', function (e) {
 }, {passive: false});
 
 function playerPhotoLoadFile(input, suffix) {
-	var $frame = $('#fotoFrame' + suffix);
-	if (!input.files || !input.files[0]) {
+	var $frame = playerPhotoFrame(suffix);
+	if (!input.files || !input.files[0] || !$frame.length) {
 		return;
 	}
+	var cfg = playerPhotoCfg($frame);
 	$frame.data('pp', {ready: false, dirty: false, pendingFile: true, pointers: {}});
-	$('#fotoTools' + suffix).hide();
-	$('#myFotoFileName' + suffix).val('');
-	$('#previewMyFoto' + suffix).html('');
+	$(cfg.tools).hide();
+	$(cfg.target).val('');
+	$(cfg.preview).html('');
 	var reader = new FileReader();
 	reader.onload = function (e) {
-		$('#foto' + suffix).show().attr('src', e.target.result);
+		$frame.find('img').first().show().attr('src', e.target.result);
 	};
 	reader.readAsDataURL(input.files[0]);
 }
 
+/** Flush several frames in order (suffixes or selectors), then done(). */
+function playerPhotoFlushAll(list, done) {
+	var i = 0;
+	(function next() {
+		if (i >= list.length) {
+			done();
+			return;
+		}
+		playerPhotoFlush(list[i++], next);
+	})();
+}
+
 /** Upload the framed photo when it was changed, then continue with done(). */
 function playerPhotoFlush(suffix, done) {
-	var $frame = $('#fotoFrame' + suffix);
+	var $frame = playerPhotoFrame(suffix);
 	var st = $frame.length ? playerPhotoState($frame) : null;
 	if (!st || !st.ready || !st.dirty) {
 		done();
 		return;
 	}
+	var cfg = playerPhotoCfg($frame);
 	var img = $frame.find('img')[0];
-	var r = PLAYER_PHOTO_OUT_W / $frame.width();
+	var r = cfg.outW / $frame.width();
 	var canvas = document.createElement('canvas');
-	canvas.width = PLAYER_PHOTO_OUT_W;
-	canvas.height = PLAYER_PHOTO_OUT_H;
+	canvas.width = cfg.outW;
+	canvas.height = cfg.outH;
 	var ctx = canvas.getContext('2d');
 	ctx.fillStyle = '#FFFFFF';
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2578,22 +2617,22 @@ function playerPhotoFlush(suffix, done) {
 			return;
 		}
 		var fd = new FormData();
-		fd.append('myFoto' + suffix, blob, 'foto.png');
+		fd.append(cfg.field, blob, 'foto.png');
 		$.ajax({
 			type: 'POST',
 			dataType: 'json',
-			url: 'objects/UploadPicture' + suffix + '.php',
+			url: cfg.upload,
 			data: fd,
 			contentType: false,
 			processData: false,
 			success: function (data) {
 				mainLoadingOff();
 				if (data.status === '1') {
-					$('#myFotoFileName' + suffix).val(data.action);
+					$(cfg.target).val(data.action);
 					st.dirty = false;
 					done();
 				} else {
-					$('#previewMyFoto' + suffix).html(data.alert);
+					$(cfg.preview).html(data.alert);
 				}
 			},
 			error: function (jqxhr, status, exception) {
@@ -2807,6 +2846,10 @@ function readIDPDFURLE(input, identificacion) {
 }
 
 function readIDURL11(input, identificacion) {
+	if ($('#id11Frame').length) {
+		playerPhotoLoadFile(input, '#id11Frame');
+		return;
+	}
 	var fd = new FormData();
 	var files = $('#myID11')[0].files;
 	fd.append('myID11',files[0]);
@@ -2849,6 +2892,10 @@ function readIDURL11(input, identificacion) {
 }
 
 function readIDURL11E(input, identificacion) {
+	if ($('#id11FrameE').length) {
+		playerPhotoLoadFile(input, '#id11FrameE');
+		return;
+	}
 	var fd = new FormData();
 	var files = $('#myID11E')[0].files;
 	fd.append('myID11E',files[0]);
@@ -2891,6 +2938,10 @@ function readIDURL11E(input, identificacion) {
 }
 
 function readIDURL12(input, identificacion) {
+	if ($('#id12Frame').length) {
+		playerPhotoLoadFile(input, '#id12Frame');
+		return;
+	}
 	var fd = new FormData();
 	var files = $('#myID12')[0].files;
 	fd.append('myID12',files[0]);
@@ -2933,6 +2984,10 @@ function readIDURL12(input, identificacion) {
 }
 
 function readIDURL12E(input, identificacion) {
+	if ($('#id12FrameE').length) {
+		playerPhotoLoadFile(input, '#id12FrameE');
+		return;
+	}
 	var fd = new FormData();
 	var files = $('#myID12E')[0].files;
 	fd.append('myID12E',files[0]);
