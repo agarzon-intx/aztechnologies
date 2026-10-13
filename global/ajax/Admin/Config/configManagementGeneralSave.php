@@ -55,6 +55,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$VBByeWeeSetkPoints = SanitizeInteger($_POST["VBByeWeekSetPoints"]);
 	$playerIDPDF = (isset($_POST["playerIDPDF"]) && SanitizeInteger($_POST["playerIDPDF"]) == 1) ? 1 : 0;
 	$playerSignature = (isset($_POST["playerSignature"]) && SanitizeInteger($_POST["playerSignature"]) == 1) ? 1 : 0;
+	$playerContactRequired = (isset($_POST["playerContactRequired"]) && SanitizeInteger($_POST["playerContactRequired"]) == 0) ? 0 : 1;
 	$credencialBack = (isset($_POST["credencialBack"]) && SanitizeInteger($_POST["credencialBack"]) == 1) ? 1 : 0;
 	$showGenerateSchedule = (isset($_POST["showGenerateSchedule"]) && SanitizeInteger($_POST["showGenerateSchedule"]) == 1) ? 1 : 0;
 	$duplicatePlayer = (isset($_POST["duplicatePlayer"]) && SanitizeInteger($_POST["duplicatePlayer"]) == 1) ? 1 : 0;
@@ -79,6 +80,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	if ($Config->configurationHasColumn('playerSignature')) {
 		$Connection->query("UPDATE $schema.Configuration SET playerSignature = $playerSignature WHERE id = 0;");
+	}
+	if (isset($_POST["playerContactRequired"]) && $Config->configurationHasColumn('playerContactRequired')) {
+		$Connection->query("UPDATE $schema.Configuration SET playerContactRequired = $playerContactRequired WHERE id = 0;");
 	}
 	if ($Config->configurationHasColumn('credencialBack')) {
 		$Connection->query("UPDATE $schema.Configuration SET credencialBack = $credencialBack WHERE id = 0;");

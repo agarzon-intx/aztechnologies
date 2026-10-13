@@ -192,6 +192,23 @@ class Configuration
     }
 
     /**
+     * Whether email and phone are required on player create/edit (default: required).
+     * Safe on schemas where the column has not been added yet.
+     */
+    public function playerContactRequired(): bool
+    {
+        if (!$this->configurationHasColumn('playerContactRequired')) {
+            return true;
+        }
+        $result = $this->query("SELECT playerContactRequired FROM " . $this->config["schema"] . ".Configuration WHERE id = 0");
+        if (!$result) {
+            return true;
+        }
+        $row = $result->fetch_assoc();
+        return $row === null || (int) $row["playerContactRequired"] !== 0;
+    }
+
+    /**
      * Whether the player signature capture is enabled for this site.
      * Safe on schemas where the column has not been added yet.
      */

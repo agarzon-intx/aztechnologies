@@ -2,6 +2,7 @@
 	$__selTarjetaCambiosCfg = $Config->configurationHasColumn('TarjetaCambios') ? 'TarjetaCambios' : '0 AS TarjetaCambios';
 	$__selPlayerIDPDFCfg = $Config->configurationHasColumn('playerIDPDF') ? 'playerIDPDF' : '0 AS playerIDPDF';
 	$__selPlayerSignatureCfg = $Config->configurationHasColumn('playerSignature') ? 'playerSignature' : '0 AS playerSignature';
+	$__selPlayerContactRequiredCfg = $Config->configurationHasColumn('playerContactRequired') ? 'playerContactRequired' : '1 AS playerContactRequired';
 	$__selCredencialBackCfg = $Config->configurationHasColumn('credencialBack') ? 'credencialBack' : '0 AS credencialBack';
 	$__selShowGenerateScheduleCfg = $Config->configurationHasColumn('showGenerateSchedule') ? 'showGenerateSchedule' : '0 AS showGenerateSchedule';
 	$__selDuplicatePlayerCfg = $Config->configurationHasColumn('duplicatePlayer') ? 'duplicatePlayer' : '0 AS duplicatePlayer';
@@ -49,6 +50,7 @@
 			    VollByeWeekSetPoints,
 			    " . $__selPlayerIDPDFCfg . ",
 			    " . $__selPlayerSignatureCfg . ",
+			    " . $__selPlayerContactRequiredCfg . ",
 			    " . $__selCredencialBackCfg . ",
 			    " . $__selShowGenerateScheduleCfg . ",
 			    " . $__selDuplicatePlayerCfg . ",
@@ -60,6 +62,7 @@
 			where id = 0;";
 	$playerIDPDFCHK = '';
 	$playerSignatureCHK = '';
+	$playerContactRequiredCHK = 'checked';
 	$credencialBackCHK = '';
 	$showGenerateScheduleCHK = '';
 	$duplicatePlayerCHK = '';
@@ -184,6 +187,7 @@
 				if($playerIDPDF == '1') $playerIDPDFCHK = 'checked';
 				$playerSignature = $row2["playerSignature"];
 				if($playerSignature == '1') $playerSignatureCHK = 'checked';
+				$playerContactRequiredCHK = ((string) $row2["playerContactRequired"] === '0') ? '' : 'checked';
 				$credencialBack = $row2["credencialBack"];
 				if($credencialBack == '1') $credencialBackCHK = 'checked';
 				$showGenerateSchedule = $row2["showGenerateSchedule"];
@@ -382,6 +386,10 @@
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="playerSignature" id="playerSignature" ' . $playerSignatureCHK . '>
 										<label class="custom-control-label" for="playerSignature">' . $lang['539-1'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="playerContactRequired" id="playerContactRequired" ' . $playerContactRequiredCHK . '>
+										<label class="custom-control-label" for="playerContactRequired">' . $lang['539-26'] . '</label>
 									</div>
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="credencialBack" id="credencialBack" ' . $credencialBackCHK . '>

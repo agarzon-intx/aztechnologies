@@ -563,6 +563,7 @@
 	$lang['539-22'] = 'Equipo eliminado';
 	$lang['539-23'] = 'No se puede eliminar: el equipo tiene juegos en este torneo';
 	$lang['539-24'] = 'La eliminación de equipos no está habilitada';
+	$lang['539-26'] = 'Correo y teléfono obligatorios';
 	$lang['539-25'] = 'Marcador Manual/Datos';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';

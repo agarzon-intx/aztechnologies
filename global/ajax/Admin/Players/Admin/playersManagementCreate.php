@@ -244,7 +244,7 @@ $htmlPlayer .= '													</select>
 														<div class="col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12">
 															<div class="input-group input-group-outline my-3" style="margin-top: 5px !important;margin-bottom: 0px !important;">
 																<label class="form-label">' . $lang['925'] . '</label>
-																<input type="number" class="form-control" name="telefono" id="telefono" value="">
+																<input type="number" class="form-control" name="telefono" id="telefono" value=""><input type="hidden" id="playerContactRequired" value="' . ($Config->playerContactRequired() ? '1' : '0') . '">
 															</div>
 														</div>
 													</div>

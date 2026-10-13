@@ -563,6 +563,7 @@
 	$lang['539-22'] = 'Team deleted';
 	$lang['539-23'] = 'Cannot delete: the team has games in this tournament';
 	$lang['539-24'] = 'Team deletion is not enabled';
+	$lang['539-26'] = 'Email and phone required';
 	$lang['539-25'] = 'Score Manual/Data';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
