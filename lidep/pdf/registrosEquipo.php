@@ -65,7 +65,7 @@
 			where a.Equipo_ID = $equipo and Estatus = 'A' and Validado = 1 and a.Foto is not null
 				and YEAR(CURDATE())-YEAR(Fecha_Nacimiento) between $edad1 and $edad2
 			order by convert(Numero,unsigned), Nombre, Apellido_P";
-	//echo $sql;
+	echo $sql;
 	$result = $Config->query($sql);
 	$players = array();
 	if ($result && $result->num_rows > 0) {
