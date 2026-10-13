@@ -117,7 +117,7 @@ $schema = $Config->getSchema();
 				$numeroA);
 			$fotostrA = $row2["Foto"]; 
 			$fotostrAN = 'style="display: block"';
-			if($fotostrA == "#") $fotostrAN = 'style="display: none"';
+			if($fotostrA == "#" || strlen((string) $fotostrA) < 100) $fotostrAN = 'style="display: none"';
 			$idstrA = $row2["Identificacion"]; 
 			$idstrAN = 'style="display: block"';
 			if($idstrA == "#") $idstrAN = 'style="display: none"';

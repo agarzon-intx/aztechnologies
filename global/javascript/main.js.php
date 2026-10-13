@@ -2434,6 +2434,12 @@ function playerPhotoInit(img) {
 		return;
 	}
 	var st = playerPhotoState($frame);
+	if (img.naturalWidth < 20 && img.naturalHeight < 20) {
+		// placeholder pixel from fetch_image.php: no picture stored, so no zoom/drag
+		st.ready = false;
+		$(playerPhotoCfg($frame).tools).hide();
+		return;
+	}
 	// a new file is always uploaded; the saved photo (edit form) only when the user moves or zooms it
 	var fromFile = st.pendingFile;
 	if (!fromFile && st.ready) {
