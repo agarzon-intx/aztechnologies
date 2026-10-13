@@ -52,7 +52,7 @@ set_time_limit(300);
 				YEAR(CURDATE())-YEAR(Fecha_Nacimiento) Edad, Curp, Numero, Estatus, a.Equipo_ID, b.Equipo_FULLDESC, Comentarios, Telefono, correo, b.Logo,
 				c.Categoria_Desc, c.Color, d.Color_HEX
 			FROM $schema.Jugadores a 
-				join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = (select max(Torneo_ID) from $schema.Equipos where Equipo_ID = $equipo) 
+				join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = (select max(x.Torneo_ID) from $schema.Equipos x join $schema.Torneos t on t.Torneo_ID = x.Torneo_ID where x.Equipo_ID = $equipo) 
 				join $schema.Categorias c on b.Fuerza = c.Categoria_ID
 				join $schema.Colores d on c.Color = d.Color_HEX
 			where a.Equipo_ID = $equipo and Estatus = 'A' and Validado = 1 and a.Foto is not null

@@ -56,7 +56,7 @@
 					date_format(CURDATE(),'%d %M %Y') FechaAlta,
 					e.Torneo_Desc
 			FROM $schema.Jugadores a 
-				join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = (select max(Torneo_ID) from $schema.Equipos where Equipo_ID = $equipo) 
+				join $schema.Equipos b on a.Equipo_ID = b.Equipo_ID and b.Torneo_ID = (select max(x.Torneo_ID) from $schema.Equipos x join $schema.Torneos t on t.Torneo_ID = x.Torneo_ID where x.Equipo_ID = $equipo) 
 				join $schema.Categorias c on b.Fuerza = c.Categoria_ID and c.Torneo_ID = $torneo
 				join $schema.Colores d on c.Color = d.Color_HEX
 				join $schema.Torneos e on b.Torneo_ID = e.Torneo_ID
