@@ -915,6 +915,10 @@
 	$lang['933-40'] = 'Drag on the image to mark "%1", or drag its box (or its corner) to move or resize it. It is read again when you let go.';
 	$lang['933-41'] = 'Marked manually';
 	$lang['933-42'] = 'Reading…';
+	$lang['933-43'] = 'Zoom with + / − or pinch; with no field selected, drag the image to move around.';
+	$lang['933-44'] = 'Zoom in';
+	$lang['933-45'] = 'Zoom out';
+	$lang['933-46'] = 'Fit';
 	$lang['934'] = 'Max 1000 KB';
 	$lang['935'] = 'Upload Signature';
 	$lang['936'] = 'Max 100 KB';

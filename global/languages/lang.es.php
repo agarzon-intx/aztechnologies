@@ -915,6 +915,10 @@
 	$lang['933-40'] = 'Arrastre sobre la imagen para marcar «%1», o arrastre su recuadro (o la esquina) para moverlo o ajustarlo. Se vuelve a leer al soltar.';
 	$lang['933-41'] = 'Marcado manualmente';
 	$lang['933-42'] = 'Leyendo…';
+	$lang['933-43'] = 'Acerque con + / − o pellizcando; sin un dato seleccionado, arrastre la imagen para desplazarse.';
+	$lang['933-44'] = 'Acercar';
+	$lang['933-45'] = 'Alejar';
+	$lang['933-46'] = 'Ajustar';
 	$lang['934'] = ' Max 1000 KB';
 	$lang['935'] = 'Subir Firma';
 	$lang['936'] = ' Max 100 KB';

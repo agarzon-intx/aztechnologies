@@ -752,7 +752,8 @@
 
 		function redraw() {
 			if (!canvas) { return; }
-			var x = canvas.getContext('2d'), k = canvas.width / img.naturalWidth, lw = Math.max(2, canvas.width / 320), fs = Math.max(12, Math.round(canvas.width / 42));
+			var ratio = canvas.width / (canvas.clientWidth || canvas.width);
+			var x = canvas.getContext('2d'), k = canvas.width / img.naturalWidth, lw = 2 * ratio, fs = Math.round(13 * ratio);
 			var active = selected || hover;
 			x.clearRect(0, 0, canvas.width, canvas.height);
 			x.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -794,6 +795,35 @@
 			redraw();
 		}
 
+		/* ---- zoom: 1 = whole card fits; the stage scrolls when zoomed in ---- */
+
+		var zoom = 1, stage = null, ZOOM_MAX = 5;
+		function fitWidth() {
+			return Math.min(stage.clientWidth, Math.max(340, 0.5 * window.innerHeight) * img.naturalWidth / img.naturalHeight);
+		}
+		/** Zoom keeping the image point `focus` (default: the centre of the view) at `at` in the stage (default: its middle). */
+		function setZoom(z, focus, at) {
+			z = Math.max(1, Math.min(ZOOM_MAX, z));
+			if (!focus) {
+				var sr = stage.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+				focus = { x: (sr.left + stage.clientWidth / 2 - cr.left) / cr.width * img.naturalWidth, y: (sr.top + stage.clientHeight / 2 - cr.top) / cr.height * img.naturalHeight };
+			}
+			at = at || { x: stage.clientWidth / 2, y: stage.clientHeight / 2 };
+			zoom = z;
+			canvas.style.width = Math.round(fitWidth() * zoom) + 'px';
+			stage.scrollLeft = focus.x / img.naturalWidth * canvas.clientWidth + canvas.offsetLeft - at.x;
+			stage.scrollTop = focus.y / img.naturalHeight * canvas.clientHeight + canvas.offsetTop - at.y;
+			$pop.find('.pio-zoom-val').text(Math.round(zoom * 100) + '%');
+			redraw();
+		}
+		/** Zoom in on a field's box when it is selected for marking. */
+		function focusField(k) {
+			var b = k && primaryBox(k);
+			if (!b) { return; }
+			var fit = Math.min(ZOOM_MAX, 0.5 * img.naturalWidth / Math.max(1, b.x1 - b.x0));
+			setZoom(Math.max(zoom, Math.min(2.5, fit)), { x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 });
+		}
+
 		/* ---- pointer: draw / move / resize ---- */
 
 		function toImg(e) {
@@ -824,7 +854,15 @@
 			var p = toImg(e), mode = selected ? hitBox(selected, p) : null, k = selected;
 			if (!mode && !selected) {
 				var h = hitAny(p);
-				if (!h) { return; }
+				if (!h) {
+					if (zoom > 1) {
+						drag = { mode: 'pan', cx: e.clientX, cy: e.clientY, sl: stage.scrollLeft, st: stage.scrollTop };
+						try { canvas.setPointerCapture(e.pointerId); } catch (ignore) { }
+						canvas.style.cursor = 'grabbing';
+						e.preventDefault();
+					}
+					return;
+				}
 				k = h.k; mode = h.mode;
 				select(k);
 			}
@@ -834,9 +872,14 @@
 		}
 		function onMove(e) {
 			var p = toImg(e);
+			if (drag && drag.mode === 'pan') {
+				stage.scrollLeft = drag.sl - (e.clientX - drag.cx);
+				stage.scrollTop = drag.st - (e.clientY - drag.cy);
+				return;
+			}
 			if (!drag) {
 				var m = selected ? hitBox(selected, p) : (hitAny(p) ? 'move' : null);
-				canvas.style.cursor = m === 'resize' ? 'nwse-resize' : (m === 'move' ? 'move' : (selected ? 'crosshair' : 'default'));
+				canvas.style.cursor = m === 'resize' ? 'nwse-resize' : (m === 'move' ? 'move' : (selected ? 'crosshair' : (zoom > 1 ? 'grab' : 'default')));
 				return;
 			}
 			if (!drag.started) {
@@ -862,6 +905,10 @@
 			var d = drag;
 			drag = null;
 			try { canvas.releasePointerCapture(e.pointerId); } catch (ignore) { }
+			if (d.mode === 'pan') {
+				canvas.style.cursor = 'grab';
+				return;
+			}
 			if (d.started) {
 				reread(d.k);
 				return;
@@ -875,7 +922,15 @@
 
 		/* ---- dialog ---- */
 
-		var html = '<canvas class="pio-layout" style="display:block;max-width:100%;max-height:340px;margin:0 auto 4px;border-radius:6px;touch-action:none;"></canvas>'
+		var zbtn = function (cls, title, label) {
+			return '<button type="button" class="' + cls + '" title="' + esc(title) + '" style="border:1px solid #ccc;background:#fff;border-radius:4px;min-width:30px;padding:1px 8px;font-size:14px;cursor:pointer;">' + label + '</button>';
+		};
+		var html = '<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:4px;font-size:12px;color:#777;">'
+			+ '<span style="margin-right:auto;text-align:left;">' + esc(T.zoomHint) + '</span>'
+			+ zbtn('pio-zoom-out', T.zoomOut, '&minus;') + '<span class="pio-zoom-val" style="min-width:40px;text-align:center;">100%</span>' + zbtn('pio-zoom-in', T.zoomIn, '+')
+			+ zbtn('pio-zoom-fit', T.zoomFit, esc(T.zoomFit)) + '</div>'
+			+ '<div class="pio-stage" style="position:relative;overflow:auto;max-height:60vh;background:#f2f2f2;border-radius:6px;margin-bottom:4px;">'
+			+ '<canvas class="pio-layout" style="display:block;margin:0 auto;touch-action:none;"></canvas></div>'
 			+ '<div class="pio-hint" style="font-size:12px;color:#666;margin-bottom:8px;min-height:16px;"></div>'
 			+ '<table style="width:100%;border-collapse:collapse;text-align:left;font-size:14px;">'
 			+ '<tr style="font-size:12px;color:#999;"><td></td><td></td><td></td><td style="padding:2px 6px;">' + esc(T.source) + '</td><td></td></tr>';
@@ -898,13 +953,26 @@
 			didOpen: function (popup) {
 				$pop = $(popup);
 				canvas = $pop.find('.pio-layout')[0];
-				var scale = Math.min(1, 1000 / img.naturalWidth);
+				stage = $pop.find('.pio-stage')[0];
+				var scale = Math.min(1, 2000 / img.naturalWidth);
 				canvas.width = Math.round(img.naturalWidth * scale);
 				canvas.height = Math.round(img.naturalHeight * scale);
 				canvas.addEventListener('pointerdown', onDown);
 				canvas.addEventListener('pointermove', onMove);
 				canvas.addEventListener('pointerup', onUp);
 				canvas.addEventListener('pointercancel', onUp);
+				canvas.style.width = Math.round(fitWidth()) + 'px';
+				$pop.find('.pio-zoom-in').on('click', function () { setZoom(zoom * 1.5); });
+				$pop.find('.pio-zoom-out').on('click', function () { setZoom(zoom / 1.5); });
+				$pop.find('.pio-zoom-fit').on('click', function () { setZoom(1); });
+				// trackpad pinch arrives as wheel + ctrlKey; plain wheel keeps scrolling
+				stage.addEventListener('wheel', function (e) {
+					if (!e.ctrlKey && !e.metaKey) { return; }
+					e.preventDefault();
+					var sr = stage.getBoundingClientRect();
+					setZoom(zoom * Math.exp(-e.deltaY / 200), toImg(e), { x: e.clientX - sr.left, y: e.clientY - sr.top });
+				}, { passive: false });
+				$(window).on('resize.pio', function () { setZoom(zoom); });
 				$pop.find('tr[data-k]')
 					.on('mouseenter', function () { if (!selected) { hover = $(this).data('k'); redraw(); } })
 					.on('mouseleave', function () { if (!selected) { hover = null; redraw(); } })
@@ -912,12 +980,14 @@
 						if ($(e.target).is('input')) { return; }
 						var k = $(this).data('k');
 						select(selected === k ? null : k);
+						if (selected) { focusField(selected); }
 					});
 				FIELD_KEYS.forEach(function (k) { refreshRow(k); });
 				refreshWarnings();
 				refreshHint();
 				redraw();
 			},
+			willClose: function () { $(window).off('resize.pio'); },
 			preConfirm: function () {
 				var on = {};
 				$(Swal.getHtmlContainer()).find('.pio-apply:checked').each(function () { on[$(this).data('k')] = true; });
