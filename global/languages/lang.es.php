@@ -910,7 +910,11 @@
 	$lang['933-35'] = 'aammdd';
 	$lang['933-36'] = 'no coincide';
 	$lang['933-37'] = 'sin ubicación';
-	$lang['933-38'] = 'Pase el cursor o toque un dato para resaltar en la imagen de dónde se leyó.';
+	$lang['933-38'] = 'Pase el cursor o toque un dato para ver de dónde se leyó. Con «Marcar» puede dibujar, mover o ajustar su recuadro.';
+	$lang['933-39'] = 'Marcar';
+	$lang['933-40'] = 'Arrastre sobre la imagen para marcar «%1», o arrastre su recuadro (o la esquina) para moverlo o ajustarlo. Se vuelve a leer al soltar.';
+	$lang['933-41'] = 'Marcado manualmente';
+	$lang['933-42'] = 'Leyendo…';
 	$lang['934'] = ' Max 1000 KB';
 	$lang['935'] = 'Subir Firma';
 	$lang['936'] = ' Max 100 KB';

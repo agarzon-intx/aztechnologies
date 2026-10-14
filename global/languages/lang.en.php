@@ -910,7 +910,11 @@
 	$lang['933-35'] = 'yymmdd';
 	$lang['933-36'] = 'does not match';
 	$lang['933-37'] = 'not located';
-	$lang['933-38'] = 'Hover or tap a field to highlight where it was read on the image.';
+	$lang['933-38'] = 'Hover or tap a field to see where it was read. Use "Mark" to draw, move or resize its box.';
+	$lang['933-39'] = 'Mark';
+	$lang['933-40'] = 'Drag on the image to mark "%1", or drag its box (or its corner) to move or resize it. It is read again when you let go.';
+	$lang['933-41'] = 'Marked manually';
+	$lang['933-42'] = 'Reading…';
 	$lang['934'] = 'Max 1000 KB';
 	$lang['935'] = 'Upload Signature';
 	$lang['936'] = 'Max 100 KB';

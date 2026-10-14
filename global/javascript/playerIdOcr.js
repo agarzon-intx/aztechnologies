@@ -38,16 +38,9 @@
 		return null;
 	}
 
-	/** Grayscale copy scaled to ~1600px wide; strong=true also stretches contrast around the mean. */
-	function prepCanvas(img, strong) {
-		var scale = Math.max(1, Math.min(3, 1600 / img.naturalWidth));
-		var c = document.createElement('canvas');
-		c.width = Math.round(img.naturalWidth * scale);
-		c.height = Math.round(img.naturalHeight * scale);
-		var x = c.getContext('2d');
-		x.imageSmoothingQuality = 'high';
-		x.drawImage(img, 0, 0, c.width, c.height);
-		var d = x.getImageData(0, 0, c.width, c.height), p = d.data, i, sum = 0;
+	/** Grayscale in place over a canvas area; strong=true also stretches contrast around the area's mean. */
+	function toGray(x, left, top, w, h, strong) {
+		var d = x.getImageData(left, top, w, h), p = d.data, i, sum = 0;
 		for (i = 0; i < p.length; i += 4) {
 			p[i] = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
 			sum += p[i];
@@ -62,8 +55,38 @@
 			var g = strong ? (p[i] <= lo ? 0 : (p[i] >= hi ? 255 : (p[i] - lo) * 255 / (hi - lo))) : p[i];
 			p[i] = p[i + 1] = p[i + 2] = g;
 		}
-		x.putImageData(d, 0, 0);
+		x.putImageData(d, left, top);
+	}
+
+	/** Grayscale copy scaled to ~1600px wide. */
+	function prepCanvas(img, strong) {
+		var scale = Math.max(1, Math.min(3, 1600 / img.naturalWidth));
+		var c = document.createElement('canvas');
+		c.width = Math.round(img.naturalWidth * scale);
+		c.height = Math.round(img.naturalHeight * scale);
+		var x = c.getContext('2d');
+		x.imageSmoothingQuality = 'high';
+		x.drawImage(img, 0, 0, c.width, c.height);
+		toGray(x, 0, 0, c.width, c.height, strong);
 		return { canvas: c, scale: scale };
+	}
+
+	/** One area of the image (box in image pixels), enlarged so the text is at least ~40px tall, on a white margin. */
+	function regionCanvas(img, box, strong) {
+		var sx = Math.max(0, box.x0), sy = Math.max(0, box.y0);
+		var sw = Math.min(img.naturalWidth, box.x1) - sx, sh = Math.min(img.naturalHeight, box.y1) - sy;
+		var scale = Math.max(1, Math.min(3, 1600 / img.naturalWidth));
+		if (sh * scale < 40) { scale = Math.min(8, 40 / sh); }
+		var m = 16, w = Math.round(sw * scale), h = Math.round(sh * scale);
+		var c = document.createElement('canvas');
+		c.width = w + 2 * m; c.height = h + 2 * m;
+		var x = c.getContext('2d');
+		x.fillStyle = '#fff';
+		x.fillRect(0, 0, c.width, c.height);
+		x.imageSmoothingQuality = 'high';
+		x.drawImage(img, sx, sy, sw, sh, m, m, w, h);
+		toGray(x, m, m, w, h, strong);
+		return c;
 	}
 
 	/* ---------- field rules ---------- */
@@ -342,7 +365,7 @@
 			}
 			if (curp.valid && differs) { warnings.push(T.nameMismatch); }
 		}
-		r.src.curp = { box: curp ? curp.box : null, fixed: !!(curp && curp.fixed) };
+		r.src.curp = { box: curp ? curp.box : null, fixed: !!(curp && curp.fixed), valid: !!(curp && curp.valid) };
 
 		var printed = pick(function (p) { return p.printedDate; });
 		var fromCurp = curp ? curpBirth(curp.value) : null;
@@ -396,10 +419,15 @@
 		x0 = Math.max(0, x0); y0 = Math.max(0, y0);
 		w = Math.min(W - x0, w); h = Math.min(H - y0, h);
 		if (w < 40 || h < 40) { return null; }
+		var box = { x0: x0, y0: y0, x1: x0 + w, y1: y0 + h };
+		return { url: cropBox(img, box), box: box, estimated: !anchor };
+	}
+
+	function cropBox(img, box) {
 		var c = document.createElement('canvas');
-		c.width = Math.round(w); c.height = Math.round(h);
-		c.getContext('2d').drawImage(img, x0, y0, w, h, 0, 0, c.width, c.height);
-		return { url: c.toDataURL('image/png'), box: { x0: x0, y0: y0, x1: x0 + w, y1: y0 + h }, estimated: !anchor };
+		c.width = Math.max(1, Math.round(box.x1 - box.x0)); c.height = Math.max(1, Math.round(box.y1 - box.y0));
+		c.getContext('2d').drawImage(img, box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0, 0, 0, c.width, c.height);
+		return c.toDataURL('image/png');
 	}
 
 	/**
@@ -453,7 +481,13 @@
 		$el.css('background-color', '#fff8c4').one('input change', function () { $(this).css('background-color', ''); });
 	}
 
+	var FIELD_KEYS = ['nombre', 'paterno', 'materno', 'fecha', 'sexo', 'curp', 'foto'];
 	var FIELD_COLORS = { nombre: '#d81b60', paterno: '#1e88e5', materno: '#43a047', fecha: '#ef6c00', sexo: '#8e24aa', curp: '#00897b', foto: '#6d4c41' };
+	var WHITELIST = {
+		name: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑÜ ',
+		key: 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789',
+		mixed: 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789/-.: '
+	};
 
 	function dmy(isoDate) { return isoDate ? isoDate.split('-').reverse().join('/') : ''; }
 
@@ -462,108 +496,422 @@
 			+ ';color:#fff;font-size:11px;font-weight:700;text-align:center;margin-right:4px;">' + n + '</span>';
 	}
 
-	/** ID image with a numbered box per field; boxes of the other fields fade while one row is hovered. */
-	function drawLayout(canvas, img, rows, active) {
-		var x = canvas.getContext('2d'), k = canvas.width / img.naturalWidth, lw = Math.max(2, canvas.width / 320), fs = Math.max(12, Math.round(canvas.width / 42));
-		x.clearRect(0, 0, canvas.width, canvas.height);
-		x.drawImage(img, 0, 0, canvas.width, canvas.height);
-		rows.forEach(function (row) {
-			row.boxes.forEach(function (bx) {
-				var on = !active || active === row.key;
-				var X = bx.box.x0 * k, Y = bx.box.y0 * k, W = (bx.box.x1 - bx.box.x0) * k, H = (bx.box.y1 - bx.box.y0) * k;
-				x.globalAlpha = on ? 1 : 0.2;
-				x.lineWidth = on && active ? lw * 1.6 : lw;
-				x.strokeStyle = row.color;
-				x.setLineDash(bx.dashed ? [lw * 3, lw * 2] : []);
-				x.strokeRect(X - lw, Y - lw, W + 2 * lw, H + 2 * lw);
-				x.setLineDash([]);
-				x.font = 'bold ' + fs + 'px sans-serif';
-				var tw = x.measureText(String(row.n)).width + fs * 0.6, th = fs * 1.2;
-				// date and sex boxes are often slices of the CURP / voter key: tag below so the key stays readable
-				var below = row.key === 'fecha' || row.key === 'sexo';
-				var tx = below ? X - lw : X - 2 * lw - tw, ty = below ? Y + H + lw : Y + H / 2 - th / 2;
-				if (tx < 0) { tx = X - lw; ty = Y - lw - th; }
-				ty = Math.min(canvas.height - th, Math.max(0, ty));
-				x.fillStyle = row.color;
-				x.fillRect(tx, ty, tw, th);
-				x.fillStyle = '#fff';
-				x.fillText(String(row.n), tx + fs * 0.3, ty + fs * 0.95);
-			});
+	/* ---------- reading one marked area ---------- */
+
+	/** Value of a field from the text of a marked area, or null. */
+	function parseField(k, text) {
+		var t = String(text || '').toUpperCase();
+		if (k === 'curp') {
+			var c = findCurp(t) || findCurp(t.replace(/\s+/g, ''));
+			if (c) { return c; }
+			var raw = t.replace(/[^A-Z0-9Ñ]/g, '');
+			return raw.length >= 10 ? { value: raw.slice(0, 18), valid: false } : null;
+		}
+		if (k === 'fecha') {
+			var d = findPrintedDate(t);
+			if (d) { return { value: d.iso, raw: d.raw, fmt: 'dmy' }; }
+			var key = findCurp(t.replace(/\s+/g, ''));
+			if (key && curpBirth(key.value)) { return { value: curpBirth(key.value), raw: key.value.substr(4, 6), fmt: 'ymd' }; }
+			var cl = findClave(t.replace(/\s+/g, ''));
+			if (cl && cl.birth) { return { value: cl.birth, raw: cl.value.substr(6, 6), fmt: 'ymd' }; }
+			var digits = t.replace(/[^0-9]/g, ''), y, m, dd;
+			if (digits.length === 8) {
+				dd = parseInt(digits.substr(0, 2), 10); m = parseInt(digits.substr(2, 2), 10); y = parseInt(digits.substr(4, 4), 10);
+				if (y > 1900 && validDate(y, m, dd)) { return { value: iso(y, m, dd), raw: digits.substr(0, 2) + '/' + digits.substr(2, 2) + '/' + digits.substr(4), fmt: 'dmy' }; }
+			}
+			if (digits.length === 6) {
+				var yy = parseInt(digits.substr(0, 2), 10);
+				y = (yy > new Date().getFullYear() % 100 ? 1900 : 2000) + yy; m = parseInt(digits.substr(2, 2), 10); dd = parseInt(digits.substr(4, 2), 10);
+				if (validDate(y, m, dd)) { return { value: iso(y, m, dd), raw: digits, fmt: 'ymd' }; }
+			}
+			return null;
+		}
+		if (k === 'sexo') {
+			var sm = t.match(/SEXO\W*([HMX])\b/);
+			if (sm) { return { value: sm[1] }; }
+			var kc = findCurp(t.replace(/\s+/g, ''));
+			if (kc) { return { value: kc.value.charAt(10) }; }
+			var kl = findClave(t.replace(/\s+/g, ''));
+			if (kl) { return { value: kl.sex }; }
+			var letters = t.replace(/[^A-Z]/g, '');
+			if (/^[HMX]$/.test(letters)) { return { value: letters }; }
+			var one = t.match(/\b([HMX])\b/);
+			return one ? { value: one[1] } : null;
+		}
+		var words = t.replace(/[^A-ZÁÉÍÓÚÑÜ\s]/g, ' ').split(/\s+/).filter(function (w) {
+			return (w.length >= 2 || w === 'Y') && w !== 'NOMBRE' && !NAME_STOP.test(w);
 		});
-		x.globalAlpha = 1;
+		return words.length ? { value: words.join(' ') } : null;
 	}
 
-	function showResult(s, img, r, photo, T) {
-		var sexLabel = r.sexo === '0' ? T.male : (r.sexo === '1' ? T.female : '');
-		var fields = [
-			['nombre', T.nombre, r.nombre], ['paterno', T.paterno, r.paterno], ['materno', T.materno, r.materno],
-			['fecha', T.fecha + ' (' + T.fmtDate + ')', dmy(r.fecha)], ['sexo', T.sexo, sexLabel], ['curp', T.curp, r.curp]
-		];
-		if (photo) { fields.push(['foto', T.foto, '']); }
+	/** OCR of one area with a whitelist for the field; tries a soft then a high-contrast copy. */
+	function readRegion(worker, img, box, k) {
+		var wl = k === 'curp' ? WHITELIST.key : (k === 'fecha' || k === 'sexo' ? WHITELIST.mixed : WHITELIST.name);
+		var once = function (strong) {
+			return worker.recognize(regionCanvas(img, box, strong)).then(function (res) { return String(res.data.text || ''); });
+		};
+		var restore = function () { return worker.setParameters({ tessedit_char_whitelist: '' }); };
+		return worker.setParameters({ tessedit_char_whitelist: wl })
+			.then(function () { return once(false); })
+			.then(function (t) { return parseField(k, t) ? t : once(true).then(function (t2) { return parseField(k, t2) ? t2 : t; }); })
+			.then(function (t) { return restore().then(function () { return t; }); },
+				function (e) { return restore().then(function () { throw e; }); });
+	}
 
-		var rows = fields.map(function (f, i) {
-			var key = f[0], src = r.src[key], boxes = [], where = '';
-			var located = function (b) { return b ? '' : ' <span style="color:#bbb;">(' + esc(T.notMarked) + ')</span>'; };
-			if (key === 'fecha' || key === 'sexo') {
-				var chosen = src.filter(function (x) { return x.chosen; })[0];
-				src.slice().sort(function (a, b) { return b.chosen - a.chosen; }).forEach(function (x) {
-					if (x.box) { boxes.push({ box: x.box, dashed: !x.chosen }); }
-					var mark = x.chosen ? '' : (chosen && x.value === chosen.value ? ' &#10003;' : ' <span style="color:#c62828;">&#8800; ' + esc(T.differs) + '</span>');
-					where += '<div style="' + (x.chosen ? 'font-weight:600;color:#333;' : 'color:#777;') + '">' + esc(x.label) + ': ' + esc(x.raw)
-						+ (x.fmt ? ' <span style="color:#999;font-weight:400;">(' + esc(x.fmt) + ')</span>' : '') + mark + located(x.box) + '</div>';
-				});
-			} else if (key === 'foto') {
-				boxes.push({ box: photo.box, dashed: photo.estimated });
-				where = esc(photo.estimated ? T.srcPhotoEst : T.srcPhoto);
-			} else if (f[2] !== '') {
-				if (src.box) { boxes.push({ box: src.box, dashed: false }); }
-				where = esc(key === 'curp' ? T.srcCurp : T.srcName) + (key === 'curp' && src.fixed ? ' <span style="color:#999;">(' + esc(T.srcCurpFixed) + ')</span>' : '') + located(src.box);
+	/* ---------- result dialog ---------- */
+
+	/**
+	 * Data read, with a picture of the ID where each field has a numbered box. A field's box can be drawn,
+	 * moved or resized on the picture; that area is then read again and replaces the value.
+	 */
+	function showResult(s, img, r, photo, T, worker) {
+		photo = photo || { url: '', box: null, estimated: false };
+		var labels = { nombre: T.nombre, paterno: T.paterno, materno: T.materno, fecha: T.fecha + ' (' + T.fmtDate + ')', sexo: T.sexo, curp: T.curp, foto: T.foto };
+		var num = {}, seq = {}, pending = {}, queue = Promise.resolve(), edited = false;
+		FIELD_KEYS.forEach(function (k, i) { num[k] = i + 1; });
+		var selected = null, hover = null, drag = null, canvas = null, $pop = null;
+
+		var multi = function (k) { return k === 'fecha' || k === 'sexo'; };
+		var chosenOf = function (k) { return r.src[k].filter(function (x) { return x.chosen; })[0] || null; };
+		var fmtLabel = function (f) { return f === 'dmy' ? T.fmtDate : (f === 'ymd' ? T.fmtYmd : f || ''); };
+		r.src.fecha.forEach(function (x) { x.fmt = x.key === 'printed' ? 'dmy' : 'ymd'; });
+
+		function primaryBox(k) {
+			if (k === 'foto') { return photo.box; }
+			if (multi(k)) { var c = chosenOf(k); return c ? c.box : null; }
+			return r.src[k].box;
+		}
+		function setPrimaryBox(k, b) {
+			if (k === 'foto') { photo.box = b; } else if (multi(k)) { chosenOf(k).box = b; } else { r.src[k].box = b; }
+		}
+		function boxesOf(k) {
+			if (multi(k)) {
+				return r.src[k].filter(function (x) { return x.box; }).map(function (x) { return { box: x.box, dashed: !x.chosen }; });
 			}
-			return { key: key, n: i + 1, color: FIELD_COLORS[key], label: f[1], value: f[2], boxes: boxes, where: where };
-		});
+			var b = primaryBox(k);
+			return b ? [{ box: b, dashed: k === 'foto' && photo.estimated }] : [];
+		}
+		function hasValue(k) {
+			if (k === 'foto') { return !!photo.url; }
+			if (k === 'sexo') { return r.sexo !== ''; }
+			return !!r[k];
+		}
+		function valueHtml(k) {
+			if (pending[k]) { return '<span style="color:#999;font-weight:400;">' + esc(T.rereading) + '</span>'; }
+			if (!hasValue(k)) { return '<span style="color:#bbb;font-weight:400;">' + esc(T.none) + '</span>'; }
+			if (k === 'foto') { return '<img src="' + photo.url + '" style="max-width:70px;max-height:90px;border-radius:4px;border:2px solid ' + FIELD_COLORS.foto + ';">'; }
+			if (k === 'fecha') { return esc(dmy(r.fecha)); }
+			if (k === 'sexo') { return esc(r.sexo === '0' ? T.male : T.female); }
+			return esc(r[k]);
+		}
+		function whereHtml(k) {
+			var located = function (b) { return b ? '' : ' <span style="color:#bbb;">(' + esc(T.notMarked) + ')</span>'; };
+			if (multi(k)) {
+				var chosen = chosenOf(k), out = '';
+				r.src[k].slice().sort(function (a, b) { return b.chosen - a.chosen; }).forEach(function (x) {
+					var mark = x.chosen || !chosen ? '' : (x.value === chosen.value ? ' &#10003;' : ' <span style="color:#c62828;">&#8800; ' + esc(T.differs) + '</span>');
+					out += '<div style="' + (x.chosen ? 'font-weight:600;color:#333;' : 'color:#777;') + '">' + esc(x.label) + ': ' + (x.raw ? esc(x.raw) : esc(T.none))
+						+ (x.raw && x.fmt ? ' <span style="color:#999;font-weight:400;">(' + esc(fmtLabel(x.fmt)) + ')</span>' : '') + mark + located(x.box) + '</div>';
+				});
+				return out;
+			}
+			if (k === 'foto') {
+				return photo.box ? esc(photo.manual ? T.srcManual : (photo.estimated ? T.srcPhotoEst : T.srcPhoto)) : '';
+			}
+			var src = r.src[k];
+			if (src.manual) { return esc(T.srcManual) + located(src.box); }
+			if (!r[k]) { return ''; }
+			return esc(k === 'curp' ? T.srcCurp : T.srcName) + (k === 'curp' && src.fixed ? ' <span style="color:#999;">(' + esc(T.srcCurpFixed) + ')</span>' : '') + located(src.box);
+		}
 
-		var html = '<canvas class="pio-layout" style="display:block;max-width:100%;max-height:340px;margin:0 auto 4px;border-radius:6px;"></canvas>'
-			+ '<div style="font-size:12px;color:#888;margin-bottom:8px;">' + esc(T.hoverHint) + '</div>'
-			+ '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;text-align:left;font-size:14px;">';
-		if (photo) {
-			html += '<label style="flex:0 0 110px;text-align:center;cursor:pointer;"><img src="' + photo.url + '" style="width:110px;border-radius:6px;border:2px solid ' + FIELD_COLORS.foto + ';"><br>'
-				+ '<input type="checkbox" class="pio-apply" data-k="foto" checked> ' + badge(rows[rows.length - 1].n, FIELD_COLORS.foto) + esc(T.foto) + '</label>';
+		function computeWarnings() {
+			var w = [];
+			if (!r.curp) { w.push(T.noCurp); } else if (!r.src.curp.valid) { w.push(T.curpCheck); }
+			if (!r.nombre || !r.paterno) { w.push(T.noNames); }
+			var fn = curpFromNames(r.paterno, r.materno, r.nombre);
+			if (r.curp && r.src.curp.valid && fn && Object.keys(fn).some(function (i) { return r.curp.charAt(i) !== fn[i]; })) { w.push(T.nameMismatch); }
+			var cf = chosenOf('fecha');
+			if (cf && r.src.fecha.some(function (x) { return x.value && x.value !== cf.value; })) { w.push(T.dateMismatch); }
+			var cs = chosenOf('sexo');
+			if (cs && cs.value === 'X') { w.push(T.sexX); }
+			return w;
 		}
-		html += '<table style="flex:1 1 380px;border-collapse:collapse;">'
-			+ '<tr style="font-size:12px;color:#999;"><td></td><td></td><td></td><td style="padding:2px 6px;">' + esc(T.source) + '</td></tr>';
-		rows.forEach(function (row) {
-			if (row.key === 'foto') { return; }
-			var has = row.value !== '';
-			html += '<tr data-k="' + row.key + '" style="border-bottom:1px solid #eee;cursor:default;"><td style="padding:4px 6px;width:24px;vertical-align:top;"><input type="checkbox" class="pio-apply" data-k="' + row.key + '"' + (has ? ' checked' : ' disabled') + '></td>'
-				+ '<td style="padding:4px 6px;color:#777;white-space:nowrap;vertical-align:top;">' + badge(row.n, row.color) + esc(row.label) + '</td>'
-				+ '<td style="padding:4px 6px;font-weight:600;word-break:break-all;vertical-align:top;">' + (has ? esc(row.value) : '<span style="color:#bbb;font-weight:400;">' + esc(T.none) + '</span>') + '</td>'
-				+ '<td style="padding:4px 6px;font-size:12px;color:#555;vertical-align:top;">' + row.where + '</td></tr>';
+
+		/** After the CURP changes, refresh the birth date / sex entries taken from it. */
+		function refreshCurpSources() {
+			var ok = /^[A-Z]{4}\d{6}[HMX]/.test(r.curp), box = r.src.curp.box;
+			var fromCurp = ok && r.curp.length === 18 ? curpBirth(r.curp) : null;
+			[['fecha', fromCurp ? { label: T.srcCurpDate, raw: r.curp.substr(4, 6), fmt: 'ymd', value: fromCurp } : null],
+				['sexo', ok ? { label: T.srcCurpSex, raw: r.curp.charAt(10), value: r.curp.charAt(10) } : null]].forEach(function (pair) {
+				var k = pair[0], list = r.src[k], cur = list.filter(function (x) { return x.key === 'curp'; })[0];
+				if (!pair[1]) {
+					if (cur) { list.splice(list.indexOf(cur), 1); }
+				} else {
+					if (!cur) { cur = { key: 'curp', chosen: false }; list.push(cur); }
+					$.extend(cur, pair[1], { box: box });
+				}
+				if (!chosenOf(k) && list.length) { list[0].chosen = true; }
+				syncChosen(k);
+			});
+		}
+		function syncChosen(k) {
+			var c = chosenOf(k);
+			if (k === 'fecha') { r.fecha = c ? c.value || '' : ''; }
+			if (k === 'sexo') { var v = c ? c.value : ''; r.sexo = v === 'H' ? '0' : (v === 'M' ? '1' : ''); }
+		}
+
+		/** First change to a field's box: it becomes a manual source. */
+		function makeManual(k) {
+			if (k === 'foto') { photo.manual = true; photo.estimated = false; return; }
+			if (multi(k)) {
+				var c = chosenOf(k);
+				if (c && c.key === 'manual') { return; }
+				r.src[k].forEach(function (x) { x.chosen = false; });
+				r.src[k] = r.src[k].filter(function (x) { return x.key !== 'manual'; });
+				r.src[k].unshift({ key: 'manual', label: T.srcManual, raw: '', fmt: '', value: '', box: c && c.box ? $.extend({}, c.box) : null, chosen: true });
+				return;
+			}
+			r.src[k].manual = true;
+			r.src[k].fixed = false;
+		}
+
+		function applyRead(k, text) {
+			var p = parseField(k, text);
+			if (k === 'curp') {
+				r.curp = p ? p.value : '';
+				r.src.curp.valid = !!(p && p.valid);
+				refreshCurpSources();
+			} else if (multi(k)) {
+				var c = chosenOf(k);
+				c.value = p ? p.value : '';
+				c.raw = p ? (k === 'fecha' ? p.raw : p.value) : '';
+				c.fmt = p && k === 'fecha' ? p.fmt : '';
+				syncChosen(k);
+			} else {
+				r[k] = p ? p.value : '';
+			}
+		}
+
+		function reread(k) {
+			var b = primaryBox(k);
+			if (!b || b.x1 - b.x0 < 4 || b.y1 - b.y0 < 4) { return; }
+			b = $.extend({}, b);
+			edited = true;
+			if (k === 'foto') {
+				photo.url = cropBox(img, b);
+				refreshRow(k, true);
+				redraw();
+				return;
+			}
+			var my = seq[k] = (seq[k] || 0) + 1;
+			pending[k] = true;
+			refreshRow(k);
+			queue = queue.then(function () { return readRegion(worker, img, b, k); }).then(function (text) {
+				if (seq[k] === my) { applyRead(k, text); }
+			}).catch(function (e) {
+				console.log('playerIdOcr reread', e);
+			}).then(function () {
+				if (seq[k] !== my) { return; }
+				pending[k] = false;
+				FIELD_KEYS.forEach(function (key) { refreshRow(key, key === k); });
+				refreshWarnings();
+				redraw();
+			});
+		}
+
+		/* ---- rendering ---- */
+
+		function refreshRow(k, check) {
+			if (!$pop) { return; }
+			var $tr = $pop.find('tr[data-k="' + k + '"]'), has = hasValue(k) && !pending[k];
+			var $cb = $tr.find('.pio-apply').prop('disabled', !has);
+			if (!has) { $cb.prop('checked', false); } else if (check) { $cb.prop('checked', true); }
+			$tr.find('.pio-val').html(valueHtml(k));
+			$tr.find('.pio-where').html(whereHtml(k));
+			$tr.css('background', selected === k ? '#eef3ff' : '');
+		}
+		function refreshWarnings() {
+			if (!$pop) { return; }
+			var w = edited ? computeWarnings() : r.warnings;
+			$pop.find('.pio-warn').toggle(w.length > 0).html(w.map(function (x) { return '&#9888; ' + esc(x); }).join('<br>'));
+		}
+		function refreshHint() {
+			if (!$pop) { return; }
+			$pop.find('.pio-hint').text(selected ? T.editHint.replace('%1', labels[selected].replace(/\s*\(.*\)$/, '')) : T.hoverHint);
+			$pop.find('.pio-mark').each(function () {
+				var on = $(this).closest('tr').data('k') === selected;
+				$(this).css({ background: on ? FIELD_COLORS[selected] : '#fff', color: on ? '#fff' : '#555' });
+			});
+			if (canvas) { canvas.style.cursor = selected ? 'crosshair' : 'default'; }
+		}
+
+		function redraw() {
+			if (!canvas) { return; }
+			var x = canvas.getContext('2d'), k = canvas.width / img.naturalWidth, lw = Math.max(2, canvas.width / 320), fs = Math.max(12, Math.round(canvas.width / 42));
+			var active = selected || hover;
+			x.clearRect(0, 0, canvas.width, canvas.height);
+			x.drawImage(img, 0, 0, canvas.width, canvas.height);
+			FIELD_KEYS.forEach(function (key) {
+				var color = FIELD_COLORS[key], on = !active || active === key;
+				boxesOf(key).forEach(function (bx) {
+					var X = bx.box.x0 * k, Y = bx.box.y0 * k, W = (bx.box.x1 - bx.box.x0) * k, H = (bx.box.y1 - bx.box.y0) * k;
+					x.globalAlpha = on ? 1 : 0.2;
+					x.lineWidth = on && active ? lw * 1.6 : lw;
+					x.strokeStyle = color;
+					x.setLineDash(bx.dashed ? [lw * 3, lw * 2] : []);
+					x.strokeRect(X - lw, Y - lw, W + 2 * lw, H + 2 * lw);
+					x.setLineDash([]);
+					if (!bx.dashed && selected === key) {
+						var hs = lw * 4;
+						x.fillStyle = color;
+						x.fillRect(X + W + lw - hs / 2, Y + H + lw - hs / 2, hs, hs);
+					}
+					// date and sex boxes are often slices of the CURP / voter key: tag below so the key stays readable
+					x.font = 'bold ' + fs + 'px sans-serif';
+					var tw = x.measureText(String(num[key])).width + fs * 0.6, th = fs * 1.2, below = multi(key);
+					var tx = below ? X - lw : X - 2 * lw - tw, ty = below ? Y + H + lw : Y + H / 2 - th / 2;
+					if (tx < 0) { tx = X - lw; ty = Y - lw - th; }
+					ty = Math.min(canvas.height - th, Math.max(0, ty));
+					x.fillStyle = color;
+					x.fillRect(tx, ty, tw, th);
+					x.fillStyle = '#fff';
+					x.fillText(String(num[key]), tx + fs * 0.3, ty + fs * 0.95);
+				});
+			});
+			x.globalAlpha = 1;
+		}
+
+		function select(k) {
+			selected = k;
+			hover = null;
+			FIELD_KEYS.forEach(function (key) { refreshRow(key); });
+			refreshHint();
+			redraw();
+		}
+
+		/* ---- pointer: draw / move / resize ---- */
+
+		function toImg(e) {
+			var rc = canvas.getBoundingClientRect();
+			return { x: (e.clientX - rc.left) * img.naturalWidth / rc.width, y: (e.clientY - rc.top) * img.naturalHeight / rc.height, u: img.naturalWidth / rc.width };
+		}
+		function hitBox(k, p) {
+			var b = primaryBox(k), hs = 10 * p.u;
+			if (!b) { return null; }
+			if (Math.abs(p.x - b.x1) <= hs && Math.abs(p.y - b.y1) <= hs) { return 'resize'; }
+			return p.x >= b.x0 && p.x <= b.x1 && p.y >= b.y0 && p.y <= b.y1 ? 'move' : null;
+		}
+		function hitAny(p) {
+			for (var i = 0; i < FIELD_KEYS.length; i++) {
+				var mode = hitBox(FIELD_KEYS[i], p);
+				if (mode) { return { k: FIELD_KEYS[i], mode: mode }; }
+			}
+			return null;
+		}
+		function clampBox(b) {
+			var W = img.naturalWidth, H = img.naturalHeight;
+			var x0 = Math.max(0, Math.min(b.x0, b.x1)), x1 = Math.min(W, Math.max(b.x0, b.x1));
+			var y0 = Math.max(0, Math.min(b.y0, b.y1)), y1 = Math.min(H, Math.max(b.y0, b.y1));
+			return { x0: x0, y0: y0, x1: x1, y1: y1 };
+		}
+
+		function onDown(e) {
+			var p = toImg(e), mode = selected ? hitBox(selected, p) : null, k = selected;
+			if (!mode && !selected) {
+				var h = hitAny(p);
+				if (!h) { return; }
+				k = h.k; mode = h.mode;
+				select(k);
+			}
+			drag = { k: k, mode: mode || 'draw', start: p, orig: primaryBox(k) ? $.extend({}, primaryBox(k)) : null, started: false };
+			try { canvas.setPointerCapture(e.pointerId); } catch (ignore) { }
+			e.preventDefault();
+		}
+		function onMove(e) {
+			var p = toImg(e);
+			if (!drag) {
+				var m = selected ? hitBox(selected, p) : (hitAny(p) ? 'move' : null);
+				canvas.style.cursor = m === 'resize' ? 'nwse-resize' : (m === 'move' ? 'move' : (selected ? 'crosshair' : 'default'));
+				return;
+			}
+			if (!drag.started) {
+				if (Math.abs(p.x - drag.start.x) + Math.abs(p.y - drag.start.y) < 4 * p.u) { return; }
+				drag.started = true;
+				makeManual(drag.k);
+			}
+			var o = drag.orig, b;
+			if (drag.mode === 'move') {
+				var dx = Math.max(-o.x0, Math.min(img.naturalWidth - o.x1, p.x - drag.start.x));
+				var dy = Math.max(-o.y0, Math.min(img.naturalHeight - o.y1, p.y - drag.start.y));
+				b = { x0: o.x0 + dx, y0: o.y0 + dy, x1: o.x1 + dx, y1: o.y1 + dy };
+			} else if (drag.mode === 'resize') {
+				b = clampBox({ x0: o.x0, y0: o.y0, x1: Math.max(o.x0 + 6 * p.u, p.x), y1: Math.max(o.y0 + 6 * p.u, p.y) });
+			} else {
+				b = clampBox({ x0: drag.start.x, y0: drag.start.y, x1: p.x, y1: p.y });
+			}
+			setPrimaryBox(drag.k, b);
+			redraw();
+		}
+		function onUp(e) {
+			if (!drag) { return; }
+			var d = drag;
+			drag = null;
+			try { canvas.releasePointerCapture(e.pointerId); } catch (ignore) { }
+			if (d.started) {
+				reread(d.k);
+				return;
+			}
+			if (d.mode === 'draw') {
+				// a click (no drag) outside the selected box picks another field, or clears the selection
+				var h = hitAny(d.start);
+				select(h ? h.k : null);
+			}
+		}
+
+		/* ---- dialog ---- */
+
+		var html = '<canvas class="pio-layout" style="display:block;max-width:100%;max-height:340px;margin:0 auto 4px;border-radius:6px;touch-action:none;"></canvas>'
+			+ '<div class="pio-hint" style="font-size:12px;color:#666;margin-bottom:8px;min-height:16px;"></div>'
+			+ '<table style="width:100%;border-collapse:collapse;text-align:left;font-size:14px;">'
+			+ '<tr style="font-size:12px;color:#999;"><td></td><td></td><td></td><td style="padding:2px 6px;">' + esc(T.source) + '</td><td></td></tr>';
+		FIELD_KEYS.forEach(function (k) {
+			html += '<tr data-k="' + k + '" style="border-bottom:1px solid #eee;cursor:pointer;">'
+				+ '<td style="padding:4px 6px;width:24px;vertical-align:top;"><input type="checkbox" class="pio-apply" data-k="' + k + '"' + (hasValue(k) ? ' checked' : ' disabled') + '></td>'
+				+ '<td style="padding:4px 6px;color:#777;white-space:nowrap;vertical-align:top;">' + badge(num[k], FIELD_COLORS[k]) + esc(labels[k]) + '</td>'
+				+ '<td class="pio-val" style="padding:4px 6px;font-weight:600;word-break:break-all;vertical-align:top;"></td>'
+				+ '<td class="pio-where" style="padding:4px 6px;font-size:12px;color:#555;vertical-align:top;"></td>'
+				+ '<td style="padding:4px 6px;vertical-align:top;text-align:right;"><button type="button" class="pio-mark" style="border:1px solid #ccc;border-radius:4px;padding:1px 8px;font-size:12px;cursor:pointer;white-space:nowrap;">'
+				+ '&#8982; ' + esc(T.mark) + '</button></td></tr>';
 		});
-		html += '</table></div>';
-		if (r.warnings.length) {
-			html += '<div style="margin-top:10px;text-align:left;font-size:13px;color:#a15c00;background:#fff4e0;border-radius:6px;padding:6px 10px;">'
-				+ r.warnings.map(function (w) { return '&#9888; ' + esc(w); }).join('<br>') + '</div>';
-		}
-		html += '<div style="margin-top:8px;font-size:12px;color:#777;">' + esc(T.review) + '</div>';
+		html += '</table>'
+			+ '<div class="pio-warn" style="margin-top:10px;text-align:left;font-size:13px;color:#a15c00;background:#fff4e0;border-radius:6px;padding:6px 10px;"></div>'
+			+ '<div style="margin-top:8px;font-size:12px;color:#777;">' + esc(T.review) + '</div>';
 
 		Swal.fire({
-			title: esc(T.title), html: html, width: 860, showCancelButton: true,
+			title: esc(T.title), html: html, width: 900, showCancelButton: true,
 			confirmButtonText: esc(T.apply), cancelButtonText: esc(T.cancel), focusConfirm: false,
 			didOpen: function (popup) {
-				var canvas = $(popup).find('.pio-layout')[0], active = null;
+				$pop = $(popup);
+				canvas = $pop.find('.pio-layout')[0];
 				var scale = Math.min(1, 1000 / img.naturalWidth);
 				canvas.width = Math.round(img.naturalWidth * scale);
 				canvas.height = Math.round(img.naturalHeight * scale);
-				var redraw = function (k) { active = k; drawLayout(canvas, img, rows, k); };
-				redraw(null);
-				$(popup).find('tr[data-k], label:has(.pio-apply[data-k="foto"])')
-					.on('mouseenter', function () { redraw($(this).data('k') || 'foto'); })
-					.on('mouseleave', function () { redraw(null); })
+				canvas.addEventListener('pointerdown', onDown);
+				canvas.addEventListener('pointermove', onMove);
+				canvas.addEventListener('pointerup', onUp);
+				canvas.addEventListener('pointercancel', onUp);
+				$pop.find('tr[data-k]')
+					.on('mouseenter', function () { if (!selected) { hover = $(this).data('k'); redraw(); } })
+					.on('mouseleave', function () { if (!selected) { hover = null; redraw(); } })
 					.on('click', function (e) {
 						if ($(e.target).is('input')) { return; }
-						var k = $(this).data('k') || 'foto';
-						redraw(active === k ? null : k);
+						var k = $(this).data('k');
+						select(selected === k ? null : k);
 					});
+				FIELD_KEYS.forEach(function (k) { refreshRow(k); });
+				refreshWarnings();
+				refreshHint();
+				redraw();
 			},
 			preConfirm: function () {
 				var on = {};
@@ -579,7 +927,7 @@
 			if (on.fecha) { setField($('#fechanac' + s), r.fecha); }
 			if (on.sexo) { setField($('#sexo' + s), r.sexo); }
 			if (on.curp) { setField($('#curp' + s), r.curp); }
-			if (on.foto && photo && typeof playerPhotoLoadDataUrl === 'function') { playerPhotoLoadDataUrl(s, photo.url); }
+			if (on.foto && photo.url && typeof playerPhotoLoadDataUrl === 'function') { playerPhotoLoadDataUrl(s, photo.url); }
 		});
 	}
 
@@ -605,7 +953,7 @@
 					Swal.fire({ icon: 'warning', title: '', text: T.nothing });
 					return;
 				}
-				showResult(s, img, r, cropPhoto(img, r.anchor), T);
+				showResult(s, img, r, cropPhoto(img, r.anchor), T, worker);
 			});
 		}).catch(function (e) {
 			console.log('playerIdOcr', e);
