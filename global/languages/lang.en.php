@@ -927,6 +927,7 @@
 	$lang['933-52'] = 'Two images (front and back)';
 	$lang['933-53'] = 'How will you upload the ID?';
 	$lang['933-54'] = 'One image (front and back together)';
+	$lang['933-55'] = 'Upload the PDF with the player\'s details first (ID, birth certificate, CURP…).';
 	$lang['934'] = 'Max 1000 KB';
 	$lang['935'] = 'Upload Signature';
 	$lang['936'] = 'Max 100 KB';

@@ -1,16 +1,17 @@
 <?php
 /**
  * "Read ID data" button for the player forms (javascript/playerIdOcr.js, loaded on first click).
- * $suffix is '' on the create forms and 'E' on the edit forms.
+ * $suffix is '' on the create forms and 'E' on the edit forms; $source 'pdf' reads the ID PDF instead of the image.
  */
 if (!function_exists('az_player_id_ocr_button')) {
-	function az_player_id_ocr_button(array $lang, $suffix)
+	function az_player_id_ocr_button(array $lang, $suffix, $source = '')
 	{
 		$t = function ($key, $fallback) use ($lang) {
 			return isset($lang[$key]) ? $lang[$key] : $fallback;
 		};
 		$texts = array(
 			'needImage' => $t('933-5', 'Upload the front of the ID first.'),
+			'needPdf' => $t('933-55', 'Upload the PDF with the player\'s details first (ID, birth certificate, CURP…).'),
 			'reading' => $t('933-6', 'Reading ID…'),
 			'firstTime' => $t('933-7', 'The first time may take a few seconds.'),
 			'title' => $t('933-8', 'Data read from the ID'),
@@ -69,6 +70,7 @@ if (!function_exists('az_player_id_ocr_button')) {
 		$suffix = $suffix === 'E' ? 'E' : '';
 		return '<button type="button" class="btn btn-outline-primary btn-sm mb-0 mt-2" style="min-width: 180px;"'
 			. ' data-src="' . htmlspecialchars($src, ENT_QUOTES, 'UTF-8') . '"'
+			. ($source === 'pdf' ? ' data-source="pdf"' : '')
 			. ' data-ocr="' . htmlspecialchars(json_encode($texts, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"'
 			. ' onclick="playerIdOcr(\'' . $suffix . '\', this);"><i class="fas fa-id-card"></i> '
 			. htmlspecialchars($t('933-4', 'Read ID data'), ENT_QUOTES, 'UTF-8') . '</button>';

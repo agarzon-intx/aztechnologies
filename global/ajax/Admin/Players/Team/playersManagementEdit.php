@@ -545,6 +545,7 @@ $htmlPlayer .= '													</select>
 											</span>
 										</div>
 									</div>
+									' . ($Config->playerIDReadEnabled() && (int) ($_SESSION[$Config->getAlias() . 'equipo'] ?? 1) <= 0 ? '<div style="text-align: center;">' . az_player_id_ocr_button($lang, 'E', 'pdf') . '</div>' : '') . '
 								</div>
 								<div class="row" ' . $signatureStyle . '>
 									<h4>' . $lang['949'] . '</h4>

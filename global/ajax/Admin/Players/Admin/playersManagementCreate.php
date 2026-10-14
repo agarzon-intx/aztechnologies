@@ -419,6 +419,7 @@ $htmlPlayer .= '													</select>
 										</span>
 									</div>
 								</div>
+								' . ($Config->playerIDReadEnabled() ? '<div style="text-align: center;">' . az_player_id_ocr_button($lang, '', 'pdf') . '</div>' : '') . '
 							</div>
 							<div class="row" ' . $signatureStyle . '>
 								<h4>' . $lang['949'] . '</h4>

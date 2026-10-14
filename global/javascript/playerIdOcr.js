@@ -1,6 +1,8 @@
 /*
- * Read a Mexican voter ID (INE) from the player form's ID image, in the browser (Tesseract.js),
- * and fill name, surnames, birth date, sex, CURP and the player photo after the user confirms.
+ * Read the player's details from the ID image (Mexican voter ID and other cards) or from the ID PDF
+ * (any document with personal data: birth certificate, CURP, passport…), in the browser: pdf.js for
+ * PDFs with text, Tesseract.js OCR for images and scanned PDFs. Fills name, surnames, birth date, sex,
+ * CURP and the player photo after the user confirms.
  * Loaded on demand by playerIdOcr() in main.js.php; texts come from the button's data-ocr attribute.
  */
 (function () {
@@ -1281,31 +1283,185 @@
 		});
 	}
 
-	window.playerIdOcrRun = function (s, T) {
-		var img = sourceImage(s);
-		if (!img) {
-			Swal.fire({ icon: 'info', title: '', text: T.needImage });
-			return;
+	/* ---------- PDF: text layer when the PDF has one, else the rendered page goes through the OCR ---------- */
+
+	var PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+	var pdfjsPromise = null;
+
+	function loadPdfJs() {
+		if (window.pdfjsLib && window.pdfjsLib.getDocument && String(window.pdfjsLib.version || '').indexOf('3.') === 0) {
+			return Promise.resolve(window.pdfjsLib);
 		}
-		Swal.fire({ title: esc(T.reading), text: T.firstTime, allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
-		getWorker().then(function (worker) {
+		if (!pdfjsPromise) {
+			pdfjsPromise = new Promise(function (resolve, reject) {
+				var sc = document.createElement('script');
+				sc.src = PDFJS_BASE + 'pdf.min.js';
+				sc.onload = function () {
+					window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + 'pdf.worker.min.js';
+					resolve(window.pdfjsLib);
+				};
+				sc.onerror = function () { pdfjsPromise = null; reject(new Error('pdf.js load failed')); };
+				document.head.appendChild(sc);
+			});
+		}
+		return pdfjsPromise;
+	}
+
+	/** PDF chosen on the form ({file}) or the one already saved (edit form, {url}). */
+	function sourcePdf(s) {
+		var input = $('#myIDPDF' + s)[0];
+		if (input && input.files && input.files[0]) { return { file: input.files[0] }; }
+		var $frame = $('#identificacionPDF' + s), url = $frame.attr('src');
+		return url && $frame.css('display') !== 'none' ? { url: url } : null;
+	}
+
+	/** Saved ID image shown in the PDF area of the edit form (players saved before the PDF option). */
+	function pdfAreaImage(s) {
+		var img = $('#identificacionPDFImg' + s)[0];
+		return img && img.getAttribute('src') && $(img).css('display') !== 'none' && img.complete && img.naturalWidth >= 200 ? img : null;
+	}
+
+	/** Text of a PDF page in the OCR result shape: lines of words with boxes in rendered-page pixels. */
+	function pdfTextData(content, vp) {
+		var U = window.pdfjsLib.Util, items = [];
+		content.items.forEach(function (it) {
+			if (!it.str || !it.str.trim()) { return; }
+			var t = U.transform(vp.transform, it.transform), h = Math.hypot(t[2], t[3]) || 10;
+			var w = it.width ? it.width * vp.scale : it.str.length * h * 0.5;
+			items.push({ str: it.str, x0: t[4], x1: t[4] + w, base: t[5], h: h });
+		});
+		items.sort(function (a, b) { return a.base - b.base || a.x0 - b.x0; });
+		var rows = [];
+		items.forEach(function (it) {
+			var row = rows[rows.length - 1];
+			if (row && Math.abs(it.base - row.base) < 0.4 * Math.min(it.h, row.h)) { row.items.push(it); } else { rows.push({ base: it.base, h: it.h, items: [it] }); }
+		});
+		return {
+			confidence: 99,
+			lines: rows.map(function (row) {
+				var runs = [], words = [];
+				row.items.sort(function (a, b) { return a.x0 - b.x0; }).forEach(function (it) {
+					var last = runs[runs.length - 1];
+					// some PDFs write each letter as its own item
+					if (last && it.x0 - last.x1 < 0.1 * it.h && !/\s$/.test(last.str) && !/^\s/.test(it.str)) {
+						last.str += it.str; last.x1 = Math.max(last.x1, it.x1); last.h = Math.max(last.h, it.h);
+					} else {
+						runs.push($.extend({}, it));
+					}
+				});
+				runs.forEach(function (it) {
+					var cw = (it.x1 - it.x0) / it.str.length, re = /\S+/g, m;
+					while ((m = re.exec(it.str))) {
+						words.push({ text: m[0], confidence: 99, bbox: { x0: it.x0 + m.index * cw, x1: it.x0 + (m.index + m[0].length) * cw, y0: it.base - 0.8 * it.h, y1: it.base + 0.2 * it.h } });
+					}
+				});
+				return { text: words.map(function (w) { return w.text; }).join(' '), words: words };
+			})
+		};
+	}
+
+	/** First page of the PDF: {img} rendered ~2000px wide and {text} from its text layer. */
+	function pdfFirstPage(src) {
+		var bytes = src.file ? src.file.arrayBuffer() : fetch(src.url, { credentials: 'same-origin' }).then(function (res) {
+			if (!res.ok) { throw new Error('pdf ' + res.status); }
+			return res.arrayBuffer();
+		});
+		return Promise.all([loadPdfJs(), bytes]).then(function (a) {
+			return a[0].getDocument({ data: new Uint8Array(a[1]) }).promise;
+		}).then(function (pdf) { return pdf.getPage(1); }).then(function (page) {
+			var base = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: Math.max(1, Math.min(4, 2000 / base.width)) });
+			var c = document.createElement('canvas');
+			c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+			var x = c.getContext('2d');
+			x.fillStyle = '#fff';
+			x.fillRect(0, 0, c.width, c.height);
+			return page.render({ canvasContext: x, viewport: vp }).promise.then(function () {
+				return page.getTextContent();
+			}).then(function (content) {
+				return new Promise(function (resolve, reject) {
+					var img = new Image();
+					img.onload = function () { resolve({ img: img, text: pdfTextData(content, vp) }); };
+					img.onerror = reject;
+					img.src = c.toDataURL('image/png');
+				});
+			});
+		});
+	}
+
+	/* ---------- reading ---------- */
+
+	function ocrArea(img) {
+		return function (box, k) { return getWorker().then(function (worker) { return readRegion(worker, img, box, k); }); };
+	}
+
+	/** Marked area of a PDF with text: the PDF words inside it (OCR when there are none). */
+	function textArea(data, img) {
+		var ocr = ocrArea(img);
+		return function (b, k) {
+			var out = [];
+			data.lines.forEach(function (l) {
+				var ws = l.words.filter(function (w) {
+					var cx = (w.bbox.x0 + w.bbox.x1) / 2, cy = (w.bbox.y0 + w.bbox.y1) / 2;
+					return cx >= b.x0 && cx <= b.x1 && cy >= b.y0 && cy <= b.y1;
+				});
+				if (ws.length) { out.push(ws.map(function (w) { return w.text; }).join(' ')); }
+			});
+			return out.length ? Promise.resolve(out.join('\n')) : ocr(b, k);
+		};
+	}
+
+	function found(r) { return !!(r.curp || r.nombre || r.paterno || r.fecha); }
+
+	/** Face photo only on ID cards (NOMBRE label found); documents have no photo to take. */
+	function photoOf(img, r, isDocument) {
+		return r.anchor || !(isDocument || r.document) ? cropPhoto(img, r.anchor) : null;
+	}
+
+	function readImage(s, img, T, isDocument) {
+		return getWorker().then(function (worker) {
 			var strong = prepCanvas(img, true), soft = prepCanvas(img, false), passes = [];
 			return worker.recognize(strong.canvas).then(function (r1) {
 				passes.push(parse(r1.data, strong.scale));
-				var p = passes[0];
-				if (p.curp && p.curp.valid && p.names.lines.length >= 2 && (p.printedDate || p.clave)) { return; }
+				var p = passes[0], named = p.names.lines.length >= 2 || (p.labels.nombre && (p.labels.paterno || p.labels.apellidos));
+				if (p.curp && p.curp.valid && named && (p.printedDate || p.clave)) { return; }
 				return worker.recognize(soft.canvas).then(function (r2) { passes.push(parse(r2.data, soft.scale)); });
 			}).then(function () {
 				return retryCurp(worker, passes, [strong, soft]);
 			}).then(function () {
 				var r = merge(passes, T);
-				if (!r.curp && !r.nombre && !r.paterno && !r.fecha) {
+				if (!found(r)) {
 					Swal.fire({ icon: 'warning', title: '', text: T.nothing });
 					return;
 				}
-				showResult(s, img, r, cropPhoto(img, r.anchor), T, worker);
+				showResult(s, img, r, photoOf(img, r, isDocument), T, ocrArea(img));
 			});
-		}).catch(function (e) {
+		});
+	}
+
+	function readPdf(s, src, T) {
+		return pdfFirstPage(src).then(function (page) {
+			var letters = page.text.lines.map(function (l) { return l.text; }).join('').replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, '').length;
+			if (letters >= 30) {
+				var r = merge([parse(page.text, 1)], T);
+				if (found(r)) {
+					showResult(s, page.img, r, photoOf(page.img, r, true), T, textArea(page.text, page.img));
+					return;
+				}
+			}
+			return readImage(s, page.img, T, true);
+		});
+	}
+
+	window.playerIdOcrRun = function (s, T, btn) {
+		var pdfMode = $(btn).data('source') === 'pdf';
+		var pdf = pdfMode ? sourcePdf(s) : null;
+		var img = pdf ? null : (pdfMode ? pdfAreaImage(s) : sourceImage(s));
+		if (!pdf && !img) {
+			Swal.fire({ icon: 'info', title: '', text: pdfMode ? T.needPdf : T.needImage });
+			return;
+		}
+		Swal.fire({ title: esc(T.reading), text: T.firstTime, allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
+		(pdf ? readPdf(s, pdf, T) : readImage(s, img, T, pdfMode)).catch(function (e) {
 			console.log('playerIdOcr', e);
 			Swal.fire({ icon: 'error', title: '', text: T.loadError });
 		});

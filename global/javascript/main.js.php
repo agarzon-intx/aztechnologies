@@ -2600,7 +2600,7 @@ function playerPhotoLoadDataUrl(suffix, dataUrl) {
 /** "Read ID" button on the player forms: loads javascript/playerIdOcr.js on first use. */
 function playerIdOcr(suffix, btn) {
 	var T = $(btn).data('ocr') || {};
-	var run = function () { window.playerIdOcrRun(suffix, T); };
+	var run = function () { window.playerIdOcrRun(suffix, T, btn); };
 	if (window.playerIdOcrRun) {
 		run();
 		return;

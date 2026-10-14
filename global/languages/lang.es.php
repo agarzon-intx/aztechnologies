@@ -927,6 +927,7 @@
 	$lang['933-52'] = 'Dos imágenes (frente y reverso)';
 	$lang['933-53'] = '¿Cómo vas a subir la identificación?';
 	$lang['933-54'] = 'Una sola imagen (frente y reverso juntos)';
+	$lang['933-55'] = 'Primero sube el PDF con los datos del jugador (identificación, acta de nacimiento, CURP…).';
 	$lang['934'] = ' Max 1000 KB';
 	$lang['935'] = 'Subir Firma';
 	$lang['936'] = ' Max 100 KB';
