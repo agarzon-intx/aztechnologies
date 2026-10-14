@@ -30,7 +30,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$Config->LoadFlags();
 
 	$retunData = array('status' => '0', 'message' => $lang['539-12']);
-	if ((int) $Config->duplicatePlayer !== 1) {
+	$allowCopy = (int) $Config->allowCopyDuplicate === 1;
+	if ((int) $Config->duplicatePlayer !== 1 && !($allowCopy && (int) $Config->searchPlayer === 1)) {
 		echo json_encode($retunData);
 		exit;
 	}
@@ -57,6 +58,10 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$row = $src->fetch_assoc();
 	$curp = (string) $row['Curp'];
+	if (!$isAdmin && !$allowCopy && !az_player_coach_can_move_to_team($Config, $schema, (int) $row['Equipo_ID'], $team, $allowed, false)) {
+		echo json_encode(array('status' => '0', 'message' => $lang['539-30']));
+		exit;
+	}
 	if ((int) $row['Equipo_ID'] === $team) {
 		echo json_encode(array('status' => '0', 'message' => $lang['539-15']));
 		exit;

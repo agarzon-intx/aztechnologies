@@ -70,10 +70,22 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				}
 				if (res.found === 1 && res.sameTeam === 0) {
 					if (res.canMove !== 1) {
+						if (res.canCopy === 1) {
+							if (window.confirm(res.copyMessage)) {
+								searchPlayerCopy(res, team);
+							}
+							return;
+						}
 						alert(res.message);
 						return;
 					}
-					if (window.confirm(res.message)) {
+					if (!window.confirm(res.message)) {
+						if (res.canCopy === 1 && window.confirm(res.copyMessage)) {
+							searchPlayerCopy(res, team);
+						}
+						return;
+					}
+					{
 						mainLoadingOn();
 						$.ajax({
 							type: 'POST',
@@ -101,6 +113,32 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					return;
 				}
 				alert(res.message);
+			},
+			error: function() {
+				mainLoadingOff();
+				alert(MSG_AJAX_GENERIC);
+			}
+		});
+	}
+
+	function searchPlayerCopy(found, team) {
+		mainLoadingOn();
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: 'ajax/Admin/Players/Admin/playerDuplicate.php',
+			data: {player: found.player, team: team},
+			success: function (copyRes) {
+				mainLoadingOff();
+				alert((copyRes && copyRes.message) ? copyRes.message : MSG_AJAX_GENERIC);
+				if (copyRes && copyRes.status === '1') {
+					var cat = copyRes.categoria || found.categoria;
+					if (typeof playersManagementAdminShow === 'function' && $('#equipo').length) {
+						playersManagementAdminShow(cat, team);
+					} else if (typeof playersManagementTeamShow === 'function') {
+						playersManagementTeamShow(cat, team);
+					}
+				}
 			},
 			error: function() {
 				mainLoadingOff();

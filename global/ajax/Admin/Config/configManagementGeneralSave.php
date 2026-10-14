@@ -60,6 +60,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$showGenerateSchedule = (isset($_POST["showGenerateSchedule"]) && SanitizeInteger($_POST["showGenerateSchedule"]) == 1) ? 1 : 0;
 	$duplicatePlayer = (isset($_POST["duplicatePlayer"]) && SanitizeInteger($_POST["duplicatePlayer"]) == 1) ? 1 : 0;
 	$searchPlayer = (isset($_POST["searchPlayer"]) && SanitizeInteger($_POST["searchPlayer"]) == 1) ? 1 : 0;
+	$allowCopyDuplicate = (isset($_POST["allowCopyDuplicate"]) && SanitizeInteger($_POST["allowCopyDuplicate"]) == 1 && ($duplicatePlayer === 1 || $searchPlayer === 1)) ? 1 : 0;
 	$currentWeek = (isset($_POST["currentWeek"]) && SanitizeInteger($_POST["currentWeek"]) == 1) ? 1 : 0;
 	$deleteTeam = (isset($_POST["deleteTeam"]) && SanitizeInteger($_POST["deleteTeam"]) == 1) ? 1 : 0;
 	$basketScoreManual = (isset($_POST["basketScoreManual"]) && SanitizeInteger($_POST["basketScoreManual"]) == 1) ? 1 : 0;
@@ -96,6 +97,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	if ($Config->configurationHasColumn('searchPlayer')) {
 		$Connection->query("UPDATE $schema.Configuration SET searchPlayer = $searchPlayer WHERE id = 0;");
+	}
+	if (isset($_POST["allowCopyDuplicate"]) && $Config->configurationHasColumn('allowCopyDuplicate')) {
+		$Connection->query("UPDATE $schema.Configuration SET allowCopyDuplicate = $allowCopyDuplicate WHERE id = 0;");
 	}
 	if ($Config->configurationHasColumn('currentWeek')) {
 		$Connection->query("UPDATE $schema.Configuration SET currentWeek = $currentWeek WHERE id = 0;");

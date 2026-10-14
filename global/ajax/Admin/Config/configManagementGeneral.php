@@ -7,6 +7,7 @@
 	$__selShowGenerateScheduleCfg = $Config->configurationHasColumn('showGenerateSchedule') ? 'showGenerateSchedule' : '0 AS showGenerateSchedule';
 	$__selDuplicatePlayerCfg = $Config->configurationHasColumn('duplicatePlayer') ? 'duplicatePlayer' : '0 AS duplicatePlayer';
 	$__selSearchPlayerCfg = $Config->configurationHasColumn('searchPlayer') ? 'searchPlayer' : '0 AS searchPlayer';
+	$__selAllowCopyDuplicateCfg = $Config->configurationHasColumn('allowCopyDuplicate') ? 'allowCopyDuplicate' : '0 AS allowCopyDuplicate';
 	$__selCurrentWeekCfg = $Config->configurationHasColumn('currentWeek') ? 'currentWeek' : '0 AS currentWeek';
 	$__selDeleteTeamCfg = $Config->configurationHasColumn('deleteTeam') ? 'deleteTeam' : '0 AS deleteTeam';
 	$__selBasketScoreManualCfg = $Config->configurationHasColumn('basketScoreManual') ? 'basketScoreManual' : '0 AS basketScoreManual';
@@ -57,6 +58,7 @@
 			    " . $__selShowGenerateScheduleCfg . ",
 			    " . $__selDuplicatePlayerCfg . ",
 			    " . $__selSearchPlayerCfg . ",
+			    " . $__selAllowCopyDuplicateCfg . ",
 			    " . $__selCurrentWeekCfg . ",
 			    " . $__selDeleteTeamCfg . ",
 			    " . $__selBasketScoreManualCfg . ",
@@ -70,6 +72,7 @@
 	$showGenerateScheduleCHK = '';
 	$duplicatePlayerCHK = '';
 	$searchPlayerCHK = '';
+	$allowCopyDuplicateCHK = '';
 	$currentWeekCHK = '';
 	$deleteTeamCHK = '';
 	$basketScoreManualCHK = '';
@@ -203,6 +206,7 @@
 				$searchPlayer = $row2["searchPlayer"];
 				$searchPlayerCHK = '';
 				if($searchPlayer == '1') $searchPlayerCHK = 'checked';
+				$allowCopyDuplicateCHK = ($row2["allowCopyDuplicate"] == '1') ? 'checked' : '';
 				$currentWeek = $row2["currentWeek"];
 				$currentWeekCHK = '';
 				if($currentWeek == '1') $currentWeekCHK = 'checked';
@@ -415,6 +419,15 @@
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="searchPlayer" id="searchPlayer" ' . $searchPlayerCHK . '>
 										<label class="custom-control-label" for="searchPlayer">' . $lang['539-4'] . '</label>
+									</div>
+									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3" title="' . htmlspecialchars($lang['539-31'], ENT_QUOTES, 'UTF-8') . '">
+										<input class="form-check-input" type="checkbox" name="allowCopyDuplicate" id="allowCopyDuplicate" ' . $allowCopyDuplicateCHK . (($duplicatePlayerCHK === '' && $searchPlayerCHK === '') ? ' disabled' : '') . '>
+										<label class="custom-control-label" for="allowCopyDuplicate">' . $lang['539-28'] . '</label>
+										<script type="text/javascript">
+											$(document).off('change.allowCopy').on('change.allowCopy', '#duplicatePlayer, #searchPlayer', function () {
+												$('#allowCopyDuplicate').prop('disabled', !($('#duplicatePlayer').is(':checked') || $('#searchPlayer').is(':checked')));
+											});
+										</script>
 									</div>
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="deleteTeam" id="deleteTeam" ' . $deleteTeamCHK . '>

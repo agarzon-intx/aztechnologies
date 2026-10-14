@@ -72,6 +72,7 @@ class Configuration
     public $duplicatePlayer = 0;
     /** 1 = allow searching a player. */
     public $searchPlayer = 0;
+    public $allowCopyDuplicate = 0;
     /** 1 = coach games default to the current week; 0 = next week. */
     public $currentWeek = 0;
     /** 1 = allow deleting a team. */
@@ -374,6 +375,9 @@ class Configuration
         $selSearchPlayer = $this->schemaHasConfigurationColumn($conn, 'searchPlayer')
             ? 'searchPlayer'
             : '0 AS searchPlayer';
+        $selAllowCopyDuplicate = $this->schemaHasConfigurationColumn($conn, 'allowCopyDuplicate')
+            ? 'allowCopyDuplicate'
+            : '0 AS allowCopyDuplicate';
         $selCurrentWeek = $this->schemaHasConfigurationColumn($conn, 'currentWeek')
             ? 'currentWeek'
             : '0 AS currentWeek';
@@ -439,6 +443,7 @@ class Configuration
 			  " . $selShowGenerateSchedule . ",
 			  " . $selDuplicatePlayer . ",
 			  " . $selSearchPlayer . ",
+			  " . $selAllowCopyDuplicate . ",
 			  " . $selCurrentWeek . ",
 			  " . $selDeleteTeam . ",
 			  " . $selBasketScoreManual . ",
@@ -496,6 +501,7 @@ class Configuration
             $this->showGenerateSchedule = $row2["showGenerateSchedule"];
             $this->duplicatePlayer = $row2["duplicatePlayer"];
             $this->searchPlayer = $row2["searchPlayer"];
+            $this->allowCopyDuplicate = $row2["allowCopyDuplicate"];
             $this->currentWeek = $row2["currentWeek"];
             $this->deleteTeam = $row2["deleteTeam"];
             $this->basketScoreManual = $row2["basketScoreManual"];
