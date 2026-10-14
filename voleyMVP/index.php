@@ -269,11 +269,13 @@
 						© <script>
 						  document.write(new Date().getFullYear())
 						</script>, <a href="https://www.aztechnologies.tech" class="font-weight-bold" target="_blank">aztechnologies.tech</a>
+						<?php require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'global' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'footer_links.php'; if (!az_footer_render($Config)) { ?>
 						<img src="imagenes/aztechnologies.png" width="126" style="margin-left: 20px;">
 						<img src="imagenes/ws.png" width="30" style="margin-left: 20px;">
 						<img src="imagenes/FMVB.png" width="30" style="margin-left: 20px;">
 						<img src="imagenes/AMVB.png" width="30" style="margin-left: 20px;">
 						<img src="imagenes/proLeague.png" width="30" style="margin-left: 20px;">
+						<?php } ?>
 					  </div>
 					</div>
 				  </div>
