@@ -2290,12 +2290,13 @@ class FGMembersite {
 			mysqli_close($connection);
 			return false;
 		}
-		if(!$this->SaveUserInstitutions($connection, 'username', SanitizeUsername($formvars['username']), $this->UserInstitutionsFromEquipo($formvars['equipo']))){
+		$institucionIds = $this->UserInstitutionsFromEquipo($formvars['equipo']);
+		if(!$this->SaveUserInstitutions($connection, 'username', SanitizeUsername($formvars['username']), $institucionIds)){
 			$this->HandleDBError($lang['10091']);
 			mysqli_close($connection);
 			return false;
 		}
-		$teamsCsv = $this->UserTeamsFromEquipo($formvars['equipo']);
+		$teamsCsv = $this->DropInstitutionTeams($connection, $this->UserTeamsFromEquipo($formvars['equipo']), $institucionIds);
 		if($teamsCsv === ''){
 			mysqli_close($connection);
 			return true;
@@ -2362,6 +2363,35 @@ class FGMembersite {
 			}
 		}
 		return implode(',', array_unique($teams));
+	}
+
+	/** $teamsCsv without the teams (latest season row) that belong to one of $institucionIds. */
+	function DropInstitutionTeams($connection, $teamsCsv, $institucionIds){
+		$positive = function ($id) {
+			return $id > 0;
+		};
+		$ids = array_filter(array_map('intval', (array) $institucionIds), $positive);
+		$teams = array_filter(array_map('intval', explode(',', (string) $teamsCsv)), $positive);
+		if (!$ids || !$teams) {
+			return $teamsCsv;
+		}
+		$schema = $this->Config->getSchema();
+		$col = $connection->query("SHOW COLUMNS FROM $schema.Equipos LIKE 'Institucion_ID'");
+		if (!$col || $col->num_rows === 0) {
+			return $teamsCsv;
+		}
+		$covered = array();
+		$res = $connection->query("SELECT a.Equipo_ID FROM $schema.Equipos a
+				JOIN (SELECT Equipo_ID, MAX(Torneo_ID) Torneo_ID FROM $schema.Equipos
+					WHERE Equipo_ID IN (" . implode(',', $teams) . ") GROUP BY Equipo_ID) b
+					ON a.Equipo_ID = b.Equipo_ID AND a.Torneo_ID = b.Torneo_ID
+			WHERE a.Institucion_ID IN (" . implode(',', $ids) . ")");
+		while ($res && ($row = $res->fetch_row())) {
+			$covered[(int) $row[0]] = true;
+		}
+		return implode(',', array_filter(explode(',', (string) $teamsCsv), function ($t) use ($covered) {
+			return !isset($covered[(int) $t]);
+		}));
 	}
 
 	/**
@@ -2472,12 +2502,13 @@ class FGMembersite {
 				mysqli_close($connection);
 				return false;
 			}
-			if(!$this->SaveUserInstitutions($connection, 'id_user', SanitizeInteger($formvars['userid']), $this->UserInstitutionsFromEquipo($formvars['equipo']))){
+			$institucionIds = $this->UserInstitutionsFromEquipo($formvars['equipo']);
+			if(!$this->SaveUserInstitutions($connection, 'id_user', SanitizeInteger($formvars['userid']), $institucionIds)){
 				$this->HandleDBError($lang['10091']);
 				mysqli_close($connection);
 				return false;
 			}
-			$teamsCsv = $this->UserTeamsFromEquipo($formvars['equipo']);
+			$teamsCsv = $this->DropInstitutionTeams($connection, $this->UserTeamsFromEquipo($formvars['equipo']), $institucionIds);
 			if($teamsCsv === ''){
 				mysqli_close($connection);
 				return true;
