@@ -315,7 +315,7 @@ $htmlPlayer .= '													</select>
 										<div class="row">
 											<div class="form-check col-12 col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12" style="width: 100%;">
 												<span style="text-align: left; ">
-													<button style="margin: 0; width: 180px;" class="btn btn-secondary" type="button" onclick="$(\'#myIDBackground\').toggle();$(\'#myIDBackground2\').toggle();" id="subiridentificacion">' . $lang['933'] . '</button><br>' . az_player_id_whole_button($lang, '') . '
+													<button style="margin: 0; width: 180px;" class="btn btn-secondary" type="button" ' . az_player_id_upload_attrs($lang, '') . ' id="subiridentificacion">' . $lang['933'] . '</button>
 												</span>
 											</div>
 										</div>
@@ -387,7 +387,7 @@ $htmlPlayer .= '													</select>
 												</span>
 											</div>
 										</div>
-										' . az_player_id_whole_switch($lang, '') . '
+										' . az_player_id_upload_cancel($lang, '') . '
 									</div>
 									' . az_player_id_whole_block($lang, '') . '
 								</div>

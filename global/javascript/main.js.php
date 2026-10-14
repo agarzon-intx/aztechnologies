@@ -2709,23 +2709,54 @@ function playerPhotoClear(suffix) {
 	$frame.find('img').first().attr('src', '').hide();
 }
 
-/** ID upload on the player forms: mode 2 = front and back pictures, 3 = one whole picture (front on top). */
+/** ID upload on the player forms: mode 1 = start view (cancel), 2 = front and back pictures, 3 = one whole picture (front on top). */
 function playerIdUploadMode(s, mode, pick) {
 	s = s || '';
-	$('#myIDBackground' + s).hide();
+	$('#myIDBackground' + s).toggle(mode === 1);
 	$('#myIDBackground2' + s).toggle(mode === 2);
 	$('#myIDBackground3' + s).toggle(mode === 3);
-	if (mode === 3) {
+	if (mode !== 2) {
 		playerPhotoClear('#id11Frame' + s);
 		playerPhotoClear('#id12Frame' + s);
 		$('#myID11' + s + ', #myID12' + s).val('');
-		if (pick) {
-			fireEvent($('#myID13' + s), 'click');
-		}
-	} else {
+	}
+	if (mode !== 3) {
 		playerPhotoClear('#id13Frame' + s);
 		$('#myID13' + s).val('');
 	}
+	if (pick) {
+		fireEvent($(mode === 3 ? '#myID13' + s : '#myID11' + s), 'click');
+	}
+}
+
+/** "Upload ID" button: one whole image or two images (front and back). */
+function playerIdUploadChoose(s, btn) {
+	var T = $(btn).data('choice') || {};
+	if (typeof Swal === 'undefined') {
+		playerIdUploadMode(s, 2);
+		return;
+	}
+	Swal.fire({
+		title: T.title,
+		showConfirmButton: true,
+		showDenyButton: true,
+		showCancelButton: true,
+		confirmButtonText: T.single,
+		denyButtonText: T.two,
+		cancelButtonText: T.cancel,
+		buttonsStyling: false,
+		customClass: {
+			confirmButton: 'btn btn-secondary m-1',
+			denyButton: 'btn btn-secondary m-1',
+			cancelButton: 'btn btn-outline-secondary m-1'
+		}
+	}).then(function (r) {
+		if (r.isConfirmed) {
+			playerIdUploadMode(s, 3, true);
+		} else if (r.isDenied) {
+			playerIdUploadMode(s, 2, true);
+		}
+	});
 }
 
 /* Players list: the "complete" icon opens the player's picture and ID document. */

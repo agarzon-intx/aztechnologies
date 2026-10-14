@@ -76,24 +76,34 @@ if (!function_exists('az_player_id_ocr_button')) {
 }
 
 /**
- * "Upload whole image" option of the ID upload: one picture with the front on top and the back below
- * (the stored 700x876 layout). On save the frame is sent as its two halves to the front / back uploads.
+ * ID upload on the player forms: the start button asks for one whole image (front on top, back below:
+ * the stored 700x876 layout) or two images (front and back). The whole image is sent on save as its
+ * two halves to the front / back uploads.
  */
-if (!function_exists('az_player_id_whole_button')) {
-	function az_player_id_whole_button(array $lang, $suffix)
+if (!function_exists('az_player_id_upload_attrs')) {
+	/** onclick + texts for the start button ("Upload ID"). */
+	function az_player_id_upload_attrs(array $lang, $suffix)
 	{
 		$s = $suffix === 'E' ? 'E' : '';
-		$label = isset($lang['933-50']) ? $lang['933-50'] : 'Upload whole image';
-		return '<button style="margin: 6px 0 0; width: 180px;" class="btn btn-outline-secondary" type="button" onclick="playerIdUploadMode(\'' . $s . '\', 3, true);">'
-			. htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</button>';
+		$t = function ($key, $fallback) use ($lang) {
+			return isset($lang[$key]) ? $lang[$key] : $fallback;
+		};
+		$texts = array(
+			'title' => $t('933-53', 'How will you upload the ID?'),
+			'single' => $t('933-54', 'One image (front and back together)'),
+			'two' => $t('933-52', 'Two images (front and back)'),
+			'cancel' => $t('933-10', 'Cancel'),
+		);
+		return ' data-choice="' . htmlspecialchars(json_encode($texts, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"'
+			. ' onclick="playerIdUploadChoose(\'' . $s . '\', this);"';
 	}
 
-	/** Link inside the front / back panel that switches to the whole-image panel. */
-	function az_player_id_whole_switch(array $lang, $suffix)
+	/** Cancel button of the upload panels: drops the chosen images and goes back to the start view. */
+	function az_player_id_upload_cancel(array $lang, $suffix)
 	{
 		$s = $suffix === 'E' ? 'E' : '';
-		$label = isset($lang['933-50']) ? $lang['933-50'] : 'Upload whole image';
-		return '<div style="text-align: center;"><button type="button" class="btn btn-link btn-sm mb-0" onclick="playerIdUploadMode(\'' . $s . '\', 3, true);">'
+		$label = isset($lang['933-10']) ? $lang['933-10'] : 'Cancel';
+		return '<div style="text-align: center;"><button type="button" class="btn btn-outline-secondary btn-sm mb-0 mt-2" style="width: 180px;" onclick="playerIdUploadMode(\'' . $s . '\', 1);">'
 			. htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</button></div>';
 	}
 
@@ -124,7 +134,7 @@ if (!function_exists('az_player_id_whole_button')) {
 			. '<button style="margin: 0; width: 180px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myID13' . $s . '\'), \'click\');">' . $t('933-50', 'Upload whole image') . '</button>'
 			. '<input style="display: none; visibility: hidden;" type="file" accept="image/png,image/jpeg" id="myID13' . $s . '" onchange="playerPhotoLoadFile(this, \'' . $frame . '\');">'
 			. '<div id="previewMyID13' . $s . '"></div>'
-			. '<div style="text-align: center;"><button type="button" class="btn btn-link btn-sm mb-0" onclick="playerIdUploadMode(\'' . $s . '\', 2);">' . $t('933-52', 'Upload front and back separately') . '</button></div>'
+			. az_player_id_upload_cancel($lang, $s)
 			. '</div>';
 	}
 }

@@ -924,7 +924,9 @@
 	$lang['933-49'] = 'Order of day, month and year in the printed date';
 	$lang['933-50'] = 'Upload whole image';
 	$lang['933-51'] = 'Front and back in one image, front on top.';
-	$lang['933-52'] = 'Upload front and back separately';
+	$lang['933-52'] = 'Two images (front and back)';
+	$lang['933-53'] = 'How will you upload the ID?';
+	$lang['933-54'] = 'One image (front and back together)';
 	$lang['934'] = 'Max 1000 KB';
 	$lang['935'] = 'Upload Signature';
 	$lang['936'] = 'Max 100 KB';
