@@ -426,8 +426,12 @@
 			return worker.recognize(c.canvas, { rectangle: rect }).then(function (r) {
 				var curp = findCurp(String(r.data.text || '').toUpperCase().replace(/CURP/g, ' '));
 				if (curp) {
-					curp.box = { x0: rect.left / c.scale, y0: rect.top / c.scale, x1: (rect.left + rect.width) / c.scale, y1: (rect.top + rect.height) / c.scale };
-					curp.exact = false;
+					var words = (r.data.words || []).map(function (w) {
+						return { t: String(w.text || '').toUpperCase(), b: { x0: w.bbox.x0 / c.scale, y0: w.bbox.y0 / c.scale, x1: w.bbox.x1 / c.scale, y1: w.bbox.y1 / c.scale } };
+					}).filter(function (w) { return w.t.replace(/[^A-Z0-9Ñ]/g, '').length >= 10 && !/CURP/.test(w.t); });
+					$.extend(curp, words.length ? keyBox({ words: words }) : {
+						box: { x0: rect.left / c.scale, y0: rect.top / c.scale, x1: (rect.left + rect.width) / c.scale, y1: (rect.top + rect.height) / c.scale }, exact: false
+					});
 					passes.push({ curp: curp, clave: null, printedDate: null, printedSex: null, names: { anchor: null, lines: [] } });
 					if (curp.valid) { return restore(); }
 				}
@@ -474,11 +478,16 @@
 				x.strokeRect(X - lw, Y - lw, W + 2 * lw, H + 2 * lw);
 				x.setLineDash([]);
 				x.font = 'bold ' + fs + 'px sans-serif';
-				var tw = x.measureText(String(row.n)).width + fs * 0.6, ty = Math.max(0, Y - lw - fs * 1.2);
+				var tw = x.measureText(String(row.n)).width + fs * 0.6, th = fs * 1.2;
+				// date and sex boxes are often slices of the CURP / voter key: tag below so the key stays readable
+				var below = row.key === 'fecha' || row.key === 'sexo';
+				var tx = below ? X - lw : X - 2 * lw - tw, ty = below ? Y + H + lw : Y + H / 2 - th / 2;
+				if (tx < 0) { tx = X - lw; ty = Y - lw - th; }
+				ty = Math.min(canvas.height - th, Math.max(0, ty));
 				x.fillStyle = row.color;
-				x.fillRect(X - lw, ty, tw, fs * 1.2);
+				x.fillRect(tx, ty, tw, th);
 				x.fillStyle = '#fff';
-				x.fillText(String(row.n), X - lw + fs * 0.3, ty + fs * 0.95);
+				x.fillText(String(row.n), tx + fs * 0.3, ty + fs * 0.95);
 			});
 		});
 		x.globalAlpha = 1;
