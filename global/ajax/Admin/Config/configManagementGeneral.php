@@ -424,8 +424,8 @@
 										<input class="form-check-input" type="checkbox" name="allowCopyDuplicate" id="allowCopyDuplicate" ' . $allowCopyDuplicateCHK . (($duplicatePlayerCHK === '' && $searchPlayerCHK === '') ? ' disabled' : '') . '>
 										<label class="custom-control-label" for="allowCopyDuplicate">' . $lang['539-28'] . '</label>
 										<script type="text/javascript">
-											$(document).off('change.allowCopy').on('change.allowCopy', '#duplicatePlayer, #searchPlayer', function () {
-												$('#allowCopyDuplicate').prop('disabled', !($('#duplicatePlayer').is(':checked') || $('#searchPlayer').is(':checked')));
+											$(document).off(\'change.allowCopy\').on(\'change.allowCopy\', \'#duplicatePlayer, #searchPlayer\', function () {
+												$(\'#allowCopyDuplicate\').prop(\'disabled\', !($(\'#duplicatePlayer\').is(\':checked\') || $(\'#searchPlayer\').is(\':checked\')));
 											});
 										</script>
 									</div>

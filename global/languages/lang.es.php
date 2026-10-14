@@ -590,6 +590,10 @@
 	$lang['539-26'] = 'Correo y teléfono obligatorios';
 	$lang['539-25'] = 'Marcador Manual/Datos';
 	$lang['539-27'] = 'Botón leer información de la identificación';
+	$lang['539-28'] = 'Copiar jugador de cualquier equipo';
+	$lang['539-29'] = 'El jugador existe: Categoría %1, Equipo %2, Jugador %3. ¿Copiarlo (duplicarlo) al equipo actual?';
+	$lang['539-30'] = 'Solo puedes copiar jugadores de tus equipos o de tu institución';
+	$lang['539-31'] = 'Con Buscar jugador o Duplicar jugador: permite copiar al equipo actual un jugador de cualquier equipo, aunque no sea del entrenador ni de su institución.';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';
