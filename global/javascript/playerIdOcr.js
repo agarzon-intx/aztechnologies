@@ -727,47 +727,6 @@
 			.catch(function (e) { console.log('playerIdOcr curp retry', e); return restore(); });
 	}
 
-	/**
-	 * Card name lines under NOMBRE where the OCR lost one: two text lines merged into one tall box, or a
-	 * line-high gap between two name lines. That area is read again with the name whitelist and the lines
-	 * are put back in place; with a CURP, the second surname must start with its third letter.
-	 */
-	function fillNameGaps(worker, img, passes) {
-		var best = null, curp = null;
-		passes.forEach(function (p) {
-			if (p.names.anchor && p.names.lines.length && (!best || p.names.lines.length > best.lines.length)) { best = p.names; }
-			if (p.curp && (!curp || p.curp.valid)) { curp = p.curp.value; }
-		});
-		if (!best || best.lines.length !== 2) { return Promise.resolve(); }
-		var L = best.lines, hs = L.map(function (l) { return l.box.y1 - l.box.y0; }), h = Math.min(hs[0], hs[1]);
-		var x0 = Math.min(best.anchor.b.x0, L[0].box.x0, L[1].box.x0) - 0.5 * h, x1 = Math.max(L[0].box.x1, L[1].box.x1) + 6 * h;
-		var tall = hs[0] > 1.6 * h ? 0 : (hs[1] > 1.6 * h ? 1 : -1), job;
-		if (tall >= 0) {
-			job = { at: tall, replace: 1, box: { x0: x0, y0: L[tall].box.y0, x1: x1, y1: L[tall].box.y1 } };
-		} else if (L[1].box.y0 - L[0].box.y1 > 0.8 * h) {
-			job = { at: 1, replace: 0, box: { x0: x0, y0: L[0].box.y1, x1: x1, y1: L[1].box.y0 } };
-		} else {
-			return Promise.resolve();
-		}
-		// a merged box is read as two single lines (top and bottom half), which the OCR handles much better
-		var boxes = job.replace ? [0, 1].map(function (i) {
-			var mid = (job.box.y0 + job.box.y1) / 2, pad = 0.1 * h;
-			return { x0: job.box.x0, x1: job.box.x1, y0: i ? mid - pad : job.box.y0, y1: i ? job.box.y1 : mid + pad };
-		}) : [job.box];
-		var lines = [];
-		return boxes.reduce(function (chain, b) {
-			return chain.then(function () { return readRegion(worker, img, b, 'nombre'); }).then(function (text) {
-				var p = parseField('nombre', text);
-				if (p) { lines.push({ text: p.value, box: b, words: p.value.split(' ').map(function (t) { return { t: t, b: b }; }) }); }
-			});
-		}, Promise.resolve()).then(function () {
-			if (lines.length !== boxes.length) { return; }
-			var next = L.slice(0, job.at).concat(lines, L.slice(job.at + job.replace));
-			if (next.length !== 3 || (curp && curp.charAt(2) !== 'X' && mainWord(next[1].text, false).charAt(0) !== curp.charAt(2))) { return; }
-			best.lines = next;
-		}).catch(function (e) { console.log('playerIdOcr name lines', e); });
-	}
-
 	/* ---------- UI ---------- */
 
 	function esc(s) { return $('<div>').text(String(s == null ? '' : s)).html(); }
@@ -1428,12 +1387,65 @@
 			}).then(function (content) {
 				return new Promise(function (resolve, reject) {
 					var img = new Image();
-					img.onload = function () { resolve({ img: img, text: pdfTextData(content, vp) }); };
+					img.onload = function () { resolve({ img: img, text: pdfTextData(content, vp), page: page }); };
 					img.onerror = reject;
 					img.src = c.toDataURL('image/png');
 				});
 			});
 		});
+	}
+
+	function canvasImage(c) {
+		return new Promise(function (resolve, reject) {
+			var img = new Image();
+			img.onload = function () { resolve(img); };
+			img.onerror = reject;
+			img.src = c.toDataURL('image/png');
+		});
+	}
+
+	/** Picture decoded by pdf.js (ImageBitmap or raw 1 / 24 / 32-bit pixels) on a canvas. */
+	function pdfImageCanvas(o) {
+		var c = document.createElement('canvas'), x;
+		c.width = o.width; c.height = o.height;
+		x = c.getContext('2d');
+		if (o.bitmap) { x.drawImage(o.bitmap, 0, 0); return c; }
+		if (!o.data) { return null; }
+		var out = x.createImageData(o.width, o.height), d = out.data, src = o.data, n = o.width * o.height, i;
+		if (o.kind === 3) {
+			d.set(src.subarray(0, n * 4));
+		} else if (o.kind === 2) {
+			for (i = 0; i < n; i++) { d[4 * i] = src[3 * i]; d[4 * i + 1] = src[3 * i + 1]; d[4 * i + 2] = src[3 * i + 2]; d[4 * i + 3] = 255; }
+		} else if (o.kind === 1) {
+			var row = (o.width + 7) >> 3;
+			for (var y = 0; y < o.height; y++) {
+				for (var xx = 0; xx < o.width; xx++) {
+					var v = (src[y * row + (xx >> 3)] >> (7 - (xx & 7))) & 1 ? 255 : 0, k = 4 * (y * o.width + xx);
+					d[k] = d[k + 1] = d[k + 2] = v; d[k + 3] = 255;
+				}
+			}
+		} else {
+			return null;
+		}
+		x.putImageData(out, 0, 0);
+		return c;
+	}
+
+	/**
+	 * Scanned page: the scan itself (the page's only picture) at its own resolution, which the OCR reads
+	 * better than a re-rendered page. null when the page is not a single picture.
+	 */
+	function pdfScanImage(page) {
+		return page.getOperatorList().then(function (ops) {
+			var OPS = window.pdfjsLib.OPS, ids = [];
+			ops.fnArray.forEach(function (fn, i) { if (fn === OPS.paintImageXObject) { ids.push(ops.argsArray[i][0]); } });
+			if (ids.length !== 1) { return null; }
+			var store = /^g_/.test(ids[0]) ? page.commonObjs : page.objs;
+			return new Promise(function (resolve) { store.get(ids[0], resolve); }).then(function (o) {
+				var c = o && o.width >= 500 ? pdfImageCanvas(o) : null;
+				return c ? canvasImage(c) : null;
+			});
+		}).catch(function (e) { console.log('playerIdOcr pdf image', e); return null; });
 	}
 
 	/* ---------- reading ---------- */
@@ -1477,8 +1489,6 @@
 			}).then(function () {
 				return retryCurp(worker, passes, [strong, soft]);
 			}).then(function () {
-				return fillNameGaps(worker, img, passes);
-			}).then(function () {
 				var r = merge(passes, T);
 				if (!found(r)) {
 					Swal.fire({ icon: 'warning', title: '', text: T.nothing });
@@ -1499,7 +1509,7 @@
 					return;
 				}
 			}
-			return readImage(s, page.img, T, true);
+			return pdfScanImage(page.page).then(function (scan) { return readImage(s, scan || page.img, T, true); });
 		});
 	}
 
