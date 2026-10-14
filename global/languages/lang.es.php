@@ -899,7 +899,7 @@
 	$lang['933-24'] = 'Fecha impresa';
 	$lang['933-25'] = 'CURP, caracteres 5-10';
 	$lang['933-26'] = 'Clave de elector, caracteres 7-12';
-	$lang['933-27'] = 'Campo SEXO';
+	$lang['933-27'] = 'Campo sexo';
 	$lang['933-28'] = 'CURP, carácter 11';
 	$lang['933-29'] = 'Clave de elector, carácter 15';
 	$lang['933-30'] = 'Campo CURP';

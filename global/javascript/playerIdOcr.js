@@ -202,7 +202,23 @@
 		return { x0: key.box.x0 + a * w, y0: key.box.y0, x1: key.box.x0 + b * w, y1: key.box.y1 };
 	}
 
-	var NAME_STOP = /^(SEXO|SEO|FECHA|NACIMIENTO|EDAD|GENERO|GÉNERO|DOMICILIO)$/;
+	var NAME_STOP = /^(SEXO|SEO|SEX|GENDER|FECHA|NACIMIENTO|EDAD|GENERO|GÉNERO|DOMICILIO)$/;
+
+	/* ---------- sex: H/M (Spanish: Hombre/Mujer) or M/F (English: Male/Female) ---------- */
+
+	// "SEXO M", "SEX: F", "SEXO / SEX M", "GENDER F"
+	var SEX_RE = /\b(SEXO|SEX|GENDER)\b[^A-Z0-9]{0,6}(?:SEX\b[^A-Z0-9]{0,4})?([HMFX])\b/;
+
+	/** Cards with an English label use M/F, so there M means male. */
+	function sexUsesMF(text) { return /\bSEX\b|\bGENDER\b/.test(text); }
+
+	/** '0' male, '1' female, 'X' non-binary, '' unknown. */
+	function sexCode(letter, mf) {
+		if (letter === 'H') { return '0'; }
+		if (letter === 'F') { return '1'; }
+		if (letter === 'M') { return mf ? '0' : '1'; }
+		return letter === 'X' ? 'X' : '';
+	}
 
 	/** Name lines under the NOMBRE label: words aligned with the label, stopping at gaps and non-name tokens. */
 	function findNames(lines) {
@@ -255,23 +271,30 @@
 			if (k) { clave = $.extend(k, keyBox(l)); }
 			var d = !printedDate && findPrintedDate(l.text);
 			if (d) { d.box = boxOf(l.words.filter(function (w) { return /\d/.test(w.t); })); printedDate = d; }
-			var sm = !printedSex && l.text.match(/\bSEXO\s*[:.]?\s*([HM])\b/);
+			var sm = !printedSex && l.text.match(SEX_RE);
 			if (sm) {
-				var si = -1;
-				l.words.forEach(function (w, i) { if (si < 0 && /^SEXO/.test(w.t)) { si = i; } });
-				printedSex = { value: sm[1], box: si < 0 ? null : boxOf(l.words.slice(si, /^SEXO\W*$/.test(l.words[si].t) ? si + 2 : si + 1)) };
+				var si = -1, sj = -1;
+				l.words.forEach(function (w, i) {
+					if (si < 0 && /^(SEXO|SEX|GENDER)/.test(w.t)) { si = i; }
+					if (si >= 0 && sj < 0 && i >= si && new RegExp('(^|[^A-Z])' + sm[2] + '$').test(w.t.replace(/[^A-Z]/g, ' ').trim())) { sj = i; }
+				});
+				printedSex = { raw: sm[2], box: si < 0 ? null : boxOf(l.words.slice(si, sj >= si ? sj + 1 : si + 2)) };
 			}
 		});
+		var allText = lines.map(function (l) { return l.text; }).join('\n');
 		if (!printedSex) {
-			var sexM = lines.map(function (l) { return l.text; }).join('\n').match(/\bSEXO\s*[:.]?\s*([HM])\b/);
-			if (sexM) { printedSex = { value: sexM[1], box: null }; }
+			var sexM = allText.match(SEX_RE);
+			if (sexM) { printedSex = { raw: sexM[2], box: null }; }
 		}
+		var mf = sexUsesMF(allText);
+		if (printedSex) { printedSex.value = sexCode(printedSex.raw, mf); }
 		return {
 			curpLabel: curpLabel,
 			curp: curp,
 			clave: clave,
 			printedDate: printedDate,
 			printedSex: printedSex,
+			sexMF: mf,
 			names: findNames(lines),
 			confidence: data.confidence || 0
 		};
@@ -393,13 +416,14 @@
 		var printedSex = pick(function (p) { return p.printedSex; });
 		var sexKey = curp && curp.valid ? 'curp' : (printedSex ? 'printed' : (clave ? 'clave' : (curp ? 'curp' : '')));
 		var sexes = [];
-		if (curp) { sexes.push({ key: 'curp', label: T.srcCurpSex, raw: curp.value.charAt(10), box: keySlice(curp, 10, 11) }); }
-		if (printedSex) { sexes.push({ key: 'printed', label: T.srcPrintedSex, raw: printedSex.value, box: printedSex.box }); }
-		if (clave) { sexes.push({ key: 'clave', label: T.srcClaveSex, raw: clave.sex, box: keySlice(clave, 14, 15) }); }
-		sexes.forEach(function (x) { x.chosen = x.key === sexKey; x.value = x.raw; });
-		var sex = (sexes.filter(function (x) { return x.chosen; })[0] || {}).raw;
-		if (sex === 'H') { r.sexo = '0'; } else if (sex === 'M') { r.sexo = '1'; } else if (sex === 'X') { warnings.push(T.sexX); }
+		if (curp) { sexes.push({ key: 'curp', label: T.srcCurpSex, raw: curp.value.charAt(10), value: sexCode(curp.value.charAt(10), false), box: keySlice(curp, 10, 11) }); }
+		if (printedSex) { sexes.push({ key: 'printed', label: T.srcPrintedSex, raw: printedSex.raw, value: printedSex.value, box: printedSex.box }); }
+		if (clave) { sexes.push({ key: 'clave', label: T.srcClaveSex, raw: clave.sex, value: sexCode(clave.sex, false), box: keySlice(clave, 14, 15) }); }
+		sexes.forEach(function (x) { x.chosen = x.key === sexKey; });
+		var sex = (sexes.filter(function (x) { return x.chosen; })[0] || {}).value;
+		if (sex === '0' || sex === '1') { r.sexo = sex; } else if (sex === 'X') { warnings.push(T.sexX); }
 		r.src.sexo = sexes;
+		r.sexMF = passes.some(function (p) { return p.sexMF; });
 
 		r.warnings = warnings;
 		return r;
@@ -504,7 +528,7 @@
 	/* ---------- reading one marked area ---------- */
 
 	/** Value of a field from the text of a marked area, or null. */
-	function parseField(k, text) {
+	function parseField(k, text, mf) {
 		var t = String(text || '').toUpperCase();
 		if (k === 'curp') {
 			var c = findCurp(t) || findCurp(t.replace(/\s+/g, ''));
@@ -532,16 +556,16 @@
 			return null;
 		}
 		if (k === 'sexo') {
-			var sm = t.match(/SEXO\W*([HMX])\b/);
-			if (sm) { return { value: sm[1] }; }
+			mf = mf || sexUsesMF(t);
+			var sm = t.match(SEX_RE);
+			if (sm) { return { value: sexCode(sm[2], mf), raw: sm[2] }; }
 			var kc = findCurp(t.replace(/\s+/g, ''));
-			if (kc) { return { value: kc.value.charAt(10) }; }
+			if (kc) { return { value: sexCode(kc.value.charAt(10), false), raw: kc.value.charAt(10) }; }
 			var kl = findClave(t.replace(/\s+/g, ''));
-			if (kl) { return { value: kl.sex }; }
+			if (kl) { return { value: sexCode(kl.sex, false), raw: kl.sex }; }
 			var letters = t.replace(/[^A-Z]/g, '');
-			if (/^[HMX]$/.test(letters)) { return { value: letters }; }
-			var one = t.match(/\b([HMX])\b/);
-			return one ? { value: one[1] } : null;
+			var one = /^[HMFX]$/.test(letters) ? [letters, letters] : t.match(/\b([HMFX])\b/);
+			return one ? { value: sexCode(one[1], mf), raw: one[1] } : null;
 		}
 		var words = t.replace(/[^A-ZÁÉÍÓÚÑÜ\s]/g, ' ').split(/\s+/).filter(function (w) {
 			return (w.length >= 2 || w === 'Y') && w !== 'NOMBRE' && !NAME_STOP.test(w);
@@ -647,7 +671,7 @@
 			var ok = /^[A-Z]{4}\d{6}[HMX]/.test(r.curp), box = r.src.curp.box;
 			var fromCurp = ok && r.curp.length === 18 ? curpBirth(r.curp) : null;
 			[['fecha', fromCurp ? { label: T.srcCurpDate, raw: r.curp.substr(4, 6), fmt: 'ymd', value: fromCurp } : null],
-				['sexo', ok ? { label: T.srcCurpSex, raw: r.curp.charAt(10), value: r.curp.charAt(10) } : null]].forEach(function (pair) {
+				['sexo', ok ? { label: T.srcCurpSex, raw: r.curp.charAt(10), value: sexCode(r.curp.charAt(10), false) } : null]].forEach(function (pair) {
 				var k = pair[0], list = r.src[k], cur = list.filter(function (x) { return x.key === 'curp'; })[0];
 				if (!pair[1]) {
 					if (cur) { list.splice(list.indexOf(cur), 1); }
@@ -662,7 +686,7 @@
 		function syncChosen(k) {
 			var c = chosenOf(k);
 			if (k === 'fecha') { r.fecha = c ? c.value || '' : ''; }
-			if (k === 'sexo') { var v = c ? c.value : ''; r.sexo = v === 'H' ? '0' : (v === 'M' ? '1' : ''); }
+			if (k === 'sexo') { var v = c ? c.value : ''; r.sexo = v === '0' || v === '1' ? v : ''; }
 		}
 
 		/** First change to a field's box: it becomes a manual source. */
@@ -681,7 +705,7 @@
 		}
 
 		function applyRead(k, text) {
-			var p = parseField(k, text);
+			var p = parseField(k, text, r.sexMF);
 			if (k === 'curp') {
 				r.curp = p ? p.value : '';
 				r.src.curp.valid = !!(p && p.valid);
@@ -689,7 +713,7 @@
 			} else if (multi(k)) {
 				var c = chosenOf(k);
 				c.value = p ? p.value : '';
-				c.raw = p ? (k === 'fecha' ? p.raw : p.value) : '';
+				c.raw = p ? p.raw : '';
 				c.fmt = p && k === 'fecha' ? p.fmt : '';
 				syncChosen(k);
 			} else {

@@ -899,7 +899,7 @@
 	$lang['933-24'] = 'Printed date';
 	$lang['933-25'] = 'CURP, characters 5-10';
 	$lang['933-26'] = 'Voter key, characters 7-12';
-	$lang['933-27'] = 'SEX field';
+	$lang['933-27'] = 'Sex field';
 	$lang['933-28'] = 'CURP, character 11';
 	$lang['933-29'] = 'Voter key, character 15';
 	$lang['933-30'] = 'CURP field';
