@@ -871,6 +871,7 @@
 	$lang['931'] = 'Max 500 KB';
 	$lang['931-1'] = 'Drag the photo to center it; use the mouse wheel, the buttons or the slider to zoom in or out.';
 	$lang['931-2'] = 'Reset';
+	$lang['931-3'] = 'Drag the image to center it; use the wheel, the buttons or the bar to zoom in or out.';
 	$lang['932'] = 'Email';
 	$lang['933'] = 'Upload ID';
 	$lang['933-1'] = 'Upload Front';

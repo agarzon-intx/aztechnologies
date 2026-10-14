@@ -131,6 +131,7 @@ if (!function_exists('az_player_id_upload_attrs')) {
 			. '<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'' . $frame . '\', 1.15);">+</button>'
 			. '<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $t('931-2', 'Reset') . '" onclick="playerPhotoReset(\'' . $frame . '\');">&#8634;</button>'
 			. '</div>'
+			. '<small class="text-muted" style="font-size: 11px;">' . $t('931-3', 'Drag the image to center it; use the wheel, the buttons or the bar to zoom in or out.') . '</small>'
 			. '</div>'
 			. '<div style="font-size: 12px; color: #777; margin: 4px auto; max-width: 220px;">' . $t('933-51', 'Front and back in one image, front on top.') . '</div>'
 			. '<button style="margin: 0; width: 180px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myID13' . $s . '\'), \'click\');">' . $t('933-50', 'Upload whole image') . '</button>'

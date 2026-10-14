@@ -332,6 +332,7 @@ $htmlPlayer .= '													</select>
 															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'#id11Frame\', 1.15);">+</button>
 															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $lang['931-2'] . '" onclick="playerPhotoReset(\'#id11Frame\');">&#8634;</button>
 														</div>
+														<small class="text-muted" style="font-size: 11px;">' . $lang['931-3'] . '</small>
 													</div>
 												</span>
 											</div>
@@ -365,6 +366,7 @@ $htmlPlayer .= '													</select>
 															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'#id12Frame\', 1.15);">+</button>
 															<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $lang['931-2'] . '" onclick="playerPhotoReset(\'#id12Frame\');">&#8634;</button>
 														</div>
+														<small class="text-muted" style="font-size: 11px;">' . $lang['931-3'] . '</small>
 													</div>
 												</span>
 											</div>

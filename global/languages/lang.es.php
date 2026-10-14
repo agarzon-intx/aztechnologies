@@ -871,6 +871,7 @@
 	$lang['931'] = ' Max 500 KB';
 	$lang['931-1'] = 'Arrastra la foto para centrarla; usa la rueda, los botones o la barra para acercar o alejar.';
 	$lang['931-2'] = 'Restablecer';
+	$lang['931-3'] = 'Arrastra la imagen para centrarla; usa la rueda, los botones o la barra para acercar o alejar.';
 	$lang['932'] = 'Correo Electronico';
 	$lang['933'] = 'Subir identificacion';
 	$lang['933-1'] = 'Subir Frente';
