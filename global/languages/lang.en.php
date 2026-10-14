@@ -1593,4 +1593,21 @@
 	$lang['inst011'] = 'Institution Updated';
 	$lang['inst012'] = 'Search institution by name';
 	$lang['inst013'] = 'Name 5 must be 3 to 5 characters';
+	$lang['rol001'] = 'Roles';
+	$lang['rol002'] = 'Role List';
+	$lang['rol003'] = 'Name';
+	$lang['rol004'] = 'Description';
+	$lang['rol005'] = 'Menu options';
+	$lang['rol006'] = 'Create Role';
+	$lang['rol007'] = 'Update Role';
+	$lang['rol008'] = 'Role saved';
+	$lang['rol009'] = 'Name is required (10 characters max)';
+	$lang['rol010'] = 'A role with that name already exists';
+	$lang['rol011'] = 'Delete the role? It will be removed from the users that have it.';
+	$lang['rol012'] = 'Role deleted';
+	$lang['rol013'] = 'Updated';
+	$lang['rol014'] = 'User roles';
+	$lang['rol015'] = 'Without roles a league admin sees the whole menu. With roles they see only the options of their roles; other users see their own menu plus those options.';
+	$lang['rol016'] = 'Select at least one menu option';
+	$lang['rol017'] = 'There are no roles; create them in Configuration > Roles.';
 ?>

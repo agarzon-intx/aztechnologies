@@ -42,241 +42,20 @@ $schema = $Config->getSchema();
     //echo $Config->coachjuegos . ' -- ' . date('N') . ' vs ' . $Config->coachjuegosdiainicial . ' -- ' . date('N') . ' vs ' . $Config->coachjuegosdiafinal . ' -- ' . date('H:i:s') . ' vs ' . $Config->coachjuegoshorafinal;
     //echo ($Config->coachjuegos == 1) . ' && (' . (date('N')>=$Config->coachjuegosdiainicial) . ' && ' . (date('N')<=$Config->coachjuegosdiafinal) . ' && ' . var_dump((date('H:i:s') < $Config->coachjuegoshorafinal)) . ')';
 	if (session_status() == PHP_SESSION_ACTIVE and isset($_SESSION[$Config->getAlias() . "equipo"])) {
+		require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'role_menu.inc.php';
+		$__roleUser = (string) ($_SESSION[$Config->getAlias() . 'username'] ?? '');
+		$__roleMenu = ($__roleUser === 'admin') ? null : az_user_role_menu($Config, $schema, $__roleUser);
+		$__menuHidden = array();
+		if ((int) $Config->showGenerateSchedule !== 1) {
+			$__menuHidden[] = 'generateSchedule';
+		}
+		$__gamesRes = $Config->query("SELECT 1 FROM $schema.Juegos WHERE Torneo_ID = (SELECT max(Torneo_ID) FROM $schema.Torneos WHERE Actual = 'S') LIMIT 1");
+		if (!$__gamesRes || $__gamesRes->num_rows === 0) {
+			$__menuHidden[] = 'gamesCsv';
+		}
         if($_SESSION[$Config->getAlias() . 'equipo'] == 0 || $_SESSION[$Config->getAlias() . 'equipo'] == -1){
             if($_SESSION[$Config->getAlias() . 'equipo'] == 0){
-                $htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu1" class="nav-link text-white " aria-controls="menu1" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">settings</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['121'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu1" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="configManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">settings</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['121'] . ' </span>
-    										</a>
-    									</li>
-    
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onclick="colorManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">palette</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['114'] . '  </span>
-    										</a>
-    									</li>
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onclick="userManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">emoji_events</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['103'] . '  </span>
-    										</a>
-    									</li>
-    									
-    								</ul>
-    							</div>
-    						</li>';
-                $htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu2" class="nav-link text-white " aria-controls="menu2" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">emoji_events</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['104'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu2" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="tournamentManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">emoji_events</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['105'] . ' </span>
-    										</a>    
-    									</li>
-                                        					<li class="nav-item">
-                                        						<a data-bs-toggle="collapse" href="#menu2-1" class="nav-link text-white " aria-controls="menu2-1" role="button" aria-expanded="false">
-                                        							<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}" style="font-size: 16px;">date_range</i>
-                                        							<span class="nav-link-text ms-2 ps-1">' . $lang['108'] . '</span>
-                                        						</a>
-                                        						<div class="collapse " id="menu2-1" style="margin-left: 5px;">
-                                        							<ul class="nav ">
-                                        
-                                        							<li class="nav-item ">
-                										<a class="nav-link text-white " aria-expanded="false" onclick="calendarManagementShow(); toggleSidenav();">
-                											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 14px;">date_range</i> </span>
-                											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['133'] . '  </span>
-                										</a>
-                									</li>
-                
-                
-                									<li class="nav-item ">
-                										<a class="nav-link text-white " aria-expanded="false" onclick="weekManagementShow(); toggleSidenav();">
-                											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 14px;">date_range</i> </span>
-                											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['108'] . '  </span>
-                										</a>
-                									</li>
-                                        			
-                                        		</ul>
-                                        	</div>
-                                        </li>
-    								</ul>
-    							</div>
-    				</li>';
-    						
-    			$htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu3" class="nav-link text-white " aria-controls="menu3" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">category</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['109'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu3" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="categoryManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">category</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['109'] . ' </span>
-    										</a>
-    									</li>
-    									
-    								</ul>
-    							</div>
-    						</li>';
-    						
-    			$htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu4" class="nav-link text-white " aria-controls="menu4" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">public</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['110'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu4" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="fieldManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">public</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['110'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>
-    									
-    								</ul>
-    							</div>
-    						</li>';
-    						
-    			$htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu5" class="nav-link text-white " aria-controls="menu5" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">folder_shared</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['112'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu5" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="institutionsManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">account_balance</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['113-2'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>
-
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="teamsManagementAdminCategoryShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">groups</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['113'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="playersManagementAdminCategoryShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">account_circle</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['115'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="playersManagementAdminShowPrintList(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">badge</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['123'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>
-    									
-    								</ul>
-    							</div>
-    						</li>';
-    						
-    			$htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu6" class="nav-link text-white " aria-controls="menu6" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">scoreboard</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['100'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu6" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="loadWeeksAdmin(0); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">scoreboard</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>';
-    			if ((int) $Config->showGenerateSchedule === 1) {
-    				$htmlMenu .= '<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="generateScheduleShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">calendar_month</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101-1'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>';
-    			}
-    			$htmlMenu .= '<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="teamSubstitutionShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">swap_horiz</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101-44'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>';
-    			$__gamesRes = $Config->query("SELECT 1 FROM $schema.Juegos WHERE Torneo_ID = (SELECT max(Torneo_ID) FROM $schema.Torneos WHERE Actual = 'S') LIMIT 1");
-    			if ($__gamesRes && $__gamesRes->num_rows > 0) {
-    				$htmlMenu .= '<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="gamesExportCsv(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">download</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['101-52'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>';
-    			}
-    			$htmlMenu .= '      </ul>
-    							</div>';
-    			$htmlMenu .= '</li>';
-    			
-    			$htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu7" class="nav-link text-white " aria-controls="menu7" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">notifications</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['116'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu7" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="alertManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">notifications</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['117'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>
-    									
-    								</ul>
-    							</div>
-    						</li>';
-    						
-    			$htmlMenu .= '<li class="nav-item">
-    							<a data-bs-toggle="collapse" href="#menu8" class="nav-link text-white " aria-controls="menu8" role="button" aria-expanded="false">
-    								<i class="material-symbols-rounded {% if page.brand == \'RTL\' %}ms-2{% else %} me-2{% endif %}">description</i>
-    									<span class="nav-link-text ms-2 ps-1">' . $lang['118'] . '</span>
-    							</a>
-    							<div class="collapse " id="menu8" style="margin-left: 5px;">
-    								<ul class="nav ">
-    
-    									<li class="nav-item ">
-    										<a class="nav-link text-white " aria-expanded="false" onClick="memoManagementShow(); toggleSidenav();">
-    											<span class="sidenav-mini-icon"> <i class="material-symbols-rounded" style="font-size: 16px;">description</i> </span>
-    											<span class="sidenav-normal  ms-2  ps-1"> ' . $lang['118'] . ' <b class="caret"></b></span>
-    										</a>
-    									</li>
-    									
-    								</ul>
-    							</div>
-    						</li>';
+                $htmlMenu .= az_role_menu_html($lang, $__roleMenu, $__menuHidden);
     						
     			/*
     			$htmlMenu .= '<li class="nav-item">
@@ -532,6 +311,9 @@ $schema = $Config->getSchema();
 			$htmlMenu .= '</li>';
 			*/
         }
+        if ($_SESSION[$Config->getAlias() . 'equipo'] != 0 && $__roleMenu) {
+			$htmlMenu .= az_role_menu_html($lang, $__roleMenu, $__menuHidden, 'rm-');
+		}
         if (session_status() == PHP_SESSION_ACTIVE and isset($_SESSION[$Config->getAlias() . "equipo"])) {
 		$htmlMenu .='<li class="nav-item">
 						<hr class="horizontal light">

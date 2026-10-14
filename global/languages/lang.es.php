@@ -1609,4 +1609,21 @@
 	$lang['inst011'] = 'Institucion Actualizada';
 	$lang['inst012'] = 'Buscar institucion por nombre';
 	$lang['inst013'] = 'Nombre 5 debe tener de 3 a 5 caracteres';
+	$lang['rol001'] = 'Roles';
+	$lang['rol002'] = 'Lista de Roles';
+	$lang['rol003'] = 'Nombre';
+	$lang['rol004'] = 'Descripción';
+	$lang['rol005'] = 'Opciones del menú';
+	$lang['rol006'] = 'Crear Rol';
+	$lang['rol007'] = 'Actualizar Rol';
+	$lang['rol008'] = 'Rol guardado';
+	$lang['rol009'] = 'El nombre es obligatorio (máximo 10 caracteres)';
+	$lang['rol010'] = 'Ya existe un rol con ese nombre';
+	$lang['rol011'] = '¿Eliminar el rol? Se quitará a los usuarios que lo tengan.';
+	$lang['rol012'] = 'Rol eliminado';
+	$lang['rol013'] = 'Actualizado';
+	$lang['rol014'] = 'Roles del usuario';
+	$lang['rol015'] = 'Sin roles, un administrador de la liga ve todo el menú. Con roles, ve solo las opciones de sus roles; los demás usuarios ven su menú más esas opciones.';
+	$lang['rol016'] = 'Selecciona al menos una opción del menú';
+	$lang['rol017'] = 'No hay roles; créalos en Configuración > Roles.';
 ?>
