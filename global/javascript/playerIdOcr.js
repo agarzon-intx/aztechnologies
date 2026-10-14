@@ -60,9 +60,9 @@
 		x.putImageData(d, left, top);
 	}
 
-	/** Grayscale copy scaled to ~1600px wide. */
-	function prepCanvas(img, strong) {
-		var scale = Math.max(1, Math.min(3, 1600 / img.naturalWidth));
+	/** Grayscale copy scaled to ~1600px wide (times `factor` for a second try at another size). */
+	function prepCanvas(img, strong, factor) {
+		var scale = Math.max(1, Math.min(3, 1600 / img.naturalWidth)) * (factor || 1);
 		var c = document.createElement('canvas');
 		c.width = Math.round(img.naturalWidth * scale);
 		c.height = Math.round(img.naturalHeight * scale);
@@ -547,7 +547,8 @@
 		};
 		var curp = pick(function (p) { return p.curp && p.curp.valid ? p.curp : null; }) || pick(function (p) { return p.curp; });
 		var clave = pick(function (p) { return p.clave; });
-		var names = pick(function (p) { return p.names.lines.length >= 2 ? p.names : null; }) || pick(function (p) { return p.names.lines.length ? p.names : null; });
+		var names = pick(function (p) { return p.names.lines.length >= 3 ? p.names : null; }) || pick(function (p) { return p.names.lines.length >= 2 ? p.names : null; })
+			|| pick(function (p) { return p.names.lines.length ? p.names : null; });
 		var anchor = pick(function (p) { return p.names.anchor; });
 		var warnings = [], r = { nombre: '', paterno: '', materno: '', fecha: '', sexo: '', curp: '', anchor: anchor, src: {} };
 
@@ -1436,6 +1437,14 @@
 				return retryCurp(worker, passes, [strong, soft]);
 			}).then(function () {
 				var r = merge(passes, T);
+				if (r.nombre && r.paterno && r.materno && r.src.curp.valid) { return r; }
+				// Tesseract splits lines differently at another size: one more pass often finds what was missed
+				var alt = prepCanvas(img, true, 0.85);
+				return worker.recognize(alt.canvas).then(function (r3) {
+					passes.push(parse(r3.data, alt.scale));
+					return merge(passes, T);
+				});
+			}).then(function (r) {
 				if (!found(r)) {
 					Swal.fire({ icon: 'warning', title: '', text: T.nothing });
 					return;
