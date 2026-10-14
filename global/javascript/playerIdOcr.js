@@ -134,13 +134,49 @@
 		return null;
 	}
 
+	/** Printed birth date, always dd/mm/yyyy on the card: {iso, raw}. */
 	function findPrintedDate(text) {
 		var re = /\b(\d{2})\s*[\/\-.]\s*(\d{2})\s*[\/\-.]\s*(\d{4})\b/g, r;
 		while ((r = re.exec(text))) {
 			var d = parseInt(r[1], 10), m = parseInt(r[2], 10), y = parseInt(r[3], 10);
-			if (y > 1900 && validDate(y, m, d)) { return iso(y, m, d); }
+			if (y > 1900 && validDate(y, m, d)) { return { iso: iso(y, m, d), raw: r[1] + '/' + r[2] + '/' + r[3] }; }
 		}
 		return null;
+	}
+
+	/* ---------- word boxes (image pixels) ---------- */
+
+	function boxOf(words) {
+		if (!words.length) { return null; }
+		var b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+		words.forEach(function (w) {
+			b.x0 = Math.min(b.x0, w.b.x0); b.y0 = Math.min(b.y0, w.b.y0);
+			b.x1 = Math.max(b.x1, w.b.x1); b.y1 = Math.max(b.y1, w.b.y1);
+		});
+		return b;
+	}
+
+	function joinBoxes(boxes) {
+		boxes = boxes.filter(Boolean);
+		return boxes.length ? boxOf(boxes.map(function (b) { return { b: b }; })) : null;
+	}
+
+	/** Box of the longest token on the line (where an 18-character key sits); exact when it is the key alone. */
+	function keyBox(line) {
+		var best = null, len = 0;
+		line.words.forEach(function (w) {
+			var n = w.t.replace(/[^A-Z0-9Ñ]/g, '').length;
+			if (n > len) { best = w; len = n; }
+		});
+		return best ? { box: best.b, exact: len === 18 } : { box: boxOf(line.words), exact: false };
+	}
+
+	/** Part of an 18-character key box covering characters [a, b), when the box holds only the key. */
+	function keySlice(key, a, b) {
+		if (!key || !key.box) { return null; }
+		if (!key.exact) { return key.box; }
+		var w = (key.box.x1 - key.box.x0) / 18;
+		return { x0: key.box.x0 + a * w, y0: key.box.y0, x1: key.box.x0 + b * w, y1: key.box.y1 };
 	}
 
 	var NAME_STOP = /^(SEXO|SEO|FECHA|NACIMIENTO|EDAD|GENERO|GÉNERO|DOMICILIO)$/;
@@ -157,7 +193,7 @@
 		var h = Math.max(4, anchor.b.y1 - anchor.b.y0), out = [];
 		for (var j = li + 1; j < lines.length && j <= li + 5 && out.length < 4; j++) {
 			if (/DOMICILIO|CLAVE|CURP|ELECTOR/.test(lines[j].text)) { break; }
-			var words = [], prev = null;
+			var words = [], used = [], prev = null;
 			lines[j].words.forEach(function (wd) {
 				if (words.stop) { return; }
 				if (!words.length && (wd.b.x1 < anchor.b.x0 - h || wd.b.x0 > anchor.b.x0 + 3 * h)) { return; }
@@ -168,9 +204,10 @@
 					return;
 				}
 				words.push(t);
+				used.push(wd);
 				prev = wd;
 			});
-			if (words.length) { out.push(words.join(' ')); }
+			if (words.length) { out.push({ text: words.join(' '), box: boxOf(used) }); }
 		}
 		return { anchor: anchor, lines: out };
 	}
@@ -184,20 +221,34 @@
 				})
 			};
 		});
-		var text = lines.map(function (l) { return l.text; }).join('\n');
-		var sexM = text.match(/\bSEXO\s*[:.]?\s*([HM])\b/);
-		var curpLabel = null;
+		var curpLabel = null, curp = null, clave = null, printedDate = null, printedSex = null;
 		lines.forEach(function (l) {
 			l.words.forEach(function (w) {
 				if (!curpLabel && /^CURP$/.test(w.t)) { curpLabel = w; }
 			});
+			var c = findCurp(l.text);
+			if (c && (!curp || (c.valid && !curp.valid))) { curp = $.extend(c, keyBox(l)); }
+			var k = !clave && findClave(l.text);
+			if (k) { clave = $.extend(k, keyBox(l)); }
+			var d = !printedDate && findPrintedDate(l.text);
+			if (d) { d.box = boxOf(l.words.filter(function (w) { return /\d/.test(w.t); })); printedDate = d; }
+			var sm = !printedSex && l.text.match(/\bSEXO\s*[:.]?\s*([HM])\b/);
+			if (sm) {
+				var si = -1;
+				l.words.forEach(function (w, i) { if (si < 0 && /^SEXO/.test(w.t)) { si = i; } });
+				printedSex = { value: sm[1], box: si < 0 ? null : boxOf(l.words.slice(si, /^SEXO\W*$/.test(l.words[si].t) ? si + 2 : si + 1)) };
+			}
 		});
+		if (!printedSex) {
+			var sexM = lines.map(function (l) { return l.text; }).join('\n').match(/\bSEXO\s*[:.]?\s*([HM])\b/);
+			if (sexM) { printedSex = { value: sexM[1], box: null }; }
+		}
 		return {
 			curpLabel: curpLabel,
-			curp: findCurp(text),
-			clave: findClave(text),
-			printedDate: findPrintedDate(text),
-			printedSex: sexM ? sexM[1] : null,
+			curp: curp,
+			clave: clave,
+			printedDate: printedDate,
+			printedSex: printedSex,
 			names: findNames(lines),
 			confidence: data.confidence || 0
 		};
@@ -230,7 +281,10 @@
 		return { 0: x(p[0]), 1: inner(p, true), 2: m ? x(m[0]) : 'X', 3: x(n[0]), 13: inner(p, false), 14: m ? inner(m, false) : 'X', 15: inner(n, false) };
 	}
 
-	/** Combine the OCR passes and cross-check fields. */
+	/**
+	 * Combine the OCR passes and cross-check fields. r.src holds, per field, where it was read on the image:
+	 * {box} for single-source fields, and a list of {key, label, raw, fmt, value, box, chosen} for date and sex.
+	 */
 	function merge(passes, T) {
 		var pick = function (fn) {
 			for (var i = 0; i < passes.length; i++) { var v = fn(passes[i]); if (v) { return v; } }
@@ -240,7 +294,7 @@
 		var clave = pick(function (p) { return p.clave; });
 		var names = pick(function (p) { return p.names.lines.length >= 2 ? p.names : null; }) || pick(function (p) { return p.names.lines.length ? p.names : null; });
 		var anchor = pick(function (p) { return p.names.anchor; });
-		var warnings = [], r = { nombre: '', paterno: '', materno: '', fecha: '', sexo: '', curp: '', anchor: anchor };
+		var warnings = [], r = { nombre: '', paterno: '', materno: '', fecha: '', sexo: '', curp: '', anchor: anchor, src: {} };
 
 		if (curp) {
 			r.curp = curp.value;
@@ -249,19 +303,25 @@
 			warnings.push(T.noCurp);
 		}
 
-		var L = names ? names.lines : [];
+		var L = names ? names.lines : [], nameLine = { paterno: null, materno: null, nombre: [] };
 		if (L.length >= 3) {
-			r.paterno = L[0]; r.materno = L[1]; r.nombre = L.slice(2).join(' ');
+			nameLine.paterno = L[0]; nameLine.materno = L[1]; nameLine.nombre = L.slice(2);
 		} else if (L.length === 2) {
-			r.paterno = L[0];
-			if (curp && curp.value.charAt(2) !== 'X' && L[1].charAt(0) === curp.value.charAt(2) && L[1].charAt(0) !== curp.value.charAt(3)) {
-				r.materno = L[1];
+			nameLine.paterno = L[0];
+			if (curp && curp.value.charAt(2) !== 'X' && L[1].text.charAt(0) === curp.value.charAt(2) && L[1].text.charAt(0) !== curp.value.charAt(3)) {
+				nameLine.materno = L[1];
 			} else {
-				r.nombre = L[1];
+				nameLine.nombre = [L[1]];
 			}
 		} else if (L.length === 1) {
-			r.paterno = L[0];
+			nameLine.paterno = L[0];
 		}
+		r.paterno = nameLine.paterno ? nameLine.paterno.text : '';
+		r.materno = nameLine.materno ? nameLine.materno.text : '';
+		r.nombre = nameLine.nombre.map(function (l) { return l.text; }).join(' ');
+		r.src.paterno = { box: nameLine.paterno ? nameLine.paterno.box : null };
+		r.src.materno = { box: nameLine.materno ? nameLine.materno.box : null };
+		r.src.nombre = { box: joinBoxes(nameLine.nombre.map(function (l) { return l.box; })) };
 		if (!r.nombre || !r.paterno) { warnings.push(T.noNames); }
 
 		var fromNames = curpFromNames(r.paterno, r.materno, r.nombre);
@@ -274,7 +334,7 @@
 				idx.forEach(function (k) { fixed[k] = fromNames[k]; });
 				fixed = fixed.join('');
 				if (curpCheckDigit(fixed.slice(0, 17)) === fixed.charAt(17)) {
-					curp = { value: fixed, valid: true };
+					curp = { value: fixed, valid: true, box: curp.box, exact: curp.exact, fixed: true };
 					r.curp = fixed;
 					warnings = warnings.filter(function (w) { return w !== T.curpCheck; });
 					differs = false;
@@ -282,30 +342,47 @@
 			}
 			if (curp.valid && differs) { warnings.push(T.nameMismatch); }
 		}
+		r.src.curp = { box: curp ? curp.box : null, fixed: !!(curp && curp.fixed) };
 
 		var printed = pick(function (p) { return p.printedDate; });
 		var fromCurp = curp ? curpBirth(curp.value) : null;
 		var fromClave = clave ? clave.birth : null;
-		if (printed && (printed === fromCurp || printed === fromClave)) {
-			r.fecha = printed;
+		var printedIso = printed ? printed.iso : null, dateKey = '';
+		if (printedIso && (printedIso === fromCurp || printedIso === fromClave)) {
+			dateKey = 'printed';
 		} else if (fromCurp && (curp.valid || fromCurp === fromClave)) {
-			r.fecha = fromCurp;
-			if (printed) { warnings.push(T.dateMismatch); }
+			dateKey = 'curp';
+			if (printedIso) { warnings.push(T.dateMismatch); }
 		} else {
-			r.fecha = printed || fromClave || fromCurp || '';
-			if (r.fecha && (printed || fromClave || fromCurp) && [printed, fromClave, fromCurp].filter(Boolean).some(function (v) { return v !== r.fecha; })) {
+			dateKey = printedIso ? 'printed' : (fromClave ? 'clave' : (fromCurp ? 'curp' : ''));
+			if ([printedIso, fromClave, fromCurp].filter(Boolean).some(function (v, i, a) { return v !== a[0]; })) {
 				warnings.push(T.dateMismatch);
 			}
 		}
+		var dates = [];
+		if (printedIso) { dates.push({ key: 'printed', label: T.srcPrintedDate, raw: printed.raw, fmt: T.fmtDate, value: printedIso, box: printed.box }); }
+		if (fromCurp) { dates.push({ key: 'curp', label: T.srcCurpDate, raw: curp.value.substr(4, 6), fmt: T.fmtYmd, value: fromCurp, box: keySlice(curp, 4, 10) }); }
+		if (fromClave) { dates.push({ key: 'clave', label: T.srcClaveDate, raw: clave.value.substr(6, 6), fmt: T.fmtYmd, value: fromClave, box: keySlice(clave, 6, 12) }); }
+		dates.forEach(function (d) { d.chosen = d.key === dateKey; });
+		r.fecha = (dates.filter(function (d) { return d.chosen; })[0] || { value: '' }).value;
+		r.src.fecha = dates;
 
-		var sex = (curp && curp.valid ? curp.value.charAt(10) : null) || pick(function (p) { return p.printedSex; }) || (clave ? clave.sex : null) || (curp ? curp.value.charAt(10) : null);
+		var printedSex = pick(function (p) { return p.printedSex; });
+		var sexKey = curp && curp.valid ? 'curp' : (printedSex ? 'printed' : (clave ? 'clave' : (curp ? 'curp' : '')));
+		var sexes = [];
+		if (curp) { sexes.push({ key: 'curp', label: T.srcCurpSex, raw: curp.value.charAt(10), box: keySlice(curp, 10, 11) }); }
+		if (printedSex) { sexes.push({ key: 'printed', label: T.srcPrintedSex, raw: printedSex.value, box: printedSex.box }); }
+		if (clave) { sexes.push({ key: 'clave', label: T.srcClaveSex, raw: clave.sex, box: keySlice(clave, 14, 15) }); }
+		sexes.forEach(function (x) { x.chosen = x.key === sexKey; x.value = x.raw; });
+		var sex = (sexes.filter(function (x) { return x.chosen; })[0] || {}).raw;
 		if (sex === 'H') { r.sexo = '0'; } else if (sex === 'M') { r.sexo = '1'; } else if (sex === 'X') { warnings.push(T.sexX); }
+		r.src.sexo = sexes;
 
 		r.warnings = warnings;
 		return r;
 	}
 
-	/** Face photo: left of the NOMBRE label, sized from the label height; falls back to the card layout. */
+	/** Face photo {url, box, estimated}: left of the NOMBRE label, sized from the label height; falls back to the card layout. */
 	function cropPhoto(img, anchor) {
 		var W = img.naturalWidth, H = img.naturalHeight, x0, y0, w, h;
 		if (anchor) {
@@ -322,7 +399,7 @@
 		var c = document.createElement('canvas');
 		c.width = Math.round(w); c.height = Math.round(h);
 		c.getContext('2d').drawImage(img, x0, y0, w, h, 0, 0, c.width, c.height);
-		return c.toDataURL('image/png');
+		return { url: c.toDataURL('image/png'), box: { x0: x0, y0: y0, x1: x0 + w, y1: y0 + h }, estimated: !anchor };
 	}
 
 	/**
@@ -345,9 +422,12 @@
 		var next = function () {
 			if (i >= list.length) { return restore(); }
 			var c = list[i++];
-			return worker.recognize(c.canvas, { rectangle: rectFor(c) }).then(function (r) {
+			var rect = rectFor(c);
+			return worker.recognize(c.canvas, { rectangle: rect }).then(function (r) {
 				var curp = findCurp(String(r.data.text || '').toUpperCase().replace(/CURP/g, ' '));
 				if (curp) {
+					curp.box = { x0: rect.left / c.scale, y0: rect.top / c.scale, x1: (rect.left + rect.width) / c.scale, y1: (rect.top + rect.height) / c.scale };
+					curp.exact = false;
 					passes.push({ curp: curp, clave: null, printedDate: null, printedSex: null, names: { anchor: null, lines: [] } });
 					if (curp.valid) { return restore(); }
 				}
@@ -369,24 +449,86 @@
 		$el.css('background-color', '#fff8c4').one('input change', function () { $(this).css('background-color', ''); });
 	}
 
-	function showResult(s, r, photo, T) {
-		var sexLabel = r.sexo === '0' ? T.male : (r.sexo === '1' ? T.female : '');
-		var fecha = r.fecha ? r.fecha.split('-').reverse().join('/') : '';
-		var rows = [
-			['nombre', T.nombre, r.nombre], ['paterno', T.paterno, r.paterno], ['materno', T.materno, r.materno],
-			['fecha', T.fecha, fecha], ['sexo', T.sexo, sexLabel], ['curp', T.curp, r.curp]
-		];
-		var html = '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;text-align:left;font-size:14px;">';
-		if (photo) {
-			html += '<label style="flex:0 0 120px;text-align:center;cursor:pointer;"><img src="' + photo + '" style="width:120px;border-radius:6px;border:1px solid #ddd;"><br>'
-				+ '<input type="checkbox" class="pio-apply" data-k="foto" checked> ' + esc(T.foto) + '</label>';
-		}
-		html += '<table style="flex:1 1 260px;border-collapse:collapse;">';
+	var FIELD_COLORS = { nombre: '#d81b60', paterno: '#1e88e5', materno: '#43a047', fecha: '#ef6c00', sexo: '#8e24aa', curp: '#00897b', foto: '#6d4c41' };
+
+	function dmy(isoDate) { return isoDate ? isoDate.split('-').reverse().join('/') : ''; }
+
+	function badge(n, color) {
+		return '<span style="display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:' + color
+			+ ';color:#fff;font-size:11px;font-weight:700;text-align:center;margin-right:4px;">' + n + '</span>';
+	}
+
+	/** ID image with a numbered box per field; boxes of the other fields fade while one row is hovered. */
+	function drawLayout(canvas, img, rows, active) {
+		var x = canvas.getContext('2d'), k = canvas.width / img.naturalWidth, lw = Math.max(2, canvas.width / 320), fs = Math.max(12, Math.round(canvas.width / 42));
+		x.clearRect(0, 0, canvas.width, canvas.height);
+		x.drawImage(img, 0, 0, canvas.width, canvas.height);
 		rows.forEach(function (row) {
-			var has = row[2] !== '';
-			html += '<tr style="border-bottom:1px solid #eee;"><td style="padding:4px 6px;width:24px;"><input type="checkbox" class="pio-apply" data-k="' + row[0] + '"' + (has ? ' checked' : ' disabled') + '></td>'
-				+ '<td style="padding:4px 6px;color:#777;white-space:nowrap;">' + esc(row[1]) + '</td>'
-				+ '<td style="padding:4px 6px;font-weight:600;word-break:break-all;">' + (has ? esc(row[2]) : '<span style="color:#bbb;font-weight:400;">' + esc(T.none) + '</span>') + '</td></tr>';
+			row.boxes.forEach(function (bx) {
+				var on = !active || active === row.key;
+				var X = bx.box.x0 * k, Y = bx.box.y0 * k, W = (bx.box.x1 - bx.box.x0) * k, H = (bx.box.y1 - bx.box.y0) * k;
+				x.globalAlpha = on ? 1 : 0.2;
+				x.lineWidth = on && active ? lw * 1.6 : lw;
+				x.strokeStyle = row.color;
+				x.setLineDash(bx.dashed ? [lw * 3, lw * 2] : []);
+				x.strokeRect(X - lw, Y - lw, W + 2 * lw, H + 2 * lw);
+				x.setLineDash([]);
+				x.font = 'bold ' + fs + 'px sans-serif';
+				var tw = x.measureText(String(row.n)).width + fs * 0.6, ty = Math.max(0, Y - lw - fs * 1.2);
+				x.fillStyle = row.color;
+				x.fillRect(X - lw, ty, tw, fs * 1.2);
+				x.fillStyle = '#fff';
+				x.fillText(String(row.n), X - lw + fs * 0.3, ty + fs * 0.95);
+			});
+		});
+		x.globalAlpha = 1;
+	}
+
+	function showResult(s, img, r, photo, T) {
+		var sexLabel = r.sexo === '0' ? T.male : (r.sexo === '1' ? T.female : '');
+		var fields = [
+			['nombre', T.nombre, r.nombre], ['paterno', T.paterno, r.paterno], ['materno', T.materno, r.materno],
+			['fecha', T.fecha + ' (' + T.fmtDate + ')', dmy(r.fecha)], ['sexo', T.sexo, sexLabel], ['curp', T.curp, r.curp]
+		];
+		if (photo) { fields.push(['foto', T.foto, '']); }
+
+		var rows = fields.map(function (f, i) {
+			var key = f[0], src = r.src[key], boxes = [], where = '';
+			var located = function (b) { return b ? '' : ' <span style="color:#bbb;">(' + esc(T.notMarked) + ')</span>'; };
+			if (key === 'fecha' || key === 'sexo') {
+				var chosen = src.filter(function (x) { return x.chosen; })[0];
+				src.slice().sort(function (a, b) { return b.chosen - a.chosen; }).forEach(function (x) {
+					if (x.box) { boxes.push({ box: x.box, dashed: !x.chosen }); }
+					var mark = x.chosen ? '' : (chosen && x.value === chosen.value ? ' &#10003;' : ' <span style="color:#c62828;">&#8800; ' + esc(T.differs) + '</span>');
+					where += '<div style="' + (x.chosen ? 'font-weight:600;color:#333;' : 'color:#777;') + '">' + esc(x.label) + ': ' + esc(x.raw)
+						+ (x.fmt ? ' <span style="color:#999;font-weight:400;">(' + esc(x.fmt) + ')</span>' : '') + mark + located(x.box) + '</div>';
+				});
+			} else if (key === 'foto') {
+				boxes.push({ box: photo.box, dashed: photo.estimated });
+				where = esc(photo.estimated ? T.srcPhotoEst : T.srcPhoto);
+			} else if (f[2] !== '') {
+				if (src.box) { boxes.push({ box: src.box, dashed: false }); }
+				where = esc(key === 'curp' ? T.srcCurp : T.srcName) + (key === 'curp' && src.fixed ? ' <span style="color:#999;">(' + esc(T.srcCurpFixed) + ')</span>' : '') + located(src.box);
+			}
+			return { key: key, n: i + 1, color: FIELD_COLORS[key], label: f[1], value: f[2], boxes: boxes, where: where };
+		});
+
+		var html = '<canvas class="pio-layout" style="display:block;max-width:100%;max-height:340px;margin:0 auto 4px;border-radius:6px;"></canvas>'
+			+ '<div style="font-size:12px;color:#888;margin-bottom:8px;">' + esc(T.hoverHint) + '</div>'
+			+ '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;text-align:left;font-size:14px;">';
+		if (photo) {
+			html += '<label style="flex:0 0 110px;text-align:center;cursor:pointer;"><img src="' + photo.url + '" style="width:110px;border-radius:6px;border:2px solid ' + FIELD_COLORS.foto + ';"><br>'
+				+ '<input type="checkbox" class="pio-apply" data-k="foto" checked> ' + badge(rows[rows.length - 1].n, FIELD_COLORS.foto) + esc(T.foto) + '</label>';
+		}
+		html += '<table style="flex:1 1 380px;border-collapse:collapse;">'
+			+ '<tr style="font-size:12px;color:#999;"><td></td><td></td><td></td><td style="padding:2px 6px;">' + esc(T.source) + '</td></tr>';
+		rows.forEach(function (row) {
+			if (row.key === 'foto') { return; }
+			var has = row.value !== '';
+			html += '<tr data-k="' + row.key + '" style="border-bottom:1px solid #eee;cursor:default;"><td style="padding:4px 6px;width:24px;vertical-align:top;"><input type="checkbox" class="pio-apply" data-k="' + row.key + '"' + (has ? ' checked' : ' disabled') + '></td>'
+				+ '<td style="padding:4px 6px;color:#777;white-space:nowrap;vertical-align:top;">' + badge(row.n, row.color) + esc(row.label) + '</td>'
+				+ '<td style="padding:4px 6px;font-weight:600;word-break:break-all;vertical-align:top;">' + (has ? esc(row.value) : '<span style="color:#bbb;font-weight:400;">' + esc(T.none) + '</span>') + '</td>'
+				+ '<td style="padding:4px 6px;font-size:12px;color:#555;vertical-align:top;">' + row.where + '</td></tr>';
 		});
 		html += '</table></div>';
 		if (r.warnings.length) {
@@ -396,8 +538,24 @@
 		html += '<div style="margin-top:8px;font-size:12px;color:#777;">' + esc(T.review) + '</div>';
 
 		Swal.fire({
-			title: esc(T.title), html: html, width: 620, showCancelButton: true,
+			title: esc(T.title), html: html, width: 860, showCancelButton: true,
 			confirmButtonText: esc(T.apply), cancelButtonText: esc(T.cancel), focusConfirm: false,
+			didOpen: function (popup) {
+				var canvas = $(popup).find('.pio-layout')[0], active = null;
+				var scale = Math.min(1, 1000 / img.naturalWidth);
+				canvas.width = Math.round(img.naturalWidth * scale);
+				canvas.height = Math.round(img.naturalHeight * scale);
+				var redraw = function (k) { active = k; drawLayout(canvas, img, rows, k); };
+				redraw(null);
+				$(popup).find('tr[data-k], label:has(.pio-apply[data-k="foto"])')
+					.on('mouseenter', function () { redraw($(this).data('k') || 'foto'); })
+					.on('mouseleave', function () { redraw(null); })
+					.on('click', function (e) {
+						if ($(e.target).is('input')) { return; }
+						var k = $(this).data('k') || 'foto';
+						redraw(active === k ? null : k);
+					});
+			},
 			preConfirm: function () {
 				var on = {};
 				$(Swal.getHtmlContainer()).find('.pio-apply:checked').each(function () { on[$(this).data('k')] = true; });
@@ -412,7 +570,7 @@
 			if (on.fecha) { setField($('#fechanac' + s), r.fecha); }
 			if (on.sexo) { setField($('#sexo' + s), r.sexo); }
 			if (on.curp) { setField($('#curp' + s), r.curp); }
-			if (on.foto && photo && typeof playerPhotoLoadDataUrl === 'function') { playerPhotoLoadDataUrl(s, photo); }
+			if (on.foto && photo && typeof playerPhotoLoadDataUrl === 'function') { playerPhotoLoadDataUrl(s, photo.url); }
 		});
 	}
 
@@ -438,7 +596,7 @@
 					Swal.fire({ icon: 'warning', title: '', text: T.nothing });
 					return;
 				}
-				showResult(s, r, cropPhoto(img, r.anchor), T);
+				showResult(s, img, r, cropPhoto(img, r.anchor), T);
 			});
 		}).catch(function (e) {
 			console.log('playerIdOcr', e);
