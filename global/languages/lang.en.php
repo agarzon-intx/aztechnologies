@@ -892,6 +892,7 @@
 	$lang['933-18'] = 'Photo';
 	$lang['933-19'] = 'The text reader could not be loaded. Check the internet connection.';
 	$lang['933-20'] = 'Not found';
+	$lang['933-21'] = 'The name read does not match the CURP; please check it.';
 	$lang['934'] = 'Max 1000 KB';
 	$lang['935'] = 'Upload Signature';
 	$lang['936'] = 'Max 100 KB';

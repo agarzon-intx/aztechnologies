@@ -26,6 +26,7 @@ if (!function_exists('az_player_id_ocr_button')) {
 			'foto' => $t('933-18', 'Photo'),
 			'loadError' => $t('933-19', 'The text reader could not be loaded. Check the internet connection.'),
 			'none' => $t('933-20', 'Not found'),
+			'nameMismatch' => $t('933-21', 'The name read does not match the CURP; please check it.'),
 			'nombre' => $t('907', 'Name'),
 			'paterno' => $t('919', 'Last name'),
 			'materno' => $t('920', 'Second last name'),

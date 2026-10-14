@@ -186,7 +186,14 @@
 		});
 		var text = lines.map(function (l) { return l.text; }).join('\n');
 		var sexM = text.match(/\bSEXO\s*[:.]?\s*([HM])\b/);
+		var curpLabel = null;
+		lines.forEach(function (l) {
+			l.words.forEach(function (w) {
+				if (!curpLabel && /^CURP$/.test(w.t)) { curpLabel = w; }
+			});
+		});
 		return {
+			curpLabel: curpLabel,
 			curp: findCurp(text),
 			clave: findClave(text),
 			printedDate: findPrintedDate(text),
@@ -194,6 +201,33 @@
 			names: findNames(lines),
 			confidence: data.confidence || 0
 		};
+	}
+
+	var NAME_PARTICLES = /^(DA|DAS|DE|DEL|DER|DI|DIE|DD|EL|LA|LOS|LAS|LE|LES|MAC|MC|VAN|VON|Y)$/;
+
+	function plain(s) {
+		return String(s || '').toUpperCase().replace(/[ÁÀÄÂ]/g, 'A').replace(/[ÉÈËÊ]/g, 'E').replace(/[ÍÌÏÎ]/g, 'I')
+			.replace(/[ÓÒÖÔ]/g, 'O').replace(/[ÚÙÜÛ]/g, 'U').replace(/[^A-ZÑ ]/g, '').trim();
+	}
+
+	function mainWord(s, skipCommon) {
+		var w = plain(s).split(/\s+/).filter(function (x) { return x && !NAME_PARTICLES.test(x); });
+		if (skipCommon && w.length > 1 && /^(JOSE|J|MARIA|MA)$/.test(w[0])) { w.shift(); }
+		return w[0] || '';
+	}
+
+	/** CURP characters that come from the name: index => letter (positions 1-4 and 14-16). */
+	function curpFromNames(paterno, materno, nombre) {
+		var p = mainWord(paterno, false), m = mainWord(materno, false), n = mainWord(nombre, true);
+		if (!p || !n) { return null; }
+		var x = function (c) { return c === 'Ñ' ? 'X' : c; };
+		var inner = function (w, vowel) {
+			for (var i = 1; i < w.length; i++) {
+				if (/[AEIOU]/.test(w[i]) === vowel) { return x(w[i]); }
+			}
+			return 'X';
+		};
+		return { 0: x(p[0]), 1: inner(p, true), 2: m ? x(m[0]) : 'X', 3: x(n[0]), 13: inner(p, false), 14: m ? inner(m, false) : 'X', 15: inner(n, false) };
 	}
 
 	/** Combine the OCR passes and cross-check fields. */
@@ -229,6 +263,23 @@
 			r.paterno = L[0];
 		}
 		if (!r.nombre || !r.paterno) { warnings.push(T.noNames); }
+
+		var fromNames = curpFromNames(r.paterno, r.materno, r.nombre);
+		if (curp && fromNames) {
+			var idx = Object.keys(fromNames), differs = idx.some(function (k) { return curp.value.charAt(k) !== fromNames[k]; });
+			if (!curp.valid && differs) {
+				var fixed = curp.value.split('');
+				idx.forEach(function (k) { fixed[k] = fromNames[k]; });
+				fixed = fixed.join('');
+				if (curpCheckDigit(fixed.slice(0, 17)) === fixed.charAt(17)) {
+					curp = { value: fixed, valid: true };
+					r.curp = fixed;
+					warnings = warnings.filter(function (w) { return w !== T.curpCheck; });
+					differs = false;
+				}
+			}
+			if (curp.valid && differs) { warnings.push(T.nameMismatch); }
+		}
 
 		var printed = pick(function (p) { return p.printedDate; });
 		var fromCurp = curp ? curpBirth(curp.value) : null;
@@ -270,6 +321,39 @@
 		c.width = Math.round(w); c.height = Math.round(h);
 		c.getContext('2d').drawImage(img, x0, y0, w, h, 0, 0, c.width, c.height);
 		return c.toDataURL('image/png');
+	}
+
+	/**
+	 * When no valid CURP was read, re-read only the strip by the CURP label (same line or the line below)
+	 * with a letters/digits whitelist, which cuts most of the noise from the security background.
+	 */
+	function retryCurp(worker, passes, canvases) {
+		var have = passes.some(function (p) { return p.curp && p.curp.valid; });
+		var label = null;
+		passes.forEach(function (p) { label = label || p.curpLabel; });
+		if (have || !label) { return Promise.resolve(); }
+		var u = label.b.y1 - label.b.y0;
+		var list = canvases.slice(), i = 0;
+		var rectFor = function (c) {
+			var k = c.scale, W = c.canvas.width, H = c.canvas.height;
+			var left = Math.max(0, (label.b.x0 - 0.5 * u) * k), top = Math.max(0, (label.b.y0 - 0.4 * u) * k);
+			return { left: Math.round(left), top: Math.round(top), width: Math.round(Math.min(W - left, 26 * u * k)), height: Math.round(Math.min(H - top, 3.4 * u * k)) };
+		};
+		var restore = function () { return worker.setParameters({ tessedit_char_whitelist: '' }); };
+		var next = function () {
+			if (i >= list.length) { return restore(); }
+			var c = list[i++];
+			return worker.recognize(c.canvas, { rectangle: rectFor(c) }).then(function (r) {
+				var curp = findCurp(String(r.data.text || '').toUpperCase().replace(/CURP/g, ' '));
+				if (curp) {
+					passes.push({ curp: curp, clave: null, printedDate: null, printedSex: null, names: { anchor: null, lines: [] } });
+					if (curp.valid) { return restore(); }
+				}
+				return next();
+			});
+		};
+		return worker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÑ0123456789 ' }).then(next, function () { return next(); })
+			.catch(function (e) { console.log('playerIdOcr curp retry', e); return restore(); });
 	}
 
 	/* ---------- UI ---------- */
@@ -344,6 +428,8 @@
 				var p = passes[0];
 				if (p.curp && p.curp.valid && p.names.lines.length >= 2 && (p.printedDate || p.clave)) { return; }
 				return worker.recognize(soft.canvas).then(function (r2) { passes.push(parse(r2.data, soft.scale)); });
+			}).then(function () {
+				return retryCurp(worker, passes, [strong, soft]);
 			}).then(function () {
 				var r = merge(passes, T);
 				if (!r.curp && !r.nombre && !r.paterno && !r.fecha) {

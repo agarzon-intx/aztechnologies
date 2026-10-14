@@ -892,6 +892,7 @@
 	$lang['933-18'] = 'Foto';
 	$lang['933-19'] = 'No se pudo cargar el lector de texto. Revise la conexión a internet.';
 	$lang['933-20'] = 'No encontrado';
+	$lang['933-21'] = 'El nombre leído no coincide con la CURP; verifíquelo.';
 	$lang['934'] = ' Max 1000 KB';
 	$lang['935'] = 'Subir Firma';
 	$lang['936'] = ' Max 100 KB';
