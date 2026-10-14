@@ -26,6 +26,7 @@ if (!defined('APP_SITE_ROOT')) {
 	}
 }
 	require("membersite_config.php");
+	require_once dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'player_id_ocr.inc.php';
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('playersManagementEdit.php');
 	
@@ -387,6 +388,7 @@ $htmlPlayer .= '													</select>
 									</div>
 								</div>
 							</div>
+								<div style="text-align: center;">' . az_player_id_ocr_button($lang, '') . '</div>
 							</div>
 							<div ' . $idPdfStyle . '>
 								<h4>' . $lang['948'] . '</h4>

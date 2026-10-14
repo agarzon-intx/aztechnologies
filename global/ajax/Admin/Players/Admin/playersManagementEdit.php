@@ -24,6 +24,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'player_id_ocr.inc.php';
 	$schema = $Config->getSchema();
 	$sessionstat = $fgmembersite->CheckLogin('playersManagementEdit.php');
 	
@@ -493,6 +494,7 @@ $htmlPlayer .= '													</select>
 										</div>
 									</div>
 								</div>
+									<div style="text-align: center;">' . az_player_id_ocr_button($lang, 'E') . '</div>
 								</div>
 								<div ' . $idPdfStyle . '>
 									<h4>' . $lang['948'] . '</h4>

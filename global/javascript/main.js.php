@@ -2568,8 +2568,20 @@ document.addEventListener('wheel', function (e) {
 }, {passive: false});
 
 function playerPhotoLoadFile(input, suffix) {
+	if (!input.files || !input.files[0] || !playerPhotoFrame(suffix).length) {
+		return;
+	}
+	var reader = new FileReader();
+	reader.onload = function (e) {
+		playerPhotoLoadDataUrl(suffix, e.target.result);
+	};
+	reader.readAsDataURL(input.files[0]);
+}
+
+/** Put a new picture (data URL) in the frame; it is uploaded on save like a chosen file. */
+function playerPhotoLoadDataUrl(suffix, dataUrl) {
 	var $frame = playerPhotoFrame(suffix);
-	if (!input.files || !input.files[0] || !$frame.length) {
+	if (!$frame.length) {
 		return;
 	}
 	var cfg = playerPhotoCfg($frame);
@@ -2577,11 +2589,23 @@ function playerPhotoLoadFile(input, suffix) {
 	$(cfg.tools).hide();
 	$(cfg.target).val('');
 	$(cfg.preview).html('');
-	var reader = new FileReader();
-	reader.onload = function (e) {
-		$frame.find('img').first().show().attr('src', e.target.result);
-	};
-	reader.readAsDataURL(input.files[0]);
+	var img = $frame.find('img').first().show()[0];
+	if (img.getAttribute('src') === dataUrl && img.complete) {
+		playerPhotoInit(img);
+	} else {
+		img.setAttribute('src', dataUrl);
+	}
+}
+
+/** "Read ID" button on the player forms: loads javascript/playerIdOcr.js on first use. */
+function playerIdOcr(suffix, btn) {
+	var T = $(btn).data('ocr') || {};
+	var run = function () { window.playerIdOcrRun(suffix, T); };
+	if (window.playerIdOcrRun) {
+		run();
+		return;
+	}
+	$.ajax({ url: $(btn).data('src'), dataType: 'script', cache: true }).done(run).fail(function () { alert(T.loadError || MSG_AJAX_GENERIC); });
 }
 
 /** Flush several frames in order (suffixes or selectors), then done(). */
