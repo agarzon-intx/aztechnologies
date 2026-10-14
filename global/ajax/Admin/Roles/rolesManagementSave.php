@@ -33,12 +33,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$id = (int) ($_POST['id'] ?? 0);
 	$name = trim((string) ($_POST['name'] ?? ''));
 	$desc = trim((string) ($_POST['desc'] ?? ''));
+	$type = (int) ($_POST['type'] ?? -1);
 	$valid = az_role_menu_keys($lang);
 	$menus = array_values(array_unique(array_intersect(array_map('trim', explode(',', (string) ($_POST['menus'] ?? ''))), $valid)));
 	$user = (string) ($_SESSION[$Config->getAlias() . 'username'] ?? '');
 
 	if ($name === '' || mb_strlen($name, 'UTF-8') > 10) {
 		$retunData['message'] = $lang['rol009'];
+		echo json_encode($retunData);
+		exit;
+	}
+	if (!array_key_exists($type, az_role_types($lang))) {
+		$retunData['message'] = $lang['rol023'];
 		echo json_encode($retunData);
 		exit;
 	}
@@ -64,9 +70,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$descSql = $desc === '' ? 'NULL' : $q(mb_substr($desc, 0, 200, 'UTF-8'));
 	if ($id > 0) {
-		$ok = $db->query("UPDATE $schema.role SET Role_Name = " . $q($name) . ", Role_Desc = $descSql, Update_Date = NOW(), Update_User = " . $q($user) . " WHERE Role_ID = $id");
+		$ok = $db->query("UPDATE $schema.role SET Role_Name = " . $q($name) . ", Role_Desc = $descSql, Role_Type = $type, Update_Date = NOW(), Update_User = " . $q($user) . " WHERE Role_ID = $id");
 	} else {
-		$ok = $db->query("INSERT INTO $schema.role (Role_Name, Role_Desc, Create_User) VALUES (" . $q($name) . ", $descSql, " . $q($user) . ")");
+		$ok = $db->query("INSERT INTO $schema.role (Role_Name, Role_Desc, Role_Type, Create_User) VALUES (" . $q($name) . ", $descSql, $type, " . $q($user) . ")");
 		$id = $ok ? (int) $db->insert_id : 0;
 	}
 	if ($ok && $id > 0) {

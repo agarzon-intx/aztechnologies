@@ -33,7 +33,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		function validateUserAdd(name, lastname, lastname2, phone, email, user, password, salt){
 			var error = '" . $lang['js0000'] . "';
 			var count = 0;
-			if($('#equipor option').length == 0){
+			if(typeof userManagementRoleType === 'function' && userManagementRoleType() === 1 && $('#equipor option').filter(function(){ return this.value !== '0' && this.value !== '-1'; }).length == 0){
     		    count++;
     		    error = error + '\\n' + count +  '.- " . $lang['849'] . "';
     	    }
@@ -49,7 +49,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		    console.log('validateUserEdit');
 			var error = '" . $lang['js0000'] . "';
 			var count = 0;
-			if($('#equipor option').length == 0){
+			if(typeof userManagementRoleType === 'function' && userManagementRoleType() === 1 && $('#equipor option').filter(function(){ return this.value !== '0' && this.value !== '-1'; }).length == 0){
     		    count++;
     		    error = error + '\\n' + count +  '.- " . $lang['849'] . "';
     	    }

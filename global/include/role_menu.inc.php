@@ -138,6 +138,53 @@ if (!function_exists('az_role_menu_catalog')) {
 		})));
 	}
 
+	/** Role types: 0 Admin and 2 Referee users get no teams; 1 Coach users get teams / institutions. */
+	function az_role_types($lang)
+	{
+		return array(0 => $lang['rol024'], 1 => $lang['rol025'], 2 => $lang['rol026']);
+	}
+
+	/** Account type given by a set of roles: Admin wins over Coach, Coach over Referee; null without roles. */
+	function az_role_account_type($Config, $schema, $roleIds)
+	{
+		$ids = array_filter(array_map('intval', (array) $roleIds), function ($id) {
+			return $id > 0;
+		});
+		if (!$ids) {
+			return null;
+		}
+		$types = array();
+		$r = $Config->query("SELECT DISTINCT Role_Type FROM $schema.role WHERE Role_ID IN (" . implode(',', $ids) . ")");
+		while ($r && ($row = $r->fetch_assoc())) {
+			$types[] = (int) $row['Role_Type'];
+		}
+		foreach (array(0, 1, 2) as $type) {
+			if (in_array($type, $types, true)) {
+				return $type;
+			}
+		}
+		return null;
+	}
+
+	/** usuarios_equipo value for an account type: "0" league, "-1" referee, or the posted teams / institutions. */
+	function az_role_equipo($type, $postedEquipo)
+	{
+		if ($type === 0) {
+			return '0';
+		}
+		if ($type === 2) {
+			return '-1';
+		}
+		$keep = array();
+		foreach (explode(',', (string) $postedEquipo) as $token) {
+			$token = trim($token);
+			if (preg_match('/^(i\d+|[1-9]\d*)$/', $token)) {
+				$keep[$token] = $token;
+			}
+		}
+		return implode(',', $keep);
+	}
+
 	/** Existing Role_IDs among $roleIds. */
 	function az_valid_role_ids($Config, $schema, $roleIds)
 	{
@@ -158,12 +205,12 @@ if (!function_exists('az_role_menu_catalog')) {
 	/** Role checkboxes for the user create / edit forms. */
 	function az_user_roles_html($Config, $schema, $lang, $selected = array())
 	{
-		$r = $Config->query("SELECT Role_ID, Role_Name, Role_Desc FROM $schema.role ORDER BY Role_Name");
+		$r = $Config->query("SELECT Role_ID, Role_Name, Role_Desc, Role_Type FROM $schema.role ORDER BY Role_Type, Role_Name");
 		$boxes = '';
 		while ($r && ($row = $r->fetch_assoc())) {
 			$id = (int) $row['Role_ID'];
 			$boxes .= '<div class="form-check form-check-inline" title="' . htmlspecialchars((string) $row['Role_Desc'], ENT_QUOTES, 'UTF-8') . '">
-								<input class="form-check-input um-role" type="checkbox" id="umRole' . $id . '" value="' . $id . '"' . (in_array($id, $selected, true) ? ' checked' : '') . '>
+								<input class="form-check-input um-role" type="checkbox" id="umRole' . $id . '" value="' . $id . '" data-type="' . (int) $row['Role_Type'] . '"' . (in_array($id, $selected, true) ? ' checked' : '') . '>
 								<label class="form-check-label" for="umRole' . $id . '">' . htmlspecialchars((string) $row['Role_Name'], ENT_QUOTES, 'UTF-8') . '</label>
 							</div>';
 		}
@@ -171,13 +218,14 @@ if (!function_exists('az_role_menu_catalog')) {
 			$boxes = '<span class="text-secondary text-xs">' . htmlspecialchars($lang['rol017'], ENT_QUOTES, 'UTF-8') . '</span>';
 		}
 		return '<div class="row">
-						<div class="col-12" id="umRoles" data-required-msg="' . htmlspecialchars($lang['rol021'], ENT_QUOTES, 'UTF-8') . '">
+						<div class="col-12" id="umRoles" data-required-msg="' . htmlspecialchars($lang['rol021'], ENT_QUOTES, 'UTF-8') . '" data-teams-msg="' . htmlspecialchars($lang['rol022'], ENT_QUOTES, 'UTF-8') . '">
 							<h6 class="mb-1">' . htmlspecialchars($lang['rol014'], ENT_QUOTES, 'UTF-8') . ' *</h6>
 							' . $boxes . '
 							<div id="umRolesError" class="error" style="color: red;"></div>
 							<p class="text-secondary text-xs mb-3">' . htmlspecialchars($lang['rol015'], ENT_QUOTES, 'UTF-8') . '</p>
 						</div>
-					</div>';
+					</div>
+					<script type="text/javascript">setTimeout(function () { if (typeof userManagementApplyRoleType === "function") { userManagementApplyRoleType(); } }, 0);</script>';
 	}
 
 	/**

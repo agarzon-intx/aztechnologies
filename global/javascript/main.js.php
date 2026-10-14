@@ -1385,11 +1385,10 @@ function userManagementCreateUser(name, lastname, lastname2, phone, email, user,
 		return;
 	}
 	//console.log('userManagementCreateUser name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', phone = ' + phone + ', email = ' + email + ', team = ' + team + ', user = ' + user + ', password = ' + password + ', salt = ' + salt);
-	var equipos = '';
-	$("#equipor option").each(function(){
-        equipos = equipos + $(this).val() + ',';
-    });
-    equipos = equipos.slice(0, -1);
+	var equipos = userManagementRoleEquipo();
+	if (equipos === null) {
+		return;
+	}
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
@@ -1614,12 +1613,10 @@ function userManagementEditUser(userid, name, lastname, lastname2, phone, email,
 		return;
 	}
 	console.log('userManagementEditUser name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', phone = ' + phone + ', active = ' + active);
-	var equipos = '';
-	$("#equipor option").each(function(){
-        equipos = equipos + $(this).val() + ',';
-    });
-    equipos = equipos.slice(0, -1);
-	
+	var equipos = userManagementRoleEquipo();
+	if (equipos === null) {
+		return;
+	}
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
@@ -1649,6 +1646,38 @@ function userManagementRolesOk(){
 	var ok = $('.um-role:checked').length > 0;
 	$('#umRolesError').text(ok ? '' : ($('#umRoles').data('required-msg') || ''));
 	return ok;
+}
+
+/** Account type of the checked roles: 0 Admin wins over 1 Coach, Coach over 2 Referee; null without roles. */
+function userManagementRoleType(){
+	var types = $('.um-role:checked').map(function(){ return String($(this).data('type')); }).get();
+	if (types.indexOf('0') >= 0) { return 0; }
+	if (types.indexOf('1') >= 0) { return 1; }
+	if (types.indexOf('2') >= 0) { return 2; }
+	return null;
+}
+
+/** Teams / institutions are only assigned to Coach users. */
+function userManagementApplyRoleType(){
+	$('.um-teams-block').toggle(userManagementRoleType() === 1);
+}
+
+$(document).on('change', '.um-role', function(){
+	$('#umRolesError').text('');
+	userManagementApplyRoleType();
+});
+
+/** usuarios_equipo value for the checked roles ("0", "-1" or the assigned teams / institutions); null when invalid. */
+function userManagementRoleEquipo(){
+	var type = userManagementRoleType();
+	if (type === 0) { return '0'; }
+	if (type === 2) { return '-1'; }
+	var list = $('#equipor option').map(function(){ return this.value; }).get().filter(function(v){ return v !== '0' && v !== '-1'; });
+	if (!list.length) {
+		$('#umRolesError').text($('#umRoles').data('teams-msg') || '');
+		return null;
+	}
+	return list.join(',');
 }
 
 function userManagementSelectedRoles(){
@@ -1715,7 +1744,7 @@ $(document).on('change', '#roleMenus .rm-menu', function(){
 
 function roleManagementSave(id){
 	var menus = $('#roleMenus .rm-menu:checked').map(function(){ return this.value; }).get().join(',');
-	roleManagementAjax('ajax/Admin/Roles/rolesManagementSave.php', {id: id, name: $('#roleName').val(), desc: $('#roleDesc').val(), menus: menus}, function (res) {
+	roleManagementAjax('ajax/Admin/Roles/rolesManagementSave.php', {id: id, name: $('#roleName').val(), desc: $('#roleDesc').val(), type: $('#roleType').val(), menus: menus}, function (res) {
 		if (res.status === '1') {
 			alert(res.message);
 			roleManagementShow();

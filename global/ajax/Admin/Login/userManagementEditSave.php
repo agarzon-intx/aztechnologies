@@ -37,6 +37,11 @@ $schema = $Config->getSchema();
 		echo json_encode(array('status' => '0', 'message' => 'role', 'dataUser' => $lang['rol021']));
 		exit;
 	}
+	$_POST['equipo'] = az_role_equipo(az_role_account_type($Config, $Config->getSchema(), $__roleIds), $_POST['equipo'] ?? '');
+	if ($_POST['equipo'] === '') {
+		echo json_encode(array('status' => '0', 'message' => 'teams', 'dataUser' => $lang['rol022']));
+		exit;
+	}
 	if($fgmembersite->UpdateUser()){
 		$__roleUser = $Config->query("SELECT username FROM " . $Config->getSchema() . ".usuarios WHERE id_user = " . (int) $_POST['userid']);
 		if ($__roleUser && ($__roleRow = $__roleUser->fetch_assoc())) {

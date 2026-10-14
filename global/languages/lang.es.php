@@ -1630,4 +1630,9 @@
 	$lang['rol019'] = 'Marcadores de mis equipos';
 	$lang['rol020'] = 'Mis equipos';
 	$lang['rol021'] = 'Selecciona al menos un rol';
+	$lang['rol022'] = 'Selecciona al menos un equipo o institución';
+	$lang['rol023'] = 'Tipo';
+	$lang['rol024'] = 'Administrador';
+	$lang['rol025'] = 'Entrenador';
+	$lang['rol026'] = 'Árbitro';
 ?>

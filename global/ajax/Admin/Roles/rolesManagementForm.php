@@ -36,21 +36,27 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$id = (int) ($_POST['id'] ?? 0);
 	$name = '';
 	$desc = '';
+	$type = 1;
 	$menus = array();
 	if ($id > 0) {
-		$r = $Config->query("SELECT Role_Name, Role_Desc FROM $schema.role WHERE Role_ID = $id");
+		$r = $Config->query("SELECT Role_Name, Role_Desc, Role_Type FROM $schema.role WHERE Role_ID = $id");
 		if (!$r || !($row = $r->fetch_assoc())) {
 			echo json_encode($retunData);
 			exit;
 		}
 		$name = $row['Role_Name'];
 		$desc = $row['Role_Desc'];
+		$type = (int) $row['Role_Type'];
 		$r = $Config->query("SELECT Menu_Element FROM $schema.roleMenu WHERE Role_ID = $id");
 		while ($r && ($row = $r->fetch_assoc())) {
 			$menus[] = (string) $row['Menu_Element'];
 		}
 	}
 
+	$typeOptions = '';
+	foreach (az_role_types($lang) as $value => $label) {
+		$typeOptions .= '<option value="' . $value . '"' . ($value === $type ? ' selected' : '') . '>' . $h($label) . '</option>';
+	}
 	$groupsHtml = '';
 	foreach (az_role_menu_catalog($lang) as $group) {
 		$items = $group['items'];
@@ -83,7 +89,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							<input type="text" class="form-control" id="roleName" maxlength="10" value="' . $h($name) . '">
 						</div>
 					</div>
-					<div class="col-12 col-md-9">
+					<div class="col-12 col-md-3">
+						<div class="input-group input-group-static mb-4">
+							<label>' . $h($lang['rol023']) . ' *</label>
+							<select class="form-control" id="roleType">' . $typeOptions . '</select>
+						</div>
+					</div>
+					<div class="col-12 col-md-6">
 						<div class="input-group input-group-static mb-4">
 							<label>' . $h($lang['rol004']) . '</label>
 							<input type="text" class="form-control" id="roleDesc" maxlength="200" value="' . $h($desc) . '">

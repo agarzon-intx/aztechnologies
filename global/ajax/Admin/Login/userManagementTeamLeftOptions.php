@@ -39,8 +39,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$optionsInnerHtml = '';
 
 	if ($mode === 'create') {
-		$optionsInnerHtml .= '<option value="0">' . htmlspecialchars($Config->liga, ENT_QUOTES, 'UTF-8') . '</option>';
-		$optionsInnerHtml .= '<option value="-1">' . htmlspecialchars($lang['10761'], ENT_QUOTES, 'UTF-8') . '</option>';
 		$optionsInnerHtml .= um_institution_options_html($Config, $schema, $lang);
 		$sql01 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, b.Activo AS Equipo_Activo, b.Equipo_Institucion, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza, a.Activo, " . um_team_institution_sql($Config, $schema, 'a') . " Equipo_Institucion
@@ -70,16 +68,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		}
 		$username = $qr->fetch_assoc()['username'];
 
-		$sql0 = "SELECT Equipo_ID FROM usuarios_equipo WHERE username = '" . $username . "' AND Equipo_ID = 0";
-		$result = $Config->query($sql0);
-		if ($result->num_rows == 0) {
-			$optionsInnerHtml .= '<option value="0">' . htmlspecialchars($Config->liga, ENT_QUOTES, 'UTF-8') . '</option>';
-		}
-		$sql0 = "SELECT Equipo_ID FROM usuarios_equipo WHERE username = '" . $username . "' AND Equipo_ID = -1";
-		$result = $Config->query($sql0);
-		if ($result->num_rows == 0) {
-			$optionsInnerHtml .= '<option value="-1">' . htmlspecialchars($lang['10761'], ENT_QUOTES, 'UTF-8') . '</option>';
-		}
 		$optionsInnerHtml .= um_institution_options_html($Config, $schema, $lang, um_user_institution_ids($Config, $schema, $userID));
 
 		$sql01 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, b.Activo AS Equipo_Activo, b.Equipo_Institucion, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 

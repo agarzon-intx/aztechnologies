@@ -1614,4 +1614,9 @@
 	$lang['rol019'] = 'My teams scores';
 	$lang['rol020'] = 'My teams';
 	$lang['rol021'] = 'Select at least one role';
+	$lang['rol022'] = 'Select at least one team or institution';
+	$lang['rol023'] = 'Type';
+	$lang['rol024'] = 'Admin';
+	$lang['rol025'] = 'Coach';
+	$lang['rol026'] = 'Referee';
 ?>

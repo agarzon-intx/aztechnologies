@@ -37,6 +37,11 @@ $schema = $Config->getSchema();
 		echo json_encode(array('status' => '0', 'message' => 'role', 'dataUser' => $lang['rol021']));
 		exit;
 	}
+	$_POST['equipo'] = az_role_equipo(az_role_account_type($Config, $Config->getSchema(), $__roleIds), $_POST['equipo'] ?? '');
+	if ($_POST['equipo'] === '') {
+		echo json_encode(array('status' => '0', 'message' => 'teams', 'dataUser' => $lang['rol022']));
+		exit;
+	}
 	if($fgmembersite->RegisterUser()){
 		az_save_user_roles($Config, $Config->getSchema(), SanitizeUsername($_POST['username']), $__roleIds);
         $htmlUserAdm .= $lang['812'] . "," . $lang['10118'] . "\n" . $lang['10119'];

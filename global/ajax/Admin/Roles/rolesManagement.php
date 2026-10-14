@@ -49,18 +49,20 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 									' . $th . '</th>
 									' . $th . $h($lang['rol003']) . '</th>
 									' . $th . $h($lang['rol004']) . '</th>
+									' . $th . $h($lang['rol023']) . '</th>
 									' . $th . $h($lang['rol005']) . '</th>
 									' . $th . $h($lang['103']) . '</th>
 									' . $th . $h($lang['rol013']) . '</th>
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="padding: 0.75rem 0.2rem;">' . $h($lang['809']) . '</th>
 								</thead>
 								<tbody>';
-	$r = $Config->query("SELECT r.Role_ID, r.Role_Name, r.Role_Desc,
+	$r = $Config->query("SELECT r.Role_ID, r.Role_Name, r.Role_Desc, r.Role_Type,
 				IFNULL(r.Update_Date, r.Create_Date) Changed, IFNULL(r.Update_User, r.Create_User) ChangedBy,
 				(SELECT COUNT(*) FROM $schema.roleMenu m WHERE m.Role_ID = r.Role_ID) Menus,
 				(SELECT COUNT(*) FROM $schema.usuarios_role u WHERE u.Role_ID = r.Role_ID) Users
 			FROM $schema.role r
-			ORDER BY r.Role_Name");
+			ORDER BY r.Role_Type, r.Role_Name");
+	$types = az_role_types($lang);
 	$count = 0;
 	while ($r && ($row = $r->fetch_assoc())) {
 		$id = (int) $row['Role_ID'];
@@ -68,6 +70,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$html .= '<td class="align-middle text-left"><img src="imagenes/eliminar.png" height="15" width="15" style="cursor: pointer;" onclick="roleManagementDelete(' . $id . ');"></td>'
 			. $td . $h($row['Role_Name']) . '</span></td>'
 			. $td . $h($row['Role_Desc']) . '</span></td>'
+			. $td . $h($types[(int) $row['Role_Type']] ?? '') . '</span></td>'
 			. $td . (int) $row['Menus'] . '</span></td>'
 			. $td . (int) $row['Users'] . '</span></td>'
 			. $td . $h($row['Changed']) . ' ' . $h($row['ChangedBy']) . '</span></td>'

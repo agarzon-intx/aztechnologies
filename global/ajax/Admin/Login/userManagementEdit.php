@@ -143,6 +143,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								</select>
 							</div>
 						</div>
+					</div>
+					' . az_user_roles_html($Config, $schema, $lang, az_user_role_ids($Config, $schema, $username)) . '
+					<div class="row um-teams-block">
 						' . um_assign_type_filter_html($lang, um_institutions_available($Config, $schema, $lang, $userInstitucionIds), count($userInstitucionIds) > 0) . '
 							<div class="um-team-filter-col col-4 col-xs-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
 							<div class="input-group input-group-static mb-4">
@@ -161,27 +164,11 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 						</div>
 					</div>
 					</div>
-					<div class="row">
+					<div class="row um-teams-block">
 						<div class="col-5 col-xs-5 col-sm-5 col-md-5 col-lg-5 col-xl-5 col-xxl-5">
 							<div class="input-group input-group-static mb-4">
 								<label for="lenguaje" class="ms-0">' . $lang['819'] . '</label>
 								<select class="form-control" id="equipol" size="5" multiple="multiple">';
-	$sql0 = "   SELECT Equipo_ID
-				FROM usuarios_equipo
-				where username = '" . $username . "'
-				    and Equipo_ID = 0;";
-	$result = $Config->query($sql0);
-	if ($result->num_rows == 0) {
-			$htmlUsers .= '<option value="0">' . $Config->liga . '</option>';
-	}
-	$sql0 = "   SELECT Equipo_ID
-				FROM usuarios_equipo
-				where username = '" . $username . "'
-				    and Equipo_ID = -1;";
-	$result = $Config->query($sql0);
-	if ($result->num_rows == 0) {
-			$htmlUsers .= '<option value="-1">' . $lang['10761'] . '</option>';
-	}
 	$htmlUsers .= um_institution_options_html($Config, $schema, $lang, $userInstitucionIds);
 	$sql01 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, b.Activo AS Equipo_Activo, b.Equipo_Institucion, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza, a.Activo, " . um_team_institution_sql($Config, $schema, 'a') . " Equipo_Institucion
@@ -221,30 +208,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							<div class="input-group input-group-static mb-4">
 								<label for="lenguaje" class="ms-0">' . $lang['819-1'] . '</label>
 								<select class="form-control" id="equipor" size="5" multiple="multiple">';
-	$sql1 = "   SELECT distinct Equipo_ID
-				FROM usuarios_equipo
-				where username = '" . $username . "'
-				    and Equipo_ID in (0);";
-	$result = $Config->query($sql1);
-	if ($result->num_rows > 0) {
-		// output data of each row
-		$selected = false;
-		while($row2 = $result->fetch_assoc()) {
-			$htmlUsers .= '<option value="0">' . $Config->liga . '</option>';
-		}
-	}
-	$sql1 = "   SELECT distinct Equipo_ID
-				FROM usuarios_equipo
-				where username = '" . $username . "'
-				    and Equipo_ID in (-1);";
-	$result = $Config->query($sql1);
-	if ($result->num_rows > 0) {
-		// output data of each row
-		$selected = false;
-		while($row2 = $result->fetch_assoc()) {
-			$htmlUsers .= '<option value="-1">' . $lang['10761'] . '</option>';
-		}
-	}
 	if ($userInstitucionIds) {
 		$htmlUsers .= um_institution_options_html($Config, $schema, $lang, array(), $userInstitucionIds);
 	}
@@ -275,7 +238,6 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							</div>
 						</div>
 					</div>
-					' . az_user_roles_html($Config, $schema, $lang, az_user_role_ids($Config, $schema, $username)) . '
 					<div class="row">
 						<div class="" >
 							<button type="button" class="btn btn-primary" onClick="validateUserEdit(' . $userID . ', $(\'#nombrea\').val(), $(\'#apellidopa\').val(), $(\'#apellidoma\').val(), $(\'#telefonoa\').val(), $(\'#emaila\').val(), $(\'#activo\').val(), $(\'#username\').val());" >' . $lang['0000'] . '</button>
