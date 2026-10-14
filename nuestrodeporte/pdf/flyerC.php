@@ -64,8 +64,8 @@
                 TIME_FORMAT(j.Horario, '%H:%i HRS') Horario,
                 DATE_FORMAT(j.Fecha, '%e de %M') Fecha
             FROM $schema.Juegos j
-            	left join $schema.Equipos l on j.Local_ID = l.Equipo_ID
-            	left join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID
+            	left join $schema.Equipos l on j.Local_ID = l.Equipo_ID and l.Torneo_ID = j.Torneo_ID
+            	left join $schema.Equipos v on j.Visitante_ID = v.Equipo_ID and v.Torneo_ID = j.Torneo_ID
                 join $schema.Jornada jo on jo.Jornada_ID = j.Jornada_ID
                 left join $schema.Campos jc on jc.Campo_ID = NULLIF(j.Campo_ID, 0)
                 left join $schema.Campos lc on lc.Campo_ID = l.Campo_ID

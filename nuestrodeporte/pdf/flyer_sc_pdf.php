@@ -194,7 +194,7 @@ if (!function_exists('flyer_sc_draw_page_header')) {
                     jo.Jornada_DescCorta,
                     ca.Categoria_Desc
             FROM $schema.Juegos j
-            	join $schema.Equipos l on j.Local_ID = l.Equipo_ID
+            	join $schema.Equipos l on j.Local_ID = l.Equipo_ID and l.Torneo_ID = j.Torneo_ID
                 join $schema.Jornada jo on jo.Jornada_ID = j.Jornada_ID
                 join $schema.Categorias ca on ca.Categoria_ID = l.Fuerza and j.Torneo_ID = ca.Torneo_ID
             where jo.Jornada_ID = $jornada and l.Fuerza = $categoria
