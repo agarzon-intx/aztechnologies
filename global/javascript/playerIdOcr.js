@@ -491,6 +491,11 @@
 
 	function dmy(isoDate) { return isoDate ? isoDate.split('-').reverse().join('/') : ''; }
 
+	/** "DE LA ROSA" -> "De La Rosa" (also after hyphens and apostrophes). */
+	function titleCase(s) {
+		return String(s || '').toLowerCase().replace(/(^|[\s\-'])(\S)/g, function (m, sep, c) { return sep + c.toUpperCase(); });
+	}
+
 	function badge(n, color) {
 		return '<span style="display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:' + color
 			+ ';color:#fff;font-size:11px;font-weight:700;text-align:center;margin-right:4px;">' + n + '</span>';
@@ -602,7 +607,7 @@
 			if (k === 'foto') { return '<img src="' + photo.url + '" style="max-width:70px;max-height:90px;border-radius:4px;border:2px solid ' + FIELD_COLORS.foto + ';">'; }
 			if (k === 'fecha') { return esc(dmy(r.fecha)); }
 			if (k === 'sexo') { return esc(r.sexo === '0' ? T.male : T.female); }
-			return esc(r[k]);
+			return esc(k === 'curp' ? r[k] : titleCase(r[k]));
 		}
 		function whereHtml(k) {
 			var located = function (b) { return b ? '' : ' <span style="color:#bbb;">(' + esc(T.notMarked) + ')</span>'; };
@@ -921,9 +926,9 @@
 		}).then(function (res) {
 			if (!res.isConfirmed) { return; }
 			var on = res.value || {};
-			if (on.nombre) { setField($('#nombre' + s), r.nombre); }
-			if (on.paterno) { setField($('#apellidop' + s), r.paterno); }
-			if (on.materno) { setField($('#apellidom' + s), r.materno); }
+			if (on.nombre) { setField($('#nombre' + s), titleCase(r.nombre)); }
+			if (on.paterno) { setField($('#apellidop' + s), titleCase(r.paterno)); }
+			if (on.materno) { setField($('#apellidom' + s), titleCase(r.materno)); }
 			if (on.fecha) { setField($('#fechanac' + s), r.fecha); }
 			if (on.sexo) { setField($('#sexo' + s), r.sexo); }
 			if (on.curp) { setField($('#curp' + s), r.curp); }
