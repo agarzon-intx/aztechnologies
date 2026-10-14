@@ -49,6 +49,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$retunData = array('status' => '1', 'message' => 'Success.', 'dataUser' => $lang['10124']);
 		}
 	}
+	$Connection->query("DELETE ui FROM $schema.usuarios_institucion ui
+			LEFT JOIN $schema.usuarios u ON u.username = ui.username
+		WHERE u.username IS NULL");
 	
 	$Connection->Close(); 
     echo json_encode($retunData);

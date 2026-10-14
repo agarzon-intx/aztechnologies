@@ -27,6 +27,7 @@
 				OR a.ApellidoP LIKE $umLike
 				OR a.ApellidoM LIKE $umLike
 				OR CONCAT(IFNULL(a.name, ''), ' ', IFNULL(a.ApellidoP, ''), ' ', IFNULL(a.ApellidoM, '')) LIKE $umLike
+				OR inst.Institucion_DESC LIKE $umLike
 			)";
 		}
 	}
@@ -91,7 +92,7 @@
 				ApellidoM,
 				email,
 				GROUP_CONCAT(ifnull(c.Equipo_FULLDESC ,'')) Equipo_FULLDESC,
-				MAX((select i.Institucion_DESC from $schema.Instituciones i where i.Institucion_ID = a.Institucion_ID and a.Institucion_ID > 0 limit 1)) Institucion_DESC,
+				MAX(inst.Institucion_DESC) Institucion_DESC,
 				a.active,
 				case when a.username <> 'admin' then case when ISNULL(d.ct) then '' else 'style=\"visibility: hidden; display: none;\"' end else 'style=\"visibility: hidden; display: none;\"' end dispDel
 			FROM $schema.usuarios a
@@ -110,6 +111,12 @@
 									where a.Torneo_ID = $umSeason and c.Torneo_ID = $umSeason) c on c.Equipo_ID = b.Equipo_ID
 				left outer join (	SELECT count(*) ct, User_ID FROM $schema.Control_Table
 									group by User_ID) d on a.username = d.User_ID
+				left outer join (	SELECT ui.username, GROUP_CONCAT(DISTINCT i.Institucion_DESC ORDER BY i.Institucion_DESC SEPARATOR '\n') Institucion_DESC
+									FROM (	SELECT username, Institucion_ID FROM $schema.usuarios_institucion
+											UNION
+											SELECT username, Institucion_ID FROM $schema.usuarios WHERE Institucion_ID > 0) ui
+										JOIN $schema.Instituciones i ON i.Institucion_ID = ui.Institucion_ID
+									GROUP BY ui.username) inst on inst.username = a.username
 			$userListFilterSql
 			GROUP BY id_user
 			order by $umOrder;";
@@ -118,9 +125,13 @@
 	$umRows = array('1' => array(), '0' => array(), '-1' => array());
 	if ($result2 && $result2->num_rows > 0) {
 		while ($row2 = $result2->fetch_assoc()) {
-			if (trim((string) $row2['Equipo_FULLDESC'], ', ') === '' && (string) $row2['Institucion_DESC'] !== '') {
-				$row2['Equipo_FULLDESC'] = $lang['819-2'] . ' - ' . $row2['Institucion_DESC'];
+			$umAssigned = array_filter(explode(',', (string) $row2['Equipo_FULLDESC']), function ($t) {
+				return trim($t) !== '';
+			});
+			foreach (array_filter(explode("\n", (string) $row2['Institucion_DESC']), 'strlen') as $umInst) {
+				$umAssigned[] = $lang['819-2'] . ' - ' . $umInst;
 			}
+			$row2['Equipo_FULLDESC'] = implode(',', $umAssigned);
 			$umCode = (string) (int) $row2['active'];
 			if (!isset($umRows[$umCode])) {
 				$umCode = '0';

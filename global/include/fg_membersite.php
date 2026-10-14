@@ -2290,19 +2290,19 @@ class FGMembersite {
 			mysqli_close($connection);
 			return false;
 		}
-		$institucionId = $this->UserInstitutionFromEquipo($formvars['equipo']);
-		if(!$this->SaveUserInstitution($connection, 'username', SanitizeUsername($formvars['username']), $institucionId)){
+		if(!$this->SaveUserInstitutions($connection, 'username', SanitizeUsername($formvars['username']), $this->UserInstitutionsFromEquipo($formvars['equipo']))){
 			$this->HandleDBError($lang['10091']);
 			mysqli_close($connection);
 			return false;
 		}
-		if($institucionId > 0){
+		$teamsCsv = $this->UserTeamsFromEquipo($formvars['equipo']);
+		if($teamsCsv === ''){
 			mysqli_close($connection);
 			return true;
 		}
-		if(SanitizeTextComa($formvars['equipo']) == '0' || SanitizeTextComa($formvars['equipo']) == '-1'){
+		if($teamsCsv == '0' || $teamsCsv == '-1'){
 		    if($stmt = $connection->prepare("insert into " . $this->Config->getSchema() . ".usuarios_equipo
-                                			select '" . $formvars['username'] ."', ".$formvars['equipo'])){
+                                			select '" . $formvars['username'] ."', " . $teamsCsv)){
 				if (!$stmt->execute()){
 				    $error = $stmt->error;
 					$this->HandleDBError($lang['10090'] . $stmt->errno . ") " . $stmt->error);
@@ -2321,7 +2321,7 @@ class FGMembersite {
 		}else{
 		    if($stmt = $connection->prepare("insert into " . $this->Config->getSchema() . ".usuarios_equipo
                                 			select '" . $formvars['username'] ."', Equipo_ID from " . $this->Config->getSchema() . ".Equipos
-                                            where FIND_IN_SET(Equipo_ID, '" . SanitizeTextComa($formvars['equipo']) . "')")){
+                                            where FIND_IN_SET(Equipo_ID, '" . $teamsCsv . "')")){
 				if (!$stmt->execute()){
 				    $error = $stmt->error;
 					$this->HandleDBError($lang['10090'] . $stmt->errno . ") " . $stmt->error);
@@ -2341,30 +2341,60 @@ class FGMembersite {
 		return true;
 	}
 	
-	/** Institucion_ID when the assignment is an institution ("i<ID>"), otherwise 0 (league / referee / teams). */
-	function UserInstitutionFromEquipo($equipo){
-		if(preg_match('/^i(\d+)$/', trim((string) $equipo), $m)){
-			return (int) $m[1];
+	/** Institucion_IDs in an assignment list ("i<ID>" items; teams, league 0 and referee -1 are skipped). */
+	function UserInstitutionsFromEquipo($equipo){
+		$ids = array();
+		foreach (explode(',', (string) $equipo) as $item) {
+			if (preg_match('/^i(\d+)$/', trim($item), $m) && (int) $m[1] > 0) {
+				$ids[(int) $m[1]] = (int) $m[1];
+			}
 		}
-		return 0;
+		return array_values($ids);
 	}
 
-	/** Sets usuarios.Institucion_ID (NULL when $institucionId is 0 or not an existing institution). */
-	function SaveUserInstitution($connection, $keyColumn, $keyValue, $institucionId){
+	/** Team / league / referee ids of an assignment list as CSV (institution items removed). */
+	function UserTeamsFromEquipo($equipo){
+		$teams = array();
+		foreach (explode(',', (string) $equipo) as $item) {
+			$item = trim($item);
+			if (preg_match('/^-?\d+$/', $item)) {
+				$teams[] = (string) (int) $item;
+			}
+		}
+		return implode(',', array_unique($teams));
+	}
+
+	/**
+	 * Replaces the user's usuarios_institucion rows with the existing institutions among $institucionIds and
+	 * points the legacy usuarios.Institucion_ID at one of them (NULL when none).
+	 */
+	function SaveUserInstitutions($connection, $keyColumn, $keyValue, $institucionIds){
 		$schema = $this->Config->getSchema();
 		$keyColumn = ($keyColumn === 'id_user') ? 'id_user' : 'username';
-		$stmt = $connection->prepare("update $schema.usuarios
-				set Institucion_ID = (select Institucion_ID from $schema.Instituciones where Institucion_ID = ? and Institucion_ID > 0 limit 1)
-				where $keyColumn = ?");
+		$stmt = $connection->prepare("select username from $schema.usuarios where $keyColumn = ? limit 1");
 		if(!$stmt){
 			return false;
 		}
-		$instId = (int) $institucionId;
 		$key = (string) $keyValue;
-		$stmt->bind_param("is", $instId, $key);
-		$ok = $stmt->execute();
+		$stmt->bind_param("s", $key);
+		$stmt->execute();
+		$stmt->bind_result($username);
+		$found = $stmt->fetch();
 		$stmt->close();
-		return $ok;
+		if(!$found){
+			return false;
+		}
+		$ids = array_filter(array_map('intval', (array) $institucionIds), function ($id) {
+			return $id > 0;
+		});
+		$in = $ids ? implode(',', $ids) : '0';
+		$user = $connection->real_escape_string($username);
+		return $connection->query("delete from $schema.usuarios_institucion where username = '$user'")
+			&& $connection->query("insert into $schema.usuarios_institucion (username, Institucion_ID)
+				select distinct '$user', Institucion_ID from $schema.Instituciones where Institucion_ID in ($in) and Institucion_ID > 0")
+			&& $connection->query("update $schema.usuarios
+				set Institucion_ID = (select min(Institucion_ID) from $schema.usuarios_institucion where username = '$user')
+				where username = '$user'");
 	}
 
 	function InsertIntoDBUpdate(&$formvars){
@@ -2442,19 +2472,19 @@ class FGMembersite {
 				mysqli_close($connection);
 				return false;
 			}
-			$institucionId = $this->UserInstitutionFromEquipo($formvars['equipo']);
-			if(!$this->SaveUserInstitution($connection, 'id_user', SanitizeInteger($formvars['userid']), $institucionId)){
+			if(!$this->SaveUserInstitutions($connection, 'id_user', SanitizeInteger($formvars['userid']), $this->UserInstitutionsFromEquipo($formvars['equipo']))){
 				$this->HandleDBError($lang['10091']);
 				mysqli_close($connection);
 				return false;
 			}
-			if($institucionId > 0){
+			$teamsCsv = $this->UserTeamsFromEquipo($formvars['equipo']);
+			if($teamsCsv === ''){
 				mysqli_close($connection);
 				return true;
 			}
-			if(SanitizeTextComa($formvars['equipo']) == '0' || SanitizeTextComa($formvars['equipo']) == '-1'){
+			if($teamsCsv == '0' || $teamsCsv == '-1'){
 			    if($stmt = $connection->prepare("insert into " . $this->Config->getSchema() . ".usuarios_equipo
-                                    			select '" . $formvars['username'] ."', ".$formvars['equipo'])){
+                                    			select '" . $formvars['username'] ."', " . $teamsCsv)){
     				if (!$stmt->execute()){
     				    $error = $stmt->error;
     					$this->HandleDBError($lang['10090'] . $stmt->errno . ") " . $stmt->error);
@@ -2473,7 +2503,7 @@ class FGMembersite {
 			}else{
 			    if($stmt = $connection->prepare("insert into " . $this->Config->getSchema() . ".usuarios_equipo
                                     			select '" . $formvars['username'] ."', Equipo_ID from " . $this->Config->getSchema() . ".Equipos
-                                                where FIND_IN_SET(Equipo_ID, '" . SanitizeTextComa($formvars['equipo']) . "')")){
+                                                where FIND_IN_SET(Equipo_ID, '" . $teamsCsv . "')")){
     				if (!$stmt->execute()){
     				    $error = $stmt->error;
     					$this->HandleDBError($lang['10090'] . $stmt->errno . ") " . $stmt->error);
