@@ -2639,39 +2639,93 @@ function playerPhotoFlush(suffix, done) {
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	ctx.imageSmoothingQuality = 'high';
 	ctx.drawImage(img, st.x * r, st.y * r, st.nw * st.scale * r, st.nh * st.scale * r);
+	var parts = [{canvas: canvas, upload: cfg.upload, field: cfg.field, target: cfg.target}];
+	if ($frame.data('split')) {
+		// whole ID image: the save endpoints stack the front (top half) and back (bottom half) uploads again
+		parts = [[cfg.upload, cfg.field, cfg.target], [$frame.data('upload2'), $frame.data('field2'), $frame.data('target2')]].map(function (p, i) {
+			var half = document.createElement('canvas'), h = cfg.outH / 2;
+			half.width = cfg.outW;
+			half.height = h;
+			half.getContext('2d').drawImage(canvas, 0, i * h, cfg.outW, h, 0, 0, cfg.outW, h);
+			return {canvas: half, upload: p[0], field: p[1], target: p[2]};
+		});
+	}
 	mainLoadingOn();
-	canvas.toBlob(function (blob) {
-		if (!blob) {
+	var i = 0;
+	(function next() {
+		if (i >= parts.length) {
 			mainLoadingOff();
-			alert(MSG_AJAX_GENERIC);
+			st.dirty = false;
+			done();
 			return;
 		}
-		var fd = new FormData();
-		fd.append(cfg.field, blob, 'foto.png');
-		$.ajax({
-			type: 'POST',
-			dataType: 'json',
-			url: cfg.upload,
-			data: fd,
-			contentType: false,
-			processData: false,
-			success: function (data) {
-				mainLoadingOff();
-				if (data.status === '1') {
-					$(cfg.target).val(data.action);
-					st.dirty = false;
-					done();
-				} else {
-					$(cfg.preview).html(data.alert);
-				}
-			},
-			error: function (jqxhr, status, exception) {
+		var p = parts[i++];
+		p.canvas.toBlob(function (blob) {
+			if (!blob) {
 				mainLoadingOff();
 				alert(MSG_AJAX_GENERIC);
-				console.log('Exception:' + exception);
+				return;
 			}
-		});
-	}, 'image/png');
+			var fd = new FormData();
+			fd.append(p.field, blob, 'foto.png');
+			$.ajax({
+				type: 'POST',
+				dataType: 'json',
+				url: p.upload,
+				data: fd,
+				contentType: false,
+				processData: false,
+				success: function (data) {
+					if (data.status === '1') {
+						$(p.target).val(data.action);
+						next();
+					} else {
+						mainLoadingOff();
+						$(cfg.preview).html(data.alert);
+					}
+				},
+				error: function (jqxhr, status, exception) {
+					mainLoadingOff();
+					alert(MSG_AJAX_GENERIC);
+					console.log('Exception:' + exception);
+				}
+			});
+		}, 'image/png');
+	})();
+}
+
+/** Empty a frame (picture, zoom tools and uploaded file name). */
+function playerPhotoClear(suffix) {
+	var $frame = playerPhotoFrame(suffix);
+	if (!$frame.length) {
+		return;
+	}
+	var cfg = playerPhotoCfg($frame);
+	$frame.data('pp', {ready: false, dirty: false, pendingFile: false, pointers: {}});
+	$(cfg.tools).hide();
+	$(cfg.target).val('');
+	$($frame.data('target2')).val('');
+	$(cfg.preview).html('');
+	$frame.find('img').first().attr('src', '').hide();
+}
+
+/** ID upload on the player forms: mode 2 = front and back pictures, 3 = one whole picture (front on top). */
+function playerIdUploadMode(s, mode, pick) {
+	s = s || '';
+	$('#myIDBackground' + s).hide();
+	$('#myIDBackground2' + s).toggle(mode === 2);
+	$('#myIDBackground3' + s).toggle(mode === 3);
+	if (mode === 3) {
+		playerPhotoClear('#id11Frame' + s);
+		playerPhotoClear('#id12Frame' + s);
+		$('#myID11' + s + ', #myID12' + s).val('');
+		if (pick) {
+			fireEvent($('#myID13' + s), 'click');
+		}
+	} else {
+		playerPhotoClear('#id13Frame' + s);
+		$('#myID13' + s).val('');
+	}
 }
 
 /* Players list: the "complete" icon opens the player's picture and ID document. */

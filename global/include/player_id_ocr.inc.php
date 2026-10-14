@@ -74,3 +74,57 @@ if (!function_exists('az_player_id_ocr_button')) {
 			. htmlspecialchars($t('933-4', 'Read ID data'), ENT_QUOTES, 'UTF-8') . '</button>';
 	}
 }
+
+/**
+ * "Upload whole image" option of the ID upload: one picture with the front on top and the back below
+ * (the stored 700x876 layout). On save the frame is sent as its two halves to the front / back uploads.
+ */
+if (!function_exists('az_player_id_whole_button')) {
+	function az_player_id_whole_button(array $lang, $suffix)
+	{
+		$s = $suffix === 'E' ? 'E' : '';
+		$label = isset($lang['933-50']) ? $lang['933-50'] : 'Upload whole image';
+		return '<button style="margin: 6px 0 0; width: 180px;" class="btn btn-outline-secondary" type="button" onclick="playerIdUploadMode(\'' . $s . '\', 3, true);">'
+			. htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</button>';
+	}
+
+	/** Link inside the front / back panel that switches to the whole-image panel. */
+	function az_player_id_whole_switch(array $lang, $suffix)
+	{
+		$s = $suffix === 'E' ? 'E' : '';
+		$label = isset($lang['933-50']) ? $lang['933-50'] : 'Upload whole image';
+		return '<div style="text-align: center;"><button type="button" class="btn btn-link btn-sm mb-0" onclick="playerIdUploadMode(\'' . $s . '\', 3, true);">'
+			. htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</button></div>';
+	}
+
+	function az_player_id_whole_block(array $lang, $suffix)
+	{
+		$s = $suffix === 'E' ? 'E' : '';
+		$t = function ($key, $fallback) use ($lang) {
+			return htmlspecialchars(isset($lang[$key]) ? $lang[$key] : $fallback, ENT_QUOTES, 'UTF-8');
+		};
+		$frame = '#id13Frame' . $s;
+		return '<div id="myIDBackground3' . $s . '" style="display: none;">'
+			. '<div id="id13Frame' . $s . '" class="player-photo-frame" data-out-w="700" data-out-h="876" data-split="1"'
+			. ' data-upload="objects/UploadIDF' . $s . '.php" data-field="myID11' . $s . '" data-target="#myID11FileName' . $s . '"'
+			. ' data-upload2="objects/UploadIDB' . $s . '.php" data-field2="myID12' . $s . '" data-target2="#myID12FileName' . $s . '"'
+			. ' data-preview="#previewMyID13' . $s . '" data-tools="#id13Tools' . $s . '" data-zoom="#id13Zoom' . $s . '"'
+			. ' style="width: 150px; height: 187px; background-color: #BFBFBF; margin: auto; position: relative; overflow: hidden;">'
+			. '<img id="identificacion13' . $s . '" src="" width="150" height="187" style="display: none"/>'
+			. '</div>'
+			. '<div id="id13Tools' . $s . '" style="display: none; width: 150px; margin: 6px auto 0;">'
+			. '<div class="d-flex align-items-center" style="gap: 4px;">'
+			. '<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'' . $frame . '\', 1 / 1.15);">&minus;</button>'
+			. '<input type="range" class="form-range" id="id13Zoom' . $s . '" min="0" max="100" step="1" value="0" oninput="playerPhotoSlider(\'' . $frame . '\', this.value);" style="flex: 1;">'
+			. '<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" onclick="playerPhotoStep(\'' . $frame . '\', 1.15);">+</button>'
+			. '<button type="button" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="' . $t('931-2', 'Reset') . '" onclick="playerPhotoReset(\'' . $frame . '\');">&#8634;</button>'
+			. '</div>'
+			. '</div>'
+			. '<div style="font-size: 12px; color: #777; margin: 4px auto; max-width: 220px;">' . $t('933-51', 'Front and back in one image, front on top.') . '</div>'
+			. '<button style="margin: 0; width: 180px;" class="btn btn-secondary" type="button" onclick="fireEvent($(\'#myID13' . $s . '\'), \'click\');">' . $t('933-50', 'Upload whole image') . '</button>'
+			. '<input style="display: none; visibility: hidden;" type="file" accept="image/png,image/jpeg" id="myID13' . $s . '" onchange="playerPhotoLoadFile(this, \'' . $frame . '\');">'
+			. '<div id="previewMyID13' . $s . '"></div>'
+			. '<div style="text-align: center;"><button type="button" class="btn btn-link btn-sm mb-0" onclick="playerIdUploadMode(\'' . $s . '\', 2);">' . $t('933-52', 'Upload front and back separately') . '</button></div>'
+			. '</div>';
+	}
+}

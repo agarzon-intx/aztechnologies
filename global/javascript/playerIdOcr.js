@@ -28,7 +28,7 @@
 	/* ---------- image helpers ---------- */
 
 	function sourceImage(s) {
-		var ids = ['#identificacion11' + s, '#identificacion' + s];
+		var ids = ['#identificacion13' + s, '#identificacion11' + s, '#identificacion' + s];
 		for (var i = 0; i < ids.length; i++) {
 			var img = $(ids[i])[0];
 			if (img && img.getAttribute('src') && img.complete && img.naturalWidth >= 200) {

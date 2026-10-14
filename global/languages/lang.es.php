@@ -922,6 +922,9 @@
 	$lang['933-47'] = 'mm/dd/aaaa';
 	$lang['933-48'] = 'aaaa/mm/dd';
 	$lang['933-49'] = 'Orden de día, mes y año en la fecha impresa';
+	$lang['933-50'] = 'Subir imagen completa';
+	$lang['933-51'] = 'Frente y reverso en una sola imagen, el frente arriba.';
+	$lang['933-52'] = 'Subir frente y reverso por separado';
 	$lang['934'] = ' Max 1000 KB';
 	$lang['935'] = 'Subir Firma';
 	$lang['936'] = ' Max 100 KB';
