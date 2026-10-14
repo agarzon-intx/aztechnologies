@@ -364,10 +364,13 @@ class FGMembersite {
 			$formvars['username'] = SanitizeUsername($_POST['username']);
 		}
 		if($type == 1){
-			$formvars['active'] = 1;
-			if($_POST['active'] == 'false'){
-				$formvars['active'] = 0;
+			$active = isset($_POST['active']) ? trim((string) $_POST['active']) : '1';
+			if ($active === 'false') {
+				$active = '0';
+			} elseif ($active === 'true') {
+				$active = '1';
 			}
+			$formvars['active'] = in_array($active, array('1', '0', '-1'), true) ? (int) $active : 1;
 			$formvars['userid'] = $_POST['userid'];
 		}
 	}

@@ -42,7 +42,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				ApellidoM,
 				email,
 				Equipo_ID,
-				case When active = 0 then '' else 'checked' end active
+				active
 			FROM $schema.usuarios
 			where id_user = " . $userID .";";
 	$result = $Config->query($sql);
@@ -56,7 +56,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$ApellidoM = $row2["ApellidoM"];
 			$email = $row2["email"];
 			$Equipo_ID = $row2["Equipo_ID"];
-			$active = $row2["active"];
+			$active = (int) $row2["active"];
 		}
 	}
 	$userInstitucionId = um_user_institution_id($Config, $schema, $userID);
@@ -133,9 +133,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							</div>
 						</div>
 						<div class="col-4 col-xs-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" name="activo" id="activo" ' . $active . '>
-								<label class="custom-control-label" for="activo">' . $lang['835'] . '</label>
+							<div class="input-group input-group-static mb-4">
+								<label for="activo">' . $lang['926'] . '</label>
+								<select class="form-control" name="activo" id="activo">
+									<option value="1"' . ($active === 1 ? ' selected' : '') . '>' . $lang['927'] . '</option>
+									<option value="0"' . ($active === 0 ? ' selected' : '') . '>' . $lang['928'] . '</option>
+									<option value="-1"' . ($active === -1 ? ' selected' : '') . '>' . $lang['929'] . '</option>
+								</select>
 							</div>
 						</div>
 						' . um_assign_type_filter_html($lang, um_institutions_available($Config, $schema, $lang, $userInstitucionId), $userInstitucionId > 0) . '
@@ -269,7 +273,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					</div>
 					<div class="row">
 						<div class="" >
-							<button type="button" class="btn btn-primary" onClick="validateUserEdit(' . $userID . ', $(\'#nombrea\').val(), $(\'#apellidopa\').val(), $(\'#apellidoma\').val(), $(\'#telefonoa\').val(), $(\'#emaila\').val(), $(\'#activo\').is(\':checked\'), $(\'#username\').val());" >' . $lang['0000'] . '</button>
+							<button type="button" class="btn btn-primary" onClick="validateUserEdit(' . $userID . ', $(\'#nombrea\').val(), $(\'#apellidopa\').val(), $(\'#apellidoma\').val(), $(\'#telefonoa\').val(), $(\'#emaila\').val(), $(\'#activo\').val(), $(\'#username\').val());" >' . $lang['0000'] . '</button>
 							<button type="button" class="btn btn-primary" onClick="userManagementLimpiarEditUser();" >' . $lang['0001'] . '</button>
 						</div>
 					</div>

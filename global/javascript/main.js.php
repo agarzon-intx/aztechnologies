@@ -1237,6 +1237,22 @@ function abrirFichaS(id, week, game, gamedesc, lgoals, vgoals){
 ********************************************User MAnagement*******************************************************
 *****************************************************************************************************************/
 var userManagementFilterTimer = null;
+var userManagementStatus = '1';
+var userManagementSort = '';
+
+$(document).on('click', '#umStatusTabs a.nav-link[data-status]', function () {
+	userManagementStatus = String($(this).attr('data-status'));
+});
+
+function userManagementListParams() {
+	var $input = $('#userListFilter');
+	return { userListFilter: $input.length ? $input.val() : '', userListStatus: userManagementStatus, userListSort: userManagementSort };
+}
+
+function userManagementSortBy() {
+	userManagementSort = userManagementSort === 'asc' ? 'desc' : 'asc';
+	userManagementReloadList();
+}
 
 function userManagementFilterListDebounced() {
 	if (userManagementFilterTimer) {
@@ -1248,16 +1264,11 @@ function userManagementFilterListDebounced() {
 }
 
 function userManagementReloadList() {
-	var filterVal = '';
-	var $input = $('#userListFilter');
-	if ($input.length) {
-		filterVal = $input.val();
-	}
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Login/userManagementReloadList.php',
-		data: { userListFilter: filterVal },
+		data: userManagementListParams(),
 		success: function (res) {
 			if (res.status === '1') {
 				var $wrap = $('#userManagementListTables');
@@ -1272,13 +1283,22 @@ function userManagementReloadList() {
 	});
 }
 
-function userManagementShow(){
+function userManagementShow(keepState){
 	//console.log('loadUsersAdmin');
+	if (keepState !== true) {
+		userManagementStatus = '1';
+		userManagementSort = '';
+	}
+	var params = userManagementListParams();
+	if (keepState !== true) {
+		params.userListFilter = '';
+	}
 	mainLoadingOn();
 	$.ajax({
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Login/userManagement.php',
+		data: params,
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -1375,7 +1395,7 @@ function userManagementCreateUser(name, lastname, lastname2, phone, email, user,
 			mainLoadingOff()
 			if (res.status === '1') {
 				alert(res.dataUser);
-				userManagementShow();
+				userManagementShow(true);
 			}
 			if (res.status === '0') {
 				$("#register_errorloc").html(res.dataUser);
@@ -1402,7 +1422,7 @@ function userManagementDeleteUser(id){
 			if (res.status === '1') {
 				//$("#register_errorloc").html(res.dataUser);
 				alert(res.dataUser);
-				userManagementShow();
+				userManagementShow(true);
 			}
 		},
 		error: function(jqxhr, status, exception) {
@@ -1595,7 +1615,7 @@ function userManagementEditUser(userid, name, lastname, lastname2, phone, email,
 			mainLoadingOff()
 			if (res.status === '1') {
 				alert(res.dataUser);
-				userManagementShow();
+				userManagementShow(true);
 			}
 			if (res.status === '0') {
 				$("#register_errorloca").html(res.dataUser);
