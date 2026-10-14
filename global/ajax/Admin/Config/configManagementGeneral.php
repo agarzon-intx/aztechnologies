@@ -499,5 +499,6 @@
 						</div>
 					</div>';
 
+	require __DIR__ . '/configManagementFooter.php';
 	require __DIR__ . '/configManagementFonts.php';
 ?>
