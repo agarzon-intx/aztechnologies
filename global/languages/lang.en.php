@@ -594,6 +594,11 @@
 	$lang['539-29'] = 'The player exists: Category %1, Team %2, Player %3. Copy (duplicate) them to the current team?';
 	$lang['539-30'] = 'You can only copy players from your teams or your institution';
 	$lang['539-31'] = 'With Search player or Duplicate player: allows copying a player from any team to the current team, even if the team is not the coach team or from their institution.';
+	$lang['539-32'] = 'The player already exists: Category %1, Team %2, Player %3.';
+	$lang['539-33'] = 'Duplicate the player to the current team?';
+	$lang['539-34'] = 'Change the player to the current team?';
+	$lang['539-35'] = 'The player cannot be moved or duplicated because they are suspended.';
+	$lang['539-36'] = 'This player cannot be duplicated; they can only change team.';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';

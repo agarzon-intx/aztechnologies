@@ -58,7 +58,18 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	$row = $src->fetch_assoc();
 	$curp = (string) $row['Curp'];
-	if (!$isAdmin && !$allowCopy && !az_player_coach_can_move_to_team($Config, $schema, (int) $row['Equipo_ID'], $team, $allowed, false)) {
+	$ownSource = $isAdmin || az_player_coach_can_move_to_team($Config, $schema, (int) $row['Equipo_ID'], $team, $allowed, false);
+	if ($allowCopy) {
+		$action = az_player_found_action($Config, $schema, $player, $Season);
+		if ($action === 'suspended') {
+			echo json_encode(array('status' => '0', 'message' => $lang['539-35']));
+			exit;
+		}
+		if (!$ownSource && $action !== 'copy') {
+			echo json_encode(array('status' => '0', 'message' => $lang['539-36']));
+			exit;
+		}
+	} elseif (!$ownSource) {
 		echo json_encode(array('status' => '0', 'message' => $lang['539-30']));
 		exit;
 	}

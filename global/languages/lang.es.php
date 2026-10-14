@@ -594,6 +594,11 @@
 	$lang['539-29'] = 'El jugador existe: Categoría %1, Equipo %2, Jugador %3. ¿Copiarlo (duplicarlo) al equipo actual?';
 	$lang['539-30'] = 'Solo puedes copiar jugadores de tus equipos o de tu institución';
 	$lang['539-31'] = 'Con Buscar jugador o Duplicar jugador: permite copiar al equipo actual un jugador de cualquier equipo, aunque no sea del entrenador ni de su institución.';
+	$lang['539-32'] = 'El jugador ya existe: Categoría %1, Equipo %2, Jugador %3.';
+	$lang['539-33'] = '¿Duplicar el jugador al equipo actual?';
+	$lang['539-34'] = '¿Cambiar el jugador al equipo actual?';
+	$lang['539-35'] = 'No se puede mover ni duplicar porque el jugador está suspendido.';
+	$lang['539-36'] = 'Este jugador no se puede duplicar; solo se puede cambiar de equipo.';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';

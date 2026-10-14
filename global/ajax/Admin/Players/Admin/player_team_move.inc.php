@@ -152,3 +152,26 @@ if (!function_exists('az_player_coach_can_move_to_team')) {
 		return in_array($srcInst, $coachInst, true);
 	}
 }
+
+if (!function_exists('az_player_found_action')) {
+	/**
+	 * With allowCopyDuplicate on, what a found player allows: "suspended" (player S: neither move nor copy),
+	 * "copy" (player and source team active) or "move" (player or source team inactive).
+	 * The source team status is its row in $season, else its latest season.
+	 */
+	function az_player_found_action($Config, $schema, $playerId, $season) {
+		$playerId = (int) $playerId;
+		$season = (int) $season;
+		$r = $Config->query("SELECT j.Estatus, IFNULL((SELECT e.Activo FROM $schema.Equipos e WHERE e.Equipo_ID = j.Equipo_ID
+				ORDER BY (e.Torneo_ID = $season) DESC, e.Torneo_ID DESC LIMIT 1), 0) AS Equipo_Activo
+			FROM $schema.Jugadores j WHERE j.Jugador_ID = $playerId LIMIT 1");
+		if (!$r || !($row = $r->fetch_assoc())) {
+			return '';
+		}
+		$status = strtoupper(trim((string) $row['Estatus']));
+		if ($status === 'S') {
+			return 'suspended';
+		}
+		return ($status === 'A' && (int) $row['Equipo_Activo'] === 1) ? 'copy' : 'move';
+	}
+}

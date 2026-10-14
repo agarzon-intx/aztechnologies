@@ -50,7 +50,13 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if ($src && $srcRow = $src->fetch_assoc()) {
 		$srcTeam = (int) $srcRow['Equipo_ID'];
 	}
-	if (!az_player_coach_can_move_to_team($Config, $schema, $srcTeam, $team, $allowed, $isAdmin)) {
+	if ((int) $Config->allowCopyDuplicate === 1) {
+		$action = az_player_found_action($Config, $schema, $player, $Season);
+		if ($action === 'suspended' || $action !== 'move' || (!$isAdmin && !in_array($team, $allowed, true))) {
+			echo json_encode(array('status' => '0', 'message' => $action === 'suspended' ? $lang['539-35'] : $lang['539-16']));
+			exit;
+		}
+	} elseif (!az_player_coach_can_move_to_team($Config, $schema, $srcTeam, $team, $allowed, $isAdmin)) {
 		echo json_encode(array('status' => '0', 'message' => $lang['539-16']));
 		exit;
 	}

@@ -88,18 +88,26 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$isAdmin = az_user_is_league_admin($Config, $schema, $fgmembersite);
 		$allowed = az_user_allowed_equipo_ids($Config, $schema, $fgmembersite, $isAdmin);
 		$canMove = az_player_coach_can_move_to_team($Config, $schema, $playerTeam, $team, $allowed, $isAdmin);
-		$canCopy = (int) $Config->allowCopyDuplicate === 1 && ($isAdmin || in_array($team, $allowed, true));
 		$fill = function ($key) use ($lang, $row, $playerName) {
 			return str_replace(array('%1', '%2', '%3'), array($row['Categoria_Desc'], $row['Equipo_FULLDESC'], $playerName), $lang[$key]);
 		};
-		$confirm = $fill($canMove ? '539-6' : ($canCopy ? '539-29' : '539-16'));
+		$action = '';
+		if ((int) $Config->allowCopyDuplicate === 1) {
+			$action = ($isAdmin || in_array($team, $allowed, true)) ? az_player_found_action($Config, $schema, (int) $row['Jugador_ID'], $Season) : 'none';
+			$question = array('copy' => ' ' . $lang['539-33'], 'move' => ' ' . $lang['539-34'], 'suspended' => ' ' . $lang['539-35']);
+			$confirm = $fill('539-32') . ($question[$action] ?? '');
+			$canMove = ($action === 'move');
+		} else {
+			$confirm = $fill($canMove ? '539-6' : '539-16');
+		}
+		$canCopy = ($action === 'copy');
 		echo json_encode(array(
 			'status' => '1',
 			'found' => 1,
 			'sameTeam' => 0,
 			'canMove' => $canMove ? 1 : 0,
 			'canCopy' => $canCopy ? 1 : 0,
-			'copyMessage' => $canCopy ? $fill('539-29') : '',
+			'action' => $action,
 			'player' => (int) $row['Jugador_ID'],
 			'categoria' => (int) $row['Categoria_ID'],
 			'equipo' => $playerTeam,

@@ -69,23 +69,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					return;
 				}
 				if (res.found === 1 && res.sameTeam === 0) {
-					if (res.canMove !== 1) {
-						if (res.canCopy === 1) {
-							if (window.confirm(res.copyMessage)) {
-								searchPlayerCopy(res, team);
-							}
-							return;
-						}
-						alert(res.message);
-						return;
-					}
-					if (!window.confirm(res.message)) {
-						if (res.canCopy === 1 && window.confirm(res.copyMessage)) {
+					if (res.action === 'copy') {
+						if (window.confirm(res.message)) {
 							searchPlayerCopy(res, team);
 						}
 						return;
 					}
-					{
+					if (res.canMove !== 1) {
+						alert(res.message);
+						return;
+					}
+					if (window.confirm(res.message)) {
 						mainLoadingOn();
 						$.ajax({
 							type: 'POST',
