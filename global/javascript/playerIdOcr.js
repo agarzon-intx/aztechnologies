@@ -60,9 +60,9 @@
 		x.putImageData(d, left, top);
 	}
 
-	/** Grayscale copy scaled to ~1600px wide (times `factor` for a second try at another size). */
-	function prepCanvas(img, strong, factor) {
-		var scale = Math.max(1, Math.min(3, 1600 / img.naturalWidth)) * (factor || 1);
+	/** Grayscale copy scaled to ~1600px wide. */
+	function prepCanvas(img, strong) {
+		var scale = Math.max(1, Math.min(3, 1600 / img.naturalWidth));
 		var c = document.createElement('canvas');
 		c.width = Math.round(img.naturalWidth * scale);
 		c.height = Math.round(img.naturalHeight * scale);
@@ -725,6 +725,47 @@
 		};
 		return worker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÑ0123456789 ' }).then(next, function () { return next(); })
 			.catch(function (e) { console.log('playerIdOcr curp retry', e); return restore(); });
+	}
+
+	/**
+	 * Card name lines under NOMBRE where the OCR lost one: two text lines merged into one tall box, or a
+	 * line-high gap between two name lines. That area is read again with the name whitelist and the lines
+	 * are put back in place; with a CURP, the second surname must start with its third letter.
+	 */
+	function fillNameGaps(worker, img, passes) {
+		var best = null, curp = null;
+		passes.forEach(function (p) {
+			if (p.names.anchor && p.names.lines.length && (!best || p.names.lines.length > best.lines.length)) { best = p.names; }
+			if (p.curp && (!curp || p.curp.valid)) { curp = p.curp.value; }
+		});
+		if (!best || best.lines.length !== 2) { return Promise.resolve(); }
+		var L = best.lines, hs = L.map(function (l) { return l.box.y1 - l.box.y0; }), h = Math.min(hs[0], hs[1]);
+		var x0 = Math.min(best.anchor.b.x0, L[0].box.x0, L[1].box.x0) - 0.5 * h, x1 = Math.max(L[0].box.x1, L[1].box.x1) + 6 * h;
+		var tall = hs[0] > 1.6 * h ? 0 : (hs[1] > 1.6 * h ? 1 : -1), job;
+		if (tall >= 0) {
+			job = { at: tall, replace: 1, box: { x0: x0, y0: L[tall].box.y0, x1: x1, y1: L[tall].box.y1 } };
+		} else if (L[1].box.y0 - L[0].box.y1 > 0.8 * h) {
+			job = { at: 1, replace: 0, box: { x0: x0, y0: L[0].box.y1, x1: x1, y1: L[1].box.y0 } };
+		} else {
+			return Promise.resolve();
+		}
+		// a merged box is read as two single lines (top and bottom half), which the OCR handles much better
+		var boxes = job.replace ? [0, 1].map(function (i) {
+			var mid = (job.box.y0 + job.box.y1) / 2, pad = 0.1 * h;
+			return { x0: job.box.x0, x1: job.box.x1, y0: i ? mid - pad : job.box.y0, y1: i ? job.box.y1 : mid + pad };
+		}) : [job.box];
+		var lines = [];
+		return boxes.reduce(function (chain, b) {
+			return chain.then(function () { return readRegion(worker, img, b, 'nombre'); }).then(function (text) {
+				var p = parseField('nombre', text);
+				if (p) { lines.push({ text: p.value, box: b, words: p.value.split(' ').map(function (t) { return { t: t, b: b }; }) }); }
+			});
+		}, Promise.resolve()).then(function () {
+			if (lines.length !== boxes.length) { return; }
+			var next = L.slice(0, job.at).concat(lines, L.slice(job.at + job.replace));
+			if (next.length !== 3 || (curp && curp.charAt(2) !== 'X' && mainWord(next[1].text, false).charAt(0) !== curp.charAt(2))) { return; }
+			best.lines = next;
+		}).catch(function (e) { console.log('playerIdOcr name lines', e); });
 	}
 
 	/* ---------- UI ---------- */
@@ -1436,15 +1477,9 @@
 			}).then(function () {
 				return retryCurp(worker, passes, [strong, soft]);
 			}).then(function () {
+				return fillNameGaps(worker, img, passes);
+			}).then(function () {
 				var r = merge(passes, T);
-				if (r.nombre && r.paterno && r.materno && r.src.curp.valid) { return r; }
-				// Tesseract splits lines differently at another size: one more pass often finds what was missed
-				var alt = prepCanvas(img, true, 0.85);
-				return worker.recognize(alt.canvas).then(function (r3) {
-					passes.push(parse(r3.data, alt.scale));
-					return merge(passes, T);
-				});
-			}).then(function (r) {
 				if (!found(r)) {
 					Swal.fire({ icon: 'warning', title: '', text: T.nothing });
 					return;
