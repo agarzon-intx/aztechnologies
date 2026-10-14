@@ -59,7 +59,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$active = (int) $row2["active"];
 		}
 	}
-	$userInstitucionId = um_user_institution_id($Config, $schema, $userID);
+	$userInstitucionIds = um_user_institution_ids($Config, $schema, $userID);
 	
 	$sqlCat = "SELECT Categoria_ID, Categoria_Desc FROM $schema.Categorias WHERE Torneo_ID = $Season ORDER BY Categoria_Orden ASC, Categoria_ID ASC";
 	$resCat = $Config->query($sqlCat);
@@ -142,7 +142,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								</select>
 							</div>
 						</div>
-						' . um_assign_type_filter_html($lang, um_institutions_available($Config, $schema, $lang, $userInstitucionId), $userInstitucionId > 0) . '
+						' . um_assign_type_filter_html($lang, um_institutions_available($Config, $schema, $lang, $userInstitucionIds), count($userInstitucionIds) > 0) . '
 							<div class="um-team-filter-col col-4 col-xs-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
 							<div class="input-group input-group-static mb-4">
 								<label>' . htmlspecialchars($lang['378'], ENT_QUOTES, 'UTF-8') . '</label>
@@ -181,7 +181,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	if ($result->num_rows == 0) {
 			$htmlUsers .= '<option value="-1">' . $lang['10761'] . '</option>';
 	}
-	$htmlUsers .= um_institution_options_html($Config, $schema, $lang, $userInstitucionId);
+	$htmlUsers .= um_institution_options_html($Config, $schema, $lang, $userInstitucionIds);
 	$sql01 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, b.Activo AS Equipo_Activo, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza, a.Activo 
 						from $schema.Equipos a
@@ -244,8 +244,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 			$htmlUsers .= '<option value="-1">' . $lang['10761'] . '</option>';
 		}
 	}
-	if ($userInstitucionId > 0) {
-		$htmlUsers .= um_institution_options_html($Config, $schema, $lang, 0, $userInstitucionId);
+	if ($userInstitucionIds) {
+		$htmlUsers .= um_institution_options_html($Config, $schema, $lang, array(), $userInstitucionIds);
 	}
 	$sql11 = "SELECT distinct c.Categoria_ID, b.Equipo_ID, concat(c.categoria_DESC,' - ',b.Equipo_FULLDESC) Equipo_FULLDESC 
 				from (	select distinct b.Equipo_ID, Equipo_FULLDESC, a.Torneo_ID, a.Fuerza 

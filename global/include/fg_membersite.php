@@ -1190,16 +1190,41 @@ class FGMembersite {
 		return isset($_SESSION[$this->Config->getAlias() . 'telefono'])?SanitizeRealName($_SESSION[$this->Config->getAlias() . 'telefono']):'';
 	}
 	
-	/*
-	 * Users assigned to an institution (usuarios.Institucion_ID) get its teams of the current season
-	 * (Torneos.Actual = 'S'). Returns array(seasonId, teamsCsv); array('', '') for users without institution.
-	 */
-	function InstitutionTeams($connection, $institucionId)
+	/** Institucion_IDs of a user: usuarios_institucion rows plus the legacy usuarios.Institucion_ID ($legacyId). */
+	function UserInstitutionIds($connection, $username, $legacyId = 0)
 	{
-		$institucionId = (int) $institucionId;
-		if ($institucionId <= 0) {
+		$ids = array();
+		if ((int) $legacyId > 0) {
+			$ids[(int) $legacyId] = (int) $legacyId;
+		}
+		$stmt = $connection->prepare("SELECT Institucion_ID FROM " . $this->Config->getSchema() . ".usuarios_institucion WHERE username = ? AND Institucion_ID > 0");
+		if ($stmt) {
+			$user = SanitizeUsername($username);
+			$stmt->bind_param("s", $user);
+			if ($stmt->execute()) {
+				$stmt->bind_result($instId);
+				while ($stmt->fetch()) {
+					$ids[(int) $instId] = (int) $instId;
+				}
+			}
+			$stmt->close();
+		}
+		return array_values($ids);
+	}
+
+	/*
+	 * Users assigned to institutions get their teams of the current season (Torneos.Actual = 'S').
+	 * Returns array(seasonId, teamsCsv); array('', '') for users without institutions.
+	 */
+	function InstitutionTeams($connection, $institucionIds)
+	{
+		$institucionIds = array_filter(array_map('intval', (array) $institucionIds), function ($id) {
+			return $id > 0;
+		});
+		if (!$institucionIds) {
 			return array('', '');
 		}
+		$institucionIn = implode(',', $institucionIds);
 		$schema = $this->Config->getSchema();
 		$teams = array();
 		try {
@@ -1210,7 +1235,7 @@ class FGMembersite {
 			}
 			$season = (string) (int) $row[0];
 			$res = $connection->query("SELECT DISTINCT Equipo_ID FROM $schema.Equipos
-				WHERE Torneo_ID = $season AND Institucion_ID = $institucionId AND Equipo_ID > 0");
+				WHERE Torneo_ID = $season AND Institucion_ID IN ($institucionIn) AND Equipo_ID > 0");
 			if ($res) {
 				while ($row = $res->fetch_row()) {
 					$teams[] = (int) $row[0];
@@ -1240,6 +1265,7 @@ class FGMembersite {
 		$season = (string) ($_COOKIE[$alias . 'season'] ?? $_SESSION[$alias . 'season'] ?? '');
 		if ($extra !== '' && ($season === '' || $season === $extraSeason)) {
 			$teams = ($teams === '') ? $extra : $teams . ',' . $extra;
+			$teams = implode(',', array_unique(array_filter(explode(',', $teams), 'strlen')));
 		}
 		// institution users without teams in the selected season: -2 keeps "IN (...)" queries valid and empty
 		if ($teams === '') {
@@ -3205,9 +3231,9 @@ class FGMembersite {
 			$stmt->fetch();
 			$stmt->close();
 		}
-		// Users need team assignments (usuarios_equipo) or an institution (usuarios.Institucion_ID)
-		$Institucion_ID = ((string) $Equipo_ID === '') ? (int) $Institucion_ID : 0;
-		if ((string) $Equipo_ID === '' && $Institucion_ID <= 0) {
+		// Users need team assignments (usuarios_equipo) or institutions (usuarios_institucion / usuarios.Institucion_ID)
+		$Institucion_IDs = isset($email) ? $this->UserInstitutionIds($connection, $username, $Institucion_ID) : array();
+		if ((string) $Equipo_ID === '' && !$Institucion_IDs) {
 			unset($email);
 		}
 
@@ -3272,9 +3298,9 @@ class FGMembersite {
 		$_SESSION[$this->Config->getAlias() . 'apellidop'] = SanitizeUsername($ApellidoP);
 		$_SESSION[$this->Config->getAlias() . 'apellidom']  = SanitizeUsername($ApellidoM);
 		$_SESSION[$this->Config->getAlias() . 'telefono'] = SanitizeInteger($phone_number);
-		$_SESSION[$this->Config->getAlias() . 'institucion'] = $Institucion_ID;
+		$_SESSION[$this->Config->getAlias() . 'institucion'] = implode(',', $Institucion_IDs);
 		$_SESSION[$this->Config->getAlias() . 'equipoBase'] = SanitizeTextComa($Equipo_ID);
-		list($instSeason, $instTeams) = $this->InstitutionTeams($connection, $Institucion_ID);
+		list($instSeason, $instTeams) = $this->InstitutionTeams($connection, $Institucion_IDs);
 		$_SESSION[$this->Config->getAlias() . 'equipoInstSeason'] = $instSeason;
 		$_SESSION[$this->Config->getAlias() . 'equipoInst'] = SanitizeTextComa($instTeams);
 		$_SESSION[$this->Config->getAlias() . 'equipo'] = SanitizeTextComa($Equipo_ID);

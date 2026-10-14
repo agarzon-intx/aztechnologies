@@ -1,8 +1,10 @@
 <?php
 /*
- * Institution assignment for users (usuarios.Institucion_ID).
+ * Institution assignments for users: usuarios_institucion (one row per institution) plus the legacy
+ * single usuarios.Institucion_ID, which saving keeps pointing at one of the user's institutions.
  * Options use value "i<Institucion_ID>" so they can live in the same #equipol / #equipor lists as
- * league (0), referee (-1) and teams; an institution is exclusive like 0 / -1.
+ * league (0), referee (-1) and teams; like teams, several institutions can be combined with each other
+ * and with teams, while 0 / -1 stay exclusive.
  * Only offered when Equipos.Institucion_ID exists (otherwise an institution user would get no teams).
  */
 
@@ -13,53 +15,70 @@ if (!function_exists('um_institutions_enabled')) {
 		return ($r && $r->num_rows > 0);
 	}
 
-	/** Institucion_ID assigned to the user, 0 when none. */
-	function um_user_institution_id($Config, $schema, $userID)
+	/** Institucion_IDs assigned to the user (empty array when none). */
+	function um_user_institution_ids($Config, $schema, $userID)
 	{
-		$r = $Config->query("SELECT Institucion_ID FROM $schema.usuarios WHERE id_user = " . (int) $userID . " LIMIT 1");
-		if ($r && ($row = $r->fetch_assoc())) {
-			return (int) $row['Institucion_ID'];
+		$userID = (int) $userID;
+		$ids = array();
+		$r = $Config->query("SELECT ui.Institucion_ID FROM $schema.usuarios_institucion ui
+				JOIN $schema.usuarios u ON u.username = ui.username
+			WHERE u.id_user = $userID AND ui.Institucion_ID > 0");
+		while ($r && ($row = $r->fetch_assoc())) {
+			$ids[(int) $row['Institucion_ID']] = (int) $row['Institucion_ID'];
 		}
-		return 0;
+		$r = $Config->query("SELECT Institucion_ID FROM $schema.usuarios WHERE id_user = $userID AND Institucion_ID > 0");
+		while ($r && ($row = $r->fetch_assoc())) {
+			$ids[(int) $row['Institucion_ID']] = (int) $row['Institucion_ID'];
+		}
+		return array_values($ids);
 	}
 
 	/**
-	 * <option> list of institutions. $only > 0 returns just that institution, $exclude skips one.
+	 * <option> list of active institutions, skipping $exclude. With $only (array) it returns exactly
+	 * those institutions, inactive ones included.
 	 */
-	function um_institution_options_html($Config, $schema, $lang, $exclude = 0, $only = 0)
+	function um_institution_options_html($Config, $schema, $lang, $exclude = array(), $only = null)
 	{
 		if (!um_institutions_enabled($Config, $schema)) {
 			return '';
 		}
 		$where = "Institucion_ID > 0";
-		if ((int) $only > 0) {
-			$where .= " AND Institucion_ID = " . (int) $only;
+		if ($only !== null) {
+			$only = array_filter(array_map('intval', (array) $only));
+			if (!$only) {
+				return '';
+			}
+			$where .= " AND Institucion_ID IN (" . implode(',', $only) . ")";
 		}
-		if ((int) $exclude > 0) {
-			$where .= " AND Institucion_ID <> " . (int) $exclude;
+		$exclude = array_filter(array_map('intval', (array) $exclude));
+		if ($exclude) {
+			$where .= " AND Institucion_ID NOT IN (" . implode(',', $exclude) . ")";
 		}
 		$r = $Config->query("SELECT * FROM $schema.Instituciones WHERE $where ORDER BY Institucion_DESC");
 		$html = '';
+		$seen = array();
 		$prefix = isset($lang['819-2']) ? $lang['819-2'] : 'Institution';
 		if ($r && $r->num_rows > 0) {
 			while ($row = $r->fetch_assoc()) {
-				if ((int) $only <= 0 && isset($row['Activo']) && (string) $row['Activo'] === '0') {
+				$id = (int) $row['Institucion_ID'];
+				if (isset($seen[$id]) || ($only === null && isset($row['Activo']) && (string) $row['Activo'] === '0')) {
 					continue;
 				}
-				$html .= '<option value="i' . (int) $row['Institucion_ID'] . '" data-tipo="inst">'
+				$seen[$id] = true;
+				$html .= '<option value="i' . $id . '" data-tipo="inst">'
 					. htmlspecialchars($prefix . ' - ' . $row['Institucion_DESC'], ENT_QUOTES, 'UTF-8') . '</option>';
 			}
 		}
 		return $html;
 	}
 
-	/** True when the schema supports institutions and has at least one (active, or the user's own). */
-	function um_institutions_available($Config, $schema, $lang, $userInstitucionId = 0)
+	/** True when the schema supports institutions and has at least one (active, or one of the user's). */
+	function um_institutions_available($Config, $schema, $lang, $userInstitucionIds = array())
 	{
 		if (um_institution_options_html($Config, $schema, $lang) !== '') {
 			return true;
 		}
-		return (int) $userInstitucionId > 0 && um_institution_options_html($Config, $schema, $lang, 0, $userInstitucionId) !== '';
+		return um_institution_options_html($Config, $schema, $lang, array(), (array) $userInstitucionIds) !== '';
 	}
 
 	/** Equipos / Institución selector shown left of the status and category filters. */
@@ -78,8 +97,8 @@ if (!function_exists('um_institutions_enabled')) {
 	}
 
 	/**
-	 * moveRight() for the #equipol / #equipor lists: league (0), referee (-1) and institutions (i<ID>)
-	 * are exclusive (only one assignment), teams can be combined.
+	 * moveRight() for the #equipol / #equipor lists: league (0) and referee (-1) are exclusive (only one
+	 * assignment), teams and institutions (i<ID>) can be combined.
 	 */
 	function um_move_right_js($lang)
 	{
@@ -91,7 +110,7 @@ if (!function_exists('um_institutions_enabled')) {
 		return <<<JS
 					function umIsExclusive(v) {
 						v = String(v);
-						return v === "0" || v === "-1" || /^i\\d+$/.test(v);
+						return v === "0" || v === "-1";
 					}
 					function moveRight(leftValue, rightValue, type) {
 						var \$l = $("#" + leftValue), \$r = $("#" + rightValue);
