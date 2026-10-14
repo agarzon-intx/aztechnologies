@@ -268,9 +268,119 @@
 				used.push(wd);
 				prev = wd;
 			});
-			if (words.length) { out.push({ text: words.join(' '), box: boxOf(used) }); }
+			if (words.length) { out.push({ text: words.join(' '), box: boxOf(used), words: used.map(function (wd, i) { return { t: words[i], b: wd.b }; }) }); }
 		}
 		return { anchor: anchor, lines: out };
+	}
+
+	/* ---------- labeled documents (birth certificate, CURP, passport…): "LABEL: value" or the value under the label ---------- */
+
+	/** Upper case without accents, one character for one (offsets stay valid). */
+	function deaccent(s) {
+		return String(s || '').toUpperCase().replace(/[ÁÀÄÂ]/g, 'A').replace(/[ÉÈËÊ]/g, 'E').replace(/[ÍÌÏÎ]/g, 'I')
+			.replace(/[ÓÒÖÔ]/g, 'O').replace(/[ÚÙÜÛ]/g, 'U');
+	}
+
+	var FIELD_LABELS = {
+		nombre: /\bNOMBRE\s*\(\s*S\s*\)|\bNOMBRES\b|\bGIVEN\s+NAMES?\b|\bFIRST\s+NAMES?\b|\bNOMBRE\b/,
+		paterno: /\bPRIMER\s+APELLIDO\b|\bAPELLIDO\s+PATERNO\b|\bPATERNO\b/,
+		materno: /\bSEGUNDO\s+APELLIDO\b|\bAPELLIDO\s+MATERNO\b|\bMATERNO\b/,
+		apellidos: /\bAPELLIDOS\b|\bSURNAMES?\b|\bLAST\s+NAMES?\b|\bFAMILY\s+NAMES?\b/,
+		fecha: /\bFECHA\s+DE\s+NACIMIENTO\b|\bFECHA\s+NACIMIENTO\b|\bFECHA\s+DE\s+NAC\b\.?|\bDATE\s+OF\s+BIRTH\b|\bBIRTH\s*DATE\b|\bDOB\b/,
+		sexo: /\bSEXO\b|\bSEX\b|\bGENDER\b|\bGENERO\b/
+	};
+	// where a label's value ends (start of the next label on the line)
+	var LABEL_STOP = /\b(NOMBRE\s*\(\s*S\s*\)|NOMBRES?|GIVEN|FIRST\s+NAMES?|PRIMER|SEGUNDO|APELLIDOS?|PATERNO|MATERNO|SURNAMES?|LAST\s+NAMES?|FAMILY|SEXO|SEX|GENDER|GENERO|FECHA|DATE|DOB|CURP|CLAVE|LUGAR|PLACE|NACIONALIDAD|NATIONALITY|EDAD|DOMICILIO|ADDRESS|ENTIDAD|MUNICIPIO|ESTADO|PAIS|COUNTRY|NACIMIENTO|BIRTH|PADRE|MADRE|REGISTRO|SECCION|VIGENCIA|EMISION|FIRMA)\b/;
+	var LABEL_WORD = new RegExp('^(?:' + LABEL_STOP.source + ')');
+
+	/** Line text with each word's offset, for matching labels and mapping matches back to words. */
+	function indexLine(l) {
+		var pos = 0;
+		l.off = l.words.map(function (w) { var o = pos; pos += w.t.length + 1; return o; });
+		l.plain = deaccent(l.words.map(function (w) { return w.t; }).join(' '));
+		return l;
+	}
+
+	function wordsIn(l, a, b) {
+		return l.words.filter(function (w, i) { return l.off[i] < b && l.off[i] + w.t.length > a; });
+	}
+
+	/** Value {words, text, box} of the first label matching `re` that has one, on its line or under it. */
+	function labeled(lines, re) {
+		var at = new RegExp('^(?:' + re.source + ')');
+		for (var i = 0; i < lines.length; i++) {
+			var L = lines[i], m = re.exec(L.plain);
+			if (!m) { continue; }
+			var end = m.index + m[0].length, tw;
+			do {
+				// twin label of the same field on bilingual documents: "NOMBRES / GIVEN NAMES"
+				end += /^[\s\/:|.,\-]*/.exec(L.plain.slice(end))[0].length;
+				tw = at.exec(L.plain.slice(end));
+				if (tw && tw[0]) { end += tw[0].length; } else { tw = null; }
+			} while (tw);
+			var stop = LABEL_STOP.exec(L.plain.slice(end)), vEnd = stop ? end + stop.index : L.plain.length;
+			var value = wordsIn(L, end, vEnd).filter(function (w) { return /[A-Z0-9]/.test(deaccent(w.t)); });
+			if (value.length) {
+				return { words: value, text: value.map(function (w) { return w.t; }).join(' '), box: boxOf(value) };
+			}
+			var lb = boxOf(wordsIn(L, m.index, end));
+			if (!lb) { continue; }
+			var h = Math.max(4, lb.y1 - lb.y0), next = stop ? wordsIn(L, vEnd, vEnd + 1)[0] : null;
+			var right = next ? next.b.x0 - 0.3 * h : Infinity;
+			for (var j = i + 1; j < lines.length && j <= i + 2; j++) {
+				var below = [];
+				if (!lines[j].words.length || lines[j].words[0].b.y0 - lb.y1 > 4 * h) { break; }
+				for (var k = 0; k < lines[j].words.length; k++) {
+					var w = lines[j].words[k], cx = (w.b.x0 + w.b.x1) / 2;
+					if (cx < lb.x0 - 3 * h || cx > right || LABEL_WORD.test(deaccent(w.t))) {
+						if (below.length) { break; }
+						continue;
+					}
+					below.push(w);
+				}
+				if (below.length) {
+					return { words: below, text: below.map(function (x) { return x.t; }).join(' '), box: boxOf(below) };
+				}
+			}
+		}
+		return null;
+	}
+
+	/** Name words of a labeled value: letters only, up to the first token with digits. */
+	function nameWords(words) {
+		var out = [];
+		for (var i = 0; i < words.length && out.length < 6; i++) {
+			var t = words[i].t.replace(/^[.,:;\/]+|[.,:;\/]+$/g, '');
+			if (/\d/.test(t)) { break; }
+			if (!/^[A-ZÁÉÍÓÚÑÜ'\-]+$/.test(t) || (t.length < 2 && t !== 'Y')) {
+				if (out.length) { break; }
+				continue;
+			}
+			out.push({ t: t, b: words[i].b });
+		}
+		return out;
+	}
+
+	var MONTHS = { ENE: 1, JAN: 1, FEB: 2, MAR: 3, ABR: 4, APR: 4, MAY: 5, JUN: 6, JUL: 7, AGO: 8, AUG: 8, SEP: 9, SET: 9, OCT: 10, NOV: 11, DIC: 12, DEC: 12 };
+	var MONTH_RE = '(ENERO|ENE|JANUARY|JAN|FEBRERO|FEBRUARY|FEB|MARZO|MARCH|MAR|ABRIL|APRIL|ABR|APR|MAYO|MAY|JUNIO|JUNE|JUN|JULIO|JULY|JUL|AGOSTO|AUGUST|AGO|AUG'
+		+ '|SEPTIEMBRE|SETIEMBRE|SEPTEMBER|SEPT|SEP|SET|OCTUBRE|OCTOBER|OCT|NOVIEMBRE|NOVEMBER|NOV|DICIEMBRE|DECEMBER|DIC|DEC)';
+	var NAMED_DMY = new RegExp('\\b(\\d{1,2})\\s*(?:DE\\s+|[\\/\\-.\\s])\\s*' + MONTH_RE + '\\.?\\s*(?:DEL?\\s+|[\\/\\-.,\\s])\\s*(\\d{4})\\b');
+	var NAMED_MDY = new RegExp('\\b' + MONTH_RE + '\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b');
+
+	/** Date with the month in letters: "5 DE JULIO DE 1980", "05 JUL 1980", "JULY 5, 1980". */
+	function findNamedDate(text) {
+		var t = deaccent(text), r = NAMED_DMY.exec(t), d, m, y;
+		if (r) { d = +r[1]; m = MONTHS[r[2].slice(0, 3)]; y = +r[3]; } else if ((r = NAMED_MDY.exec(t))) { m = MONTHS[r[1].slice(0, 3)]; d = +r[2]; y = +r[3]; }
+		if (!r || !m || y < 1900 || !validDate(y, m, d)) { return null; }
+		return { parts: [d, m, y], raw: r[0].trim(), order: 'dmy', iso: iso(y, m, d), named: true };
+	}
+
+	/** Sex from a word: HOMBRE / MUJER, MALE / FEMALE, MASCULINO / FEMENINO or one letter. */
+	function sexFromWord(word, mf) {
+		var t = deaccent(word).replace(/[^A-Z]/g, '');
+		if (/^(HOMBRE|MASCULINO|MASC|MALE|VARON)$/.test(t)) { return '0'; }
+		if (/^(MUJER|FEMENINO|FEM|FEMALE)$/.test(t)) { return '1'; }
+		return /^[HMFX]$/.test(t) ? sexCode(t, mf) : '';
 	}
 
 	function parse(data, scale) {
@@ -282,8 +392,22 @@
 				})
 			};
 		});
+		lines.forEach(indexLine);
 		var curpLabel = null, curp = null, clave = null, printedDate = null, printedSex = null;
 		var allText = lines.map(function (l) { return l.text; }).join('\n'), english = englishCard(allText);
+		var mf = sexUsesMF(allText), labels = {};
+		Object.keys(FIELD_LABELS).forEach(function (k) { labels[k] = labeled(lines, FIELD_LABELS[k]); });
+		['nombre', 'paterno', 'materno', 'apellidos'].forEach(function (k) {
+			var w = labels[k] ? nameWords(labels[k].words) : [];
+			labels[k] = w.length ? { words: w, text: w.map(function (x) { return x.t; }).join(' '), box: boxOf(w) } : null;
+		});
+		var labDate = labels.fecha ? findPrintedDate(labels.fecha.text, english) || findNamedDate(labels.fecha.text) : null;
+		if (labDate) { labDate.box = labels.fecha.box; }
+		var labSex = null;
+		if (labels.sexo) {
+			var sw = labels.sexo.words[0], sv = sexFromWord(sw.t, mf);
+			if (sv) { labSex = { raw: sw.t.replace(/[^A-ZÁÉÍÓÚÑ]/g, ''), value: sv, box: sw.b }; }
+		}
 		lines.forEach(function (l) {
 			l.words.forEach(function (w) {
 				if (!curpLabel && /^CURP$/.test(w.t)) { curpLabel = w; }
@@ -308,8 +432,17 @@
 			var sexM = allText.match(SEX_RE);
 			if (sexM) { printedSex = { raw: sexM[2], box: null }; }
 		}
-		var mf = sexUsesMF(allText);
 		if (printedSex) { printedSex.value = sexCode(printedSex.raw, mf); }
+		if (labSex) { printedSex = labSex; }
+		if (labDate) {
+			printedDate = labDate;
+		} else if (!printedDate) {
+			lines.some(function (l) {
+				var nd = findNamedDate(l.text);
+				if (nd) { nd.box = boxOf(l.words.filter(function (w) { return nd.raw.indexOf(deaccent(w.t)) >= 0; })) || boxOf(l.words); printedDate = nd; }
+				return !!nd;
+			});
+		}
 		return {
 			curpLabel: curpLabel,
 			curp: curp,
@@ -319,6 +452,7 @@
 			sexMF: mf,
 			english: english,
 			names: findNames(lines),
+			labels: labels,
 			confidence: data.confidence || 0
 		};
 	}
@@ -350,6 +484,50 @@
 		return { 0: x(p[0]), 1: inner(p, true), 2: m ? x(m[0]) : 'X', 3: x(n[0]), 13: inner(p, false), 14: m ? inner(m, false) : 'X', 15: inner(n, false) };
 	}
 
+	function namePart(words) {
+		return words && words.length ? { text: words.map(function (w) { return w.t; }).join(' '), box: boxOf(words) } : null;
+	}
+
+	function mainCount(words) {
+		return words.filter(function (w) { return !NAME_PARTICLES.test(plain(w.t)); }).length;
+	}
+
+	/** Score of a name split: one main word per surname, plus agreement with the CURP letters taken from the name. */
+	function splitScore(nombre, paterno, materno, curpValue) {
+		var t = function (a) { return a.map(function (w) { return w.t; }).join(' '); };
+		var score = -Math.abs(mainCount(paterno) - 1) - (materno.length ? Math.abs(mainCount(materno) - 1) : 0.5);
+		var fn = curpValue ? curpFromNames(t(paterno), t(materno), t(nombre)) : null;
+		if (fn) { Object.keys(fn).forEach(function (i) { if (curpValue.charAt(i) === fn[i]) { score += 10; } }); }
+		return score;
+	}
+
+	/** "MARGARITA GOMEZ VELAZQUEZ" or "GOMEZ VELAZQUEZ MARGARITA" in one line: given names and surnames, checked with the CURP. */
+	function splitFullName(words, curpValue) {
+		var n = words.length, best = null;
+		var consider = function (nombre, paterno, materno, bias) {
+			if (!nombre.length || !mainCount(paterno) || (materno.length && !mainCount(materno))) { return; }
+			var score = splitScore(nombre, paterno, materno, curpValue) + bias;
+			if (!best || score > best.score) { best = { score: score, nombre: nombre, paterno: paterno, materno: materno }; }
+		};
+		for (var a = 1; a < n; a++) {
+			for (var b = a + 1; b <= n; b++) {
+				consider(words.slice(0, a), words.slice(a, b), words.slice(b), 0.5);
+				consider(words.slice(b), words.slice(0, a), words.slice(a, b), 0);
+			}
+		}
+		return best;
+	}
+
+	/** "GOMEZ VELAZQUEZ" under a single surnames label: first and second surname. */
+	function splitSurnames(words, nombre, curpValue) {
+		var best = { paterno: words, materno: [], score: -Infinity };
+		for (var a = 1; a < words.length; a++) {
+			var score = splitScore(nombre, words.slice(0, a), words.slice(a), curpValue);
+			if (score > best.score) { best = { paterno: words.slice(0, a), materno: words.slice(a), score: score }; }
+		}
+		return { paterno: best.paterno, materno: best.materno };
+	}
+
 	/**
 	 * Combine the OCR passes and cross-check fields. r.src holds, per field, where it was read on the image:
 	 * {box} for single-source fields, and a list of {key, label, raw, fmt, value, box, chosen} for date and sex.
@@ -373,7 +551,25 @@
 		}
 
 		var L = names ? names.lines : [], nameLine = { paterno: null, materno: null, nombre: [] };
-		if (L.length >= 3) {
+		var labs = pick(function (p) { return p.labels && p.labels.nombre && (p.labels.paterno || p.labels.apellidos) ? p.labels : null; });
+		var full = null;
+		if (!labs && L.length < 2) {
+			full = L.length === 1 && L[0].words && L[0].words.length >= 2 ? L[0].words
+				: (pick(function (p) { return p.labels && p.labels.nombre && p.labels.nombre.words.length >= 2 ? p.labels.nombre : null; }) || {}).words;
+		}
+		var split = null;
+		if (labs) {
+			split = { nombre: labs.nombre.words, paterno: labs.paterno ? labs.paterno.words : [], materno: labs.materno ? labs.materno.words : [] };
+			if (!labs.paterno) { $.extend(split, splitSurnames(labs.apellidos.words, split.nombre, curp && curp.value)); }
+		} else if (full) {
+			split = splitFullName(full, curp && curp.value);
+		}
+		if (split) {
+			r.document = !!labs;
+			nameLine.paterno = namePart(split.paterno);
+			nameLine.materno = namePart(split.materno);
+			nameLine.nombre = split.nombre.length ? [namePart(split.nombre)] : [];
+		} else if (L.length >= 3) {
 			nameLine.paterno = L[0]; nameLine.materno = L[1]; nameLine.nombre = L.slice(2);
 		} else if (L.length === 2) {
 			nameLine.paterno = L[0];
@@ -416,7 +612,7 @@
 		var printed = pick(function (p) { return p.printedDate; });
 		var fromCurp = curp ? curpBirth(curp.value) : null;
 		var fromClave = clave ? clave.birth : null;
-		if (printed && (fromCurp || fromClave)) {
+		if (printed && !printed.named && (fromCurp || fromClave)) {
 			var match = DATE_ORDERS.filter(function (o) { var v = dateFrom(printed.parts, o); return v && (v === fromCurp || v === fromClave); })[0];
 			if (match) { printed.order = match; printed.iso = dateFrom(printed.parts, match); }
 		}
@@ -433,7 +629,7 @@
 			}
 		}
 		var dates = [];
-		if (printedIso) { dates.push({ key: 'printed', label: T.srcPrintedDate, raw: printed.raw, parts: printed.parts, fmt: printed.order, value: printedIso, box: printed.box }); }
+		if (printedIso) { dates.push({ key: 'printed', label: T.srcPrintedDate, raw: printed.raw, parts: printed.named ? null : printed.parts, fmt: printed.named ? '' : printed.order, value: printedIso, box: printed.box }); }
 		if (fromCurp) { dates.push({ key: 'curp', label: T.srcCurpDate, raw: curp.value.substr(4, 6), fmt: 'yymmdd', value: fromCurp, box: keySlice(curp, 4, 10) }); }
 		if (fromClave) { dates.push({ key: 'clave', label: T.srcClaveDate, raw: clave.value.substr(6, 6), fmt: 'yymmdd', value: fromClave, box: keySlice(clave, 6, 12) }); }
 		dates.forEach(function (d) { d.chosen = d.key === dateKey; });
@@ -568,6 +764,8 @@
 			var english = mf || englishCard(t);
 			var d = findPrintedDate(t, english);
 			if (d) { return { value: d.iso, raw: d.raw, parts: d.parts, fmt: d.order }; }
+			var nd = findNamedDate(t);
+			if (nd) { return { value: nd.iso, raw: nd.raw, fmt: '' }; }
 			var key = findCurp(t.replace(/\s+/g, ''));
 			if (key && curpBirth(key.value)) { return { value: curpBirth(key.value), raw: key.value.substr(4, 6), fmt: 'yymmdd' }; }
 			var cl = findClave(t.replace(/\s+/g, ''));
@@ -591,6 +789,8 @@
 		}
 		if (k === 'sexo') {
 			mf = mf || sexUsesMF(t);
+			var word = deaccent(t).match(/\b(HOMBRE|MASCULINO|MALE|VARON|MUJER|FEMENINO|FEMALE)\b/);
+			if (word) { return { value: sexFromWord(word[1], mf), raw: word[1] }; }
 			var sm = t.match(SEX_RE);
 			if (sm) { return { value: sexCode(sm[2], mf), raw: sm[2] }; }
 			var kc = findCurp(t.replace(/\s+/g, ''));
@@ -602,7 +802,7 @@
 			return one ? { value: sexCode(one[1], mf), raw: one[1] } : null;
 		}
 		var words = t.replace(/[^A-ZÁÉÍÓÚÑÜ\s]/g, ' ').split(/\s+/).filter(function (w) {
-			return (w.length >= 2 || w === 'Y') && w !== 'NOMBRE' && !NAME_STOP.test(w);
+			return (w.length >= 2 || w === 'Y') && !NAME_STOP.test(w) && !LABEL_WORD.test(deaccent(w));
 		});
 		return words.length ? { value: words.join(' ') } : null;
 	}
@@ -627,7 +827,7 @@
 	 * Data read, with a picture of the ID where each field has a numbered box. A field's box can be drawn,
 	 * moved or resized on the picture; that area is then read again and replaces the value.
 	 */
-	function showResult(s, img, r, photo, T, worker) {
+	function showResult(s, img, r, photo, T, readArea) {
 		photo = photo || { url: '', box: null, estimated: false };
 		var labels = { nombre: T.nombre, paterno: T.paterno, materno: T.materno, fecha: T.fecha + ' (' + T.fmtDate + ')', sexo: T.sexo, curp: T.curp, foto: T.foto };
 		var num = {}, seq = {}, pending = {}, queue = Promise.resolve(), edited = false;
@@ -776,7 +976,7 @@
 			var my = seq[k] = (seq[k] || 0) + 1;
 			pending[k] = true;
 			refreshRow(k);
-			queue = queue.then(function () { return readRegion(worker, img, b, k); }).then(function (text) {
+			queue = queue.then(function () { return readArea(b, k); }).then(function (text) {
 				if (seq[k] === my) { applyRead(k, text); }
 			}).catch(function (e) {
 				console.log('playerIdOcr reread', e);
