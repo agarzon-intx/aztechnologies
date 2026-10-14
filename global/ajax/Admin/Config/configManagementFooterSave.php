@@ -26,6 +26,7 @@
 
 	include('lang.' . $_COOKIE[$Config->getAlias() . 'language'] . '.php');
 	require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'footer_links.php';
+	require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'role_menu.inc.php';
 
 	$t = function ($key, $fallback) use ($lang) {
 		return isset($lang[$key]) ? $lang[$key] : $fallback;
@@ -39,7 +40,8 @@
 	};
 
 	$alias = $Config->getAlias();
-	if (!$sessionstat || !isset($_SESSION[$alias . 'equipo']) || (string) $_SESSION[$alias . 'equipo'] !== '0') {
+	if (!$sessionstat || !isset($_SESSION[$alias . 'equipo'])
+		|| ((string) $_SESSION[$alias . 'equipo'] !== '0' && !az_user_is_admin($Config, $Config->getSchema(), $_SESSION[$alias . 'username'] ?? ''))) {
 		$fail($t('js0002', 'Error'));
 	}
 	if (!az_footer_tables_exist($Config)) {

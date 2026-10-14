@@ -144,7 +144,7 @@ if (!function_exists('az_role_menu_catalog')) {
 		return array(0 => $lang['rol024'], 1 => $lang['rol025'], 2 => $lang['rol026']);
 	}
 
-	/** Account type given by a set of roles: Admin wins over Coach, Coach over Referee; null without roles. */
+	/** Account type given by a set of roles: Coach wins (teams are needed), then Admin, then Referee; null without roles. */
 	function az_role_account_type($Config, $schema, $roleIds)
 	{
 		$ids = array_filter(array_map('intval', (array) $roleIds), function ($id) {
@@ -158,7 +158,7 @@ if (!function_exists('az_role_menu_catalog')) {
 		while ($r && ($row = $r->fetch_assoc())) {
 			$types[] = (int) $row['Role_Type'];
 		}
-		foreach (array(0, 1, 2) as $type) {
+		foreach (array(1, 0, 2) as $type) {
 			if (in_array($type, $types, true)) {
 				return $type;
 			}
@@ -183,6 +183,17 @@ if (!function_exists('az_role_menu_catalog')) {
 			}
 		}
 		return implode(',', $keep);
+	}
+
+	/** True for the "admin" user and users with an Admin-type role. */
+	function az_user_is_admin($Config, $schema, $username)
+	{
+		if ((string) $username === 'admin') {
+			return true;
+		}
+		$r = $Config->query("SELECT 1 FROM $schema.usuarios_role ur JOIN $schema.role r ON r.Role_ID = ur.Role_ID
+			WHERE ur.username = " . $Config->quote((string) $username) . " AND r.Role_Type = 0 LIMIT 1");
+		return ($r && $r->num_rows > 0);
 	}
 
 	/** Existing Role_IDs among $roleIds. */

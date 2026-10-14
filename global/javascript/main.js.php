@@ -1648,11 +1648,11 @@ function userManagementRolesOk(){
 	return ok;
 }
 
-/** Account type of the checked roles: 0 Admin wins over 1 Coach, Coach over 2 Referee; null without roles. */
+/** Account type of the checked roles: 1 Coach wins (teams are needed), then 0 Admin, then 2 Referee; null without roles. */
 function userManagementRoleType(){
 	var types = $('.um-role:checked').map(function(){ return String($(this).data('type')); }).get();
-	if (types.indexOf('0') >= 0) { return 0; }
 	if (types.indexOf('1') >= 0) { return 1; }
+	if (types.indexOf('0') >= 0) { return 0; }
 	if (types.indexOf('2') >= 0) { return 2; }
 	return null;
 }
