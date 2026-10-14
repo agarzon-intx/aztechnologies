@@ -919,6 +919,9 @@
 	$lang['933-44'] = 'Zoom in';
 	$lang['933-45'] = 'Zoom out';
 	$lang['933-46'] = 'Fit';
+	$lang['933-47'] = 'mm/dd/yyyy';
+	$lang['933-48'] = 'yyyy/mm/dd';
+	$lang['933-49'] = 'Order of day, month and year in the printed date';
 	$lang['934'] = 'Max 1000 KB';
 	$lang['935'] = 'Upload Signature';
 	$lang['936'] = 'Max 100 KB';

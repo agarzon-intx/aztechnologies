@@ -157,12 +157,34 @@
 		return null;
 	}
 
-	/** Printed birth date, always dd/mm/yyyy on the card: {iso, raw}. */
-	function findPrintedDate(text) {
-		var re = /\b(\d{2})\s*[\/\-.]\s*(\d{2})\s*[\/\-.]\s*(\d{4})\b/g, r;
+	var DATE_ORDERS = ['dmy', 'mdy', 'ymd'];
+
+	/** ISO date from three printed numbers read in `order` (dmy, mdy or ymd), or null if not a valid birth date. */
+	function dateFrom(parts, order) {
+		var y, m, d;
+		if (order === 'ymd') { y = parts[0]; m = parts[1]; d = parts[2]; } else { y = parts[2]; m = order === 'mdy' ? parts[0] : parts[1]; d = order === 'mdy' ? parts[1] : parts[0]; }
+		return y > 1900 && validDate(y, m, d) ? iso(y, m, d) : null;
+	}
+
+	/** Cards in English (US style) print dates as mm/dd/yyyy. */
+	function englishCard(text) { return /\b(SEX|GENDER|DOB)\b|DATE OF BIRTH|BIRTH ?DATE/.test(text); }
+
+	/**
+	 * Printed date {parts, raw, order, iso}: a part above 12 settles day vs month; otherwise English cards
+	 * default to mm/dd/yyyy and the rest to dd/mm/yyyy (the order can be changed in the preview).
+	 */
+	function findPrintedDate(text, mdy) {
+		var re = /\b(\d{1,4})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{1,4})\b/g, r;
 		while ((r = re.exec(text))) {
-			var d = parseInt(r[1], 10), m = parseInt(r[2], 10), y = parseInt(r[3], 10);
-			if (y > 1900 && validDate(y, m, d)) { return { iso: iso(y, m, d), raw: r[1] + '/' + r[2] + '/' + r[3] }; }
+			var parts = [parseInt(r[1], 10), parseInt(r[2], 10), parseInt(r[3], 10)], order;
+			if (r[1].length === 4 && r[3].length <= 2) { order = 'ymd'; }
+			else if (r[3].length === 4 && r[1].length <= 2) { order = parts[0] > 12 ? 'dmy' : (parts[1] > 12 ? 'mdy' : (mdy ? 'mdy' : 'dmy')); }
+			else { continue; }
+			if (!dateFrom(parts, order)) {
+				order = DATE_ORDERS.filter(function (o) { return dateFrom(parts, o); })[0];
+				if (!order) { continue; }
+			}
+			return { parts: parts, raw: r[1] + '/' + r[2] + '/' + r[3], order: order, iso: dateFrom(parts, order) };
 		}
 		return null;
 	}
@@ -261,6 +283,7 @@
 			};
 		});
 		var curpLabel = null, curp = null, clave = null, printedDate = null, printedSex = null;
+		var allText = lines.map(function (l) { return l.text; }).join('\n'), english = englishCard(allText);
 		lines.forEach(function (l) {
 			l.words.forEach(function (w) {
 				if (!curpLabel && /^CURP$/.test(w.t)) { curpLabel = w; }
@@ -269,7 +292,7 @@
 			if (c && (!curp || (c.valid && !curp.valid))) { curp = $.extend(c, keyBox(l)); }
 			var k = !clave && findClave(l.text);
 			if (k) { clave = $.extend(k, keyBox(l)); }
-			var d = !printedDate && findPrintedDate(l.text);
+			var d = !printedDate && findPrintedDate(l.text, english);
 			if (d) { d.box = boxOf(l.words.filter(function (w) { return /\d/.test(w.t); })); printedDate = d; }
 			var sm = !printedSex && l.text.match(SEX_RE);
 			if (sm) {
@@ -281,7 +304,6 @@
 				printedSex = { raw: sm[2], box: si < 0 ? null : boxOf(l.words.slice(si, sj >= si ? sj + 1 : si + 2)) };
 			}
 		});
-		var allText = lines.map(function (l) { return l.text; }).join('\n');
 		if (!printedSex) {
 			var sexM = allText.match(SEX_RE);
 			if (sexM) { printedSex = { raw: sexM[2], box: null }; }
@@ -295,6 +317,7 @@
 			printedDate: printedDate,
 			printedSex: printedSex,
 			sexMF: mf,
+			english: english,
 			names: findNames(lines),
 			confidence: data.confidence || 0
 		};
@@ -393,6 +416,10 @@
 		var printed = pick(function (p) { return p.printedDate; });
 		var fromCurp = curp ? curpBirth(curp.value) : null;
 		var fromClave = clave ? clave.birth : null;
+		if (printed && (fromCurp || fromClave)) {
+			var match = DATE_ORDERS.filter(function (o) { var v = dateFrom(printed.parts, o); return v && (v === fromCurp || v === fromClave); })[0];
+			if (match) { printed.order = match; printed.iso = dateFrom(printed.parts, match); }
+		}
 		var printedIso = printed ? printed.iso : null, dateKey = '';
 		if (printedIso && (printedIso === fromCurp || printedIso === fromClave)) {
 			dateKey = 'printed';
@@ -406,9 +433,9 @@
 			}
 		}
 		var dates = [];
-		if (printedIso) { dates.push({ key: 'printed', label: T.srcPrintedDate, raw: printed.raw, fmt: T.fmtDate, value: printedIso, box: printed.box }); }
-		if (fromCurp) { dates.push({ key: 'curp', label: T.srcCurpDate, raw: curp.value.substr(4, 6), fmt: T.fmtYmd, value: fromCurp, box: keySlice(curp, 4, 10) }); }
-		if (fromClave) { dates.push({ key: 'clave', label: T.srcClaveDate, raw: clave.value.substr(6, 6), fmt: T.fmtYmd, value: fromClave, box: keySlice(clave, 6, 12) }); }
+		if (printedIso) { dates.push({ key: 'printed', label: T.srcPrintedDate, raw: printed.raw, parts: printed.parts, fmt: printed.order, value: printedIso, box: printed.box }); }
+		if (fromCurp) { dates.push({ key: 'curp', label: T.srcCurpDate, raw: curp.value.substr(4, 6), fmt: 'yymmdd', value: fromCurp, box: keySlice(curp, 4, 10) }); }
+		if (fromClave) { dates.push({ key: 'clave', label: T.srcClaveDate, raw: clave.value.substr(6, 6), fmt: 'yymmdd', value: fromClave, box: keySlice(clave, 6, 12) }); }
 		dates.forEach(function (d) { d.chosen = d.key === dateKey; });
 		r.fecha = (dates.filter(function (d) { return d.chosen; })[0] || { value: '' }).value;
 		r.src.fecha = dates;
@@ -424,6 +451,7 @@
 		if (sex === '0' || sex === '1') { r.sexo = sex; } else if (sex === 'X') { warnings.push(T.sexX); }
 		r.src.sexo = sexes;
 		r.sexMF = passes.some(function (p) { return p.sexMF; });
+		r.english = passes.some(function (p) { return p.english; });
 
 		r.warnings = warnings;
 		return r;
@@ -537,21 +565,27 @@
 			return raw.length >= 10 ? { value: raw.slice(0, 18), valid: false } : null;
 		}
 		if (k === 'fecha') {
-			var d = findPrintedDate(t);
-			if (d) { return { value: d.iso, raw: d.raw, fmt: 'dmy' }; }
+			var english = mf || englishCard(t);
+			var d = findPrintedDate(t, english);
+			if (d) { return { value: d.iso, raw: d.raw, parts: d.parts, fmt: d.order }; }
 			var key = findCurp(t.replace(/\s+/g, ''));
-			if (key && curpBirth(key.value)) { return { value: curpBirth(key.value), raw: key.value.substr(4, 6), fmt: 'ymd' }; }
+			if (key && curpBirth(key.value)) { return { value: curpBirth(key.value), raw: key.value.substr(4, 6), fmt: 'yymmdd' }; }
 			var cl = findClave(t.replace(/\s+/g, ''));
-			if (cl && cl.birth) { return { value: cl.birth, raw: cl.value.substr(6, 6), fmt: 'ymd' }; }
+			if (cl && cl.birth) { return { value: cl.birth, raw: cl.value.substr(6, 6), fmt: 'yymmdd' }; }
 			var digits = t.replace(/[^0-9]/g, ''), y, m, dd;
 			if (digits.length === 8) {
-				dd = parseInt(digits.substr(0, 2), 10); m = parseInt(digits.substr(2, 2), 10); y = parseInt(digits.substr(4, 4), 10);
-				if (y > 1900 && validDate(y, m, dd)) { return { value: iso(y, m, dd), raw: digits.substr(0, 2) + '/' + digits.substr(2, 2) + '/' + digits.substr(4), fmt: 'dmy' }; }
+				// yyyymmdd, or a day/month pair followed by the year
+				var asYmd = [parseInt(digits.substr(0, 4), 10), parseInt(digits.substr(4, 2), 10), parseInt(digits.substr(6, 2), 10)];
+				if (/^(19|20)/.test(digits) && dateFrom(asYmd, 'ymd')) {
+					return { value: dateFrom(asYmd, 'ymd'), raw: digits.substr(0, 4) + '/' + digits.substr(4, 2) + '/' + digits.substr(6), parts: asYmd, fmt: 'ymd' };
+				}
+				var g = findPrintedDate(digits.substr(0, 2) + '/' + digits.substr(2, 2) + '/' + digits.substr(4), english);
+				if (g) { return { value: g.iso, raw: g.raw, parts: g.parts, fmt: g.order }; }
 			}
 			if (digits.length === 6) {
 				var yy = parseInt(digits.substr(0, 2), 10);
 				y = (yy > new Date().getFullYear() % 100 ? 1900 : 2000) + yy; m = parseInt(digits.substr(2, 2), 10); dd = parseInt(digits.substr(4, 2), 10);
-				if (validDate(y, m, dd)) { return { value: iso(y, m, dd), raw: digits, fmt: 'ymd' }; }
+				if (validDate(y, m, dd)) { return { value: iso(y, m, dd), raw: digits, fmt: 'yymmdd' }; }
 			}
 			return null;
 		}
@@ -602,8 +636,13 @@
 
 		var multi = function (k) { return k === 'fecha' || k === 'sexo'; };
 		var chosenOf = function (k) { return r.src[k].filter(function (x) { return x.chosen; })[0] || null; };
-		var fmtLabel = function (f) { return f === 'dmy' ? T.fmtDate : (f === 'ymd' ? T.fmtYmd : f || ''); };
-		r.src.fecha.forEach(function (x) { x.fmt = x.key === 'printed' ? 'dmy' : 'ymd'; });
+		var FMT_LABELS = { dmy: T.fmtDate, mdy: T.fmtMDY, ymd: T.fmtYMD, yymmdd: T.fmtYmd };
+		var fmtLabel = function (f) { return FMT_LABELS[f] || f || ''; };
+		/** Day / month / year order of a printed date, changeable when the card uses another format. */
+		var orderSelect = function (x) {
+			return ' <select class="pio-order" data-src="' + x.key + '" title="' + esc(T.dateOrder) + '" style="font-size:11px;padding:0 2px;border:1px solid #ccc;border-radius:3px;">'
+				+ DATE_ORDERS.map(function (o) { return '<option value="' + o + '"' + (o === x.fmt ? ' selected' : '') + '>' + esc(fmtLabel(o)) + '</option>'; }).join('') + '</select>';
+		};
 
 		function primaryBox(k) {
 			if (k === 'foto') { return photo.box; }
@@ -640,7 +679,8 @@
 				r.src[k].slice().sort(function (a, b) { return b.chosen - a.chosen; }).forEach(function (x) {
 					var mark = x.chosen || !chosen ? '' : (x.value === chosen.value ? ' &#10003;' : ' <span style="color:#c62828;">&#8800; ' + esc(T.differs) + '</span>');
 					out += '<div style="' + (x.chosen ? 'font-weight:600;color:#333;' : 'color:#777;') + '">' + esc(x.label) + ': ' + (x.raw ? esc(x.raw) : esc(T.none))
-						+ (x.raw && x.fmt ? ' <span style="color:#999;font-weight:400;">(' + esc(fmtLabel(x.fmt)) + ')</span>' : '') + mark + located(x.box) + '</div>';
+						+ (x.raw && x.parts ? orderSelect(x) : (x.raw && x.fmt ? ' <span style="color:#999;font-weight:400;">(' + esc(fmtLabel(x.fmt)) + ')</span>' : ''))
+						+ mark + located(x.box) + '</div>';
 				});
 				return out;
 			}
@@ -670,7 +710,7 @@
 		function refreshCurpSources() {
 			var ok = /^[A-Z]{4}\d{6}[HMX]/.test(r.curp), box = r.src.curp.box;
 			var fromCurp = ok && r.curp.length === 18 ? curpBirth(r.curp) : null;
-			[['fecha', fromCurp ? { label: T.srcCurpDate, raw: r.curp.substr(4, 6), fmt: 'ymd', value: fromCurp } : null],
+			[['fecha', fromCurp ? { label: T.srcCurpDate, raw: r.curp.substr(4, 6), fmt: 'yymmdd', value: fromCurp } : null],
 				['sexo', ok ? { label: T.srcCurpSex, raw: r.curp.charAt(10), value: sexCode(r.curp.charAt(10), false) } : null]].forEach(function (pair) {
 				var k = pair[0], list = r.src[k], cur = list.filter(function (x) { return x.key === 'curp'; })[0];
 				if (!pair[1]) {
@@ -705,7 +745,7 @@
 		}
 
 		function applyRead(k, text) {
-			var p = parseField(k, text, r.sexMF);
+			var p = parseField(k, text, k === 'fecha' ? r.english : r.sexMF);
 			if (k === 'curp') {
 				r.curp = p ? p.value : '';
 				r.src.curp.valid = !!(p && p.valid);
@@ -714,6 +754,7 @@
 				var c = chosenOf(k);
 				c.value = p ? p.value : '';
 				c.raw = p ? p.raw : '';
+				c.parts = p ? p.parts : null;
 				c.fmt = p && k === 'fecha' ? p.fmt : '';
 				syncChosen(k);
 			} else {
@@ -1001,11 +1042,21 @@
 					.on('mouseenter', function () { if (!selected) { hover = $(this).data('k'); redraw(); } })
 					.on('mouseleave', function () { if (!selected) { hover = null; redraw(); } })
 					.on('click', function (e) {
-						if ($(e.target).is('input')) { return; }
+						if ($(e.target).is('input, select, option')) { return; }
 						var k = $(this).data('k');
 						select(selected === k ? null : k);
 						if (selected) { focusField(selected); }
 					});
+				$pop.on('change', '.pio-order', function () {
+					var x = r.src.fecha.filter(function (e) { return e.key === $(this).data('src'); }, this)[0];
+					if (!x || !x.parts) { return; }
+					x.fmt = $(this).val();
+					x.value = dateFrom(x.parts, x.fmt) || '';
+					syncChosen('fecha');
+					edited = true;
+					refreshRow('fecha', true);
+					refreshWarnings();
+				});
 				FIELD_KEYS.forEach(function (k) { refreshRow(k); });
 				refreshWarnings();
 				refreshHint();

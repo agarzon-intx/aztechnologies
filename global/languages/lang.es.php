@@ -919,6 +919,9 @@
 	$lang['933-44'] = 'Acercar';
 	$lang['933-45'] = 'Alejar';
 	$lang['933-46'] = 'Ajustar';
+	$lang['933-47'] = 'mm/dd/aaaa';
+	$lang['933-48'] = 'aaaa/mm/dd';
+	$lang['933-49'] = 'Orden de día, mes y año en la fecha impresa';
 	$lang['934'] = ' Max 1000 KB';
 	$lang['935'] = 'Subir Firma';
 	$lang['936'] = ' Max 100 KB';
