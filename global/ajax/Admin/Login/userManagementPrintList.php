@@ -65,11 +65,17 @@
 							<script>initNavs("umStatusTabs");</script>
 						</div>
 						<div class="col-12 col-md-6">
-							<input type="search" class="form-control" id="userListFilter" name="userListFilter"
-								placeholder="' . htmlspecialchars($umFilterPlaceholder, ENT_QUOTES, 'UTF-8') . '"
-								value="' . $umFilterValue . '"
-								autocomplete="off"
-								oninput="userManagementFilterListDebounced();" />
+							<div style="position: relative;">
+								<input type="search" class="form-control" id="userListFilter" name="userListFilter"
+									placeholder="' . htmlspecialchars($umFilterPlaceholder, ENT_QUOTES, 'UTF-8') . '"
+									value="' . $umFilterValue . '"
+									autocomplete="off"
+									oninput="userManagementFilterListDebounced();"
+									style="border: 1px solid #136aeb !important; border-radius: 0.5rem !important; background: #fff !important; padding: 0.5rem 2.6rem 0.5rem 0.75rem !important; height: auto; box-shadow: none;" />
+								<span onclick="$(\'#userListFilter\').focus();" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #136aeb; cursor: text; line-height: 0;">
+									<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>
+								</span>
+							</div>
 						</div>
 					</div>';
 	}
