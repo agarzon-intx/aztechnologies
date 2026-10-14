@@ -115,8 +115,8 @@ if (!function_exists('az_footer_social_types')) {
 		};
 		foreach (az_footer_logos($Config) as $logo) {
 			$img = '<img src="Form/fetch_footer_logo.php?id=' . $logo['id'] . '&amp;v=' . $logo['v'] . '" alt="' . $h($logo['alias']) . '" title="' . $h($logo['alias']) . '"'
-				. ($logo['width'] > 0 ? ' width="' . $logo['width'] . '"' : ' height="30"')
-				. ' style="margin-left: 20px; max-height: 80px; vertical-align: middle;">';
+				. ' style="margin-left: 20px; vertical-align: middle; object-fit: contain; max-height: 80px; '
+				. ($logo['width'] > 0 ? 'width: ' . $logo['width'] . 'px; height: auto;' : 'height: 40px; width: auto;') . '">';
 			echo $logo['url'] !== '' ? '<a href="' . $h($logo['url']) . '" target="_blank" rel="noopener">' . $img . '</a>' : $img;
 		}
 		$types = az_footer_social_types();
