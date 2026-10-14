@@ -513,7 +513,7 @@ $htmlPlayer .= '													</select>
 										</div>
 									</div>
 								</div>
-									' . ($Config->playerIDReadEnabled() ? '<div style="text-align: center;">' . az_player_id_ocr_button($lang, 'E') . '</div>' : '') . '
+									' . ($Config->playerIDReadEnabled() && (int) ($_SESSION[$Config->getAlias() . 'equipo'] ?? 1) <= 0 ? '<div style="text-align: center;">' . az_player_id_ocr_button($lang, 'E') . '</div>' : '') . '
 								</div>
 								<div ' . $idPdfStyle . '>
 									<h4>' . $lang['948'] . '</h4>
