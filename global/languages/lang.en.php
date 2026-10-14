@@ -589,6 +589,7 @@
 	$lang['539-24'] = 'Team deletion is not enabled';
 	$lang['539-26'] = 'Email and phone required';
 	$lang['539-25'] = 'Score Manual/Data';
+	$lang['539-27'] = 'Read info from ID button';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';
@@ -875,7 +876,7 @@
 	$lang['933-1'] = 'Upload Front';
 	$lang['933-2'] = 'Upload Back';
 	$lang['933-3'] = 'Upload PDF';
-	$lang['933-4'] = 'Read ID data';
+	$lang['933-4'] = 'Read info from ID';
 	$lang['933-5'] = 'Upload the front of the ID first.';
 	$lang['933-6'] = 'Reading ID…';
 	$lang['933-7'] = 'The first time may take a few seconds.';

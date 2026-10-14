@@ -10,6 +10,8 @@
 	$__selCurrentWeekCfg = $Config->configurationHasColumn('currentWeek') ? 'currentWeek' : '0 AS currentWeek';
 	$__selDeleteTeamCfg = $Config->configurationHasColumn('deleteTeam') ? 'deleteTeam' : '0 AS deleteTeam';
 	$__selBasketScoreManualCfg = $Config->configurationHasColumn('basketScoreManual') ? 'basketScoreManual' : '0 AS basketScoreManual';
+	$__hasPlayerIDReadCfg = $Config->configurationHasColumn('playerIDRead');
+	$__selPlayerIDReadCfg = $__hasPlayerIDReadCfg ? 'playerIDRead' : '0 AS playerIDRead';
 	$sql2 = "SELECT Logo,
 				LogoX,
 				LogoY,
@@ -57,7 +59,8 @@
 			    " . $__selSearchPlayerCfg . ",
 			    " . $__selCurrentWeekCfg . ",
 			    " . $__selDeleteTeamCfg . ",
-			    " . $__selBasketScoreManualCfg . "
+			    " . $__selBasketScoreManualCfg . ",
+			    " . $__selPlayerIDReadCfg . "
 			FROM $schema.Configuration
 			where id = 0;";
 	$playerIDPDFCHK = '';
@@ -70,6 +73,7 @@
 	$currentWeekCHK = '';
 	$deleteTeamCHK = '';
 	$basketScoreManualCHK = '';
+	$playerIDReadCHK = '';
 	$result2 = $Config->query($sql2);
 	if ($result2->num_rows > 0) {
 	// output data of each row
@@ -204,6 +208,7 @@
 				if($currentWeek == '1') $currentWeekCHK = 'checked';
 				$deleteTeamCHK = ($row2["deleteTeam"] == '1') ? 'checked' : '';
 				$basketScoreManualCHK = ($row2["basketScoreManual"] == '1') ? 'checked' : '';
+				$playerIDReadCHK = ($row2["playerIDRead"] == '1') ? 'checked' : '';
 				
 			    $VollByeWeekSets = $row2["VollByeWeekSets"];
 			    $VollByeWeekPoints = $row2["VollByeWeekPoints"];
@@ -383,6 +388,10 @@
 										<input class="form-check-input" type="checkbox" name="playerIDPDF" id="playerIDPDF" ' . $playerIDPDFCHK . '>
 										<label class="custom-control-label" for="playerIDPDF">' . $lang['539'] . '</label>
 									</div>
+									' . ($__hasPlayerIDReadCfg ? '<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
+										<input class="form-check-input" type="checkbox" name="playerIDRead" id="playerIDRead" ' . $playerIDReadCHK . '>
+										<label class="custom-control-label" for="playerIDRead">' . $lang['539-27'] . '</label>
+									</div>' : '') . '
 									<div class="form-check mb-2 col-6 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 col-xxl-3">
 										<input class="form-check-input" type="checkbox" name="playerSignature" id="playerSignature" ' . $playerSignatureCHK . '>
 										<label class="custom-control-label" for="playerSignature">' . $lang['539-1'] . '</label>

@@ -192,6 +192,23 @@ class Configuration
     }
 
     /**
+     * Whether the "Read info from ID" button is shown on the player forms (default: off).
+     * Safe on schemas where the column has not been added yet.
+     */
+    public function playerIDReadEnabled(): bool
+    {
+        if (!$this->configurationHasColumn('playerIDRead')) {
+            return false;
+        }
+        $result = $this->query("SELECT playerIDRead FROM " . $this->config["schema"] . ".Configuration WHERE id = 0");
+        if (!$result) {
+            return false;
+        }
+        $row = $result->fetch_assoc();
+        return $row !== null && (int) $row["playerIDRead"] === 1;
+    }
+
+    /**
      * Whether email and phone are required on player create/edit (default: required).
      * Safe on schemas where the column has not been added yet.
      */

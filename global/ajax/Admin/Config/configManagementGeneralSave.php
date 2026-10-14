@@ -63,6 +63,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$currentWeek = (isset($_POST["currentWeek"]) && SanitizeInteger($_POST["currentWeek"]) == 1) ? 1 : 0;
 	$deleteTeam = (isset($_POST["deleteTeam"]) && SanitizeInteger($_POST["deleteTeam"]) == 1) ? 1 : 0;
 	$basketScoreManual = (isset($_POST["basketScoreManual"]) && SanitizeInteger($_POST["basketScoreManual"]) == 1) ? 1 : 0;
+	$playerIDRead = (isset($_POST["playerIDRead"]) && SanitizeInteger($_POST["playerIDRead"]) == 1) ? 1 : 0;
 	
 	//echo $perfilJugadoresA;
 		
@@ -105,6 +106,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	}
 	if (isset($_POST["basketScoreManual"]) && $Config->configurationHasColumn('basketScoreManual')) {
 		$Connection->query("UPDATE $schema.Configuration SET basketScoreManual = $basketScoreManual WHERE id = 0;");
+	}
+	if (isset($_POST["playerIDRead"]) && $Config->configurationHasColumn('playerIDRead')) {
+		$Connection->query("UPDATE $schema.Configuration SET playerIDRead = $playerIDRead WHERE id = 0;");
 	}
 
 	$sql1 = "Select @out as 'count'";

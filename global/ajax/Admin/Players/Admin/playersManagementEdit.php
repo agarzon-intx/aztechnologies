@@ -494,7 +494,7 @@ $htmlPlayer .= '													</select>
 										</div>
 									</div>
 								</div>
-									<div style="text-align: center;">' . az_player_id_ocr_button($lang, 'E') . '</div>
+									' . ($Config->playerIDReadEnabled() ? '<div style="text-align: center;">' . az_player_id_ocr_button($lang, 'E') . '</div>' : '') . '
 								</div>
 								<div ' . $idPdfStyle . '>
 									<h4>' . $lang['948'] . '</h4>

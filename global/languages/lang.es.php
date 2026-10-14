@@ -589,6 +589,7 @@
 	$lang['539-24'] = 'La eliminación de equipos no está habilitada';
 	$lang['539-26'] = 'Correo y teléfono obligatorios';
 	$lang['539-25'] = 'Marcador Manual/Datos';
+	$lang['539-27'] = 'Botón leer información de la identificación';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';
@@ -875,7 +876,7 @@
 	$lang['933-1'] = 'Subir Frente';
 	$lang['933-2'] = 'Subir Detras';
 	$lang['933-3'] = 'Subir PDF';
-	$lang['933-4'] = 'Leer datos de la INE';
+	$lang['933-4'] = 'Leer información de la identificación';
 	$lang['933-5'] = 'Sube primero el frente de la identificación.';
 	$lang['933-6'] = 'Leyendo identificación…';
 	$lang['933-7'] = 'La primera vez puede tardar unos segundos.';

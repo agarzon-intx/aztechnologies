@@ -39,7 +39,7 @@ if (!function_exists('az_player_id_ocr_button')) {
 		$js = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'javascript' . DIRECTORY_SEPARATOR . 'playerIdOcr.js';
 		$src = 'javascript/playerIdOcr.js?v=' . (is_readable($js) ? filemtime($js) : '1');
 		$suffix = $suffix === 'E' ? 'E' : '';
-		return '<button type="button" class="btn btn-outline-primary btn-sm mb-0 mt-2" style="width: 180px;"'
+		return '<button type="button" class="btn btn-outline-primary btn-sm mb-0 mt-2" style="min-width: 180px;"'
 			. ' data-src="' . htmlspecialchars($src, ENT_QUOTES, 'UTF-8') . '"'
 			. ' data-ocr="' . htmlspecialchars(json_encode($texts, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"'
 			. ' onclick="playerIdOcr(\'' . $suffix . '\', this);"><i class="fas fa-id-card"></i> '
