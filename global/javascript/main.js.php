@@ -1484,6 +1484,13 @@ function userManagementApplyTeamLeftFilters($root) {
 	var cat = userManagementNormSelectVal($cat);
 	var $type = $root.find('.um-assign-type-filter').first();
 	var instMode = $type.length > 0 && !$type.prop('disabled') && userManagementNormSelectVal($type) === 'inst';
+	var instSelected = {};
+	$root.find('select#equipor option').each(function () {
+		var m = /^i(\d+)$/.exec(String(this.value));
+		if (m) {
+			instSelected[m[1]] = true;
+		}
+	});
 	$root.find('.um-team-filter-col').toggle(!instMode);
 	$equipol.find('option').each(function () {
 		var opt = this;
@@ -1500,7 +1507,7 @@ function userManagementApplyTeamLeftFilters($root) {
 			var cId = $o.attr('data-categoria');
 			var okS = (st === '2' || st === String(act));
 			var okC = (cat === '' || cat === String(cId));
-			show = okS && okC;
+			show = okS && okC && !instSelected[String($o.attr('data-institucion') || '')];
 		}
 		if (show) {
 			opt.removeAttribute('hidden');

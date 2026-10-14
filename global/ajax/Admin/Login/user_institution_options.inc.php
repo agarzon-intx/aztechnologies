@@ -72,6 +72,19 @@ if (!function_exists('um_institutions_enabled')) {
 		return $html;
 	}
 
+	/** SQL expression for a team row's institution ("0" when the schema has no Equipos.Institucion_ID). */
+	function um_team_institution_sql($Config, $schema, $alias)
+	{
+		return um_institutions_enabled($Config, $schema) ? "IFNULL($alias.Institucion_ID, 0)" : '0';
+	}
+
+	/** data-institucion attribute for a team <option> (empty when the team has no institution). */
+	function um_team_institution_attr($row)
+	{
+		$inst = (int) ($row['Equipo_Institucion'] ?? 0);
+		return $inst > 0 ? " data-institucion='" . $inst . "'" : '';
+	}
+
 	/** True when the schema supports institutions and has at least one (active, or one of the user's). */
 	function um_institutions_available($Config, $schema, $lang, $userInstitucionIds = array())
 	{
@@ -112,6 +125,21 @@ if (!function_exists('um_institutions_enabled')) {
 						v = String(v);
 						return v === "0" || v === "-1";
 					}
+					/** Teams of a selected institution are covered by it: back to #equipol (hidden there by the filters). */
+					function umReleaseInstitutionTeams() {
+						var \$l = $("#equipol"), \$r = $("#equipor"), inst = {};
+						\$r.find("option").each(function () {
+							var m = /^i(\\d+)$/.exec(this.value);
+							if (m) {
+								inst[m[1]] = true;
+							}
+						});
+						\$r.find("option[data-institucion]").each(function () {
+							if (inst[$(this).attr("data-institucion")]) {
+								\$l.append($(this).prop("selected", false));
+							}
+						});
+					}
 					function moveRight(leftValue, rightValue, type) {
 						var \$l = $("#" + leftValue), \$r = $("#" + rightValue);
 						var \$sel = \$l.find("option:selected");
@@ -149,6 +177,9 @@ if (!function_exists('um_institutions_enabled')) {
 						} else {
 							\$r.append(\$sel.clone());
 							\$sel.remove();
+						}
+						if (leftValue === "equipol" || rightValue === "equipol") {
+							umReleaseInstitutionTeams();
 						}
 						if ((leftValue === "equipol" || rightValue === "equipol") && typeof userManagementApplyTeamLeftFilters === "function") {
 							var \$umPanel = $("#equipol").closest("#userManagementCreate, #userManagementEdit");
