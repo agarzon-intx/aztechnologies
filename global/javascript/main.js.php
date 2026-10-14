@@ -1346,6 +1346,7 @@ function userManagementLimpiarCreateUser(image){
 	document.getElementById("password_id").value = "";
 	$("#register_errorloc").html("");
 	$('.um-role').prop('checked', false);
+	$('#umRolesError').text('');
 	$('#userManagementCreate').toggle(); 
 	$('#userManagementList').toggle();			
 }
@@ -1380,6 +1381,9 @@ function playersManagementAdminValidateAll(cat, team){
 }
 
 function userManagementCreateUser(name, lastname, lastname2, phone, email, user, password, salt){
+	if (!userManagementRolesOk()) {
+		return;
+	}
 	//console.log('userManagementCreateUser name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', phone = ' + phone + ', email = ' + email + ', team = ' + team + ', user = ' + user + ', password = ' + password + ', salt = ' + salt);
 	var equipos = '';
 	$("#equipor option").each(function(){
@@ -1606,6 +1610,9 @@ function userManagementShowEdit(id){
 }
 
 function userManagementEditUser(userid, name, lastname, lastname2, phone, email, active, username){
+	if (!userManagementRolesOk()) {
+		return;
+	}
 	console.log('userManagementEditUser name = ' + name + ', lastname = ' + lastname + ', lastname2 = ' + lastname2 + ', phone = ' + phone + ', active = ' + active);
 	var equipos = '';
 	$("#equipor option").each(function(){
@@ -1636,6 +1643,12 @@ function userManagementEditUser(userid, name, lastname, lastname2, phone, email,
 		}
 	});
 								 
+}
+
+function userManagementRolesOk(){
+	var ok = $('.um-role:checked').length > 0;
+	$('#umRolesError').text(ok ? '' : ($('#umRoles').data('required-msg') || ''));
+	return ok;
 }
 
 function userManagementSelectedRoles(){

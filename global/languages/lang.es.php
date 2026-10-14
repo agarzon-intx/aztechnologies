@@ -1623,10 +1623,11 @@
 	$lang['rol012'] = 'Rol eliminado';
 	$lang['rol013'] = 'Actualizado';
 	$lang['rol014'] = 'Roles del usuario';
-	$lang['rol015'] = 'Sin roles, el usuario ve el menú de su tipo de cuenta (liga, árbitro o equipo). Con roles, ve solo las opciones de sus roles.';
+	$lang['rol015'] = 'El usuario ve solo las opciones del menú de sus roles.';
 	$lang['rol016'] = 'Selecciona al menos una opción del menú';
 	$lang['rol017'] = 'No hay roles; créalos en Configuración > Roles.';
 	$lang['rol018'] = 'Marcadores (árbitro)';
 	$lang['rol019'] = 'Marcadores de mis equipos';
 	$lang['rol020'] = 'Mis equipos';
+	$lang['rol021'] = 'Selecciona al menos un rol';
 ?>

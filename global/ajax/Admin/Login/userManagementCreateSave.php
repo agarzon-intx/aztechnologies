@@ -32,8 +32,13 @@ $schema = $Config->getSchema();
     $retunData = array('status' => '0', 'message' => 'Something went wrong,please try again.');
     $htmlUserAdm = '';
 	
+	$__roleIds = az_valid_role_ids($Config, $Config->getSchema(), az_posted_role_ids());
+	if (!$__roleIds) {
+		echo json_encode(array('status' => '0', 'message' => 'role', 'dataUser' => $lang['rol021']));
+		exit;
+	}
 	if($fgmembersite->RegisterUser()){
-		az_save_user_roles($Config, $Config->getSchema(), SanitizeUsername($_POST['username']), az_posted_role_ids());
+		az_save_user_roles($Config, $Config->getSchema(), SanitizeUsername($_POST['username']), $__roleIds);
         $htmlUserAdm .= $lang['812'] . "," . $lang['10118'] . "\n" . $lang['10119'];
 		$retunData = array('status' => '1', 'message' => 'Success.', 'dataUser' => $htmlUserAdm);
    	}else{

@@ -1,9 +1,8 @@
 <?php
 /*
  * Roles (role / roleMenu / usuarios_role) decide which menu options a user sees:
- * - users with roles see exactly the options of their roles (union of all of them);
- * - users without roles, and the "admin" user, keep the menu of their account type
- *   (league admin, referee or team user).
+ * every user needs at least one role and sees exactly the options of their roles (union of all of them);
+ * users without roles only get logout. The "admin" user always gets the full admin menu.
  * Roles only hide / show menu options.
  */
 
@@ -139,6 +138,23 @@ if (!function_exists('az_role_menu_catalog')) {
 		})));
 	}
 
+	/** Existing Role_IDs among $roleIds. */
+	function az_valid_role_ids($Config, $schema, $roleIds)
+	{
+		$ids = array_filter(array_map('intval', (array) $roleIds), function ($id) {
+			return $id > 0;
+		});
+		if (!$ids) {
+			return array();
+		}
+		$valid = array();
+		$r = $Config->query("SELECT Role_ID FROM $schema.role WHERE Role_ID IN (" . implode(',', $ids) . ")");
+		while ($r && ($row = $r->fetch_assoc())) {
+			$valid[] = (int) $row['Role_ID'];
+		}
+		return $valid;
+	}
+
 	/** Role checkboxes for the user create / edit forms. */
 	function az_user_roles_html($Config, $schema, $lang, $selected = array())
 	{
@@ -155,9 +171,10 @@ if (!function_exists('az_role_menu_catalog')) {
 			$boxes = '<span class="text-secondary text-xs">' . htmlspecialchars($lang['rol017'], ENT_QUOTES, 'UTF-8') . '</span>';
 		}
 		return '<div class="row">
-						<div class="col-12">
-							<h6 class="mb-1">' . htmlspecialchars($lang['rol014'], ENT_QUOTES, 'UTF-8') . '</h6>
+						<div class="col-12" id="umRoles" data-required-msg="' . htmlspecialchars($lang['rol021'], ENT_QUOTES, 'UTF-8') . '">
+							<h6 class="mb-1">' . htmlspecialchars($lang['rol014'], ENT_QUOTES, 'UTF-8') . ' *</h6>
 							' . $boxes . '
+							<div id="umRolesError" class="error" style="color: red;"></div>
 							<p class="text-secondary text-xs mb-3">' . htmlspecialchars($lang['rol015'], ENT_QUOTES, 'UTF-8') . '</p>
 						</div>
 					</div>';
