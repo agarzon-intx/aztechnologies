@@ -267,7 +267,9 @@
 		var fromNames = curpFromNames(r.paterno, r.materno, r.nombre);
 		if (curp && fromNames) {
 			var idx = Object.keys(fromNames), differs = idx.some(function (k) { return curp.value.charAt(k) !== fromNames[k]; });
-			if (!curp.valid && differs) {
+			// letters 10 places apart in the CURP alphabet (L/U, A/K…) give the same check digit, so a valid
+			// CURP can still hold a misread letter: the name (larger print) wins when its version is also valid
+			if (differs) {
 				var fixed = curp.value.split('');
 				idx.forEach(function (k) { fixed[k] = fromNames[k]; });
 				fixed = fixed.join('');
