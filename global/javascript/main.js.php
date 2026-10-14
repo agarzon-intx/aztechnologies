@@ -520,6 +520,7 @@ function loadMenu(){
 			mainLoadingOff()
 			if (res.status === '1') {
 				$("#sidenav-collapse-main").html(res.dataMenu);
+				viewAsBar(res.viewAs || null);
 			}
 		},
 		error: function(jqxhr, status, exception) {
@@ -1766,6 +1767,84 @@ function roleManagementDelete(id){
 			alert(res.message);
 		}
 	});
+}
+
+var viewAsWindowTimer = null;
+
+function viewAsShow(){
+	roleManagementAjax('ajax/Admin/ViewAs/viewAsManagement.php', {}, function (res) {
+		if (res.status === '1') {
+			$("#body").html(res.dataViewAs);
+		} else {
+			alert(res.message);
+		}
+	});
+}
+
+$(document).on('input', '#viewAsFilter', function(){
+	var q = $.trim($(this).val()).toLowerCase();
+	$('#viewAsManagement tr.view-as-row').each(function(){
+		$(this).toggle(q === '' || String($(this).data('search')).indexOf(q) >= 0);
+	});
+});
+
+/** Opens the site in a new window as $username; closing that window returns to the admin's own user. */
+function viewAsStart(username){
+	var win = window.open('about:blank', '_blank');
+	roleManagementAjax('ajax/Admin/ViewAs/viewAsStart.php', {username: username}, function (res) {
+		if (res.status !== '1') {
+			if (win) { win.close(); }
+			alert(res.message);
+			return;
+		}
+		var url = window.location.href.split('#')[0];
+		if (win) {
+			win.location.href = url;
+		} else {
+			window.location.href = url;
+			return;
+		}
+		viewAsBar({user: username, label: res.label || '', end: ''}, true);
+		clearInterval(viewAsWindowTimer);
+		viewAsWindowTimer = setInterval(function(){
+			if (win.closed) {
+				clearInterval(viewAsWindowTimer);
+				viewAsEnd(true);
+			}
+		}, 1000);
+	});
+}
+
+function viewAsEnd(fromOpener){
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: 'ajax/Admin/ViewAs/viewAsEnd.php',
+		complete: function () {
+			if (fromOpener !== true && window.opener && !window.opener.closed) {
+				window.close();
+				return;
+			}
+			loadMenu();
+		}
+	});
+}
+
+/** Red bar on top while the session is viewing as another user. */
+function viewAsBar(info, opener){
+	$('#azViewAsBar').remove();
+	if (!info) {
+		return;
+	}
+	var $bar = $('<div id="azViewAsBar"></div>').css({position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000, background: '#c62828', color: '#fff', padding: '6px 12px', textAlign: 'center', fontSize: '14px'});
+	$bar.append($('<i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">visibility</i>'));
+	$bar.append(document.createTextNode(' ' + (info.label || '') + ' '));
+	$bar.append($('<b></b>').text(info.user + (info.name ? ' (' + info.name + ')' : '')));
+	if (!opener) {
+		$bar.append(' ');
+		$bar.append($('<button type="button" class="btn btn-sm btn-light mb-0 ms-2"></button>').text(info.end || 'OK').on('click', function(){ viewAsEnd(false); }));
+	}
+	$('body').append($bar);
 }
 
 function userManagementShowResetPassword(){

@@ -1635,4 +1635,9 @@
 	$lang['rol024'] = 'Administrador';
 	$lang['rol025'] = 'Entrenador';
 	$lang['rol026'] = 'Árbitro';
+	$lang['rol027'] = 'Ver como';
+	$lang['rol028'] = 'Viendo como';
+	$lang['rol029'] = 'Terminar';
+	$lang['rol030'] = 'Buscar usuario, nombre o rol';
+	$lang['rol031'] = 'Abre el sitio en una ventana nueva como el usuario elegido. Al cerrar esa ventana (o con Terminar) vuelves a tu usuario. Mientras tanto, todas las ventanas de este sitio en este navegador actúan como ese usuario.';
 ?>

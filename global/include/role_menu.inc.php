@@ -22,6 +22,7 @@ if (!function_exists('az_role_menu_catalog')) {
 				'colors' => array('palette', $t('114', 'Colors'), 'colorManagementShow();'),
 				'users' => array('emoji_events', $t('103', 'Users'), 'userManagementShow();'),
 				'roles' => array('admin_panel_settings', $t('rol001', 'Roles'), 'roleManagementShow();'),
+				'viewAs' => array('visibility', $t('rol027', 'View as'), 'viewAsShow();'),
 			)),
 			array('id' => 'menu2', 'scope' => 'admin', 'icon' => 'emoji_events', 'title' => $t('104', 'Tournaments'), 'items' => array(
 				'tournaments' => array('emoji_events', $t('105', 'Tournaments'), 'tournamentManagementShow();'),

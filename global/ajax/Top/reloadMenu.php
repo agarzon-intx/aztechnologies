@@ -392,6 +392,16 @@ $schema = $Config->getSchema();
     $htmlMenu .= '</ul>';
 	
     $retunData = array('status' => '1', 'message' => 'Success.', 'dataMenu' => $htmlMenu);
+	require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'view_as.inc.php';
+	if (az_view_as_active($Config)) {
+		$__a = $Config->getAlias();
+		$retunData['viewAs'] = array(
+			'user' => (string) ($_SESSION[$__a . 'username'] ?? ''),
+			'name' => trim(($_SESSION[$__a . 'nombre'] ?? '') . ' ' . ($_SESSION[$__a . 'apellidop'] ?? '')),
+			'label' => $lang['rol028'],
+			'end' => $lang['rol029'],
+		);
+	}
     $Config->Close();
     echo json_encode($retunData);
 ?>

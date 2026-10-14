@@ -1619,4 +1619,9 @@
 	$lang['rol024'] = 'Admin';
 	$lang['rol025'] = 'Coach';
 	$lang['rol026'] = 'Referee';
+	$lang['rol027'] = 'View as';
+	$lang['rol028'] = 'Viewing as';
+	$lang['rol029'] = 'End';
+	$lang['rol030'] = 'Search user, name or role';
+	$lang['rol031'] = 'Opens the site in a new window as the chosen user. Closing that window (or End) returns you to your own user. Meanwhile every window of this site in this browser acts as that user.';
 ?>
