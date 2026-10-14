@@ -262,15 +262,21 @@
 				if (!words.length && (wd.b.x1 < anchor.b.x0 - h || wd.b.x0 > anchor.b.x0 + 3 * h)) { return; }
 				var t = wd.t.replace(/[^A-ZÁÉÍÓÚÑÜ]/g, '');
 				var gap = prev ? wd.b.x0 - prev.b.x1 : 0;
-				if (t.length < 2 || t !== wd.t.replace(/[.,]$/, '') || NAME_STOP.test(t) || gap > 2.5 * h || wd.c < 45) {
-					if (words.length) { words.stop = true; }
+				var label = NAME_STOP.test(t) || LABEL_WORD.test(deaccent(t));
+				if (t.length < 2 || t !== wd.t.replace(/[.,]$/, '') || label || gap > 2.5 * h || wd.c < 45) {
+					if (words.length || label) { words.stop = true; }
 					return;
 				}
 				words.push(t);
 				used.push(wd);
 				prev = wd;
 			});
-			if (words.length) { out.push({ text: words.join(' '), box: boxOf(used), words: used.map(function (wd, i) { return { t: words[i], b: wd.b }; }) }); }
+			if (!words.length) {
+				// name lines are consecutive: a line without one ends them
+				if (out.length) { break; }
+				continue;
+			}
+			out.push({ text: words.join(' '), box: boxOf(used), words: used.map(function (wd, i) { return { t: words[i], b: wd.b }; }) });
 		}
 		return { anchor: anchor, lines: out };
 	}
@@ -567,7 +573,7 @@
 			split = splitFullName(full, curp && curp.value);
 		}
 		if (split) {
-			r.document = !!labs;
+			r.document = true;
 			nameLine.paterno = namePart(split.paterno);
 			nameLine.materno = namePart(split.materno);
 			nameLine.nombre = split.nombre.length ? [namePart(split.nombre)] : [];
@@ -1412,9 +1418,10 @@
 
 	function found(r) { return !!(r.curp || r.nombre || r.paterno || r.fecha); }
 
-	/** Face photo only on ID cards (NOMBRE label found); documents have no photo to take. */
+	/** Face photo only on ID cards (names under the NOMBRE label); documents have no photo to take. */
 	function photoOf(img, r, isDocument) {
-		return r.anchor || !(isDocument || r.document) ? cropPhoto(img, r.anchor) : null;
+		if (r.document || (isDocument && !r.anchor)) { return null; }
+		return cropPhoto(img, r.anchor);
 	}
 
 	function readImage(s, img, T, isDocument) {
