@@ -53,9 +53,16 @@ $schema = $Config->getSchema();
 		if (!$__gamesRes || $__gamesRes->num_rows === 0) {
 			$__menuHidden[] = 'gamesCsv';
 		}
-        if($_SESSION[$Config->getAlias() . 'equipo'] == 0 || $_SESSION[$Config->getAlias() . 'equipo'] == -1){
+		$__coachDay = (int) date('N');
+		if (!($Config->coachjuegos == 1 && $__coachDay >= $Config->coachjuegosdiainicial
+			&& ($__coachDay < $Config->coachjuegosdiafinal || ($__coachDay == $Config->coachjuegosdiafinal && date('H:i:s') < $Config->coachjuegoshorafinal)))) {
+			$__menuHidden[] = 'teamGames';
+		}
+        if ($__roleMenu !== null) {
+			$htmlMenu .= az_role_menu_html($lang, $__roleMenu, $__menuHidden, null, $_SESSION[$Config->getAlias() . 'equipo']);
+        } elseif($_SESSION[$Config->getAlias() . 'equipo'] == 0 || $_SESSION[$Config->getAlias() . 'equipo'] == -1){
             if($_SESSION[$Config->getAlias() . 'equipo'] == 0){
-                $htmlMenu .= az_role_menu_html($lang, $__roleMenu, $__menuHidden);
+                $htmlMenu .= az_role_menu_html($lang, null, $__menuHidden, array('admin'));
     						
     			/*
     			$htmlMenu .= '<li class="nav-item">
@@ -311,9 +318,6 @@ $schema = $Config->getSchema();
 			$htmlMenu .= '</li>';
 			*/
         }
-        if ($_SESSION[$Config->getAlias() . 'equipo'] != 0 && $__roleMenu) {
-			$htmlMenu .= az_role_menu_html($lang, $__roleMenu, $__menuHidden, 'rm-');
-		}
         if (session_status() == PHP_SESSION_ACTIVE and isset($_SESSION[$Config->getAlias() . "equipo"])) {
 		$htmlMenu .='<li class="nav-item">
 						<hr class="horizontal light">

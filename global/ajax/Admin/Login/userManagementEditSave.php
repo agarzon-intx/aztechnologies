@@ -22,6 +22,7 @@ for ($__i = 0, $__prev = null; $__i < 24; $__i++) {
 unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
+	require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'role_menu.inc.php';
 $schema = $Config->getSchema();
 	
 	$sessionstat = $fgmembersite->CheckLogin('userManagementEditSave.php');
@@ -32,6 +33,10 @@ $schema = $Config->getSchema();
     $htmlUserAdm = '';
 
 	if($fgmembersite->UpdateUser()){
+		$__roleUser = $Config->query("SELECT username FROM " . $Config->getSchema() . ".usuarios WHERE id_user = " . (int) $_POST['userid']);
+		if ($__roleUser && ($__roleRow = $__roleUser->fetch_assoc())) {
+			az_save_user_roles($Config, $Config->getSchema(), $__roleRow['username'], az_posted_role_ids());
+		}
         $htmlUserAdm .= $lang['822'] . "," . $lang['10118-1'] . "\n" . $lang['10119-1'];
 		$retunData = array('status' => '1', 'message' => 'Success.', 'dataUser' => $htmlUserAdm);
    	}else{

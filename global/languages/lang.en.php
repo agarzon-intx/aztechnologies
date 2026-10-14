@@ -1607,7 +1607,10 @@
 	$lang['rol012'] = 'Role deleted';
 	$lang['rol013'] = 'Updated';
 	$lang['rol014'] = 'User roles';
-	$lang['rol015'] = 'Without roles a league admin sees the whole menu. With roles they see only the options of their roles; other users see their own menu plus those options.';
+	$lang['rol015'] = 'Without roles the user sees the menu of their account type (league, referee or team). With roles they see only the options of their roles.';
 	$lang['rol016'] = 'Select at least one menu option';
 	$lang['rol017'] = 'There are no roles; create them in Configuration > Roles.';
+	$lang['rol018'] = 'Referee scores';
+	$lang['rol019'] = 'My teams scores';
+	$lang['rol020'] = 'My teams';
 ?>

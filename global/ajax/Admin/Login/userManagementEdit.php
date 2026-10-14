@@ -21,6 +21,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
 	require_once __DIR__ . '/user_institution_options.inc.php';
+	require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'role_menu.inc.php';
 	$schema = $Config->getSchema();
 	$Config->LoadFlags();
 	
@@ -274,6 +275,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							</div>
 						</div>
 					</div>
+					' . az_user_roles_html($Config, $schema, $lang, az_user_role_ids($Config, $schema, $username)) . '
 					<div class="row">
 						<div class="" >
 							<button type="button" class="btn btn-primary" onClick="validateUserEdit(' . $userID . ', $(\'#nombrea\').val(), $(\'#apellidopa\').val(), $(\'#apellidoma\').val(), $(\'#telefonoa\').val(), $(\'#emaila\').val(), $(\'#activo\').val(), $(\'#username\').val());" >' . $lang['0000'] . '</button>

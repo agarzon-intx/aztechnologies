@@ -1345,6 +1345,7 @@ function userManagementLimpiarCreateUser(image){
 	document.getElementById("usuario").value = "";
 	document.getElementById("password_id").value = "";
 	$("#register_errorloc").html("");
+	$('.um-role').prop('checked', false);
 	$('#userManagementCreate').toggle(); 
 	$('#userManagementList').toggle();			
 }
@@ -1390,7 +1391,7 @@ function userManagementCreateUser(name, lastname, lastname2, phone, email, user,
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Login/userManagementCreateSave.php',
-		data: {nombre: name, apellidop: lastname, apellidom: lastname2, telefono: phone, email: email, equipo: equipos, username: user, password: password, salt: salt},
+		data: {nombre: name, apellidop: lastname, apellidom: lastname2, telefono: phone, email: email, equipo: equipos, username: user, password: password, salt: salt, roles: userManagementSelectedRoles()},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -1617,7 +1618,7 @@ function userManagementEditUser(userid, name, lastname, lastname2, phone, email,
 		type: 'POST',
 		dataType: 'json',
 		url: 'ajax/Admin/Login/userManagementEditSave.php',
-		data: {userid: userid, nombre: name, apellidop: lastname, apellidom: lastname2, telefono: phone, email: email, equipo: equipos, active: active, username: username},
+		data: {userid: userid, nombre: name, apellidop: lastname, apellidom: lastname2, telefono: phone, email: email, equipo: equipos, active: active, username: username, roles: userManagementSelectedRoles()},
 		success: function (res) {
 			mainLoadingOff()
 			if (res.status === '1') {
@@ -1635,6 +1636,94 @@ function userManagementEditUser(userid, name, lastname, lastname2, phone, email,
 		}
 	});
 								 
+}
+
+function userManagementSelectedRoles(){
+	return $('.um-role:checked').map(function(){ return this.value; }).get().join(',');
+}
+
+var roleManagementMsgDelete = '';
+
+function roleManagementAjax(url, data, onOk){
+	mainLoadingOn();
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		url: url,
+		data: data,
+		success: function (res) {
+			mainLoadingOff();
+			onOk(res);
+		},
+		error: function(jqxhr, status, exception) {
+			mainLoadingOff();
+			alert(MSG_AJAX_GENERIC);
+			console.log('Exception:' + exception);
+		}
+	});
+}
+
+function roleManagementShow(){
+	roleManagementAjax('ajax/Admin/Roles/rolesManagement.php', {}, function (res) {
+		if (res.status === '1') {
+			roleManagementMsgDelete = res.msgDelete || '';
+			$("#body").html(res.dataRoles);
+		}
+	});
+}
+
+function roleManagementShowForm(id){
+	roleManagementAjax('ajax/Admin/Roles/rolesManagementForm.php', {id: id}, function (res) {
+		if (res.status === '1') {
+			$('#rolesManagementForm').html(res.dataRoleForm).show();
+			$('#rolesManagementList').hide();
+			$('#roleMenus .rm-group').each(function(){ roleManagementSyncGroup(this); });
+		}
+	});
+}
+
+function roleManagementHideForm(){
+	$('#rolesManagementForm').html('').hide();
+	$('#rolesManagementList').show();
+}
+
+function roleManagementSyncGroup(groupBox){
+	var boxes = $(groupBox).closest('.col-12').find('.rm-menu');
+	groupBox.checked = boxes.length > 0 && boxes.filter(':checked').length === boxes.length;
+}
+
+$(document).on('change', '#roleMenus .rm-group', function(){
+	$(this).closest('.col-12').find('.rm-menu').prop('checked', this.checked);
+});
+
+$(document).on('change', '#roleMenus .rm-menu', function(){
+	roleManagementSyncGroup($(this).closest('.col-12').find('.rm-group')[0]);
+});
+
+function roleManagementSave(id){
+	var menus = $('#roleMenus .rm-menu:checked').map(function(){ return this.value; }).get().join(',');
+	roleManagementAjax('ajax/Admin/Roles/rolesManagementSave.php', {id: id, name: $('#roleName').val(), desc: $('#roleDesc').val(), menus: menus}, function (res) {
+		if (res.status === '1') {
+			alert(res.message);
+			roleManagementShow();
+		} else {
+			$('#roleFormError').html($('<div>').text(res.message).html());
+		}
+	});
+}
+
+function roleManagementDelete(id){
+	if (roleManagementMsgDelete && !confirm(roleManagementMsgDelete)) {
+		return;
+	}
+	roleManagementAjax('ajax/Admin/Roles/rolesManagementDelete.php', {id: id}, function (res) {
+		if (res.status === '1') {
+			alert(res.message);
+			roleManagementShow();
+		} else {
+			alert(res.message);
+		}
+	});
 }
 
 function userManagementShowResetPassword(){

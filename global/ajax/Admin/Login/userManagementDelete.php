@@ -52,6 +52,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$Connection->query("DELETE ui FROM $schema.usuarios_institucion ui
 			LEFT JOIN $schema.usuarios u ON u.username = ui.username
 		WHERE u.username IS NULL");
+	$Connection->query("DELETE ur FROM $schema.usuarios_role ur
+			LEFT JOIN $schema.usuarios u ON u.username = ur.username
+		WHERE u.username IS NULL");
 	
 	$Connection->Close(); 
     echo json_encode($retunData);

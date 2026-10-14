@@ -24,6 +24,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 
 	require("membersite_config.php");
 	require_once __DIR__ . '/user_institution_options.inc.php';
+	require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'role_menu.inc.php';
 	$schema = $Config->getSchema();
 	$Config->LoadFlags();
 	
@@ -191,6 +192,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 								</div>
 							</div>
 						</div>
+						' . az_user_roles_html($Config, $schema, $lang) . '
 						<div class="row">
 							<div class="" >
 								<button type="button" class="btn btn-primary" onClick="validateUserAdd($(\'#nombre\').val(), $(\'#apellidop\').val(), $(\'#apellidom\').val(), $(\'#telefono\').val(), $(\'#realemail\').val(), $(\'#real-usuario\').val(), CryptoJS.PBKDF2($(\'#real-password_text_id\').val(), \'' . $salt . '\', { keySize: 160/32, iterations: 1000 }).toString(), \'' . $salt . '\');" >' . $lang['0000'] . '</button>
