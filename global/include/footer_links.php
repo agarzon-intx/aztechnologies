@@ -102,29 +102,44 @@ if (!function_exists('az_footer_social_types')) {
 	}
 
 	/**
-	 * Echo the footer logos followed by the social icons.
-	 * Returns false (and prints nothing) when the tables are not there, so callers can keep their legacy markup.
+	 * Footer logos followed by the social icons, or null when the tables are not there.
+	 * $margin is the CSS margin around each item (the page footer spaces them to the left, the side menu all around).
 	 */
-	function az_footer_render($Config)
+	function az_footer_html($Config, $margin = '0 0 0 20px')
 	{
 		if (!az_footer_tables_exist($Config)) {
-			return false;
+			return null;
 		}
 		$h = function ($s) {
 			return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 		};
+		$html = '';
 		foreach (az_footer_logos($Config) as $logo) {
 			$img = '<img src="Form/fetch_footer_logo.php?id=' . $logo['id'] . '&amp;v=' . $logo['v'] . '" alt="' . $h($logo['alias']) . '" title="' . $h($logo['alias']) . '"'
-				. ' style="margin-left: 20px; vertical-align: middle; object-fit: contain; max-height: 80px; '
+				. ' style="margin: ' . $margin . '; vertical-align: middle; object-fit: contain; max-height: 80px; '
 				. ($logo['width'] > 0 ? 'width: ' . $logo['width'] . 'px; height: auto;' : 'height: 40px; width: auto;') . '">';
-			echo $logo['url'] !== '' ? '<a href="' . $h($logo['url']) . '" target="_blank" rel="noopener">' . $img . '</a>' : $img;
+			$html .= $logo['url'] !== '' ? '<a href="' . $h($logo['url']) . '" target="_blank" rel="noopener">' . $img . '</a>' : $img;
 		}
 		$types = az_footer_social_types();
 		foreach (az_footer_social($Config) as $net) {
 			list(, $icon, $color) = $types[$net['type']];
-			echo '<a href="' . $h($net['url']) . '" target="_blank" rel="noopener" title="' . $h($net['alias']) . '" aria-label="' . $h($net['alias']) . '" style="margin-left: 20px; vertical-align: middle; text-decoration: none;">'
+			$html .= '<a href="' . $h($net['url']) . '" target="_blank" rel="noopener" title="' . $h($net['alias']) . '" aria-label="' . $h($net['alias']) . '" style="margin: ' . $margin . '; vertical-align: middle; text-decoration: none; display: inline-block;">'
 				. '<i class="' . $icon . '" style="font-size: 26px; color: ' . $color . '; vertical-align: middle;"></i></a>';
 		}
+		return $html;
+	}
+
+	/**
+	 * Echo the page footer items. Returns false (and prints nothing) when the tables are not there,
+	 * so callers can keep their legacy markup.
+	 */
+	function az_footer_render($Config)
+	{
+		$html = az_footer_html($Config);
+		if ($html === null) {
+			return false;
+		}
+		echo $html;
 		return true;
 	}
 }

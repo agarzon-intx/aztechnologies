@@ -852,10 +852,15 @@ $schema = $Config->getSchema();
     }
     $htmlMenu .= "</li>";
     
+	require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'footer_links.php';
+	$menuFooter = az_footer_html($Config, '4px 6px');
+	if ($menuFooter === null) {
+		$menuFooter = '<img src="imagenes/ws.png" width="30"> <img src="imagenes/aztechnologies.png" width="126"> <img src="imagenes/LeagueLogo.png" width="90">';
+	}
     $htmlMenu .= '<li class="nav-item" style="text-align: center;">
 						<hr class="horizontal light">
 							<span style="padding-left: .5rem !important;">
-							<img src="imagenes/ws.png" width="30"> <img src="imagenes/aztechnologies.png" width="126"> <img src="imagenes/LeagueLogo.png" width="90">
+							' . $menuFooter . '
 				    </li>';    
     $htmlMenu .= '</ul>';
 	
