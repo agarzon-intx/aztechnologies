@@ -45,6 +45,7 @@
 										end as marcador,
 										TIME_FORMAT(Horario, '%H:%i%p') horario,
 										case when j.Visitante_Id = -1 then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha,
+									case when j.Jugado = 0 and j.Visitante_ID <> -1 and j.Local_ID <> -1 and weekday(j.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and j.Horario = (SELECT MarcadorHoraDefault FROM $schema.Configuration) then 1 else 0 end PendienteFlag,
 										case when ifnull(s.Set1_L,0) > ifnull(s.Set1_V,0) then 1 else 0 end +
                                 		case when ifnull(s.Set2_L,0) > ifnull(s.Set2_V,0) then 1 else 0 end +
                                         case when ifnull(s.Set3_L,0) > ifnull(s.Set3_V,0) then 1 else 0 end +
@@ -99,6 +100,7 @@
 										end as marcador,
 										TIME_FORMAT(Horario, '%H:%i%p') horario,
 										case when j.Visitante_Id = -1 then DATE_ADD(j.Fecha, INTERVAL 30 DAY) else j.Fecha end  as Fecha,
+									case when j.Jugado = 0 and j.Visitante_ID <> -1 and j.Local_ID <> -1 and weekday(j.Fecha) = (SELECT MarcadorDiaDefault-1 FROM $schema.Configuration) and j.Horario = (SELECT MarcadorHoraDefault FROM $schema.Configuration) then 1 else 0 end PendienteFlag,
 										case when ifnull(s.Set1_L,0) > ifnull(s.Set1_V,0) then 1 else 0 end +
                                 		case when ifnull(s.Set2_L,0) > ifnull(s.Set2_V,0) then 1 else 0 end +
                                         case when ifnull(s.Set3_L,0) > ifnull(s.Set3_V,0) then 1 else 0 end +
@@ -129,6 +131,9 @@
 				if ($result2->num_rows > 0) {
 						
 					while($row2 = $result2->fetch_assoc()) {
+						if (!empty($row2['PendienteFlag'])) {
+							$row2['Fecha'] = $lang['663-3'];
+						}
 						if (($count % 2) == 1){
 							$htmlTeam .= "<tr>";
 						}else{
@@ -209,6 +214,9 @@
 				if ($result2->num_rows > 0) {
 						
 					while($row2 = $result2->fetch_assoc()) {
+						if (!empty($row2['PendienteFlag'])) {
+							$row2['Fecha'] = $lang['663-3'];
+						}
 						if (($count % 2) == 1){
 							$htmlTeam .= "<tr>";
 						}else{
@@ -326,6 +334,9 @@
 				if ($result2->num_rows > 0) {
 						
 					while($row2 = $result2->fetch_assoc()) {
+						if (!empty($row2['PendienteFlag'])) {
+							$row2['Fecha'] = $lang['663-3'];
+						}
 						if (($count % 2) == 1){
 							$htmlTeam .= "<tr>";
 						}else{

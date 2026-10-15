@@ -198,10 +198,22 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 				$inicioEsc = $Connection->real_escape_string($inicio);
 				$finEsc = $Connection->real_escape_string($fin);
 				$userEsc = $Connection->real_escape_string($username);
+				// LAST_INSERT_ID() after WeekCreate is the audit row (Control_Table), not the week: look the week up instead.
+				$sqlFindWeek = "SELECT Jornada_ID FROM $schema.Jornada
+						WHERE Torneo_ID = $Season AND Calendario_ID = $calId AND Jornada_Orden = $orden
+						ORDER BY Jornada_ID DESC LIMIT 1";
+				$newId = 0;
+				$resFind = $Connection->query($sqlFindWeek);
+				if ($resFind && $resFind->num_rows > 0) {
+					$newId = (int) $resFind->fetch_assoc()['Jornada_ID'];
+				}
+				if ($newId > 0) {
+					$createdWeekIdsByKey[$key] = $newId;
+					continue;
+				}
 				// WeekCreate(user, season, weekNum→DescCorta, desc→Desc, orden, fecha, inicio, fin, cal, type, @out)
 				$sqlW = "CALL $schema.WeekCreate('$userEsc', $Season, $orden, '$descEsc', $orden, '$fechaEsc', '$inicioEsc', '$finEsc', $calId, 1, @out);";
 				$okW = $Connection->query($sqlW);
-				$newId = 0;
 				if ($okW) {
 					while ($Connection->more_results() && $Connection->next_result()) {
 						$extraRes = $Connection->use_result();
@@ -209,20 +221,9 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 							$extraRes->free();
 						}
 					}
-					$Connection->query("SELECT @out AS 'count'");
-					$resId = $Connection->query("SELECT LAST_INSERT_ID() AS id");
-					if ($resId && $resId->num_rows > 0) {
-						$rowId = $resId->fetch_assoc();
-						$newId = (int) $rowId['id'];
-					}
-					if ($newId <= 0) {
-						$resFind = $Connection->query("SELECT Jornada_ID FROM $schema.Jornada
-								WHERE Torneo_ID = $Season AND Calendario_ID = $calId AND Jornada_Orden = $orden
-								ORDER BY Jornada_ID DESC LIMIT 1");
-						if ($resFind && $resFind->num_rows > 0) {
-							$rowF = $resFind->fetch_assoc();
-							$newId = (int) $rowF['Jornada_ID'];
-						}
+					$resFind = $Connection->query($sqlFindWeek);
+					if ($resFind && $resFind->num_rows > 0) {
+						$newId = (int) $resFind->fetch_assoc()['Jornada_ID'];
 					}
 				}
 				if ($newId > 0) {
@@ -232,6 +233,39 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					$errors[] = (isset($lang['101-34']) ? $lang['101-34'] : 'Failed to create week') . ' #' . $orden;
 				}
 			}
+		}
+
+		$missingWeeks = array();
+		foreach ($plan['categories'] as $catPlan) {
+			$weekIdx = 0;
+			foreach ($catPlan['weeks'] as $week) {
+				if ($weekIdx >= $confirmWeeks) {
+					break;
+				}
+				$weekIdx++;
+				if (!empty($week['skip'])) {
+					continue;
+				}
+				$wid = (int) ($week['jornadaId'] ?? 0);
+				if (!empty($week['createWeek'])) {
+					$wkey = (int) ($week['calendarioId'] ?? 0) . ':' . (int) ($week['orden'] ?? 0);
+					$wid = isset($createdWeekIdsByKey[$wkey]) ? (int) $createdWeekIdsByKey[$wkey] : 0;
+				}
+				if ($wid <= 0) {
+					$missingWeeks[(string) ($week['jornadaDesc'] ?? ('#' . (int) ($week['orden'] ?? 0)))] = true;
+				}
+			}
+		}
+		if (count($missingWeeks) > 0) {
+			$Connection->Close();
+			$retunData = array(
+				'status' => '0',
+				'message' => (isset($lang['101-34']) ? $lang['101-34'] : 'Failed to create week') . ': ' . implode(', ', array_keys($missingWeeks)),
+				'weeksCreated' => $weeksCreated,
+			);
+			header('Content-Type: application/json');
+			echo json_encode($retunData);
+			exit();
 		}
 
 		// Then create games (including bye rows with -1 on the open side).
@@ -298,7 +332,7 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 					// Campo_ID: home team field, else away (bye), else 0 — same fallback flyers use.
 					$campoTeamId = ($home > 0) ? $home : (($away > 0) ? $away : 0);
 					$campoSql = ($campoTeamId > 0)
-						? "(SELECT IFNULL(NULLIF(Campo_ID, 0), 0) FROM $schema.Equipos WHERE Equipo_ID = $campoTeamId LIMIT 1)"
+						? "IFNULL((SELECT Campo_ID FROM $schema.Equipos WHERE Equipo_ID = $campoTeamId AND Torneo_ID = $Season LIMIT 1), 0)"
 						: '0';
 					$sql = "INSERT INTO $schema.Juegos
 						(Juego_ID,

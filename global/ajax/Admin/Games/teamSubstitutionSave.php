@@ -69,15 +69,17 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$calId = (int) $catRow['Calendario_ID'];
 
 	$teamCheck = $Config->query(
-		"SELECT Equipo_ID, Fuerza FROM $schema.Equipos
+		"SELECT Equipo_ID, Fuerza, IFNULL(Campo_ID, 0) AS Campo_ID FROM $schema.Equipos
 		 WHERE Torneo_ID = $Season
 		   AND Equipo_ID IN ($sourceId, $targetId)
 		   AND IFNULL(Activo, 0) = 1"
 	);
 	$found = array();
+	$teamField = array();
 	if ($teamCheck && $teamCheck->num_rows > 0) {
 		while ($t = $teamCheck->fetch_assoc()) {
 			$found[(int) $t['Equipo_ID']] = (int) $t['Fuerza'];
+			$teamField[(int) $t['Equipo_ID']] = (int) $t['Campo_ID'];
 		}
 	}
 	if (!isset($found[$sourceId], $found[$targetId])
@@ -125,8 +127,12 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 		$fail(isset($lang['js0002']) ? $lang['js0002'] : 'Error');
 	}
 
+	// Games still on the replaced team's field (or none) move to the new team's field; manual choices stay.
+	$srcField = (int) $teamField[$sourceId];
+	$tgtField = (int) $teamField[$targetId];
 	$sqlHome = "UPDATE $schema.Juegos
-		SET Local_ID = $targetId
+		SET Campo_ID = IF(IFNULL(Campo_ID, 0) IN (0, $srcField), $tgtField, Campo_ID),
+			Local_ID = $targetId
 		WHERE Torneo_ID = $Season
 		  AND Local_ID = $sourceId
 		  AND IFNULL(Visitante_ID, 0) <> $targetId
@@ -135,7 +141,8 @@ unset($__i, $__prev, $__base, $__inc, $__app_here);
 	$homeCount = $okHome ? (int) $Connection->affected_rows : 0;
 
 	$sqlAway = "UPDATE $schema.Juegos
-		SET Visitante_ID = $targetId
+		SET Campo_ID = IF(Local_ID = -1 AND IFNULL(Campo_ID, 0) IN (0, $srcField), $tgtField, Campo_ID),
+			Visitante_ID = $targetId
 		WHERE Torneo_ID = $Season
 		  AND Visitante_ID = $sourceId
 		  AND IFNULL(Local_ID, 0) <> $targetId

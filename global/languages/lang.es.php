@@ -599,6 +599,7 @@
 	$lang['539-34'] = '¿Cambiar el jugador al equipo actual?';
 	$lang['539-35'] = 'No se puede mover ni duplicar porque el jugador está suspendido.';
 	$lang['539-36'] = 'Este jugador no se puede duplicar; solo se puede cambiar de equipo.';
+	$lang['539-37'] = 'Este jugador no se puede cambiar de equipo; solo se puede duplicar.';
 	$lang['js500'] = 'El nombre del equipo no puede estar vacio y no debe exeder de 10 caracteres';
 	$lang['js501'] = 'El nombre Largo del equipo no puede estar vacio';
 	$lang['js502'] = 'El nombre 3 del equipo no puede estar vacio';
@@ -692,6 +693,7 @@
 	$lang['663'] = 'Sancionado';
 	$lang['663-1'] = 'No Credenc.';
 	$lang['663-2'] = 'No Arbitro';
+	$lang['663-3'] = 'No Programado';
 	$lang['664'] = 'Agregar Juego';
 	$lang['665'] = 'Juego Agregado';
 	$lang['666'] = 'Juego Eliminado';

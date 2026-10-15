@@ -599,6 +599,7 @@
 	$lang['539-34'] = 'Change the player to the current team?';
 	$lang['539-35'] = 'The player cannot be moved or duplicated because they are suspended.';
 	$lang['539-36'] = 'This player cannot be duplicated; they can only change team.';
+	$lang['539-37'] = 'This player cannot change team; they can only be duplicated.';
 	$lang['js500'] = 'The name of the team cant be empty and cant be longer than 10 characters';
 	$lang['js501'] = 'The \"Full name\" value cant be empty';
 	$lang['js502'] = 'The field name 3 cant be empty';
@@ -692,6 +693,7 @@
 	$lang['663'] = 'Punished';
 	$lang['663-1'] = 'No IDS';
 	$lang['663-2'] = 'No Referee';
+	$lang['663-3'] = 'Not Scheduled';
 	$lang['664'] = 'Add Game';
 	$lang['665'] = 'Game Added';
 	$lang['666'] = 'Game Deleted';
