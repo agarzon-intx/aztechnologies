@@ -7,7 +7,7 @@ $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 						<div class="table-responsive">
 							<table class=" table align-items-center mb-0" style="border-color: #136aeb;">
 								<thead class="">
-									<th scope="col"  hidden="true" class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">123</th>
+									<th scope="col"  hidden="true" class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;"></th>
 									<th scope="col" class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;"></span></th>
 									<th scope="col" class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">' . $lang['906'] . '</span></th>
 									<th scope="col" class="text-left text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 lh-1" style="width: 105px !important;white-space: normal;padding: 0.75rem 0.2rem;">' . $lang['907'] . '</span></th>
@@ -27,7 +27,7 @@ $htmlPlayer .= '<div class="d-none d-sm-none d-md-block d-lg-block d-xl-block">
 $count = 1;
 $sql2 = "SET @rank:=0;";
 $Config->query($sql2);
-$sql2 = "	SELECT distinct Jugador_ID,
+$sql2 = "	SELECT distinct a.Jugador_ID,
 				Numero,
 				Clave,
 				Apodo,
@@ -51,7 +51,7 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					a.Fecha_Validacion,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
 					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
-					case when a.Foto is null then '' else 'si' end as Picture,
+					case when ifnull(OCTET_LENGTH(a.Foto), 0) > 100 then 'si' else '' end as Picture,
 					case when " . $hasIdExpr . " then 'si' else '' end as HasID,
 					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
@@ -61,9 +61,10 @@ $sql2 = "	SELECT distinct Jugador_ID,
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
 				LEFT OUTER JOIN $schema.Categorias d on year(now())-year(a.Fecha_Nacimiento) between d.Edad_Inicial and d.Edad_Final
-				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID = $Season
+				JOIN $schema.Jugador_Equipo_Torneo jet ON jet.Jugador_ID = a.Jugador_ID AND jet.Torneo_ID = $Season AND jet.Equipo_ID = $Team
+				JOIN $schema.Equipos e ON e.Equipo_ID = jet.Equipo_ID AND e.Torneo_ID = $Season
 				JOIN $schema.Categorias f ON e.Fuerza = f.Categoria_ID 
-			where a.Equipo_ID = $Team
+			where jet.Equipo_ID = $Team
 				and Estatus = 'A' 
 			order by cast(Numero as decimal) asc, Nombre, Apellido_P;";
 //
@@ -74,29 +75,33 @@ $sql2 = "	SELECT distinct Jugador_ID,
 
 //
 //echo $sql2;
+$playerDocIcons = function ($row2) use ($lang, $idUsesPdf) {
+	$icons = '';
+	if ($row2["Picture"] == '') {
+		$icons = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
+	}
+	if ($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0) {
+		$icons .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
+	}
+	if ($icons != '') {
+		return $icons;
+	}
+	$docInfo = array(
+		'id' => (int) $row2["Jugador_ID"],
+		'idtype' => $idUsesPdf ? ($row2["HasIDPdf"] == 'si' ? 'pdf' : '') : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
+		'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
+		'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
+		'sex' => (string) $row2["SexoT"],
+		'curp' => (string) $row2["CurpTxt"],
+		'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
+	);
+	return ' <i class="fas fa-arrow-circle-right player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
+};
 $result2 = $Config->query($sql2);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
-		$hasLogo = '';
-		if($row2["Picture"] == ''){
-			$hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
-		}
-		if($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0){
-			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
-		}
-		if($hasLogo == ''){
-			$docInfo = array(
-				'id' => (int) $row2["Jugador_ID"],
-				'idtype' => $idUsesPdf ? ($row2["HasIDPdf"] == 'si' ? 'pdf' : '') : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
-				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
-				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
-				'sex' => (string) $row2["SexoT"],
-				'curp' => (string) $row2["CurpTxt"],
-				'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
-			);
-			$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
-		}
+		$hasLogo = $playerDocIcons($row2);
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
 		}else{
@@ -155,7 +160,7 @@ $htmlPlayer .= '<div class="d-block d-sm-block d-md-none d-lg-none d-xl-none">
 $count = 1;
 $sql2 = "SET @rank:=0;";
 $Config->query($sql2);
-$sql2 = "	SELECT distinct Jugador_ID,
+$sql2 = "	SELECT distinct a.Jugador_ID,
 				Numero,
 				Clave,
 				Apodo,
@@ -177,7 +182,7 @@ $sql2 = "	SELECT distinct Jugador_ID,
 					case when FechaValidacionCurp is null then '" . $lang["941"] . "' else '" . $lang["940"] . "' end CurpValida,
 					case when ISNULL(c.Color_HEX) then '' ELSE concat('background: ', c.Color_HEX, ';') END Color_HEX,
 					year(now())-year(a.Fecha_Nacimiento) Edad,'' AS strikei,'' AS strikef,
-					case when a.Foto is null then '' else 'si' end as Picture,
+					case when ifnull(OCTET_LENGTH(a.Foto), 0) > 100 then 'si' else '' end as Picture,
 					case when " . $hasIdExpr . " then 'si' else '' end as HasID,
 					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
@@ -187,9 +192,10 @@ $sql2 = "	SELECT distinct Jugador_ID,
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
 				LEFT OUTER JOIN $schema.Categorias d on year(now())-year(a.Fecha_Nacimiento) between d.Edad_Inicial and d.Edad_Final
-				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID = $Season
+				JOIN $schema.Jugador_Equipo_Torneo jet ON jet.Jugador_ID = a.Jugador_ID AND jet.Torneo_ID = $Season AND jet.Equipo_ID = $Team
+				JOIN $schema.Equipos e ON e.Equipo_ID = jet.Equipo_ID AND e.Torneo_ID = $Season
 				JOIN $schema.Categorias f ON e.Fuerza = f.Categoria_ID 
-			where a.Equipo_ID = $Team
+			where jet.Equipo_ID = $Team
 				and Estatus = 'A' 
 			order by cast(Numero as decimal) asc, Nombre, Apellido_P;";
 		//			CASE WHEN f.Categoria_ID <> ifnull(d.Categoria_ID,-1) and year(now())-year(a.Fecha_Nacimiento) > f.Edad_Final 
@@ -203,31 +209,13 @@ $result2 = $Config->query($sql2);
 if ($result2->num_rows > 0) {
 	// output data of each row
 	while($row2 = $result2->fetch_assoc()) {
-		$hasLogo = '';
-		if($row2["Picture"] == ''){
-			$hasLogo = '<img src="./imagenes/FaltaFoto.png" width="20" height="20" alt="" title="' . $lang['946-1'] . '" style="cursor: help;">';
-		}
-		if($row2["HasID"] == '' && (int) $row2["Jugador_tipo_ID"] === 0){
-			$hasLogo .= ' <i class="fas fa-id-card" title="' . $lang['948-1'] . '" style="color: #dc3545; font-size: 16px; cursor: help; vertical-align: middle;"></i>';
-		}
-		if($hasLogo == ''){
-			$docInfo = array(
-				'id' => (int) $row2["Jugador_ID"],
-				'idtype' => $idUsesPdf ? ($row2["HasIDPdf"] == 'si' ? 'pdf' : '') : ($row2["HasIDImg"] == 'si' ? 'img' : ''),
-				'name' => trim($row2["Nombre"] . ' ' . $row2["Apellido_P"] . ' ' . $row2["Apellido_M"]),
-				'birth' => ($fn = strtotime((string) $row2["Fecha_Nacimiento"])) ? date('d/m/Y', $fn) : (string) $row2["Fecha_Nacimiento"],
-				'sex' => (string) $row2["SexoT"],
-				'curp' => (string) $row2["CurpTxt"],
-				'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
-			);
-			$hasLogo = ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
-		}
+		$hasLogo = $playerDocIcons($row2);
 		if (($count % 2) == 1){
 			$htmlPlayer .= "<tr>";
 		}else{
 			$htmlPlayer .= "<tr class='alt'>";
 		}
-		$htmlPlayer .= '<td scope="row" style="padding-top: 0px; padding-bottom: 0px;">456
+		$htmlPlayer .= '<td scope="row" style="padding-top: 0px; padding-bottom: 0px;">
 							<div class="d-flex px-0 py-0">
 								<div style="width: 5%;text-align: center;padding-top: 0px;">
 									<p style="margin-bottom: 0rem !important;"><span class="text-secondary text-xs font-weight-bold"></span></p>

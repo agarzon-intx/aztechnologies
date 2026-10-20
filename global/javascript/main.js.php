@@ -2996,43 +2996,112 @@ function playerIdUploadChoose(s, btn) {
 	});
 }
 
-/* Players list: the "complete" icon opens the player's picture and ID document. */
-$(document).on('click', '.player-docs-ok', function (e) {
-	e.preventDefault();
-	e.stopPropagation();
-	var info = $(this).data('info') || {}, L = info.l || {};
+/* Players list: green arrow = complete; hover shows info + photo + ID preview. */
+function playerDocsPreviewHtml(info, compact) {
+	var L = info.l || {};
 	var id = parseInt(info.id, 10), type = String(info.idtype || ''), t = Date.now();
 	if (!id) {
-		return;
+		return '';
 	}
 	var esc = function (s) { return $('<div>').text(String(s || '')).html(); };
 	var rows = [[L.name, info.name], [L.birth, info.birth], [L.sex, info.sex], [L.curp, info.curp]].map(function (r) {
 		return '<tr><td style="color: #777; padding: 2px 8px 2px 0; white-space: nowrap; vertical-align: top;">' + esc(r[0]) + '</td>'
 			+ '<td style="padding: 2px 0; font-weight: 600; word-break: break-word;">' + esc(r[1] || '-') + '</td></tr>';
 	}).join('');
-	var details = '<table style="margin-top: 10px; width: 100%; font-size: 13px; text-align: left;">' + rows + '</table>';
-	var box = 'flex: 1 1 260px; min-width: 0; text-align: center;';
-	var label = function (s) { return '<div style="font-weight: 600; margin-bottom: 6px;">' + esc(s) + '</div>'; };
+	var details = '<table style="margin-top: 8px; width: 100%; font-size: 12px; text-align: left;">' + rows + '</table>';
+	var label = function (s) { return '<div style="font-weight: 600; margin-bottom: 4px; font-size: 12px;">' + esc(s) + '</div>'; };
+	var fotoH = compact ? 140 : 200;
+	var idH = compact ? 160 : 420;
 	var idHtml;
 	if (type === 'pdf') {
-		idHtml = '<iframe src="Form/fetch_player_pdf.php?Jugador_ID=' + id + '&tmp=' + t + '" style="width: 100%; height: 420px; border: 1px solid #ddd; border-radius: 6px;"></iframe>'
-			+ '<div style="margin-top: 4px;"><a href="Form/fetch_player_pdf.php?Jugador_ID=' + id + '&tmp=' + t + '" target="_blank" rel="noopener">PDF</a></div>';
+		idHtml = '<iframe src="Form/fetch_player_pdf.php?Jugador_ID=' + id + '&tmp=' + t + '" style="width: 100%; height: ' + idH + 'px; border: 1px solid #ddd; border-radius: 6px;"></iframe>';
 	} else if (type === 'img') {
-		idHtml = '<a href="Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Identificacion&tmp=' + t + '" target="_blank" rel="noopener">'
-			+ '<img src="Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Identificacion&tmp=' + t + '" alt="" style="max-width: 100%; max-height: 420px; border-radius: 6px;"></a>';
+		idHtml = '<img src="Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Identificacion&tmp=' + t + '" alt="" style="max-width: 100%; max-height: ' + idH + 'px; border-radius: 6px;">';
 	} else {
-		idHtml = '<div style="color: #888; padding: 40px 0;">-</div>';
+		idHtml = '<div style="color: #888; padding: 20px 0;">-</div>';
 	}
-	var html = '<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">'
-		+ '<div style="' + box + ' flex-basis: 260px; flex-grow: 0;">' + label(L.foto)
-		+ '<img src="Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Foto&tmp=' + t + '" alt="" style="width: 200px; max-width: 100%; border-radius: 6px; background: #BFBFBF;">'
+	var gap = compact ? '10px' : '16px';
+	var box = 'flex: 1 1 ' + (compact ? '180px' : '260px') + '; min-width: 0; text-align: center;';
+	return '<div style="display: flex; flex-wrap: wrap; gap: ' + gap + '; align-items: flex-start;">'
+		+ '<div style="' + box + ' flex-grow: 0;">' + label(L.foto)
+		+ '<img src="Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Foto&tmp=' + t + '" alt="" style="width: ' + fotoH + 'px; max-width: 100%; border-radius: 6px; background: #BFBFBF;">'
 		+ details + '</div>'
 		+ '<div style="' + box + '">' + label(L.id) + idHtml + '</div>'
 		+ '</div>';
+}
+
+var $playerDocsHover = null;
+var playerDocsHoverHideTimer = null;
+
+function playerDocsHoverPanel() {
+	if (!$playerDocsHover || !$playerDocsHover.length) {
+		$playerDocsHover = $('<div id="playerDocsHoverPreview" style="display:none;position:fixed;z-index:20000;max-width:520px;max-height:70vh;overflow:auto;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:12px;"></div>').appendTo('body');
+		$playerDocsHover.on('mouseenter', function () {
+			if (playerDocsHoverHideTimer) {
+				clearTimeout(playerDocsHoverHideTimer);
+				playerDocsHoverHideTimer = null;
+			}
+		}).on('mouseleave', function () {
+			playerDocsHideHover(120);
+		});
+	}
+	return $playerDocsHover;
+}
+
+function playerDocsHideHover(delay) {
+	if (playerDocsHoverHideTimer) {
+		clearTimeout(playerDocsHoverHideTimer);
+	}
+	playerDocsHoverHideTimer = setTimeout(function () {
+		playerDocsHoverPanel().hide().empty();
+		playerDocsHoverHideTimer = null;
+	}, delay || 0);
+}
+
+function playerDocsShowHover($icon) {
+	var info = $icon.data('info') || {};
+	var html = playerDocsPreviewHtml(info, true);
+	if (!html) {
+		return;
+	}
+	if (playerDocsHoverHideTimer) {
+		clearTimeout(playerDocsHoverHideTimer);
+		playerDocsHoverHideTimer = null;
+	}
+	var $panel = playerDocsHoverPanel();
+	$panel.html(html).css({ visibility: 'hidden', display: 'block' });
+	var rect = $icon[0].getBoundingClientRect();
+	var pw = $panel.outerWidth() || 480;
+	var ph = $panel.outerHeight() || 280;
+	var left = Math.min(window.innerWidth - pw - 12, Math.max(8, rect.right + 8));
+	var top = Math.min(window.innerHeight - ph - 12, Math.max(8, rect.top));
+	if (rect.right + 8 + pw > window.innerWidth) {
+		left = Math.max(8, rect.left - pw - 8);
+	}
+	$panel.css({ left: left + 'px', top: top + 'px', visibility: 'visible' });
+}
+
+$(document).on('mouseenter', '.player-docs-ok', function () {
+	playerDocsShowHover($(this));
+}).on('mouseleave', '.player-docs-ok', function () {
+	playerDocsHideHover(180);
+});
+
+$(document).on('click', '.player-docs-ok', function (e) {
+	e.preventDefault();
+	e.stopPropagation();
+	playerDocsHideHover(0);
+	var info = $(this).data('info') || {};
+	var html = playerDocsPreviewHtml(info, false);
+	if (!html) {
+		return;
+	}
+	var esc = function (s) { return $('<div>').text(String(s || '')).html(); };
 	if (typeof Swal !== 'undefined') {
 		Swal.fire({ title: esc(info.name), html: html, width: 900, showCloseButton: true, showConfirmButton: false, focusConfirm: false });
 	} else {
-		window.open('Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Foto&tmp=' + t, '_blank');
+		var id = parseInt(info.id, 10);
+		window.open('Form/fetch_image.php?Jugador_ID=' + id + '&Imagen=Foto&tmp=' + Date.now(), '_blank');
 	}
 });
 

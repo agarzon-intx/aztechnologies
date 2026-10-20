@@ -28,7 +28,7 @@ $hasIdExpr = $idUsesPdf ? "ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100" :
 $idPdfCol = $Config->jugadoresHasColumn('IdentificacionPDF') ? "case when ifnull(OCTET_LENGTH(a.IdentificacionPDF), 0) > 100 then 'si' else '' end" : "''";
 $sql21 = "SET @rank:=0;";
 $Config->query($sql21);
-$sql22 = "	SELECT distinct Jugador_ID,
+$sql22 = "	SELECT distinct a.Jugador_ID,
 				Numero,
 				Clave,
 				Apodo,
@@ -54,7 +54,7 @@ $sql22 = "	SELECT distinct Jugador_ID,
 					year(now())-year(a.Fecha_Nacimiento) Edad, 
 					'' strikei, 
 					'' strikef,
-					case when a.Foto is null then '' else 'si' end as Picture,
+					case when ifnull(OCTET_LENGTH(a.Foto), 0) > 100 then 'si' else '' end as Picture,
 					case when " . $hasIdExpr . " then 'si' else '' end as HasID,
 					ifnull(a.Jugador_tipo, 0) Jugador_tipo_ID,
 					case when ifnull(OCTET_LENGTH(a.Identificacion), 0) > 100 then 'si' else '' end as HasIDImg,
@@ -64,9 +64,10 @@ $sql22 = "	SELECT distinct Jugador_ID,
 				LEFT OUTER JOIN $schema.Range_Age b on b.Range_Active = 1 and b.Range_Id <> 1 and year(now())-year(a.Fecha_Nacimiento) between b.Range_Start and b.Range_End
 				LEFT OUTER JOIN $schema.Colores c on b.Range_Color_ID = c.Color_ID
 				LEFT OUTER JOIN $schema.Categorias d on year(now())-year(a.Fecha_Nacimiento) between d.Edad_Inicial and d.Edad_Final
-				JOIN $schema.Equipos e ON a.Equipo_ID = e.Equipo_ID and e.Torneo_ID = $Season
+				JOIN $schema.Jugador_Equipo_Torneo jet ON jet.Jugador_ID = a.Jugador_ID AND jet.Torneo_ID = $Season AND jet.Equipo_ID = $Team
+				JOIN $schema.Equipos e ON e.Equipo_ID = jet.Equipo_ID AND e.Torneo_ID = $Season
 				JOIN $schema.Categorias f ON e.Fuerza = f.Categoria_ID 
-			where a.Equipo_ID = $Team
+			where jet.Equipo_ID = $Team
 				and Estatus = 'A' 
 			order by Jugador_tipo asc, cast(Numero as decimal) asc, Nombre, Apellido_P;";
 //echo $sql2;
@@ -90,7 +91,7 @@ $playerDocIcons = function ($row2) use ($lang, $idUsesPdf) {
 		'curp' => (string) $row2["CurpTxt"],
 		'l' => array('foto' => $lang['946'], 'id' => $lang['948'], 'name' => $lang['948-4'], 'birth' => $lang['921'], 'sex' => $lang['948-3'], 'curp' => $lang['922']),
 	);
-	return ' <i class="fas fa-check-circle player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
+	return ' <i class="fas fa-arrow-circle-right player-docs-ok" title="' . $lang['948-2'] . '" style="color: #28a745; font-size: 16px; cursor: pointer; vertical-align: middle;" data-info="' . htmlspecialchars(json_encode($docInfo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"></i>';
 };
 $result2 = $Config->query($sql22);
 if ($result2->num_rows > 0) {
